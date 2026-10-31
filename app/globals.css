@@ -2952,12 +2952,23 @@ textarea.input {
   position: absolute;
   inset: 0;
   transform-origin: 50% 0;
-  z-index: 1;
+  transform-style: preserve-3d;
+}
+.hg-card {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 .hg-face {
   position: absolute;
   inset: 0;
-  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+/* ด้านข้างตั้งฉากกับด้านหน้า เมื่อการ์ดหมุน 90 องศาด้านข้างจะหันมาทางผู้ดู */
+.hg-face.side {
+  transform: rotateY(-90deg);
 }
 /* จุดแขวนของรูปจะถูกเลื่อนมาอยู่ตรงจุดยอดของการ์ด */
 .hg-img {
@@ -3171,11 +3182,12 @@ textarea.input {
 .hg-hanger {
   position: absolute;
   left: 50%;
-  top: -6px;
-  width: 60px;
-  height: 30px;
-  margin-left: -30px;
+  top: 2px;
+  width: 40px;
+  height: 20px;
+  margin-left: -20px;
   overflow: visible;
   pointer-events: none;
-  z-index: 0; /* อยู่หลังตัวเสื้อ */
+  /* อยู่ระหว่างด้านหน้าและด้านหลังของเสื้อ โผล่เฉพาะตรงคอเสื้อ */
+  transform: translateZ(-2px);
 }
