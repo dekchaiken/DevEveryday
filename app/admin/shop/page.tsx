@@ -1,6 +1,6 @@
-import { ShopAdmin } from "@/components/shop/ShopAdmin";
+import { ShopStudio } from "@/components/shop/ShopStudio";
 import { getShop } from "@/lib/shop";
 
 export default function AdminShopPage() {
-  return <ShopAdmin initial={getShop()} />;
+  return <ShopStudio initial={getShop()} />;
 }

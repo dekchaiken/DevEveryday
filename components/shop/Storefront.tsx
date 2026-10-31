@@ -49,7 +49,7 @@ function applyCoupon(code: string, shop: Shop, lines: Line[], today: string) {
   return { coupon: c as Coupon, discount } as const;
 }
 
-export function Storefront({ shop }: { shop: Shop }) {
+export function Storefront({ shop, preview = false }: { shop: Shop; preview?: boolean }) {
   const [today, setToday] = useState(today0);
   const [slide, setSlide] = useState(0);
   const [tab, setTab] = useState<Tab>("popular");
@@ -185,7 +185,7 @@ export function Storefront({ shop }: { shop: Shop }) {
 
   return (
     <div className="sf" style={themeVars}>
-      <ShopIntro name={shop.brandName} count={shop.products.length} />
+      {!preview && <ShopIntro name={shop.brandName} count={shop.products.length} />}
 
       {sec("announcement") && liveAnnouncements.length > 0 && (
         <div className="sf-announce" role="status">
@@ -384,7 +384,7 @@ export function Storefront({ shop }: { shop: Shop }) {
         </div>
       </footer>
 
-      {cookie && (
+      {cookie && !preview && (
         <div className="sf-cookie" role="dialog" aria-label="การใช้คุกกี้">
           <span>เว็บนี้ใช้คุกกี้เพื่อจำรายการโปรดและตะกร้าของคุณ</span>
           <button

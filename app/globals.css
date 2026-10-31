@@ -4058,3 +4058,89 @@ textarea.input {
     animation: none;
   }
 }
+
+/* ============ shop studio (หลังบ้านร้านเสื้อผ้า + พรีวิวสด) ============ */
+.studio {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px clamp(16px, 2.5vw, 40px) 120px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.studio-main {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.studio-tabs {
+  position: sticky;
+  top: 72px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.studio-tabs button {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.studio-tabs button:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.studio-tabs button.on {
+  background: var(--text);
+  color: var(--bg);
+}
+.studio-panel {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.studio-live {
+  position: sticky;
+  top: 72px;
+  display: grid;
+  gap: 8px;
+}
+.studio-live-head {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--muted);
+}
+.studio-live-frame {
+  position: relative;
+  height: calc(100vh - 130px);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  /* transform ทำให้ position: fixed ของหน้าร้านอยู่ในกรอบพรีวิว ไม่ทับหน้าแอดมิน */
+  transform: translateZ(0);
+  background: var(--bg);
+}
+@media (max-width: 1100px) {
+  .studio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studio-live {
+    position: static;
+  }
+  .studio-live-frame {
+    height: 70vh;
+  }
+  .studio-tabs {
+    top: 64px;
+  }
+}
