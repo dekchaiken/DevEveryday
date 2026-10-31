@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-const KEY = "de-intro";
 const MIN_MS = 1100; // ให้เห็นแอนิเมชันอย่างน้อยเท่านี้ แม้โหลดเสร็จเร็ว
 const FALLBACK_MS = 4000; // กันค้าง ถ้า load event ไม่มาภายในเวลานี้
 
@@ -16,8 +15,6 @@ export function Loader({ name }: { name: string }) {
     const bar = fill.current;
     const label = num.current;
     if (!el || !bar || !label) return;
-    // เคยเห็นแล้วในแท็บนี้ (pre-paint script ตั้ง data-intro ไว้) ไม่ต้องวิ่งหลอดซ้ำ
-    if (document.documentElement.dataset.intro === "1") return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const minMs = reduce ? 250 : MIN_MS;
@@ -52,11 +49,6 @@ export function Loader({ name }: { name: string }) {
       el.classList.add("is-done");
       el.setAttribute("aria-hidden", "true");
       document.documentElement.classList.remove("is-loading");
-      try {
-        sessionStorage.setItem(KEY, "1");
-      } catch {
-        // เบราว์เซอร์บางตัวไม่ให้เขียน sessionStorage ก็ไม่เป็นไร
-      }
     };
 
     const paint = () => {

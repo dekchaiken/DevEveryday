@@ -457,12 +457,9 @@ textarea {
   color: var(--muted);
 }
 
-/* ============ loader (แสดงครั้งแรกในแท็บนั้น) ============ */
+/* ============ loader (แสดงทุกครั้งที่เข้าหรือรีเฟรชหน้าแรก) ============ */
 html.is-loading {
   overflow: hidden;
-}
-html[data-intro="1"] .loader {
-  display: none;
 }
 .loader {
   position: fixed;
