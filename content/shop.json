@@ -61,7 +61,14 @@
       "condition": "new",
       "price": 490,
       "description": "ตัวอย่างสินค้า ผ้า cotton 100% ทรง oversize",
+      "sizeGuide": "M: อก 44 นิ้ว ยาว 28 นิ้ว · L: อก 48 นิ้ว ยาว 29 นิ้ว · XL: อก 52 นิ้ว ยาว 32 นิ้ว",
       "image": "/uploads/test-tee.png",
+      "views": [],
+      "side": "/uploads/test-tee.png",
+      "hook": {
+        "x": 48,
+        "y": 13
+      },
       "color": "#2f4f3e",
       "variants": [
         {
@@ -77,13 +84,6 @@
           "qty": 0
         }
       ],
-      "views": [],
-      "side": "/uploads/test-tee.png",
-      "hook": {
-        "x": 48,
-        "y": 13
-      },
-      "sizeGuide": "M: อก 44 นิ้ว ยาว 28 นิ้ว · L: อก 48 นิ้ว ยาว 29 นิ้ว · XL: อก 52 นิ้ว ยาว 32 นิ้ว",
       "collectionIds": [
         "col-new",
         "col-oversize"
@@ -100,7 +100,14 @@
       "condition": "new",
       "price": 390,
       "description": "ตัวอย่างสินค้า ผ้านุ่ม ทรงพอดีตัว",
+      "sizeGuide": "",
       "image": "",
+      "views": [],
+      "side": "",
+      "hook": {
+        "x": 50,
+        "y": 10
+      },
       "color": "#d9c8a9",
       "variants": [
         {
@@ -112,13 +119,6 @@
           "qty": 6
         }
       ],
-      "views": [],
-      "side": "",
-      "hook": {
-        "x": 50,
-        "y": 10
-      },
-      "sizeGuide": "",
       "collectionIds": [
         "col-new"
       ],
@@ -134,7 +134,14 @@
       "condition": "new",
       "price": 690,
       "description": "ตัวอย่างสินค้า ลายสก็อตทรงสบาย",
+      "sizeGuide": "",
       "image": "",
+      "views": [],
+      "side": "",
+      "hook": {
+        "x": 50,
+        "y": 10
+      },
       "color": "#7a3b2e",
       "variants": [
         {
@@ -150,13 +157,6 @@
           "qty": 1
         }
       ],
-      "views": [],
-      "side": "",
-      "hook": {
-        "x": 50,
-        "y": 10
-      },
-      "sizeGuide": "",
       "collectionIds": [],
       "popular": false,
       "trending": true
@@ -170,7 +170,14 @@
       "condition": "new",
       "price": 890,
       "description": "ตัวอย่างสินค้า ผ้าหนาเนื้อนุ่มด้านใน",
+      "sizeGuide": "",
       "image": "",
+      "views": [],
+      "side": "",
+      "hook": {
+        "x": 50,
+        "y": 10
+      },
       "color": "#1d1d20",
       "variants": [
         {
@@ -182,13 +189,6 @@
           "qty": 0
         }
       ],
-      "views": [],
-      "side": "",
-      "hook": {
-        "x": 50,
-        "y": 10
-      },
-      "sizeGuide": "",
       "collectionIds": [
         "col-new"
       ],
@@ -204,7 +204,14 @@
       "condition": "used",
       "price": 550,
       "description": "ตัวอย่างสินค้ามือสอง มีชิ้นเดียว",
+      "sizeGuide": "",
       "image": "",
+      "views": [],
+      "side": "",
+      "hook": {
+        "x": 50,
+        "y": 10
+      },
       "color": "#3c5a80",
       "variants": [
         {
@@ -212,13 +219,6 @@
           "qty": 1
         }
       ],
-      "views": [],
-      "side": "",
-      "hook": {
-        "x": 50,
-        "y": 10
-      },
-      "sizeGuide": "",
       "collectionIds": [],
       "popular": false,
       "trending": true
@@ -232,7 +232,14 @@
       "condition": "used",
       "price": 350,
       "description": "ตัวอย่างสินค้ามือสอง มีชิ้นเดียว",
+      "sizeGuide": "",
       "image": "",
+      "views": [],
+      "side": "",
+      "hook": {
+        "x": 50,
+        "y": 10
+      },
       "color": "#4a4a4a",
       "variants": [
         {
@@ -240,13 +247,6 @@
           "qty": 1
         }
       ],
-      "views": [],
-      "side": "",
-      "hook": {
-        "x": 50,
-        "y": 10
-      },
-      "sizeGuide": "",
       "collectionIds": [],
       "popular": false,
       "trending": true
@@ -254,8 +254,8 @@
   ],
   "theme": {
     "primary": "#0b0b0b",
-    "accent": "#c8a165",
-    "background": "#f6f4f0",
+    "accent": "#a3a3a3",
+    "background": "#ffffff",
     "text": "#111111"
   },
   "banners": [
