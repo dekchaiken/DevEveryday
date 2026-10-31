@@ -344,7 +344,11 @@ textarea {
   animation: wordIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   animation-delay: calc(var(--i) * 70ms + 200ms);
 }
+/* background-clip:text ตัดส่วนที่อยู่นอกกล่องพื้นหลัง เลยต้องขยายกล่องขึ้นลงให้สระและวรรณยุกต์ไม่ถูกตัด
+   ใช้ margin ลบชดเชย เพื่อไม่ให้ระยะบรรทัดเปลี่ยน */
 .hero h1 .accent {
+  padding: 0.22em 0.06em 0.26em;
+  margin: -0.22em -0.06em -0.26em;
   background: linear-gradient(120deg, var(--text) 30%, var(--accent));
   -webkit-background-clip: text;
   background-clip: text;
