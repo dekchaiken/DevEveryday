@@ -24,7 +24,7 @@ function SidePlaceholder({ color }: { color: string }) {
 }
 
 // เสื้อหนึ่งตัวบนราว: ห่วงไม้แขวนอยู่ตรงจุดยอดของการ์ด เสื้อแกว่งรอบจุดนั้น และหมุนไปมาตามตำแหน่งเมาส์
-export function HangingGarment({ product: p, shift }: { product: Product; shift: number }) {
+export function HangingGarment({ product: p, shift, live = false }: { product: Product; shift: number; live?: boolean }) {
   const [turn, setTurn] = useState(0);
   const [hover, setHover] = useState(false);
 
@@ -32,7 +32,7 @@ export function HangingGarment({ product: p, shift }: { product: Product; shift:
   const hookStyle = { "--hx": `${hook.x}%`, "--hy": `${hook.y}%` } as CSSProperties;
 
   function move(e: ReactPointerEvent<HTMLSpanElement>) {
-    if (e.pointerType !== "mouse") return;
+    if (!live || e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width; // 0..1
     setTurn(Math.round((x - 0.5) * 120)); // -60..60 องศา
@@ -49,6 +49,10 @@ export function HangingGarment({ product: p, shift }: { product: Product; shift:
         setTurn(0);
       }}
     >
+      <svg className="hg-hanger" viewBox="0 0 60 30" aria-hidden="true">
+        <path d="M30 2 Q30 0 32 0 Q34 0 34 3 Q34 6 30 10 L30 14" fill="none" stroke="#9a9aa3" strokeWidth="2" strokeLinecap="round" />
+        <path d="M30 14 L6 26 Q4 28 7 28 L53 28 Q56 28 54 26 Z" fill="none" stroke="#9a9aa3" strokeWidth="2" strokeLinejoin="round" />
+      </svg>
       <span className={`hg-swing ${hover ? "still" : ""}`}>
         <span className="hg-card" style={{ transform: `rotateY(${turn}deg)` }}>
           <span className="hg-face front">

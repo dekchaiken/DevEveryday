@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { Product, Shop } from "@/lib/shop";
 import { ShopIntro } from "@/components/shop/ShopIntro";
-import { HangingGarment } from "@/components/shop/HangingGarment";
+import { RackDeck } from "@/components/shop/RackDeck";
 
 type Line = { key: string; productId: string; size: string; qty: number };
 
@@ -231,33 +231,12 @@ export function ShopClient({ shop }: { shop: Shop }) {
       </section>
 
       <main className="rack-wrap" id="rack">
-        <div className="rack" aria-label="ราวแขวนสินค้า">
-          <div className="rail" />
-          <div className="rack-items">
-            {visible.length === 0 && <p className="rack-empty">ยังไม่มีสินค้าตามตัวกรองนี้</p>}
-            {visible.map((p, i) => {
-              const soldOut = p.variants.every((v) => v.qty === 0);
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={`hang ${soldOut ? "sold" : ""}`}
-                  style={{ "--d": `${i * 70}ms`, "--c": p.color } as CSSProperties}
-                  onClick={() => openProduct(p)}
-                >
-                  <HangingGarment product={p} shift={shiftFor(i)} />
-                  <span className="hang-label">
-                    <strong>{p.name}</strong>
-                    <span>
-                      {p.condition === "used" ? "มือ 2" : "มือ 1"} · ฿{p.price.toLocaleString("th-TH")}
-                    </span>
-                    {soldOut && <em>หมด</em>}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <RackDeck
+          products={visible}
+          onOpen={openProduct}
+          onQuickAdd={(p, s) => addToBag(p, s)}
+          empty={visible.length === 0}
+        />
       </main>
 
       {open && (

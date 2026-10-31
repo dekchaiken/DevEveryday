@@ -3026,3 +3026,170 @@ textarea.input {
 .admin-preview-stage .hg {
   margin-top: 18px;
 }
+
+/* ============ shop: ราวแบบ deck (ชิ้นที่เลือกอยู่กลาง ชิ้นข้างเคียงลึกลงไป) ============ */
+.deck {
+  display: grid;
+  gap: 16px;
+}
+.deck-stage {
+  --spread: 170px;
+  position: relative;
+  height: 390px;
+  overflow: hidden;
+  perspective: 1100px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--surface) 100%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--surface-2), var(--surface));
+  outline: none;
+  touch-action: pan-y;
+  user-select: none;
+}
+.deck-stage:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.deck-rail {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 40px;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #9a9aa3, #e2e2e8 50%, #9a9aa3);
+  box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.35);
+}
+.deck-item {
+  position: absolute;
+  left: 50%;
+  top: 40px;
+  width: 150px;
+  margin-left: -75px;
+  cursor: pointer;
+  transform-origin: 50% 0;
+  transform: translateX(calc(var(--d) * var(--spread))) scale(calc(1 - var(--abs) * 0.12)) rotateY(calc(var(--d) * -16deg));
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease, filter 0.5s ease;
+  filter: brightness(calc(1 - var(--abs) * 0.06));
+}
+.deck-item.active {
+  transform: translateX(0) scale(1.45) translateY(8px);
+  filter: none;
+}
+.deck-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 80;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+.deck-nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.deck-nav.prev {
+  left: 14px;
+}
+.deck-nav.next {
+  right: 14px;
+}
+.deck-count {
+  position: absolute;
+  left: 18px;
+  bottom: 14px;
+  z-index: 80;
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--muted);
+}
+.deck-caption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  animation: deck-caption-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes deck-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.deck-caption-main {
+  display: grid;
+  gap: 4px;
+}
+.deck-kicker {
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+}
+.deck-caption-main strong {
+  font-size: 18px;
+  font-weight: 600;
+}
+.deck-price {
+  font-size: 16px;
+}
+.deck-buy {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+}
+.deck-actions {
+  display: flex;
+  gap: 10px;
+}
+.deck-actions .shop-add {
+  margin-top: 0;
+  padding: 11px 18px;
+}
+
+@media (max-width: 760px) {
+  .deck-stage {
+    --spread: 96px;
+    height: 360px;
+  }
+  .deck-item {
+    width: 120px;
+    margin-left: -60px;
+  }
+  .deck-caption {
+    grid-template-columns: 1fr;
+  }
+  .deck-buy {
+    justify-items: start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-item,
+  .deck-caption {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ไม้แขวนเหนือเสื้อ ห้อยจากราว */
+.hg-hanger {
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  width: 60px;
+  height: 30px;
+  margin-left: -30px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
