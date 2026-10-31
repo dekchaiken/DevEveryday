@@ -1077,7 +1077,7 @@ html.is-loading {
   animation: svc-fade 0.25s ease both;
 }
 .svc-modal {
-  width: min(1520px, 100%);
+  width: min(1680px, 100%);
   max-height: min(94vh, 1100px);
   overflow: auto;
   background: var(--surface);
@@ -1215,10 +1215,12 @@ html.is-loading {
 .svc-stage > .mock {
   margin: 0;
 }
+/* demo แสดงเป็นอัตราส่วน 16:9 เต็มความกว้างของพื้นที่ */
 .svc-stage iframe {
   display: block;
   width: 100%;
-  height: min(84vh, 960px);
+  aspect-ratio: 16 / 9;
+  height: auto;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface-2);
