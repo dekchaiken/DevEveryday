@@ -82,7 +82,14 @@
       "hook": {
         "x": 48,
         "y": 13
-      }
+      },
+      "sizeGuide": "M: อก 44 นิ้ว ยาว 28 นิ้ว · L: อก 48 นิ้ว ยาว 29 นิ้ว · XL: อก 52 นิ้ว ยาว 32 นิ้ว",
+      "collectionIds": [
+        "col-new",
+        "col-oversize"
+      ],
+      "popular": true,
+      "trending": false
     },
     {
       "id": "p2",
@@ -110,7 +117,13 @@
       "hook": {
         "x": 50,
         "y": 10
-      }
+      },
+      "sizeGuide": "",
+      "collectionIds": [
+        "col-new"
+      ],
+      "popular": true,
+      "trending": false
     },
     {
       "id": "p3",
@@ -142,7 +155,11 @@
       "hook": {
         "x": 50,
         "y": 10
-      }
+      },
+      "sizeGuide": "",
+      "collectionIds": [],
+      "popular": false,
+      "trending": true
     },
     {
       "id": "p4",
@@ -170,7 +187,13 @@
       "hook": {
         "x": 50,
         "y": 10
-      }
+      },
+      "sizeGuide": "",
+      "collectionIds": [
+        "col-new"
+      ],
+      "popular": true,
+      "trending": false
     },
     {
       "id": "p5",
@@ -194,7 +217,11 @@
       "hook": {
         "x": 50,
         "y": 10
-      }
+      },
+      "sizeGuide": "",
+      "collectionIds": [],
+      "popular": false,
+      "trending": true
     },
     {
       "id": "p6",
@@ -218,7 +245,128 @@
       "hook": {
         "x": 50,
         "y": 10
-      }
+      },
+      "sizeGuide": "",
+      "collectionIds": [],
+      "popular": false,
+      "trending": true
     }
-  ]
+  ],
+  "theme": {
+    "primary": "#0b0b0b",
+    "accent": "#c8a165",
+    "background": "#f6f4f0",
+    "text": "#111111"
+  },
+  "banners": [
+    {
+      "id": "bn1",
+      "title": "คอลเลกชันใหม่มาแล้ว",
+      "subtitle": "เสื้อไซส์ใหญ่ ทรงสบาย ใส่ได้ทุกวัน",
+      "image": "",
+      "link": "/shop",
+      "active": true,
+      "start": "",
+      "end": ""
+    },
+    {
+      "id": "bn2",
+      "title": "มือสองคัดพิเศษ",
+      "subtitle": "ชิ้นเดียว ไซส์เดียว หมดแล้วหมดเลย",
+      "image": "",
+      "link": "/shop",
+      "active": true,
+      "start": "",
+      "end": ""
+    }
+  ],
+  "announcements": [
+    {
+      "id": "an1",
+      "text": "ส่งฟรีเมื่อซื้อครบ 990 บาท",
+      "active": true,
+      "start": "",
+      "end": ""
+    }
+  ],
+  "collections": [
+    {
+      "id": "col-new",
+      "name": "ใหม่ล่าสุด",
+      "description": "ชิ้นล่าสุดจากคอลเลกชันนี้",
+      "image": ""
+    },
+    {
+      "id": "col-oversize",
+      "name": "Oversize",
+      "description": "ทรงหลวมใส่สบาย",
+      "image": ""
+    }
+  ],
+  "coupons": [
+    {
+      "id": "cp1",
+      "code": "WELCOME10",
+      "type": "percent",
+      "value": 10,
+      "minSpend": 300,
+      "usageLimit": 0,
+      "used": 0,
+      "scope": "all",
+      "scopeId": "",
+      "active": true,
+      "start": "",
+      "end": ""
+    },
+    {
+      "id": "cp2",
+      "code": "TEE20",
+      "type": "fixed",
+      "value": 20,
+      "minSpend": 0,
+      "usageLimit": 100,
+      "used": 0,
+      "scope": "category",
+      "scopeId": "c-tee",
+      "active": true,
+      "start": "",
+      "end": ""
+    }
+  ],
+  "sections": [
+    {
+      "id": "announcement",
+      "enabled": true
+    },
+    {
+      "id": "hero",
+      "enabled": true
+    },
+    {
+      "id": "popular",
+      "enabled": true
+    },
+    {
+      "id": "collections",
+      "enabled": true
+    },
+    {
+      "id": "trending",
+      "enabled": true
+    },
+    {
+      "id": "branches",
+      "enabled": true
+    },
+    {
+      "id": "newsletter",
+      "enabled": true
+    }
+  ],
+  "branches": [],
+  "footer": {
+    "note": "© Chubby Man. ร้านเสื้อผ้าไซส์ใหญ่",
+    "email": "hello@example.com",
+    "lineUrl": ""
+  }
 }
