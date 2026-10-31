@@ -26,20 +26,24 @@ function SidePlaceholder({ color }: { color: string }) {
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
 // เสื้อหนึ่งตัวบนราว
-// - การหมุน: บีบความกว้างตาม cos/sin ของมุม แล้วสลับระหว่างด้านหน้ากับด้านข้างแบบค่อยๆ จาง
-// - การแกว่ง: ลูกตุ้มสปริง-ดิมพ์ ถูกกระตุ้นด้วยการหมุน ทำให้ตัวเสื้อโยกตามแรงเหวี่ยง
-// - ไม้แขวนอยู่หลังตัวเสื้อ เห็นเฉพาะส่วนที่โผล่ผ่านคอเสื้อ
-// ขับด้วย requestAnimationFrame และเขียนค่าลง DOM โดยตรง ไม่ผ่าน state ของ React
+// - ถ้ามีรูปจริง: ใช้รูปที่แขวนไม้ไว้แล้วตามที่ถ่าย ไม่วาดไม้แขวนซ้อน
+//   - ถ้ามีรูปหลายมุม การเอาเมาส์ไปชี้จะพลิกดูทีละมุม และเมื่อไม่ได้ชี้จะพลิกไปมาเองช้าๆ
+//   - ถ้ามีรูปมุมเดียว จะเอียงเล็กน้อยให้เห็นมิติ
+// - ถ้ายังไม่มีรูป: วาดเสื้อด้วยสีและไม้แขวนเอง หมุนด้วย rotateY บนการ์ด 3D
+// - การแกว่งเป็นลูกตุ้มสปริง-ดิมพ์ ขับด้วย requestAnimationFrame และเขียนลง DOM โดยตรง
 export function HangingGarment({ product: p, shift, live = false }: { product: Product; shift: number; live?: boolean }) {
   const swing = useRef<HTMLSpanElement>(null);
   const card = useRef<HTMLSpanElement>(null);
   const front = useRef<HTMLSpanElement>(null);
   const side = useRef<HTMLSpanElement>(null);
+  const wrap = useRef<HTMLSpanElement>(null);
   const aim = useRef<number | null>(null); // มุมที่เมาส์ชี้ (องศา) หรือ null เมื่อไม่ได้ชี้
   const phys = useRef({ theta: 0, tv: 0, phi: 0, pv: 0 });
 
   const hook = p.hook ?? { x: 50, y: 10 };
   const hookStyle = { "--hx": `${hook.x}%`, "--hy": `${hook.y}%` } as CSSProperties;
+  const frames = p.image && p.views.length >= 2 ? p.views : [];
+  const photo = Boolean(p.image);
 
   useEffect(() => {
     if (!live) return;
@@ -47,13 +51,15 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
     let last = performance.now();
     const t0 = last;
     const s = phys.current;
+    const frameEls = wrap.current?.querySelectorAll<HTMLImageElement>(".hg-frame") ?? [];
+    let shown = -1;
 
     const tick = (now: number) => {
       const dt = Math.min(0.033, (now - last) / 1000);
       last = now;
       const t = (now - t0) / 1000;
 
-      // มุมหมุน: ตามเมาส์ถ้าชี้อยู่บนชิ้นนี้ ถ้าไม่ก็หมุนช้าๆ ไปมาเอง
+      // มุม: ตามเมาส์ถ้าชี้อยู่บนชิ้นนี้ ถ้าไม่ก็พลิกช้าๆ ไปมาเอง
       const target = aim.current ?? 62 * Math.sin(t * 0.75);
       const aT = 40 * (target - s.theta) - 7.5 * s.tv;
       s.tv += aT * dt;
@@ -64,25 +70,40 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
       s.pv += aP * dt;
       s.phi = clamp(s.phi + s.pv * dt, -12, 12);
 
-      // ด้านหน้ากับด้านข้างสลับกันด้วยการบีบความกว้างตามมุม
-      // หมุนทั้งการ์ดรอบแกนดิ่งเดียวกับไม้แขวน ไม้แขวนจึงหมุนไปพร้อมตัวเสื้อ
-      if (card.current) card.current.style.transform = `rotateY(${s.theta.toFixed(3)}deg)`;
-      // แสดงด้านหน้าหรือด้านข้างทีละด้านเท่านั้น ไม่ให้ซ้อนกัน ด้านข้างหมุนให้หันออกตามทิศที่เสื้อเอียง
-      const aside = Math.abs(s.theta) > 45;
-      if (front.current) front.current.style.visibility = aside ? "hidden" : "visible";
-      if (side.current) {
-        side.current.style.visibility = aside ? "visible" : "hidden";
-        side.current.style.transform = `rotateY(${s.theta >= 0 ? -90 : 90}deg)`;
-      }
       if (swing.current) {
         const flutter = 0.9 * Math.sin(t * 3.1) * Math.min(1, Math.abs(s.tv) / 80);
         swing.current.style.transform = `rotate(${(s.phi + flutter).toFixed(3)}deg)`;
+      }
+
+      if (photo) {
+        if (frameEls.length) {
+          // รูปหลายมุม: มุมที่หมุนไปจะเลือกรูปมุมนั้น
+          const idx = Math.round(((s.theta + 84) / 168) * (frameEls.length - 1));
+          const pick = clamp(idx, 0, frameEls.length - 1);
+          if (pick !== shown) {
+            frameEls.forEach((el, i) => (el.style.opacity = i === pick ? "1" : "0"));
+            shown = pick;
+          }
+        } else if (card.current) {
+          // รูปมุมเดียว: เอียงเล็กน้อยให้เห็นมิติ
+          card.current.style.transform = `rotateY(${(s.theta * 0.22).toFixed(3)}deg)`;
+        }
+      } else {
+        // เสื้อวาดเอง: หมุนการ์ด 3 มิติ ไม้แขวนจึงหมุนไปพร้อมตัวเสื้อ
+        if (card.current) card.current.style.transform = `rotateY(${s.theta.toFixed(3)}deg)`;
+        const aside = Math.abs(s.theta) > 45;
+        if (front.current) front.current.style.visibility = aside ? "hidden" : "visible";
+        if (side.current) {
+          side.current.style.visibility = aside ? "visible" : "hidden";
+          side.current.style.transform = `rotateY(${s.theta >= 0 ? -90 : 90}deg)`;
+        }
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [live]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, photo]);
 
   function move(e: ReactPointerEvent<HTMLSpanElement>) {
     if (!live || e.pointerType !== "mouse") return;
@@ -90,8 +111,28 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
     aim.current = ((e.clientX - r.left) / r.width - 0.5) * 140;
   }
 
+  if (photo) {
+    return (
+      <span className="hg hg-photo" ref={wrap} style={{ ...hookStyle, translate: `${shift}px 0` }} onPointerMove={move} onPointerLeave={() => (aim.current = null)}>
+        <span className="hg-swing" ref={swing}>
+          <span className="hg-card" ref={card}>
+            {frames.length ? (
+              frames.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={src + i} src={src} alt={i === 0 ? p.name : ""} className="hg-img hg-frame" draggable={false} style={{ opacity: i === 0 ? 1 : 0 }} />
+              ))
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.image} alt={p.name} className="hg-img" draggable={false} />
+            )}
+          </span>
+        </span>
+      </span>
+    );
+  }
+
   return (
-    <span className="hg" style={{ ...hookStyle, translate: `${shift}px 0` }} onPointerMove={move} onPointerLeave={() => (aim.current = null)}>
+    <span className="hg" ref={wrap} style={{ ...hookStyle, translate: `${shift}px 0` }} onPointerMove={move} onPointerLeave={() => (aim.current = null)}>
       <span className="hg-swing" ref={swing}>
         <span className="hg-card" ref={card}>
           <svg className="hg-hanger" viewBox="0 0 60 30" aria-hidden="true">
@@ -99,20 +140,10 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
             <path d="M30 15 L8 26 Q5 28 8 28 L52 28 Q55 28 52 26 Z" fill="none" stroke="#9a9aa3" strokeWidth="2.4" strokeLinejoin="round" />
           </svg>
           <span className="hg-face front" ref={front}>
-            {p.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.image} alt={p.name} className="hg-img" draggable={false} />
-            ) : (
-              <FrontPlaceholder color={p.color} />
-            )}
+            <FrontPlaceholder color={p.color} />
           </span>
           <span className="hg-face side" ref={side}>
-            {p.side ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.side} alt="" className="hg-img" draggable={false} />
-            ) : (
-              <SidePlaceholder color={p.color} />
-            )}
+            <SidePlaceholder color={p.color} />
           </span>
         </span>
       </span>

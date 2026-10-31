@@ -3242,3 +3242,14 @@ textarea.input {
     visibility: hidden;
   }
 }
+
+/* รูปจริงที่แขวนไม้มาแล้ว: จุดแขวนของรูปอยู่ตรงขอบบนของกรอบ และรูปหลายมุมซ้อนกันให้เลือกทีละมุม */
+.hg-photo {
+  height: 300px;
+}
+.hg-photo .hg-card {
+  transition: transform 0.2s linear;
+}
+.hg-photo .hg-img {
+  transition: opacity 0.12s linear;
+}
