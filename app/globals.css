@@ -406,6 +406,17 @@ textarea {
 }
 
 /* ============ marquee ============ */
+/* แถบเทคโนโลยีอยู่ท้ายสุดของ hero วางทับพื้นหลังตาราง */
+.hero > .marquee {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
 .marquee {
   border-block: 1px solid var(--border);
   overflow: hidden;

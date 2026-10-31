@@ -72,26 +72,26 @@ export default function Home() {
               </div>
             </div>
           </div>
+          <div className="marquee" aria-label="เทคโนโลยีที่ใช้">
+            <div className="marquee-track">
+              {[...stack, ...stack].map((s, i) => (
+                <span key={`${s.name}-${i}`} className="tech">
+                  <span className="tech-icon">
+                    {s.icon ? (
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d={s.icon.path} />
+                      </svg>
+                    ) : (
+                      <span className="tech-fallback">{"</>"}</span>
+                    )}
+                  </span>
+                  {s.name}
+                </span>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <div className="marquee" aria-label="เทคโนโลยีที่ใช้">
-          <div className="marquee-track">
-            {[...stack, ...stack].map((s, i) => (
-              <span key={`${s.name}-${i}`} className="tech">
-                <span className="tech-icon">
-                  {s.icon ? (
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d={s.icon.path} />
-                    </svg>
-                  ) : (
-                    <span className="tech-fallback">{"</>"}</span>
-                  )}
-                </span>
-                {s.name}
-              </span>
-            ))}
-          </div>
-        </div>
 
         {c.brands.length > 0 && (
           <section id="brands" className="section brands-showcase">
