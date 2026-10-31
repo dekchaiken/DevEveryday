@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { Contact } from "@/components/Contact";
+import { Loader } from "@/components/Loader";
 import { PixelOffice } from "@/components/PixelOffice";
 import { Magnetic } from "@/components/Magnetic";
 import { Nav } from "@/components/Nav";
@@ -7,15 +8,18 @@ import { Reveal } from "@/components/Reveal";
 import { Team } from "@/components/Team";
 import { Tilt } from "@/components/Tilt";
 import { getContent } from "@/lib/content";
+import { findTechIcon } from "@/lib/techIcon";
 
 export default function Home() {
   const c = getContent();
   const words = c.site.headline.split(" ");
   // คำสุดท้ายจะถูกไล่สีให้เด่น
   const accentFrom = Math.max(words.length - 2, 0);
+  const stack = c.stack.map((name) => ({ name, icon: findTechIcon(name) }));
 
   return (
     <>
+      <Loader name={c.site.name} />
       <Nav site={c.site} />
 
       <main id="top">
@@ -69,8 +73,19 @@ export default function Home() {
 
         <div className="marquee" aria-label="เทคโนโลยีที่ใช้">
           <div className="marquee-track">
-            {[...c.stack, ...c.stack].map((s, i) => (
-              <span key={`${s}-${i}`}>{s}</span>
+            {[...stack, ...stack].map((s, i) => (
+              <span key={`${s.name}-${i}`} className="tech">
+                <span className="tech-icon">
+                  {s.icon ? (
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d={s.icon.path} />
+                    </svg>
+                  ) : (
+                    <span className="tech-fallback">{"</>"}</span>
+                  )}
+                </span>
+                {s.name}
+              </span>
             ))}
           </div>
         </div>

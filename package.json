@@ -12,6 +12,7 @@
     "next": "15.5.28",
     "react": "19.1.2",
     "react-dom": "19.1.2",
+    "simple-icons": "16.36.0",
     "three": "0.169.0"
   },
   "devDependencies": {
