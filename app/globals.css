@@ -767,146 +767,7 @@ html.is-loading {
   }
 }
 
-/* ============ brands (ธุรกิจในเครือ) ============ */
-.brands {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-.brand-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  overflow: hidden;
-  color: var(--text);
-  text-decoration: none;
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s, box-shadow 0.4s;
-}
-a.brand-card:hover {
-  transform: translateY(-6px);
-  border-color: color-mix(in srgb, var(--c) 55%, var(--border));
-  box-shadow: 0 30px 60px -34px color-mix(in srgb, var(--c) 80%, transparent);
-}
-.brand-art {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 80% 15%, color-mix(in srgb, var(--c) 45%, transparent), transparent 55%),
-    linear-gradient(150deg, color-mix(in srgb, var(--c) 22%, var(--surface-2)), var(--surface-2));
-}
-.brand-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: 0.45;
-  mask-image: radial-gradient(circle at 50% 50%, #000, transparent 75%);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000, transparent 75%);
-  pointer-events: none;
-}
-.brand-icon {
-  position: relative;
-  z-index: 1;
-  width: 84px;
-  height: 84px;
-  display: grid;
-  place-items: center;
-  border-radius: 24px;
-  color: var(--c);
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  border: 1px solid color-mix(in srgb, var(--c) 35%, var(--border));
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.brand-icon svg {
-  width: 40px;
-  height: 40px;
-}
-a.brand-card:hover .brand-icon {
-  transform: scale(1.08) rotate(-4deg);
-}
-.brand-art img {
-  position: relative;
-  z-index: 1;
-  width: 56%;
-  height: 70%;
-  object-fit: contain;
-}
-.brand-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 24px 26px 26px;
-}
-.brand-kicker {
-  font-family: var(--font-code);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-.brand-body h3 {
-  font-size: 22px;
-  margin: 4px 0 0;
-}
-.brand-tagline {
-  margin: 0;
-  color: var(--text);
-  font-weight: 500;
-}
-.brand-desc {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.6;
-}
-.brand-go {
-  margin-top: auto;
-  padding-top: 18px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  align-self: flex-start;
-  font-size: 13px;
-  padding: 8px 14px;
-  border-radius: 99px;
-  background: color-mix(in srgb, var(--c) 14%, transparent);
-  color: var(--text);
-}
-.brand-arrow {
-  display: inline-grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--c);
-  color: #fff;
-  font-size: 12px;
-  transition: transform 0.3s;
-}
-a.brand-card:hover .brand-arrow {
-  transform: translate(2px, -2px);
-}
-
-@media (max-width: 760px) {
-  .brands {
-    grid-template-columns: 1fr;
-  }
-  .brand-icon {
-    width: 68px;
-    height: 68px;
-  }
-}
-
-/* ============ brands showcase: ลูกเล่นเพิ่มเติม ============ */
+/* ============ brands (ธุรกิจในเครือ): รายการซ้าย + หน้าเว็บจำลองขวา ============ */
 .brands-showcase {
   position: relative;
   overflow: hidden;
@@ -916,12 +777,12 @@ a.brand-card:hover .brand-arrow {
   position: absolute;
   top: -20%;
   right: -10%;
-  width: 620px;
-  height: 620px;
+  width: 560px;
+  height: 560px;
   border-radius: 50%;
   background: radial-gradient(circle, var(--glow), transparent 65%);
   filter: blur(40px);
-  opacity: 0.6;
+  opacity: 0.5;
   pointer-events: none;
   animation: brand-drift 14s ease-in-out infinite alternate;
 }
@@ -943,53 +804,244 @@ a.brand-card:hover .brand-arrow {
     background-position: 260% 0;
   }
 }
-.brand-card {
-  isolation: isolate;
+
+.bshow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 28px;
+  align-items: stretch;
 }
-/* แสงวิ่งผ่านการ์ดตอนเอาเมาส์ชี้ */
-.brand-card::after {
+
+/* รายการซ้าย */
+.bshow-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+.bshow-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: border-color 0.3s, background-color 0.3s, transform 0.3s;
+}
+.bshow-item::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.18) 50%, transparent 65%);
-  transform: translateX(-120%);
-  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
-  pointer-events: none;
-  z-index: 2;
+  left: -1px;
+  top: 16px;
+  bottom: 16px;
+  width: 3px;
+  border-radius: 99px;
+  background: var(--c);
+  transform: scaleY(0);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-a.brand-card:hover::after {
-  transform: translateX(120%);
+.bshow-item:hover {
+  border-color: var(--border-strong);
 }
-/* ไอคอนลอยขึ้นลงเบาๆ คนละจังหวะกันในแต่ละการ์ด */
-.brand-icon {
+.bshow-item.on {
+  border-color: color-mix(in srgb, var(--c) 45%, var(--border));
+  background: color-mix(in srgb, var(--c) 6%, var(--surface));
+}
+.bshow-item.on::before {
+  transform: scaleY(1);
+}
+.bshow-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.bshow-item-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  overflow: hidden;
+}
+.bshow-item-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.bshow-item-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.bshow-item-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.bshow-item-text strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+.bshow-item-text span {
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bshow-item-arrow {
+  color: var(--muted);
+  transition: transform 0.3s, color 0.3s;
+}
+.bshow-item.on .bshow-item-arrow {
+  color: var(--c);
+  transform: translateX(3px);
+}
+
+/* หน้าเว็บจำลองขวา */
+.bshow-stage {
+  min-width: 0;
+  animation: bshow-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes bshow-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+}
+.bshow-frame {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.bshow-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.bshow-bar i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+.bshow-bar-title {
+  margin-left: 10px;
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bshow-screen {
+  flex: 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.bshow-hero {
+  position: relative;
+  aspect-ratio: 16 / 7;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 20%, color-mix(in srgb, var(--c) 40%, transparent), transparent 55%),
+    linear-gradient(150deg, color-mix(in srgb, var(--c) 20%, var(--surface-2)), var(--surface-2));
+}
+.bshow-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.bshow-hero-icon {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 28px;
+  color: var(--c);
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 35%, var(--border));
   animation: brand-float 4.5s ease-in-out infinite;
 }
-.brand-card:nth-child(2) .brand-icon {
-  animation-delay: -1.5s;
-}
-.brand-card:nth-child(3) .brand-icon {
-  animation-delay: -3s;
+.bshow-hero-icon svg {
+  width: 44px;
+  height: 44px;
 }
 @keyframes brand-float {
   50% {
     transform: translateY(-8px);
   }
 }
-/* พื้นหลังของภาพปกเลื่อนช้าๆ */
-.brand-art {
-  background-size: 160% 160%;
-  animation: brand-shift 10s ease-in-out infinite alternate;
+.bshow-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px 30px 30px;
 }
-@keyframes brand-shift {
-  to {
-    background-position: 100% 100%;
+.bshow-kicker {
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+}
+.bshow-copy h3 {
+  margin: 4px 0 0;
+  font-size: 26px;
+}
+.bshow-tagline {
+  margin: 0;
+  font-weight: 500;
+}
+.bshow-desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.bshow-cta {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 10px 18px;
+  border-radius: 99px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 14px;
+  text-decoration: none;
+  transition: transform 0.3s, background-color 0.3s;
+}
+.bshow-cta:hover {
+  transform: translateY(-2px);
+  background: var(--c);
+  color: #fff;
+}
+
+@media (max-width: 860px) {
+  .bshow {
+    grid-template-columns: 1fr;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .brands-showcase::before,
   .accent-text,
-  .brand-icon,
-  .brand-art {
+  .bshow-stage,
+  .bshow-hero-icon {
     animation: none;
   }
 }

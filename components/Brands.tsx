@@ -1,4 +1,6 @@
-import type { CSSProperties } from "react";
+"use client";
+
+import { useState, type CSSProperties } from "react";
 import type { Brand, BrandIcon } from "@/lib/types";
 import { Reveal } from "@/components/Reveal";
 
@@ -12,9 +14,9 @@ const ICON_PATHS: Record<BrandIcon, string[]> = {
   spark: ["M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"],
 };
 
-function BrandIconSvg({ name }: { name: BrandIcon }) {
+function BrandIconSvg({ name, className }: { name: BrandIcon; className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {ICON_PATHS[name].map((d) => (
         <path key={d} d={d} />
       ))}
@@ -22,55 +24,82 @@ function BrandIconSvg({ name }: { name: BrandIcon }) {
   );
 }
 
-// การ์ดธุรกิจในเครือ: พื้นที่ภาพด้านบนใช้รูปหรือไอคอน ด้านล่างเป็นข้อมูลและปุ่มเข้าชม
+// ซ้าย: รายการธุรกิจให้เลือก ขวา: กรอบ browser จำลองหน้าเว็บของธุรกิจที่เลือก
 export function Brands({ items }: { items: Brand[] }) {
+  const [index, setIndex] = useState(0);
+  const active = items[index] ?? items[0];
+  if (!active) return null;
+
+  const style = { "--c": active.color } as CSSProperties;
+
   return (
-    <div className="brands">
-      {items.map((b, i) => {
-        const card = (
-          <>
-            <div className="brand-art">
-              {b.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={b.image} alt="" loading="lazy" />
-              ) : (
-                <div className="brand-icon">
+    <div className="bshow">
+      <div className="bshow-list" role="tablist" aria-label="ธุรกิจในเครือ">
+        {items.map((b, i) => (
+          <Reveal key={b.id} delay={i * 80}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={i === index}
+              className={`bshow-item ${i === index ? "on" : ""}`}
+              style={{ "--c": b.color } as CSSProperties}
+              onClick={() => setIndex(i)}
+              onMouseEnter={() => setIndex(i)}
+              onFocus={() => setIndex(i)}
+            >
+              <span className="bshow-item-icon">
+                {b.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={b.image} alt="" />
+                ) : (
                   <BrandIconSvg name={b.icon} />
+                )}
+              </span>
+              <span className="bshow-item-text">
+                <strong>{b.name}</strong>
+                <span>{b.tagline}</span>
+              </span>
+              <span className="bshow-item-arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+          </Reveal>
+        ))}
+      </div>
+
+      <div className="bshow-stage" style={style} key={active.id}>
+        <div className="bshow-frame">
+          <div className="bshow-bar">
+            <i />
+            <i />
+            <i />
+            <span className="bshow-bar-title">{active.name}</span>
+          </div>
+          <div className="bshow-screen">
+            <div className="bshow-hero">
+              {active.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={active.image} alt={active.name} />
+              ) : (
+                <div className="bshow-hero-icon">
+                  <BrandIconSvg name={active.icon} />
                 </div>
               )}
             </div>
-            <div className="brand-body">
-              <span className="brand-kicker">ในเครือ DevEveryday</span>
-              <h3>{b.name}</h3>
-              <p className="brand-tagline">{b.tagline}</p>
-              <p className="brand-desc">{b.description}</p>
-              {b.url && (
-                <span className="brand-go">
-                  เข้าชมเว็บไซต์
-                  <span className="brand-arrow" aria-hidden="true">
-                    ↗
-                  </span>
-                </span>
+            <div className="bshow-copy">
+              <span className="bshow-kicker">ในเครือ DevEveryday</span>
+              <h3>{active.name}</h3>
+              <p className="bshow-tagline">{active.tagline}</p>
+              <p className="bshow-desc">{active.description}</p>
+              {active.url && (
+                <a href={active.url} target="_blank" rel="noopener noreferrer" className="bshow-cta">
+                  เข้าชมเว็บไซต์ <span aria-hidden="true">↗</span>
+                </a>
               )}
             </div>
-          </>
-        );
-
-        const style = { "--c": b.color } as CSSProperties;
-        return (
-          <Reveal key={b.id} delay={i * 90}>
-            {b.url ? (
-              <a href={b.url} target="_blank" rel="noopener noreferrer" className="brand-card" style={style}>
-                {card}
-              </a>
-            ) : (
-              <div className="brand-card" style={style}>
-                {card}
-              </div>
-            )}
-          </Reveal>
-        );
-      })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
