@@ -93,6 +93,21 @@ export default function Home() {
           </div>
         </div>
 
+        {c.brands.length > 0 && (
+          <section id="brands" className="section brands-showcase">
+            <div className="container">
+              <Reveal>
+                <span className="eyebrow">ในเครือ DevEveryday</span>
+                <h2 className="section-title">
+                  ไม่ใช่แค่งานรับทำ <span className="accent-text">เรามีธุรกิจของตัวเองด้วย</span>
+                </h2>
+                <p className="lead">ทีมเดียวกันดูแลธุรกิจหลายประเภท กดเข้าไปดูเว็บไซต์ของแต่ละธุรกิจได้เลย</p>
+              </Reveal>
+              <Brands items={c.brands} />
+            </div>
+          </section>
+        )}
+
         <section id="services" className="section">
           <div className="container">
             <Reveal>
@@ -117,18 +132,6 @@ export default function Home() {
           </section>
         )}
 
-        {c.brands.length > 0 && (
-          <section id="brands" className="section" style={{ paddingTop: 0 }}>
-            <div className="container">
-              <Reveal>
-                <span className="eyebrow">ในเครือ</span>
-                <h2 className="section-title">ธุรกิจอื่นภายใต้ DevEveryday</h2>
-                <p className="lead">ทีมเดียวกันยังดูแลธุรกิจของตัวเองด้วย กดเข้าไปดูเว็บไซต์ของแต่ละธุรกิจได้เลย</p>
-              </Reveal>
-              <Brands items={c.brands} />
-            </div>
-          </section>
-        )}
 
         <section id="process" className="section" style={{ paddingTop: 0 }}>
           <div className="container">

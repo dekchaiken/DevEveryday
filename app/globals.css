@@ -895,6 +895,94 @@ a.brand-card:hover .brand-arrow {
   }
 }
 
+/* ============ brands showcase: ลูกเล่นเพิ่มเติม ============ */
+.brands-showcase {
+  position: relative;
+  overflow: hidden;
+}
+.brands-showcase::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow), transparent 65%);
+  filter: blur(40px);
+  opacity: 0.6;
+  pointer-events: none;
+  animation: brand-drift 14s ease-in-out infinite alternate;
+}
+@keyframes brand-drift {
+  to {
+    transform: translate(-80px, 60px) scale(1.12);
+  }
+}
+.accent-text {
+  background: linear-gradient(100deg, var(--accent), #7928ca, #17c964, var(--accent));
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: brand-gradient 6s linear infinite;
+}
+@keyframes brand-gradient {
+  to {
+    background-position: 260% 0;
+  }
+}
+.brand-card {
+  isolation: isolate;
+}
+/* แสงวิ่งผ่านการ์ดตอนเอาเมาส์ชี้ */
+.brand-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.18) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+  z-index: 2;
+}
+a.brand-card:hover::after {
+  transform: translateX(120%);
+}
+/* ไอคอนลอยขึ้นลงเบาๆ คนละจังหวะกันในแต่ละการ์ด */
+.brand-icon {
+  animation: brand-float 4.5s ease-in-out infinite;
+}
+.brand-card:nth-child(2) .brand-icon {
+  animation-delay: -1.5s;
+}
+.brand-card:nth-child(3) .brand-icon {
+  animation-delay: -3s;
+}
+@keyframes brand-float {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+/* พื้นหลังของภาพปกเลื่อนช้าๆ */
+.brand-art {
+  background-size: 160% 160%;
+  animation: brand-shift 10s ease-in-out infinite alternate;
+}
+@keyframes brand-shift {
+  to {
+    background-position: 100% 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brands-showcase::before,
+  .accent-text,
+  .brand-icon,
+  .brand-art {
+    animation: none;
+  }
+}
+
 /* ============ services: การ์ดที่กดได้ + modal ผลงาน ============ */
 .service-link {
   cursor: pointer;
