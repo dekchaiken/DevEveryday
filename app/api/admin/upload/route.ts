@@ -4,7 +4,7 @@ import { uploadImage } from "@/lib/github";
 
 export const runtime = "nodejs";
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+const MAX_BYTES = 4 * 1024 * 1024; // 4 MB (รูปที่ตัดพื้นหลังแล้วเป็น PNG จึงใหญ่กว่า)
 
 // ตรวจชนิดไฟล์จากลายเซ็นในไบต์แรก ไม่เชื่อแค่ชื่อไฟล์หรือ content-type ที่ส่งมา
 function detect(bytes: Buffer): "png" | "jpg" | "webp" | null {
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "ไม่พบไฟล์ที่อัปโหลด" }, { status: 400 });
   }
   if (!(file instanceof File)) return NextResponse.json({ error: "ไม่พบไฟล์ที่อัปโหลด" }, { status: 400 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: "ไฟล์ใหญ่เกิน 2 MB" }, { status: 400 });
+  if (file.size > MAX_BYTES) return NextResponse.json({ error: "ไฟล์ใหญ่เกิน 4 MB" }, { status: 400 });
 
   const bytes = Buffer.from(await file.arrayBuffer());
   const ext = detect(bytes);

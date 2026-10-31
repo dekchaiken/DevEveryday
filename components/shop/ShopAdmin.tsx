@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import type { Condition, Option, Product, Shop, Variant } from "@/lib/shop";
+import { processProductImage, type CheckResult, type Processed } from "@/lib/imaging";
+import { HangingGarment } from "@/components/shop/HangingGarment";
 
 const uid = (p: string) => `${p}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
@@ -257,7 +259,7 @@ function ProductList({ data, setProducts }: { data: Shop; setProducts: (next: Pr
                     <input className="input" value={p.color} onChange={(e) => patch(i, { color: e.target.value })} />
                   </div>
                 </Field>
-                <ImageUpload value={p.image} onChange={(image) => patch(i, { image })} />
+                <ImageUpload value={p.image} onChange={(image) => patch(i, { image })} onProcessed={(r) => patch(i, { hook: r.hook })} />
               </div>
 
               <div className="grid-2" style={{ alignItems: "start" }}>
@@ -266,6 +268,14 @@ function ProductList({ data, setProducts }: { data: Shop; setProducts: (next: Pr
               </div>
 
               <ViewsUpload views={p.views ?? []} onChange={(views) => patch(i, { views })} />
+
+              <div className="admin-preview">
+                <span className="admin-hint">ตัวอย่างบนราว (อัปเดตทันทีตามที่แก้)</span>
+                <div className="admin-preview-stage">
+                  <div className="admin-preview-rail" />
+                  <HangingGarment product={p} shift={0} />
+                </div>
+              </div>
             </div>
           </details>
         );
@@ -359,27 +369,35 @@ function VariantEditor({ product, sizes, onChange }: { product: Product; sizes: 
 function ImageUpload({
   value,
   onChange,
-  label = "รูปสินค้า (PNG, JPG, WebP ไม่เกิน 2 MB)",
-  hint = "ควรเป็นรูปที่ตัดพื้นหลังแล้ว (PNG) ถ้าไม่ใส่ระบบจะวาดเสื้อจากสีให้",
+  onProcessed,
+  label = "รูปสินค้า (PNG, JPG, WebP)",
+  hint = "ระบบตัดพื้นหลังให้อัตโนมัติ ถ้าไม่ใส่จะวาดเสื้อจากสีให้",
 }: {
   value: string;
   onChange: (v: string) => void;
+  onProcessed?: (p: Processed) => void;
   label?: string;
   hint?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [report, setReport] = useState<CheckResult | null>(null);
 
   async function upload(file: File) {
     setBusy(true);
     setError("");
+    setReport(null);
     try {
+      const processed = await processProductImage(file);
+      setReport(processed.report);
+      if (processed.report.errors.length) throw new Error("รูปนี้ยังใช้ไม่ได้ ดูคำแนะนำด้านล่าง");
       const body = new FormData();
-      body.append("file", file);
+      body.append("file", new File([processed.blob], "product.png", { type: "image/png" }));
       const res = await fetch("/api/admin/upload", { method: "POST", body });
       const json = (await res.json().catch(() => ({}))) as { path?: string; error?: string };
       if (!res.ok || !json.path) throw new Error(json.error || `อัปโหลดไม่สำเร็จ (${res.status})`);
       onChange(json.path);
+      onProcessed?.(processed);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -406,8 +424,25 @@ function ImageUpload({
         )}
         {busy && <span className="admin-hint">กำลังอัปโหลด...</span>}
       </div>
+      {report && <ReportList report={report} />}
       {error && <span className="admin-hint" style={{ color: "#e5484d" }}>{error}</span>}
     </Field>
+  );
+}
+
+function ReportList({ report }: { report: CheckResult }) {
+  if (!report.errors.length && !report.warnings.length) {
+    return <span className="admin-hint" style={{ color: "#17c964" }}>รูปผ่านการตรวจแล้ว</span>;
+  }
+  return (
+    <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 4, fontSize: 13 }}>
+      {report.errors.map((e) => (
+        <li key={e} style={{ color: "#e5484d" }}>{e}</li>
+      ))}
+      {report.warnings.map((w) => (
+        <li key={w} style={{ color: "#f5a524" }}>{w}</li>
+      ))}
+    </ul>
   );
 }
 

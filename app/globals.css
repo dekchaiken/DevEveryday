@@ -2998,3 +2998,31 @@ textarea.input {
     animation: none;
   }
 }
+
+/* ============ shop admin: ตัวอย่างบนราวแบบสด ============ */
+.admin-preview {
+  display: grid;
+  gap: 8px;
+}
+.admin-preview-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding: 18px 0 8px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.admin-preview-rail {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 22px;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #9a9aa3, #d7d7de, #9a9aa3);
+}
+.admin-preview-stage .hg {
+  margin-top: 18px;
+}
