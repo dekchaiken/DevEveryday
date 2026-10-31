@@ -5,6 +5,7 @@ import { PixelOffice } from "@/components/PixelOffice";
 import { Magnetic } from "@/components/Magnetic";
 import { Nav } from "@/components/Nav";
 import { Projects } from "@/components/Projects";
+import { ServicesGrid } from "@/components/ServicesGrid";
 import { Reveal } from "@/components/Reveal";
 import { Team } from "@/components/Team";
 import { Tilt } from "@/components/Tilt";
@@ -98,18 +99,7 @@ export default function Home() {
               <h2 className="section-title">รับทำอะไรบ้าง</h2>
               <p className="lead">เลือกเฉพาะส่วนที่ต้องการ หรือให้ทีมวางแผนทั้งโปรเจกต์ตั้งแต่ต้นจนจบ</p>
             </Reveal>
-            <div className="grid-3">
-              {c.services.map((s, i) => (
-                <Reveal key={s.id} delay={i * 80}>
-                  <Tilt>
-                    <span className="card-index">{String(i + 1).padStart(2, "0")}</span>
-                    <h3>{s.title}</h3>
-                    <p>{s.description}</p>
-                    <div className="card-eta">{s.eta}</div>
-                  </Tilt>
-                </Reveal>
-              ))}
-            </div>
+            <ServicesGrid services={c.services} projects={c.projects} />
           </div>
         </section>
 

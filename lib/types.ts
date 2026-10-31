@@ -61,6 +61,9 @@ export type Project = {
   image: string; // "/uploads/..." จากหน้า admin หรือว่างไว้ให้ระบบวาดพรีวิวให้
   color: string; // #rrggbb ใช้เป็นสีหลักของ mockup
   featured: boolean; // การ์ดใหญ่ 2 คอลัมน์
+  serviceId: string; // id ของบริการที่ผลงานนี้เกี่ยวข้อง (ว่างได้)
+  demoUrl: string; // ลิงก์ demo ที่ deploy แยกไว้ (ว่างได้) จะฝังใน iframe ตอนกดดู
+  frame: "browser" | "phone"; // กรอบที่ใช้แสดง demo
 };
 
 export type Content = {

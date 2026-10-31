@@ -62,6 +62,9 @@ function build(input: unknown): Content {
       const image = str(o.image, "รูปผลงาน", 200);
       // รูปต้องมาจากที่อัปโหลดผ่านหน้า admin เท่านั้น กันการใส่ path แปลกๆ
       if (image && !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(image)) throw new ValidationError("รูปผลงานไม่ถูกต้อง");
+      const demoUrl = str(o.demoUrl, "ลิงก์ demo", 300);
+      if (demoUrl && !/^https:\/\//.test(demoUrl)) throw new ValidationError("ลิงก์ demo ต้องขึ้นต้นด้วย https://");
+      const frame = o.frame === "phone" ? "phone" : "browser";
       return {
         id: str(o.id, "id ผลงาน", 40, false),
         title: str(o.title, "ชื่อผลงาน", LIMITS.short, false),
@@ -73,6 +76,9 @@ function build(input: unknown): Content {
         image,
         color,
         featured: o.featured === true,
+        serviceId: str(o.serviceId, "บริการที่เกี่ยวข้อง", 40),
+        demoUrl,
+        frame,
       };
     }),
     "ผลงาน",

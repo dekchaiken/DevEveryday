@@ -41,7 +41,7 @@ export function Projects({ items }: { items: Project[] }) {
 }
 
 // กรอบ browser พร้อมรูปจริง ถ้ายังไม่มีรูปจะวาดโครงหน้าเว็บจากสีของผลงานแทน
-function ProjectMock({ project: p }: { project: Project }) {
+export function ProjectMock({ project: p }: { project: Project }) {
   const address = p.url ? p.url.replace(/^https?:\/\//, "") : p.category;
   return (
     <div className="mock" style={{ "--c": p.color } as CSSProperties}>

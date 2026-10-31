@@ -756,6 +756,242 @@ html.is-loading {
   }
 }
 
+/* ============ services: การ์ดที่กดได้ + modal ผลงาน ============ */
+.service-link {
+  cursor: pointer;
+}
+.service-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.card-more {
+  margin-top: 12px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  color: var(--text);
+}
+.service-link:hover .card-more {
+  color: var(--accent);
+}
+
+.svc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: svc-fade 0.25s ease both;
+}
+.svc-modal {
+  width: min(1320px, 100%);
+  max-height: min(92vh, 1000px);
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  animation: svc-pop 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.svc-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.svc-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+.svc-head .spacer {
+  flex: 1;
+}
+.svc-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* รายการผลงานในหมวด */
+.svc-list {
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.svc-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  animation: svc-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transition: border-color 0.25s, transform 0.25s;
+}
+.svc-item:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-3px);
+}
+.svc-item .mock {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.svc-item-body {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px 16px;
+}
+.svc-item-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* หน้า detail: ข้อมูลอยู่ซ้าย demo ค่อยๆ ขยายจากซ้ายไปขวา */
+.svc-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+  gap: 28px;
+  padding: 28px;
+  align-items: start;
+}
+.svc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: svc-info-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.svc-info h3 {
+  font-size: 28px;
+  line-height: 1.25;
+  margin: 6px 0 0;
+}
+.svc-info p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.svc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+}
+.seg button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 99px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.seg button.on {
+  background: var(--text);
+  color: var(--bg);
+}
+.svc-stage {
+  min-width: 0;
+  animation: svc-reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.svc-stage > .mock {
+  margin: 0;
+}
+.svc-stage iframe {
+  display: block;
+  width: 100%;
+  height: min(72vh, 780px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.svc-stage[data-frame="phone"] iframe {
+  width: min(100%, 400px);
+  height: min(80vh, 780px);
+  margin: 0 auto;
+  border-width: 10px;
+  border-color: var(--text);
+  border-radius: 36px;
+}
+
+@keyframes svc-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes svc-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+@keyframes svc-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes svc-info-in {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+@keyframes svc-reveal {
+  from {
+    clip-path: inset(0 100% 0 0 round 14px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 14px);
+  }
+}
+
+@media (max-width: 760px) {
+  .svc-detail {
+    grid-template-columns: 1fr;
+  }
+  .svc-list {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-overlay,
+  .svc-modal,
+  .svc-item,
+  .svc-info,
+  .svc-stage {
+    animation: none;
+  }
+}
+
 /* ============ services ============ */
 .grid-3 {
   display: grid;

@@ -1,17 +1,18 @@
 "use client";
 
-import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useRef, type CSSProperties, type HTMLAttributes, type ReactNode } from "react";
 
 // การ์ดที่เอียงตามเมาส์และมี spotlight ตามตำแหน่งเคอร์เซอร์
 export function Tilt({
   children,
   className = "",
   style,
+  ...rest
 }: {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
-}) {
+} & Omit<HTMLAttributes<HTMLDivElement>, "className" | "style" | "children">) {
   const ref = useRef<HTMLDivElement>(null);
 
   function onMove(e: React.PointerEvent<HTMLDivElement>) {
@@ -34,7 +35,7 @@ export function Tilt({
   }
 
   return (
-    <div ref={ref} className={`card ${className}`} style={style} onPointerMove={onMove} onPointerLeave={onLeave}>
+    <div ref={ref} className={`card ${className}`} style={style} onPointerMove={onMove} onPointerLeave={onLeave} {...rest}>
       {children}
     </div>
   );

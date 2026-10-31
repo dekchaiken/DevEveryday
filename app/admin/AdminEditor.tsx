@@ -293,6 +293,27 @@ function ProjectsPanel({ data, edit }: { data: Content; edit: Edit }) {
               </label>
             </Field>
           </div>
+          <div className="grid-2">
+            <Field label="แสดงในหมวดบริการ" hint="ผลงานจะขึ้นในป๊อปอัปของบริการที่เลือก">
+              <select className="input" value={p.serviceId} onChange={(e) => setList(replaceAt(list, i, { ...p, serviceId: e.target.value }))}>
+                <option value="">ไม่ผูกกับบริการ</option>
+                {data.services.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.title}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="รูปแบบการแสดง demo">
+              <select className="input" value={p.frame} onChange={(e) => setList(replaceAt(list, i, { ...p, frame: e.target.value === "phone" ? "phone" : "browser" }))}>
+                <option value="browser">กรอบ browser (เว็บ/แดชบอร์ด)</option>
+                <option value="phone">กรอบมือถือ (แอป)</option>
+              </select>
+            </Field>
+          </div>
+          <Field label="ลิงก์ live demo (https)" hint="ว่างได้ ต้องเป็นเว็บที่อนุญาตให้ฝังได้ (ตั้ง frame-ancestors) ถ้าไม่ได้จะใช้รูปปกแทน">
+            <Text type="url" value={p.demoUrl} onChange={(v) => setList(replaceAt(list, i, { ...p, demoUrl: v }))} />
+          </Field>
           <ImageField value={p.image} onChange={(v) => setList(replaceAt(list, i, { ...p, image: v }))} />
         </div>
       ))}
@@ -302,7 +323,7 @@ function ProjectsPanel({ data, edit }: { data: Content; edit: Edit }) {
         onClick={() =>
           setList([
             ...list,
-            { id: uid("w"), title: "ผลงานใหม่", client: "", category: "", description: "", tags: [], url: "", image: "", color: "#0070f3", featured: false },
+            { id: uid("w"), title: "ผลงานใหม่", client: "", category: "", description: "", tags: [], url: "", image: "", color: "#0070f3", featured: false, serviceId: "", demoUrl: "", frame: "browser" },
           ])
         }
       />
