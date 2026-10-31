@@ -1077,8 +1077,8 @@ html.is-loading {
   animation: svc-fade 0.25s ease both;
 }
 .svc-modal {
-  width: min(1320px, 100%);
-  max-height: min(92vh, 1000px);
+  width: min(1520px, 100%);
+  max-height: min(94vh, 1100px);
   overflow: auto;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1160,7 +1160,7 @@ html.is-loading {
 /* หน้า detail: ข้อมูลอยู่ซ้าย demo ค่อยๆ ขยายจากซ้ายไปขวา */
 .svc-detail {
   display: grid;
-  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 27%) minmax(0, 1fr);
   gap: 28px;
   padding: 28px;
   align-items: start;
@@ -1218,14 +1218,14 @@ html.is-loading {
 .svc-stage iframe {
   display: block;
   width: 100%;
-  height: min(72vh, 780px);
+  height: min(84vh, 960px);
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface-2);
 }
 .svc-stage[data-frame="phone"] iframe {
-  width: min(100%, 400px);
-  height: min(80vh, 780px);
+  width: min(100%, 460px);
+  height: min(88vh, 980px);
   margin: 0 auto;
   border-width: 10px;
   border-color: var(--text);
