@@ -84,6 +84,14 @@ export function AdminEditor({ initial }: { initial: Content }) {
     router.refresh();
   }
 
+  const counts: Partial<Record<TabKey, number>> = {
+    services: data.services.length,
+    projects: data.projects.length,
+    process: data.process.length,
+    plans: data.plans.length,
+    team: data.team.length,
+  };
+
   return (
     <div className="admin">
       <div className="admin-top">
@@ -91,9 +99,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
           <strong className="brand" style={{ fontSize: 15 }}>
             <span className="brand-dot" /> Admin
           </strong>
-          <span className="mono" style={{ fontSize: 12, color: "var(--muted)" }}>
-            {dirty ? "● ยังไม่บันทึก" : "ทุกอย่างบันทึกแล้ว"}
-          </span>
+          <span className={`admin-status ${dirty ? "dirty" : ""}`}>{dirty ? "มีการแก้ไขที่ยังไม่บันทึก" : "บันทึกล่าสุดแล้ว"}</span>
           <div className="spacer" />
           <Link href="/" target="_blank" className="btn btn-ghost btn-sm">
             ดูเว็บ ↗
@@ -110,15 +116,16 @@ export function AdminEditor({ initial }: { initial: Content }) {
       <div className="admin-body">
         <nav className="admin-tabs" aria-label="หมวดข้อมูล">
           {TABS.map((t) => (
-            <button key={t.key} type="button" className={`admin-tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}>
-              {t.label}
+            <button key={t.key} type="button" className={`admin-tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)} aria-current={tab === t.key ? "page" : undefined}>
+              <span>{t.label}</span>
+              {counts[t.key] !== undefined && <span className="admin-tab-count">{counts[t.key]}</span>}
             </button>
           ))}
         </nav>
 
         <div className="admin-panel">
           {tab === "site" && <SitePanel data={data} edit={edit} />}
-          {tab === "services" && <ServicesPanel data={data} edit={edit} />}
+          {tab === "services" && <ServicesPanel data={data} edit={edit} goTo={setTab} />}
           {tab === "projects" && <ProjectsPanel data={data} edit={edit} />}
           {tab === "process" && <ProcessPanel data={data} edit={edit} />}
           {tab === "plans" && <PlansPanel data={data} edit={edit} />}
@@ -231,25 +238,83 @@ function SitePanel({ data, edit }: { data: Content; edit: Edit }) {
   );
 }
 
-function ServicesPanel({ data, edit }: { data: Content; edit: Edit }) {
+// รายการที่พับเก็บได้ หัวแสดงชื่อและป้ายสั้นๆ ส่วนปุ่มจัดการอยู่ในเนื้อหาด้านใน
+function Item({ title, tag, children, open }: { title: string; tag?: ReactNode; children: ReactNode; open?: boolean }) {
+  return (
+    <details className="admin-item" open={open}>
+      <summary>
+        <span className="admin-item-title">{title || "(ยังไม่ตั้งชื่อ)"}</span>
+        {tag && <span className="admin-item-tag">{tag}</span>}
+      </summary>
+      <div className="admin-item-body">{children}</div>
+    </details>
+  );
+}
+
+function ServicesPanel({ data, edit, goTo }: { data: Content; edit: Edit; goTo: (t: TabKey) => void }) {
   const list = data.services;
   const setList = (next: Service[]) => edit((d) => ({ ...d, services: next }));
+  const linkedOf = (id: string) => data.projects.filter((p) => p.serviceId === id);
+
+  // เพิ่มผลงานใหม่ที่ผูกกับบริการนี้ไว้ล่วงหน้า แล้วพาไปแท็บผลงานเพื่อกรอกรายละเอียด
+  function addProjectFor(serviceId: string) {
+    edit((d) => ({
+      ...d,
+      projects: [
+        ...d.projects,
+        { id: uid("w"), title: "ผลงานใหม่", client: "", category: "", description: "", tags: [], url: "", image: "", color: "#0070f3", featured: false, serviceId, demoUrl: "", frame: "browser" },
+      ],
+    }));
+    goTo("projects");
+  }
+
   return (
     <div className="admin-card">
-      <h3>บริการ ({list.length}/12)</h3>
-      {list.map((s, i) => (
-        <div className="admin-item" key={s.id}>
-          <div className="admin-item-head">
-            #{i + 1}
-            <ItemControls index={i} count={list.length} onUp={() => setList(moveItem(list, i, -1))} onDown={() => setList(moveItem(list, i, 1))} onRemove={() => setList(removeAt(list, i))} />
-          </div>
-          <div className="grid-2">
-            <Field label="ชื่อบริการ"><Text value={s.title} onChange={(v) => setList(replaceAt(list, i, { ...s, title: v }))} /></Field>
-            <Field label="ระยะเวลา"><Text value={s.eta} onChange={(v) => setList(replaceAt(list, i, { ...s, eta: v }))} /></Field>
-          </div>
-          <Field label="รายละเอียด"><Text multiline value={s.description} onChange={(v) => setList(replaceAt(list, i, { ...s, description: v }))} /></Field>
-        </div>
-      ))}
+      <div className="admin-head">
+        <h2>บริการ</h2>
+        <span className="admin-hint">{list.length}/12 รายการ · ผลงานที่ผูกไว้จะขึ้นในป๊อปอัปของแต่ละบริการ</span>
+      </div>
+      {list.map((s, i) => {
+        const linked = linkedOf(s.id);
+        return (
+          <Item key={s.id} title={s.title} tag={`ผลงาน ${linked.length}`}>
+            <div className="admin-item-head">
+              #{i + 1}
+              <ItemControls index={i} count={list.length} onUp={() => setList(moveItem(list, i, -1))} onDown={() => setList(moveItem(list, i, 1))} onRemove={() => setList(removeAt(list, i))} />
+            </div>
+            <div className="grid-2">
+              <Field label="ชื่อบริการ"><Text value={s.title} onChange={(v) => setList(replaceAt(list, i, { ...s, title: v }))} /></Field>
+              <Field label="ระยะเวลา"><Text value={s.eta} onChange={(v) => setList(replaceAt(list, i, { ...s, eta: v }))} /></Field>
+            </div>
+            <Field label="รายละเอียด"><Text multiline value={s.description} onChange={(v) => setList(replaceAt(list, i, { ...s, description: v }))} /></Field>
+
+            <div className="admin-linked-box" style={{ display: "grid", gap: 8 }}>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>ผลงานในบริการนี้</span>
+              {linked.length > 0 ? (
+                <div className="admin-linked">
+                  {linked.map((p) => (
+                    <span key={p.id} className="project-tag">
+                      {p.title}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className="admin-hint">ยังไม่มีผลงานผูกกับบริการนี้ ป๊อปอัปจะไม่ถูกเปิดจนกว่าจะมีผลงาน</span>
+              )}
+              <div className="row">
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => addProjectFor(s.id)}>
+                  + เพิ่มผลงานในบริการนี้
+                </button>
+                {linked.length > 0 && (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => goTo("projects")}>
+                    จัดการผลงาน →
+                  </button>
+                )}
+              </div>
+            </div>
+          </Item>
+        );
+      })}
       <AddButton disabled={list.length >= 12} label="เพิ่มบริการ" onClick={() => setList([...list, { id: uid("s"), title: "บริการใหม่", description: "", eta: "" }])} />
     </div>
   );
@@ -258,6 +323,8 @@ function ServicesPanel({ data, edit }: { data: Content; edit: Edit }) {
 function ProjectsPanel({ data, edit }: { data: Content; edit: Edit }) {
   const list = data.projects;
   const setList = (next: Project[]) => edit((d) => ({ ...d, projects: next }));
+  // รายการที่เพิ่งกดเพิ่มจะเปิดขึ้นมาให้กรอกทันที
+  const [fresh, setFresh] = useState<string | null>(null);
   return (
     <div className="admin-card">
       <h3>ผลงาน ({list.length}/12)</h3>
@@ -265,7 +332,7 @@ function ProjectsPanel({ data, edit }: { data: Content; edit: Edit }) {
         ติ๊ก “งานเด่น” เพื่อให้การ์ดนั้นกินพื้นที่ 2 คอลัมน์ ถ้าไม่ใส่รูป ระบบจะวาดพรีวิวจากสีของงานให้เอง
       </p>
       {list.map((p, i) => (
-        <div className="admin-item" key={p.id}>
+        <Item key={p.id} title={p.title} open={p.id === fresh} tag={data.services.find((s) => s.id === p.serviceId)?.title ?? "ไม่ผูกกับบริการ"}>
           <div className="admin-item-head">
             ผลงาน {i + 1}
             <ItemControls index={i} count={list.length} onUp={() => setList(moveItem(list, i, -1))} onDown={() => setList(moveItem(list, i, 1))} onRemove={() => setList(removeAt(list, i))} />
@@ -315,17 +382,19 @@ function ProjectsPanel({ data, edit }: { data: Content; edit: Edit }) {
             <Text type="url" value={p.demoUrl} onChange={(v) => setList(replaceAt(list, i, { ...p, demoUrl: v }))} />
           </Field>
           <ImageField value={p.image} onChange={(v) => setList(replaceAt(list, i, { ...p, image: v }))} />
-        </div>
+        </Item>
       ))}
       <AddButton
         disabled={list.length >= 12}
         label="เพิ่มผลงาน"
-        onClick={() =>
+        onClick={() => {
+          const id = uid("w");
+          setFresh(id);
           setList([
             ...list,
-            { id: uid("w"), title: "ผลงานใหม่", client: "", category: "", description: "", tags: [], url: "", image: "", color: "#0070f3", featured: false, serviceId: "", demoUrl: "", frame: "browser" },
-          ])
-        }
+            { id, title: "ผลงานใหม่", client: "", category: "", description: "", tags: [], url: "", image: "", color: "#0070f3", featured: false, serviceId: "", demoUrl: "", frame: "browser" },
+          ]);
+        }}
       />
     </div>
   );

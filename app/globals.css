@@ -1536,28 +1536,37 @@ textarea.input {
   flex: 1;
 }
 .admin-body {
-  max-width: 1120px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px 120px;
+  padding: 28px 24px 120px;
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: 32px;
   align-items: start;
 }
 .admin-tabs {
   position: sticky;
-  top: 100px;
+  top: 96px;
   display: grid;
   gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
 }
 .admin-tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   text-align: left;
-  padding: 10px 14px;
+  padding: 10px 12px;
   border-radius: 10px;
   border: 0;
   background: transparent;
   cursor: pointer;
   color: var(--muted);
+  font: inherit;
   font-size: 14px;
   transition: background-color 0.2s, color 0.2s;
 }
@@ -1566,14 +1575,130 @@ textarea.input {
   color: var(--text);
 }
 .admin-tab.on {
-  background: var(--surface-2);
-  color: var(--text);
+  background: var(--text);
+  color: var(--bg);
   font-weight: 500;
+}
+.admin-tab-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--font-code);
+  font-size: 11px;
+  text-align: center;
+}
+.admin-tab.on .admin-tab-count {
+  background: color-mix(in srgb, var(--bg) 20%, transparent);
+  color: var(--bg);
 }
 .admin-panel {
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+.admin-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.admin-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #17c964;
+}
+.admin-status.dirty {
+  color: var(--text);
+}
+.admin-status.dirty::before {
+  background: #f5a524;
+}
+.admin-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.admin-head h2 {
+  font-size: 22px;
+  margin: 0;
+}
+.admin-head .admin-hint {
+  margin-left: auto;
+}
+
+/* รายการที่พับเก็บได้: หัวรายการแสดงชื่อ คลิกเพื่อเปิดแก้ไข */
+.admin-item {
+  padding: 0;
+  overflow: hidden;
+}
+.admin-item > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 15px;
+  font-weight: 500;
+}
+.admin-item > summary::-webkit-details-marker {
+  display: none;
+}
+.admin-item > summary::after {
+  content: "▸";
+  margin-left: auto;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.admin-item[open] > summary::after {
+  transform: rotate(90deg);
+}
+.admin-item > summary:hover {
+  background: var(--surface-2);
+}
+.admin-item-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-item-tag {
+  font-family: var(--font-code);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.admin-item-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.admin-linked {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.admin-linked .project-tag {
+  color: var(--text);
+}
+.admin-panel-h {
+  display: grid;
+  gap: 4px;
 }
 .admin-card {
   background: var(--surface);
@@ -1654,12 +1779,26 @@ textarea.input {
   gap: 18px;
 }
 @media (max-width: 760px) {
+  .admin-top-inner {
+    padding: 12px 16px;
+  }
   .admin-body {
     grid-template-columns: 1fr;
+    padding: 16px 16px 120px;
+    gap: 16px;
   }
+  /* บนมือถือ เมนูเป็นแถบเลื่อนแนวนอนแทนกล่องซ้อนกัน */
   .admin-tabs {
-    position: static;
-    grid-template-columns: repeat(3, 1fr);
+    position: sticky;
+    top: 64px;
+    z-index: 30;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .admin-card {
+    padding: 18px;
   }
   .admin-card .grid-2 {
     grid-template-columns: 1fr;
