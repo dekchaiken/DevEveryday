@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { Contact } from "@/components/Contact";
-import { HeroOrb } from "@/components/HeroOrb";
+import { PixelOffice } from "@/components/PixelOffice";
 import { Magnetic } from "@/components/Magnetic";
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
@@ -20,7 +20,6 @@ export default function Home() {
 
       <main id="top">
         <section className="hero">
-          <HeroOrb />
           <div className="hero-grid-bg" aria-hidden />
           <div className="container">
             <span className="badge">
@@ -51,6 +50,8 @@ export default function Home() {
                 </a>
               </Magnetic>
             </div>
+
+            <PixelOffice />
 
             <div className="hero-meta">
               <div>

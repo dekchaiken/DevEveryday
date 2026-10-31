@@ -1177,3 +1177,24 @@ textarea.input {
     transform: none;
   }
 }
+
+/* ============ pixel office (hero) ============ */
+.pixel-stage {
+  width: min(100%, 880px);
+  margin: 48px auto 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  animation: fadeUp 1s 1.2s forwards;
+}
+.pixel-stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 320 / 180;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
