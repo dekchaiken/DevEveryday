@@ -1,11 +1,12 @@
 import type { Content } from "@/lib/types";
 
-// บันทึก content/site.json ลง GitHub ผ่าน Contents API
+// บันทึกไฟล์ลง GitHub ผ่าน Contents API
 // การ commit จะทำให้ Vercel build และ deploy เวอร์ชันใหม่อัตโนมัติ
 const API = "https://api.github.com";
 const FILE_PATH = "content/site.json";
+const UPLOAD_DIR = "public/uploads";
 
-export async function saveContent(content: Content): Promise<void> {
+function config() {
   const token = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPO;
   const branch = process.env.GITHUB_BRANCH || "main";
@@ -17,6 +18,11 @@ export async function saveContent(content: Content): Promise<void> {
     "X-GitHub-Api-Version": "2022-11-28",
     "Content-Type": "application/json",
   };
+  return { headers, repo, branch };
+}
+
+export async function saveContent(content: Content): Promise<void> {
+  const { headers, repo, branch } = config();
   const fileUrl = `${API}/repos/${repo}/contents/${FILE_PATH}`;
 
   const current = await fetch(`${fileUrl}?ref=${encodeURIComponent(branch)}`, {
@@ -38,4 +44,19 @@ export async function saveContent(content: Content): Promise<void> {
     }),
   });
   if (!res.ok) throw new Error(`บันทึกไป GitHub ไม่สำเร็จ (${res.status})`);
+}
+
+// อัปโหลดรูปใหม่เข้า public/uploads แล้วคืน path ที่ใช้ในเว็บได้เลย
+export async function uploadImage(fileName: string, bytes: Buffer): Promise<void> {
+  const { headers, repo, branch } = config();
+  const res = await fetch(`${API}/repos/${repo}/contents/${UPLOAD_DIR}/${fileName}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({
+      message: `upload: ${fileName}`,
+      content: bytes.toString("base64"),
+      branch,
+    }),
+  });
+  if (!res.ok) throw new Error(`อัปโหลดรูปไป GitHub ไม่สำเร็จ (${res.status})`);
 }

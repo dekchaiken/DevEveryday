@@ -602,6 +602,160 @@ html.is-loading {
   color: var(--accent);
 }
 
+/* ============ projects (bento) ============ */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.bento-wide {
+  grid-column: span 2;
+}
+.card.project {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.project-body {
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.project-body h3 {
+  font-size: 19px;
+  margin: 10px 0 8px;
+}
+.project-body p {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0;
+}
+.project-meta {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--accent);
+}
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
+}
+.project-tag {
+  font-family: var(--font-code);
+  font-size: 11px;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--muted);
+}
+.project-link {
+  margin-top: auto;
+  padding-top: 18px;
+  font-family: var(--font-code);
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+}
+.project-link:hover {
+  color: var(--accent);
+}
+
+/* กรอบ browser ของ mockup */
+.mock {
+  --c: var(--accent);
+  margin: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.mock-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.mock-bar i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+.mock-url {
+  margin-left: 8px;
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mock-screen {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.mock-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+.mock-skel {
+  height: 100%;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.sk-hero {
+  height: 44%;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 35%, transparent));
+}
+.sk-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.sk-card {
+  height: 36px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.sk-line {
+  height: 7px;
+  border-radius: 99px;
+  background: var(--border-strong);
+}
+.sk-line.w70 {
+  width: 70%;
+}
+.sk-line.w45 {
+  width: 45%;
+}
+
+@media (max-width: 960px) {
+  .bento {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .bento {
+    grid-template-columns: 1fr;
+  }
+  .bento-wide {
+    grid-column: auto;
+  }
+}
+
 /* ============ services ============ */
 .grid-3 {
   display: grid;

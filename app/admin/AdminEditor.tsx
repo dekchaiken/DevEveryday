@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import type { Content, HistoryItem, Member, Plan, Service, Step } from "@/lib/types";
+import type { Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
 
-type TabKey = "site" | "services" | "process" | "plans" | "team" | "contact";
+type TabKey = "site" | "services" | "projects" | "process" | "plans" | "team" | "contact";
 const TABS: { key: TabKey; label: string }[] = [
   { key: "site", label: "ข้อมูลทั่วไป" },
   { key: "services", label: "บริการ" },
+  { key: "projects", label: "ผลงาน" },
   { key: "process", label: "ขั้นตอน" },
   { key: "plans", label: "แพ็กเกจ" },
   { key: "team", label: "ทีมงาน" },
@@ -118,6 +119,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
         <div className="admin-panel">
           {tab === "site" && <SitePanel data={data} edit={edit} />}
           {tab === "services" && <ServicesPanel data={data} edit={edit} />}
+          {tab === "projects" && <ProjectsPanel data={data} edit={edit} />}
           {tab === "process" && <ProcessPanel data={data} edit={edit} />}
           {tab === "plans" && <PlansPanel data={data} edit={edit} />}
           {tab === "team" && <TeamPanel data={data} edit={edit} />}
@@ -250,6 +252,112 @@ function ServicesPanel({ data, edit }: { data: Content; edit: Edit }) {
       ))}
       <AddButton disabled={list.length >= 12} label="เพิ่มบริการ" onClick={() => setList([...list, { id: uid("s"), title: "บริการใหม่", description: "", eta: "" }])} />
     </div>
+  );
+}
+
+function ProjectsPanel({ data, edit }: { data: Content; edit: Edit }) {
+  const list = data.projects;
+  const setList = (next: Project[]) => edit((d) => ({ ...d, projects: next }));
+  return (
+    <div className="admin-card">
+      <h3>ผลงาน ({list.length}/12)</h3>
+      <p className="admin-hint" style={{ margin: 0 }}>
+        ติ๊ก “งานเด่น” เพื่อให้การ์ดนั้นกินพื้นที่ 2 คอลัมน์ ถ้าไม่ใส่รูป ระบบจะวาดพรีวิวจากสีของงานให้เอง
+      </p>
+      {list.map((p, i) => (
+        <div className="admin-item" key={p.id}>
+          <div className="admin-item-head">
+            ผลงาน {i + 1}
+            <ItemControls index={i} count={list.length} onUp={() => setList(moveItem(list, i, -1))} onDown={() => setList(moveItem(list, i, 1))} onRemove={() => setList(removeAt(list, i))} />
+          </div>
+          <div className="grid-2">
+            <Field label="ชื่อผลงาน"><Text value={p.title} onChange={(v) => setList(replaceAt(list, i, { ...p, title: v }))} /></Field>
+            <Field label="ลูกค้า"><Text value={p.client} onChange={(v) => setList(replaceAt(list, i, { ...p, client: v }))} /></Field>
+            <Field label="หมวดงาน"><Text value={p.category} onChange={(v) => setList(replaceAt(list, i, { ...p, category: v }))} /></Field>
+            <Field label="ลิงก์เว็บไซต์" hint="ว่างได้ ต้องขึ้นต้นด้วย https://"><Text type="url" value={p.url} onChange={(v) => setList(replaceAt(list, i, { ...p, url: v }))} /></Field>
+          </div>
+          <Field label="รายละเอียด"><Text multiline value={p.description} onChange={(v) => setList(replaceAt(list, i, { ...p, description: v }))} /></Field>
+          <Field label="แท็กเทคโนโลยี" hint="คั่นด้วยคอมมา คลิกออกจากช่องเพื่อบันทึก">
+            <ListText value={p.tags} onCommit={(v) => setList(replaceAt(list, i, { ...p, tags: v }))} />
+          </Field>
+          <div className="grid-2">
+            <Field label="สีประจำผลงาน (ใช้กับพรีวิว)">
+              <div className="row">
+                <input type="color" value={p.color} onChange={(e) => setList(replaceAt(list, i, { ...p, color: e.target.value }))} style={{ width: 44, height: 40, border: 0, background: "none", padding: 0 }} aria-label="เลือกสี" />
+                <Text value={p.color} onChange={(v) => setList(replaceAt(list, i, { ...p, color: v }))} />
+              </div>
+            </Field>
+            <Field label="งานเด่น">
+              <label className="row" style={{ fontSize: 14 }}>
+                <input type="checkbox" checked={p.featured} onChange={(e) => setList(replaceAt(list, i, { ...p, featured: e.target.checked }))} /> กินพื้นที่ 2 คอลัมน์
+              </label>
+            </Field>
+          </div>
+          <ImageField value={p.image} onChange={(v) => setList(replaceAt(list, i, { ...p, image: v }))} />
+        </div>
+      ))}
+      <AddButton
+        disabled={list.length >= 12}
+        label="เพิ่มผลงาน"
+        onClick={() =>
+          setList([
+            ...list,
+            { id: uid("w"), title: "ผลงานใหม่", client: "", category: "", description: "", tags: [], url: "", image: "", color: "#0070f3", featured: false },
+          ])
+        }
+      />
+    </div>
+  );
+}
+
+// เลือกรูปจากเครื่อง อัปโหลดขึ้น GitHub ผ่าน API แล้วเก็บ path ที่ได้ไว้ในข้อมูล
+function ImageField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function upload(file: File) {
+    setBusy(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
+      const json = (await res.json().catch(() => ({}))) as { path?: string; error?: string };
+      if (!res.ok || !json.path) throw new Error(json.error || `อัปโหลดไม่สำเร็จ (${res.status})`);
+      onChange(json.path);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Field label="รูปพรีวิว (PNG, JPG หรือ WebP ไม่เกิน 2 MB)" hint="รูปจะขึ้นเว็บหลังกด “บันทึกการเปลี่ยนแปลง” และ Vercel deploy เสร็จ">
+      <div className="row" style={{ alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        {value && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" style={{ width: 96, height: 60, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border)" }} />
+        )}
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          disabled={busy}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void upload(f);
+            e.target.value = "";
+          }}
+        />
+        {value && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange("")}>
+            เอารูปออก
+          </button>
+        )}
+        {busy && <span className="admin-hint">กำลังอัปโหลด...</span>}
+      </div>
+      {error && <span className="admin-hint" style={{ color: "#e5484d" }}>{error}</span>}
+    </Field>
   );
 }
 

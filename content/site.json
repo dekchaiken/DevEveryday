@@ -11,6 +11,23 @@
     "footer": "© DevEveryday. Built with Next.js & three.js."
   },
   "stack": ["Next.js", "React", "TypeScript", "Three.js", "Node.js", "PostgreSQL", "Tailwind", "Docker"],
+  "projects": [
+    {
+      "id": "w1", "title": "ตัวอย่าง: ระบบจองคิวคลินิก", "client": "ชื่อลูกค้า", "category": "Web App",
+      "description": "ข้อมูลตัวอย่าง แก้ไขหรือลบได้จากหน้า admin แทนด้วยผลงานจริงของทีมได้เลย",
+      "tags": ["Next.js", "PostgreSQL", "Node.js"], "url": "", "image": "", "color": "#0070f3", "featured": true
+    },
+    {
+      "id": "w2", "title": "ตัวอย่าง: ร้านค้าออนไลน์เครื่องหอม", "client": "ชื่อลูกค้า", "category": "E-commerce",
+      "description": "ข้อมูลตัวอย่าง ใส่รูป screenshot จริงได้ในหน้า admin",
+      "tags": ["React", "Stripe"], "url": "", "image": "", "color": "#7928ca", "featured": false
+    },
+    {
+      "id": "w3", "title": "ตัวอย่าง: หน้า Landing แบรนด์กาแฟ", "client": "ชื่อลูกค้า", "category": "Landing Page",
+      "description": "ข้อมูลตัวอย่าง มี motion และ 3D เล็กน้อยตามแคมเปญ",
+      "tags": ["Three.js", "GSAP"], "url": "", "image": "", "color": "#17c964", "featured": false
+    }
+  ],
   "services": [
     { "id": "s1", "title": "Landing Page", "description": "หน้าเดียวที่ขายได้ โหลดไว มี motion ตามแคมเปญ", "eta": "3–7 วัน" },
     { "id": "s2", "title": "เว็บไซต์องค์กร", "description": "ผลงาน บริการ ข่าวสาร SEO และระบบจัดการคอนเทนต์", "eta": "2–4 สัปดาห์" },

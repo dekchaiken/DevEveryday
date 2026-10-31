@@ -4,6 +4,7 @@ import { Loader } from "@/components/Loader";
 import { PixelOffice } from "@/components/PixelOffice";
 import { Magnetic } from "@/components/Magnetic";
 import { Nav } from "@/components/Nav";
+import { Projects } from "@/components/Projects";
 import { Reveal } from "@/components/Reveal";
 import { Team } from "@/components/Team";
 import { Tilt } from "@/components/Tilt";
@@ -111,6 +112,19 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {c.projects.length > 0 && (
+          <section id="projects" className="section" style={{ paddingTop: 0 }}>
+            <div className="container">
+              <Reveal>
+                <span className="eyebrow">ผลงาน</span>
+                <h2 className="section-title">งานที่เราเคยทำ</h2>
+                <p className="lead">ตัวอย่างโปรเจกต์ที่ทีมส่งมอบแล้ว ดูรายละเอียดและลิงก์ของแต่ละงานได้ในการ์ด</p>
+              </Reveal>
+              <Projects items={c.projects} />
+            </div>
+          </section>
+        )}
 
         <section id="process" className="section" style={{ paddingTop: 0 }}>
           <div className="container">

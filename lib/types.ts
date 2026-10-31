@@ -50,9 +50,23 @@ export type SiteInfo = {
   footer: string;
 };
 
+export type Project = {
+  id: string;
+  title: string;
+  client: string;
+  category: string;
+  description: string;
+  tags: string[];
+  url: string; // ลิงก์ไปเว็บงาน (ว่างได้)
+  image: string; // "/uploads/..." จากหน้า admin หรือว่างไว้ให้ระบบวาดพรีวิวให้
+  color: string; // #rrggbb ใช้เป็นสีหลักของ mockup
+  featured: boolean; // การ์ดใหญ่ 2 คอลัมน์
+};
+
 export type Content = {
   site: SiteInfo;
   stack: string[];
+  projects: Project[];
   services: Service[];
   plans: Plan[];
   process: Step[];

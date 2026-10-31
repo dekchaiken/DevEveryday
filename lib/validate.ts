@@ -1,8 +1,8 @@
-import type { Content, HistoryItem, Member, Plan, Service, Step } from "@/lib/types";
+import type { Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
 
 type Result = { ok: true; value: Content } | { ok: false; error: string };
 
-const LIMITS = { short: 120, long: 600, services: 12, plans: 4, steps: 6, team: 30, history: 8, skills: 10 };
+const LIMITS = { short: 120, long: 600, services: 12, plans: 4, steps: 6, team: 30, history: 8, skills: 10, projects: 12, tags: 8 };
 
 class ValidationError extends Error {}
 
@@ -51,6 +51,32 @@ function build(input: unknown): Content {
   };
 
   const stack = arr(root.stack, "stack", LIMITS.skills, (x, i) => str(x, `stack #${i + 1}`)).filter(Boolean);
+
+  const projects: Project[] = uniqueIds(
+    arr(root.projects, "ผลงาน", LIMITS.projects, (x, i) => {
+      const o = obj(x, `ผลงาน #${i + 1}`);
+      const color = str(o.color, "สีผลงาน", 7);
+      if (!/^#[0-9a-fA-F]{6}$/.test(color)) throw new ValidationError(`สีผลงาน ${color} ไม่ถูกต้อง (ต้องเป็น #rrggbb)`);
+      const url = str(o.url, "ลิงก์ผลงาน", 300);
+      if (url && !/^https?:\/\//.test(url)) throw new ValidationError("ลิงก์ผลงานต้องขึ้นต้นด้วย http:// หรือ https://");
+      const image = str(o.image, "รูปผลงาน", 200);
+      // รูปต้องมาจากที่อัปโหลดผ่านหน้า admin เท่านั้น กันการใส่ path แปลกๆ
+      if (image && !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(image)) throw new ValidationError("รูปผลงานไม่ถูกต้อง");
+      return {
+        id: str(o.id, "id ผลงาน", 40, false),
+        title: str(o.title, "ชื่อผลงาน", LIMITS.short, false),
+        client: str(o.client, "ชื่อลูกค้า"),
+        category: str(o.category, "หมวดงาน"),
+        description: str(o.description, "รายละเอียดผลงาน", LIMITS.long),
+        tags: arr(o.tags, "แท็ก", LIMITS.tags, (t, j) => str(t, `แท็ก ${j + 1}`)).filter(Boolean),
+        url,
+        image,
+        color,
+        featured: o.featured === true,
+      };
+    }),
+    "ผลงาน",
+  );
 
   const services: Service[] = uniqueIds(
     arr(root.services, "บริการ", LIMITS.services, (x, i) => {
@@ -126,6 +152,7 @@ function build(input: unknown): Content {
   return {
     site,
     stack,
+    projects,
     services,
     plans,
     process,
