@@ -20,6 +20,7 @@ export type Product = {
   price: number; // บาท จำนวนเต็ม
   description: string;
   image: string; // "/uploads/..." ว่างได้ ถ้าว่างจะวาดเสื้อจากสีให้เอง
+  views: string[]; // รูปหลายมุมตามลำดับรอบตัว ใช้หมุน 360° (ว่างได้)
   color: string; // #rrggbb
   variants: Variant[];
 };
@@ -34,7 +35,7 @@ export type Shop = {
   products: Product[];
 };
 
-export const SHOP_LIMITS = { sizes: 12, options: 20, products: 200, variants: 12 };
+export const SHOP_LIMITS = { sizes: 12, options: 20, products: 200, variants: 12, views: 36 };
 
 export function getShop(): Shop {
   return raw as Shop;

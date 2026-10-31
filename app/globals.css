@@ -2634,3 +2634,304 @@ textarea.input {
     animation: none;
   }
 }
+
+/* ============ shop: intro loader ============ */
+.shop-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: var(--bg);
+  overflow: hidden;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+.shop-intro.is-done {
+  opacity: 0;
+  visibility: hidden;
+}
+.intro-rail {
+  position: relative;
+  width: min(420px, 80vw);
+  height: 70px;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+.intro-rail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #9a9aa3, #d7d7de, #9a9aa3);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: intro-rail 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s forwards;
+}
+.intro-hanger {
+  position: relative;
+  width: 22px;
+  height: 56px;
+  border: 2px solid #9a9aa3;
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  opacity: 0;
+  transform: translateY(-40px);
+  animation: intro-drop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) forwards;
+}
+.intro-name {
+  display: flex;
+  font-family: var(--font-code);
+  font-size: clamp(28px, 6vw, 44px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.intro-name span {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: intro-char 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) forwards;
+}
+.intro-sub {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--muted);
+  animation: intro-fade 0.5s ease 0.5s both;
+}
+@keyframes intro-rail {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes intro-drop {
+  60% {
+    opacity: 1;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes intro-char {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes intro-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ============ shop: hero ============ */
+.shop-hero {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 24px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  overflow: hidden;
+}
+.shop-hero-copy {
+  display: grid;
+  gap: 16px;
+}
+.shop-hero h1 {
+  margin: 0;
+  font-size: clamp(38px, 6vw, 72px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.hero-word {
+  display: inline-block;
+  margin-right: 0.25em;
+  opacity: 0;
+  transform: translateY(24px);
+  animation: hero-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.2s + var(--i) * 0.12s) forwards;
+}
+@keyframes hero-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.shop-hero p {
+  margin: 0;
+  max-width: 460px;
+  color: var(--muted);
+  font-size: 16px;
+  animation: intro-fade 0.8s ease 0.8s both;
+}
+.shop-hero-cta {
+  justify-self: start;
+  text-decoration: none;
+}
+.shop-hero-stage {
+  position: relative;
+  height: 320px;
+}
+.hero-garment {
+  position: absolute;
+  width: 150px;
+  height: 170px;
+  animation: hero-float 6s ease-in-out infinite;
+}
+.hero-garment .garment,
+.hero-garment .garment-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 14px rgba(0, 0, 0, 0.22));
+}
+.hero-garment.g0 {
+  left: 4%;
+  top: 14%;
+  transform: rotate(-8deg);
+}
+.hero-garment.g1 {
+  left: 34%;
+  top: 0;
+  z-index: 1;
+  animation-delay: -1.5s;
+}
+.hero-garment.g2 {
+  right: 0;
+  top: 22%;
+  transform: rotate(7deg);
+  animation-delay: -3s;
+}
+.hero-garment.g3 {
+  left: 18%;
+  bottom: 0;
+  animation-delay: -4s;
+}
+.hero-garment.g4 {
+  right: 20%;
+  bottom: 4%;
+  animation-delay: -2s;
+}
+@keyframes hero-float {
+  50% {
+    translate: 0 -12px;
+  }
+}
+
+/* ============ shop: viewer 360 ============ */
+.viewer {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  padding: 40px;
+  background:
+    radial-gradient(circle at 70% 20%, color-mix(in srgb, var(--c, #888) 30%, transparent), transparent 60%),
+    var(--surface-2);
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+}
+.viewer:active {
+  cursor: grabbing;
+}
+.viewer-frame {
+  position: absolute;
+  inset: 40px;
+  width: calc(100% - 80px);
+  height: calc(100% - 80px);
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.08s linear;
+}
+.viewer-frame.on {
+  opacity: 1;
+}
+.viewer-spin {
+  width: min(300px, 80%);
+  aspect-ratio: 120 / 130;
+  display: grid;
+  place-items: center;
+  animation: viewer-turn 9s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+.viewer-spin .garment,
+.viewer-spin .garment-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 16px rgba(0, 0, 0, 0.22));
+}
+@keyframes viewer-turn {
+  0%,
+  100% {
+    transform: rotateY(-18deg);
+  }
+  50% {
+    transform: rotateY(18deg);
+  }
+}
+.viewer-bar {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+}
+.viewer-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+}
+.shop-modal > .viewer {
+  border-right: 1px solid var(--border);
+}
+
+@media (max-width: 760px) {
+  .shop-hero {
+    grid-template-columns: 1fr;
+    padding-top: 28px;
+  }
+  .shop-hero-stage {
+    height: 240px;
+  }
+  .hero-garment {
+    width: 110px;
+    height: 125px;
+  }
+  .viewer {
+    min-height: 320px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-hanger,
+  .intro-name span,
+  .hero-word,
+  .hero-garment,
+  .viewer-spin,
+  .intro-rail::before {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .intro-rail::before {
+    transform: scaleX(1);
+  }
+}

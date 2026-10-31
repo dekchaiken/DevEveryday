@@ -87,6 +87,10 @@ function products(v: unknown, shop: { brands: Option[]; categories: Option[]; ty
 
       const image = text(o.image, "รูปสินค้า", 200);
       if (image && !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(image)) fail("รูปสินค้าไม่ถูกต้อง");
+      const views = list(o.views ?? [], "รูปหมุน 360", SHOP_LIMITS.views, (x) => text(x, "รูปหมุน 360", 200, false));
+      for (const v of views) {
+        if (!/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(v)) fail("รูปหมุน 360 ไม่ถูกต้อง");
+      }
 
       const vs = variants(o.variants, condition as string, `ไซส์ของสินค้า #${i + 1}`);
       for (const r of vs) {
@@ -103,6 +107,7 @@ function products(v: unknown, shop: { brands: Option[]; categories: Option[]; ty
         price,
         description: text(o.description, "รายละเอียดสินค้า", 600),
         image,
+        views,
         color,
         variants: vs,
       };

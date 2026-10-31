@@ -259,6 +259,8 @@ function ProductList({ data, setProducts }: { data: Shop; setProducts: (next: Pr
                 </Field>
                 <ImageUpload value={p.image} onChange={(image) => patch(i, { image })} />
               </div>
+
+              <ViewsUpload views={p.views ?? []} onChange={(views) => patch(i, { views })} />
             </div>
           </details>
         );
@@ -284,6 +286,7 @@ function ProductList({ data, setProducts }: { data: Shop; setProducts: (next: Pr
               description: "",
               image: "",
               color: "#2f4f3e",
+              views: [],
               variants: [{ size: data.sizes[0] ?? "", qty: 1 }],
             },
           ]);
@@ -387,6 +390,78 @@ function ImageUpload({ value, onChange }: { value: string; onChange: (v: string)
         {busy && <span className="admin-hint">กำลังอัปโหลด...</span>}
       </div>
       {error && <span className="admin-hint" style={{ color: "#e5484d" }}>{error}</span>}
+    </Field>
+  );
+}
+
+// รูปหลายมุมสำหรับหมุน 360°: อัปโหลดทีละหลายไฟล์ เรียงตามลำดับที่เลือก
+function ViewsUpload({ views, onChange }: { views: string[]; onChange: (v: string[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function upload(files: File[]) {
+    setBusy(true);
+    setError("");
+    const added: string[] = [];
+    try {
+      for (const file of files) {
+        const body = new FormData();
+        body.append("file", file);
+        const res = await fetch("/api/admin/upload", { method: "POST", body });
+        const json = (await res.json().catch(() => ({}))) as { path?: string; error?: string };
+        if (!res.ok || !json.path) throw new Error(json.error || `อัปโหลดไม่สำเร็จ (${res.status})`);
+        added.push(json.path);
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      onChange([...views, ...added].slice(0, 36));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Field label="รูปหมุน 360° (ถ่ายรอบตัวเสื้อ 8–24 รูป เรียงตามลำดับ)" hint="ลำดับตามชื่อที่เลือก ถ้ามีอย่างน้อย 2 รูป ลูกค้าจะลากหมุนดูได้">
+      <div style={{ display: "grid", gap: 10 }}>
+        {views.length > 0 && (
+          <div className="chip-row">
+            {views.map((src, k) => (
+              <span key={src + k} style={{ position: "relative" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" style={{ width: 56, height: 56, objectFit: "contain", borderRadius: 8, border: "1px solid var(--border)" }} />
+                <button
+                  type="button"
+                  aria-label={`เอารูปที่ ${k + 1} ออก`}
+                  onClick={() => onChange(views.filter((_, j) => j !== k))}
+                  style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: 99, border: 0, background: "#e5484d", color: "#fff", cursor: "pointer", fontSize: 11 }}
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="row" style={{ flexWrap: "wrap", gap: 12 }}>
+          <input
+            type="file"
+            multiple
+            accept="image/png,image/jpeg,image/webp"
+            disabled={busy || views.length >= 36}
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              if (files.length) void upload(files);
+              e.target.value = "";
+            }}
+          />
+          {busy && <span className="admin-hint">กำลังอัปโหลด...</span>}
+          {views.length > 0 && (
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange([])}>
+              ล้างทั้งหมด
+            </button>
+          )}
+        </div>
+        {error && <span className="admin-hint" style={{ color: "#e5484d" }}>{error}</span>}
+      </div>
     </Field>
   );
 }

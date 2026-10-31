@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { Product, Shop } from "@/lib/shop";
+import { ShopIntro } from "@/components/shop/ShopIntro";
 
 type Line = { key: string; productId: string; size: string; qty: number };
 
@@ -27,8 +28,52 @@ function ProductImage({ p }: { p: Product }) {
   return <Garment color={p.color} title={p.name} />;
 }
 
-function totalQty(p: Product) {
-  return p.variants.reduce((s, v) => s + v.qty, 0);
+// ดูสินค้าแบบ 360°: ลากซ้ายขวาเพื่อหมุนผ่านรูปแต่ละมุม ถ้ามีรูปมุมเดียวจะหมุนเงา 3D เล็กน้อยแทน
+function Viewer360({ p }: { p: Product }) {
+  const frames = p.views.length >= 2 ? p.views : [];
+  const [index, setIndex] = useState(0);
+  const drag = useRef<{ x: number; i: number } | null>(null);
+
+  if (frames.length === 0) {
+    return (
+      <div className="viewer viewer-fallback" style={{ "--c": p.color } as CSSProperties}>
+        <div className="viewer-spin">
+          <ProductImage p={p} />
+        </div>
+        <p className="viewer-hint">เพิ่มรูปหลายมุมในหลังบ้านเพื่อหมุนดู 360°</p>
+      </div>
+    );
+  }
+
+  function down(e: ReactPointerEvent<HTMLDivElement>) {
+    drag.current = { x: e.clientX, i: index };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+  function move(e: ReactPointerEvent<HTMLDivElement>) {
+    if (!drag.current) return;
+    const step = Math.max(1, e.currentTarget.clientWidth / (frames.length * 2));
+    const shift = Math.round((e.clientX - drag.current.x) / step);
+    const next = (((drag.current.i - shift) % frames.length) + frames.length) % frames.length;
+    setIndex(next);
+  }
+  function up() {
+    drag.current = null;
+  }
+
+  return (
+    <div className="viewer" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+      {frames.map((src, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={src} src={src} alt={`${p.name} มุมที่ ${i + 1}`} className={`viewer-frame ${i === index ? "on" : ""}`} draggable={false} />
+      ))}
+      <div className="viewer-bar">
+        <span>ลากเพื่อหมุน 360°</span>
+        <span>
+          {index + 1}/{frames.length}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export function ShopClient({ shop }: { shop: Shop }) {
@@ -61,10 +106,11 @@ export function ShopClient({ shop }: { shop: Shop }) {
     return s + (p ? p.price * l.qty : 0);
   }, 0);
 
+  const featured = shop.products.filter((p) => p.variants.some((v) => v.qty > 0)).slice(0, 5);
+
   function openProduct(p: Product) {
     setOpen(p);
-    const firstAvailable = p.variants.find((v) => v.qty > 0)?.size ?? "";
-    setPickedSize(firstAvailable);
+    setPickedSize(p.variants.find((v) => v.qty > 0)?.size ?? "");
   }
 
   function addToBag(p: Product, s: string) {
@@ -93,11 +139,12 @@ export function ShopClient({ shop }: { shop: Shop }) {
     );
   }
 
-  const sizeOptions = open ? open.variants : [];
   const inBagFor = (p: Product, s: string) => lines.find((l) => l.key === `${p.id}:${s}`)?.qty ?? 0;
 
   return (
     <div className="shop">
+      <ShopIntro name={shop.brandName} count={shop.products.length} />
+
       <header className="shop-top">
         <div className="shop-top-inner">
           <a href="/" className="shop-back">
@@ -115,6 +162,30 @@ export function ShopClient({ shop }: { shop: Shop }) {
           </button>
         </div>
       </header>
+
+      <section className="shop-hero" aria-label="ยินดีต้อนรับ">
+        <div className="shop-hero-copy">
+          <span className="shop-kicker">{shop.brandName} · ไซส์ใหญ่ ดูดีทุกวัน</span>
+          <h1>
+            {"เลือกชุดของคุณ".split(" ").map((w, i) => (
+              <span key={i} className="hero-word" style={{ "--i": i } as CSSProperties}>
+                {w}
+              </span>
+            ))}
+          </h1>
+          <p>{shop.tagline} เลือกดูบนราวแขวน หมุนดูได้รอบตัว ก่อนหยิบใส่ตะกร้า</p>
+          <a href="#rack" className="shop-add shop-hero-cta">
+            เลือกชมสินค้า ↓
+          </a>
+        </div>
+        <div className="shop-hero-stage" aria-hidden="true">
+          {featured.map((p, i) => (
+            <div key={p.id} className={`hero-garment g${i}`} style={{ "--c": p.color } as CSSProperties}>
+              <ProductImage p={p} />
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="shop-filters" aria-label="ตัวกรองสินค้า">
         <div className="chip-row">
@@ -149,13 +220,13 @@ export function ShopClient({ shop }: { shop: Shop }) {
         </div>
       </section>
 
-      <main className="rack-wrap">
+      <main className="rack-wrap" id="rack">
         <div className="rack" aria-label="ราวแขวนสินค้า">
           <div className="rail" />
           <div className="rack-items">
             {visible.length === 0 && <p className="rack-empty">ยังไม่มีสินค้าตามตัวกรองนี้</p>}
             {visible.map((p, i) => {
-              const soldOut = totalQty(p) === 0;
+              const soldOut = p.variants.every((v) => v.qty === 0);
               return (
                 <button
                   key={p.id}
@@ -188,11 +259,7 @@ export function ShopClient({ shop }: { shop: Shop }) {
             <button type="button" className="shop-close" onClick={() => setOpen(null)} aria-label="ปิด">
               ✕
             </button>
-            <div className="shop-modal-art" style={{ "--c": open.color } as CSSProperties}>
-              <div className="garment-wrap big">
-                <ProductImage p={open} />
-              </div>
-            </div>
+            <Viewer360 p={open} />
             <div className="shop-modal-info">
               <span className="shop-kicker">
                 {brandName(open.brandId)} · {categoryName(open.categoryId)} · {typeName(open.typeId)}
@@ -207,7 +274,7 @@ export function ShopClient({ shop }: { shop: Shop }) {
               <div className="shop-sizes">
                 <span>เลือกไซส์</span>
                 <div className="chip-row">
-                  {sizeOptions.map((v) => (
+                  {open.variants.map((v) => (
                     <button
                       key={v.size}
                       type="button"
