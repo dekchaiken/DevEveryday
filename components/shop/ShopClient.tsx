@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { Product, Shop } from "@/lib/shop";
 import { ShopIntro } from "@/components/shop/ShopIntro";
+import { HangingGarment } from "@/components/shop/HangingGarment";
 
 type Line = { key: string; productId: string; size: string; qty: number };
 
@@ -84,6 +85,7 @@ export function ShopClient({ shop }: { shop: Shop }) {
   const [pickedSize, setPickedSize] = useState("");
   const [bagOpen, setBagOpen] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
 
   const brandName = (id: string) => shop.brands.find((b) => b.id === id)?.name ?? "";
   const categoryName = (id: string) => shop.categories.find((c) => c.id === id)?.name ?? "";
@@ -108,7 +110,15 @@ export function ShopClient({ shop }: { shop: Shop }) {
 
   const featured = shop.products.filter((p) => p.variants.some((v) => v.qty > 0)).slice(0, 5);
 
+  // เมื่อเลือกชิ้นหนึ่ง ชิ้นข้างเคียงจะถูกดันออกไปจากกัน
+  function shiftFor(i: number) {
+    if (selected === null || i === selected) return 0;
+    const d = i - selected;
+    return Math.sign(d) * Math.max(0, 4 - Math.abs(d)) * 18;
+  }
+
   function openProduct(p: Product) {
+    setSelected(visible.indexOf(p));
     setOpen(p);
     setPickedSize(p.variants.find((v) => v.qty > 0)?.size ?? "");
   }
@@ -235,10 +245,7 @@ export function ShopClient({ shop }: { shop: Shop }) {
                   style={{ "--d": `${i * 70}ms`, "--c": p.color } as CSSProperties}
                   onClick={() => openProduct(p)}
                 >
-                  <span className="hook" aria-hidden="true" />
-                  <span className="garment-wrap">
-                    <ProductImage p={p} />
-                  </span>
+                  <HangingGarment product={p} shift={shiftFor(i)} />
                   <span className="hang-label">
                     <strong>{p.name}</strong>
                     <span>
@@ -254,9 +261,9 @@ export function ShopClient({ shop }: { shop: Shop }) {
       </main>
 
       {open && (
-        <div className="shop-overlay" onClick={() => setOpen(null)}>
+        <div className="shop-overlay" onClick={() => { setOpen(null); setSelected(null); }}>
           <div className="shop-modal" role="dialog" aria-modal="true" aria-label={open.name} onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="shop-close" onClick={() => setOpen(null)} aria-label="ปิด">
+            <button type="button" className="shop-close" onClick={() => { setOpen(null); setSelected(null); }} aria-label="ปิด">
               ✕
             </button>
             <Viewer360 p={open} />

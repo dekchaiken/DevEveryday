@@ -260,6 +260,11 @@ function ProductList({ data, setProducts }: { data: Shop; setProducts: (next: Pr
                 <ImageUpload value={p.image} onChange={(image) => patch(i, { image })} />
               </div>
 
+              <div className="grid-2" style={{ alignItems: "start" }}>
+                <HookPicker p={p} onChange={(hook) => patch(i, { hook })} />
+                <ImageUpload label="รูปด้านข้าง (ใช้ตอนหมุนบนราว)" hint="ถ่ายจากด้านข้างในพื้นหลังและแสงเดียวกับรูปหน้า" value={p.side ?? ""} onChange={(side) => patch(i, { side })} />
+              </div>
+
               <ViewsUpload views={p.views ?? []} onChange={(views) => patch(i, { views })} />
             </div>
           </details>
@@ -287,6 +292,8 @@ function ProductList({ data, setProducts }: { data: Shop; setProducts: (next: Pr
               image: "",
               color: "#2f4f3e",
               views: [],
+              side: "",
+              hook: { x: 50, y: 10 },
               variants: [{ size: data.sizes[0] ?? "", qty: 1 }],
             },
           ]);
@@ -349,7 +356,17 @@ function VariantEditor({ product, sizes, onChange }: { product: Product; sizes: 
   );
 }
 
-function ImageUpload({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function ImageUpload({
+  value,
+  onChange,
+  label = "รูปสินค้า (PNG, JPG, WebP ไม่เกิน 2 MB)",
+  hint = "ควรเป็นรูปที่ตัดพื้นหลังแล้ว (PNG) ถ้าไม่ใส่ระบบจะวาดเสื้อจากสีให้",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label?: string;
+  hint?: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -371,7 +388,7 @@ function ImageUpload({ value, onChange }: { value: string; onChange: (v: string)
   }
 
   return (
-    <Field label="รูปสินค้า (PNG, JPG, WebP ไม่เกิน 2 MB)" hint="ควรเป็นรูปที่ตัดพื้นหลังแล้ว (PNG) ถ้าไม่ใส่ระบบจะวาดเสื้อจากสีให้">
+    <Field label={label} hint={hint}>
       <div className="row" style={{ flexWrap: "wrap", gap: 12 }}>
         {value && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -462,6 +479,37 @@ function ViewsUpload({ views, onChange }: { views: string[]; onChange: (v: strin
         </div>
         {error && <span className="admin-hint" style={{ color: "#e5484d" }}>{error}</span>}
       </div>
+    </Field>
+  );
+}
+
+// คลิกบนรูปเพื่อกำหนดจุดที่ห่วงไม้แขวนอยู่ ระบบจะเลื่อนเสื้อให้จุดนี้ตรงกับราว
+function HookPicker({ p, onChange }: { p: Product; onChange: (h: { x: number; y: number }) => void }) {
+  const hook = p.hook ?? { x: 50, y: 10 };
+  const clamp = (n: number) => Math.min(100, Math.max(0, Math.round(n)));
+
+  function pick(e: React.MouseEvent<HTMLDivElement>) {
+    const r = e.currentTarget.getBoundingClientRect();
+    onChange({ x: clamp(((e.clientX - r.left) / r.width) * 100), y: clamp(((e.clientY - r.top) / r.height) * 100) });
+  }
+
+  return (
+    <Field label="จุดแขวนบนราว" hint="คลิกบนรูปตรงห่วงของไม้แขวน (ปกติอยู่กลางบนของคอเสื้อ)">
+      <div
+        onClick={pick}
+        style={{ position: "relative", width: 220, aspectRatio: "120 / 130", border: "1px dashed var(--border-strong)", borderRadius: 12, background: "var(--surface-2)", cursor: "crosshair", overflow: "hidden" }}
+      >
+        {p.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none" }} />
+        ) : (
+          <div style={{ position: "absolute", inset: "12% 18% 0", background: p.color, borderRadius: "18px 18px 4px 4px", opacity: 0.85 }} />
+        )}
+        <span
+          style={{ position: "absolute", left: `${hook.x}%`, top: `${hook.y}%`, width: 14, height: 14, borderRadius: 99, border: "2px solid #fff", background: "#e5484d", transform: "translate(-50%, -50%)", boxShadow: "0 0 0 2px rgba(0,0,0,0.4)", pointerEvents: "none" }}
+        />
+      </div>
+      <span className="admin-hint">x {hook.x}% · y {hook.y}%</span>
     </Field>
   );
 }

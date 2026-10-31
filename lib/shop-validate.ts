@@ -87,6 +87,12 @@ function products(v: unknown, shop: { brands: Option[]; categories: Option[]; ty
 
       const image = text(o.image, "รูปสินค้า", 200);
       if (image && !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(image)) fail("รูปสินค้าไม่ถูกต้อง");
+      const side = text(o.side, "รูปด้านข้าง", 200);
+      if (side && !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(side)) fail("รูปด้านข้างไม่ถูกต้อง");
+      const hookRaw = (o.hook ?? {}) as Record<string, unknown>;
+      const hx = Number(hookRaw.x ?? 50);
+      const hy = Number(hookRaw.y ?? 10);
+      if (!(hx >= 0 && hx <= 100 && hy >= 0 && hy <= 100)) fail("จุดแขวนต้องอยู่ระหว่าง 0 ถึง 100");
       const views = list(o.views ?? [], "รูปหมุน 360", SHOP_LIMITS.views, (x) => text(x, "รูปหมุน 360", 200, false));
       for (const v of views) {
         if (!/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(v)) fail("รูปหมุน 360 ไม่ถูกต้อง");
@@ -108,6 +114,8 @@ function products(v: unknown, shop: { brands: Option[]; categories: Option[]; ty
         description: text(o.description, "รายละเอียดสินค้า", 600),
         image,
         views,
+        side,
+        hook: { x: hx, y: hy },
         color,
         variants: vs,
       };

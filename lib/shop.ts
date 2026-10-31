@@ -21,6 +21,8 @@ export type Product = {
   description: string;
   image: string; // "/uploads/..." ว่างได้ ถ้าว่างจะวาดเสื้อจากสีให้เอง
   views: string[]; // รูปหลายมุมตามลำดับรอบตัว ใช้หมุน 360° (ว่างได้)
+  side: string; // "/uploads/..." รูปด้านข้าง ใช้ตอนหมุนบนราว (ว่างได้)
+  hook: { x: number; y: number }; // จุดห่วงไม้แขวนในรูป หน่วยเป็น % ของความกว้างและความสูงรูป
   color: string; // #rrggbb
   variants: Variant[];
 };
