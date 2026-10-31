@@ -2,9 +2,19 @@
 
 import { useEffect, useRef } from "react";
 
-const MIN_MS = 1100; // ให้เห็นแอนิเมชันอย่างน้อยเท่านี้ แม้โหลดเสร็จเร็ว
+const MIN_MS = 750; // ให้เห็นแอนิเมชันอย่างน้อยเท่านี้ แม้โหลดเสร็จเร็ว
 const FALLBACK_MS = 4000; // กันค้าง ถ้า load event ไม่มาภายในเวลานี้
-const CHARSET = "01<>/{}#$%&*+=_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+// ช่วงที่ยังไม่ compile: แสดงเป็นรหัสฐาน 16 ก่อนแปลงเป็นชื่อ
+const HEX = "0123456789ABCDEF";
+// บรรทัดคำสั่งจำลองการ compile ที่วิ่งไปตามความคืบหน้า
+const ASM = [
+  "MOV r0, 0x44    ; D",
+  "MOV r1, 0x65    ; e",
+  "PUSH r0 · r1",
+  "CALL render",
+  "LINK bundle.js",
+  "OK  ✓ compile",
+];
 
 // ข้อความสถานะตามเปอร์เซ็นต์ เหมือนกำลัง compile ทีละขั้น
 const STAGES: [number, string][] = [
@@ -79,12 +89,12 @@ export function Loader({ name }: { name: string }) {
           out +=
             i < solved || shown >= 100
               ? name[i]
-              : CHARSET[Math.floor(Math.random() * CHARSET.length)];
+              : HEX[Math.floor(Math.random() * HEX.length)];
         }
         word.textContent = out;
       }
 
-      const current = [...STAGES].reverse().find(([at]) => shown >= at)?.[1] ?? "";
+      const current = ASM[Math.min(ASM.length - 1, Math.floor((shown / 100) * ASM.length))];
       if (current !== lastStage) {
         lastStage = current;
         stage.textContent = current;
@@ -93,8 +103,8 @@ export function Loader({ name }: { name: string }) {
 
     const loop = () => {
       frame += 1;
-      if (!loaded && target < 88) target += 0.05;
-      const step = (target - shown) * 0.08;
+      if (!loaded && target < 88) target += 0.12;
+      const step = (target - shown) * 0.14;
       shown = Math.min(target, shown + Math.max(step, 0.2));
       paint();
 
@@ -102,7 +112,7 @@ export function Loader({ name }: { name: string }) {
       if (loaded && shown >= 99.5 && elapsed >= minMs) {
         shown = 100;
         paint();
-        window.setTimeout(finish, 180);
+        window.setTimeout(finish, 120);
         return;
       }
       raf = requestAnimationFrame(loop);

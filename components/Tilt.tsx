@@ -21,8 +21,8 @@ export function Tilt({
     const r = el.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width;
     const y = (e.clientY - r.top) / r.height;
-    el.style.setProperty("--ry", `${((x - 0.5) * 6).toFixed(2)}deg`);
-    el.style.setProperty("--rx", `${((0.5 - y) * 5).toFixed(2)}deg`);
+    el.style.setProperty("--ry", `${((x - 0.5) * 1.5).toFixed(2)}deg`);
+    el.style.setProperty("--rx", `${((0.5 - y) * 1.2).toFixed(2)}deg`);
     el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`);
     el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
   }

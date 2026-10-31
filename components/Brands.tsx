@@ -35,7 +35,8 @@ export function Brands({ items }: { items: Brand[] }) {
   const active = items[index] ?? items[0];
   if (!active) return null;
 
-  const style = { "--c": active.color } as CSSProperties;
+  // สีของเว็บใช้สีรองของธีม ไม่ใช้สีประจำธุรกิจ เพื่อให้ทุกปุ่มอยู่ในธีมเดียวกัน
+  const style = { "--c": "var(--accent)" } as CSSProperties;
 
   return (
     <div className="bshow">
@@ -47,7 +48,7 @@ export function Brands({ items }: { items: Brand[] }) {
               role="tab"
               aria-selected={i === index}
               className={`bshow-item ${i === index ? "on" : ""}`}
-              style={{ "--c": b.color } as CSSProperties}
+              style={{ "--c": "var(--accent)" } as CSSProperties}
               onClick={() => setIndex(i)}
               onMouseEnter={() => setIndex(i)}
               onFocus={() => setIndex(i)}
@@ -81,16 +82,23 @@ export function Brands({ items }: { items: Brand[] }) {
             <span className="bshow-bar-title">{active.name}</span>
           </div>
           <div className="bshow-screen">
-            <div className="bshow-hero">
-              {active.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={active.image} alt={active.name} />
-              ) : (
-                <div className="bshow-hero-icon">
-                  <BrandIconSvg name={active.icon} />
-                </div>
-              )}
-            </div>
+            {active.url ? (
+              // หน้าเว็บจริงของธุรกิจแสดงสดในกรอบ ถ้าเว็บนั้นไม่อนุญาตให้ฝังจะใช้ปุ่มเปิดในแท็บใหม่แทน
+              <div className="bshow-live">
+                <iframe src={active.url} title={active.name} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" />
+              </div>
+            ) : (
+              <div className="bshow-hero">
+                {active.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={active.image} alt={active.name} />
+                ) : (
+                  <div className="bshow-hero-icon">
+                    <BrandIconSvg name={active.icon} />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="bshow-copy">
               <span className="bshow-kicker">ในเครือ DevEveryday</span>
               <h3>{active.name}</h3>
