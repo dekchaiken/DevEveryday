@@ -24,7 +24,7 @@
     {
       "id": "b1", "name": "ตัวอย่าง: ร้านเสื้อผ้า", "tagline": "เสื้อผ้าสไตล์เรียบง่าย ใส่ได้ทุกวัน",
       "description": "ข้อมูลตัวอย่าง ใส่ชื่อ คำโปรย และลิงก์เว็บขายเสื้อผ้าจริงได้จากหน้า admin",
-      "url": "https://www.facebook.com/kennoi17/", "image": "", "color": "#f5a524"
+      "url": "https://www.facebook.com/kennoi17/", "image": "", "color": "#f5a524", "icon": "shirt"
     }
   ],
   "projects": [

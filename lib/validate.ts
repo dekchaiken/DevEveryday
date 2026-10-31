@@ -1,4 +1,4 @@
-import type { Brand, Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
+import { BRAND_ICONS, type Brand, type BrandIcon, type Content, type HistoryItem, type Member, type Plan, type Project, type Service, type Step } from "@/lib/types";
 
 type Result = { ok: true; value: Content } | { ok: false; error: string };
 
@@ -69,6 +69,7 @@ function build(input: unknown): Content {
         url,
         image,
         color,
+        icon: BRAND_ICONS.includes(o.icon as BrandIcon) ? (o.icon as BrandIcon) : "store",
       };
     }),
     "ธุรกิจในเครือ",

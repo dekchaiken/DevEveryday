@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import type { Brand, Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
+import type { Brand, BrandIcon, Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
 
 type TabKey = "site" | "services" | "projects" | "brands" | "process" | "plans" | "team" | "contact";
 const TABS: { key: TabKey; label: string }[] = [
@@ -434,13 +434,25 @@ function BrandsPanel({ data, edit }: { data: Content; edit: Edit }) {
               </div>
             </Field>
           </div>
+          <div className="grid-2">
+            <Field label="ไอคอนบนการ์ด" hint="ใช้เมื่อไม่ได้ใส่รูป">
+              <select className="input" value={b.icon} onChange={(e) => setList(replaceAt(list, i, { ...b, icon: e.target.value as BrandIcon }))}>
+                <option value="shirt">เสื้อผ้า</option>
+                <option value="store">ร้านค้า</option>
+                <option value="code">เว็บ / ซอฟต์แวร์</option>
+                <option value="coffee">คาเฟ่ / อาหาร</option>
+                <option value="globe">ทั่วไป</option>
+                <option value="spark">แบรนด์ / ไลฟ์สไตล์</option>
+              </select>
+            </Field>
+          </div>
           <ImageField value={b.image} onChange={(v) => setList(replaceAt(list, i, { ...b, image: v }))} />
         </Item>
       ))}
       <AddButton
         disabled={list.length >= 8}
         label="เพิ่มธุรกิจ"
-        onClick={() => setList([...list, { id: uid("b"), name: "ธุรกิจใหม่", tagline: "", description: "", url: "", image: "", color: "#0070f3" }])}
+        onClick={() => setList([...list, { id: uid("b"), name: "ธุรกิจใหม่", tagline: "", description: "", url: "", image: "", color: "#0070f3", icon: "store" }])}
       />
     </div>
   );

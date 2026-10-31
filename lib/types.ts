@@ -59,7 +59,11 @@ export type Brand = {
   url: string; // https://... ไปยังเว็บของธุรกิจนั้น
   image: string; // "/uploads/..." รูปโลโก้หรือรูปปก (ว่างได้)
   color: string; // #rrggbb สีประจำธุรกิจ
+  icon: BrandIcon; // ไอคอน SVG ที่แสดงบนการ์ดเมื่อไม่มีรูป
 };
+
+export const BRAND_ICONS = ["shirt", "store", "code", "coffee", "globe", "spark"] as const;
+export type BrandIcon = (typeof BRAND_ICONS)[number];
 
 export type Project = {
   id: string;
