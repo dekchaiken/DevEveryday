@@ -51,7 +51,26 @@ const GLYPHS: Record<string, string[]> = {
   r: ["00000", "00000", "10110", "11001", "10000", "10000", "10000"],
   y: ["00000", "10001", "10001", "01111", "00001", "00001", "11110"],
   a: ["00000", "00000", "01110", "00001", "01111", "10001", "01111"],
+  // ตัวเลขและ A–F ใช้แสดงรหัสฐาน 16 ตอนกำลัง compile
+  "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+  "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+  "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+  "3": ["11111", "00010", "00100", "00010", "00001", "10001", "01110"],
+  "4": ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+  "5": ["11111", "10000", "11110", "00001", "00001", "10001", "01110"],
+  "6": ["00110", "01000", "10000", "11110", "10001", "10001", "01110"],
+  "7": ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+  "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+  "9": ["01110", "10001", "10001", "01111", "00001", "00010", "01100"],
+  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+  B: ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
+  C: ["01110", "10001", "10000", "10000", "10000", "10001", "01110"],
+  F: ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+  x: ["00000", "00000", "10001", "01010", "00100", "01010", "10001"],
+  " ": ["00000", "00000", "00000", "00000", "00000", "00000", "00000"],
 };
+// รหัสฐาน 16 ของตัวอักษรในชื่อ เช่น D=44 e=65 แสดงก่อนจะแปลงเป็นตัวอักษรจริง
+const HEXDUMP = [...WORD].map((c) => c.charCodeAt(0).toString(16).toUpperCase()).join(" ") + " ";
 
 // ไอคอนฟองพูด 5x5 ใช้แทนอารมณ์ เพราะฟอนต์พิกเซลไม่มีตัวอักษรไทย
 const ICONS = {
@@ -316,7 +335,7 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
     });
 
     // ค่อยๆ render พิกเซลทีละตัวบนจอ
-    if (pending.length) {
+    for (let k = 0; k < 4 && pending.length; k++) {
       const px = pending.shift();
       if (px) placed.push({ ...px, born: t });
     }
@@ -358,6 +377,30 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
     // ขาตั้งจอ
     rect(SCREEN.x + SCREEN.w / 2 - 2, SCREEN.y + SCREEN.h + 3, 4, 4, p.frame);
     rect(SCREEN.x + SCREEN.w / 2 - 14, SCREEN.y + SCREEN.h + 7, 28, 2, p.frame);
+
+    // ระหว่าง compile: รหัสฐาน 16 เลื่อนขึ้นบนจอ แล้วค่อยแปลงเป็นชื่อทีละพิกเซล
+    if (pending.length && !erasing && placed.length < PIX.length * 0.6) {
+      const adv = 6 * CELL;
+      const rowH = 8 * CELL;
+      const perRow = Math.max(1, Math.floor(IW / adv));
+      const scroll = (t * 1.6) % rowH;
+      for (let r = -1; r * rowH < IH + rowH; r++) {
+        const y = IY + r * rowH - scroll + rowH;
+        const start = (r * 5 + Math.floor(t / 4)) % HEXDUMP.length;
+        for (let c = 0; c < perRow; c++) {
+          const ch = HEXDUMP[(start + c) % HEXDUMP.length];
+          const g = GLYPHS[ch];
+          if (!g || ch === " ") continue;
+          const gx = IX + c * adv;
+          if (y < IY || y + 7 * CELL > IY + IH) continue;
+          for (let gy = 0; gy < 7; gy++) {
+            for (let gx2 = 0; gx2 < 5; gx2++) {
+              if (g[gy][gx2] === "1") rect(gx + gx2 * CELL, y + gy * CELL, CELL, CELL, "rgba(61,255,176,0.45)");
+            }
+          }
+        }
+      }
+    }
 
     for (const px of placed) {
       const age = t - px.born;

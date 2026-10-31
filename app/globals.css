@@ -2128,7 +2128,7 @@ textarea.input {
 
 /* ============ pixel office (hero) ============ */
 .pixel-stage {
-  width: min(100%, 1040px);
+  width: min(100%, 1280px);
   margin: 48px auto 0;
   border: 1px solid var(--border);
   border-radius: 20px;
