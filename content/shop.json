@@ -61,7 +61,7 @@
       "condition": "new",
       "price": 490,
       "description": "ตัวอย่างสินค้า ผ้า cotton 100% ทรง oversize",
-      "image": "",
+      "image": "/uploads/test-tee.png",
       "color": "#2f4f3e",
       "variants": [
         {
@@ -78,10 +78,10 @@
         }
       ],
       "views": [],
-      "side": "",
+      "side": "/uploads/test-tee.png",
       "hook": {
-        "x": 50,
-        "y": 10
+        "x": 48,
+        "y": 13
       }
     },
     {

@@ -2952,26 +2952,12 @@ textarea.input {
   position: absolute;
   inset: 0;
   transform-origin: 50% 0;
-  animation: hg-swing 4.6s ease-in-out infinite;
-  animation-delay: var(--d, 0ms);
-}
-.hg-swing.still {
-  animation: none;
-}
-.hg-card {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 1;
 }
 .hg-face {
   position: absolute;
   inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.hg-face.side {
-  transform: rotateY(-90deg);
+  will-change: transform, opacity;
 }
 /* จุดแขวนของรูปจะถูกเลื่อนมาอยู่ตรงจุดยอดของการ์ด */
 .hg-img {
@@ -3185,11 +3171,11 @@ textarea.input {
 .hg-hanger {
   position: absolute;
   left: 50%;
-  top: -22px;
+  top: -6px;
   width: 60px;
   height: 30px;
   margin-left: -30px;
   overflow: visible;
   pointer-events: none;
-  z-index: 2;
+  z-index: 0; /* อยู่หลังตัวเสื้อ */
 }

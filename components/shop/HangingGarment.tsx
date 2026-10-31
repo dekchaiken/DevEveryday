@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import type { Product } from "@/lib/shop";
 
 // เสื้อด้านหน้าแบบ placeholder เมื่อยังไม่มีรูป วาดด้วยสีของสินค้า
@@ -23,54 +23,96 @@ function SidePlaceholder({ color }: { color: string }) {
   );
 }
 
-// เสื้อหนึ่งตัวบนราว: ห่วงไม้แขวนอยู่ตรงจุดยอดของการ์ด เสื้อแกว่งรอบจุดนั้น และหมุนไปมาตามตำแหน่งเมาส์
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+// เสื้อหนึ่งตัวบนราว
+// - การหมุน: บีบความกว้างตาม cos/sin ของมุม แล้วสลับระหว่างด้านหน้ากับด้านข้างแบบค่อยๆ จาง
+// - การแกว่ง: ลูกตุ้มสปริง-ดิมพ์ ถูกกระตุ้นด้วยการหมุน ทำให้ตัวเสื้อโยกตามแรงเหวี่ยง
+// - ไม้แขวนอยู่หลังตัวเสื้อ เห็นเฉพาะส่วนที่โผล่ผ่านคอเสื้อ
+// ขับด้วย requestAnimationFrame และเขียนค่าลง DOM โดยตรง ไม่ผ่าน state ของ React
 export function HangingGarment({ product: p, shift, live = false }: { product: Product; shift: number; live?: boolean }) {
-  const [turn, setTurn] = useState(0);
-  const [hover, setHover] = useState(false);
+  const swing = useRef<HTMLSpanElement>(null);
+  const front = useRef<HTMLSpanElement>(null);
+  const side = useRef<HTMLSpanElement>(null);
+  const aim = useRef<number | null>(null); // มุมที่เมาส์ชี้ (องศา) หรือ null เมื่อไม่ได้ชี้
+  const phys = useRef({ theta: 0, tv: 0, phi: 0, pv: 0 });
 
   const hook = p.hook ?? { x: 50, y: 10 };
   const hookStyle = { "--hx": `${hook.x}%`, "--hy": `${hook.y}%` } as CSSProperties;
 
+  useEffect(() => {
+    if (!live) return;
+    let raf = 0;
+    let last = performance.now();
+    const t0 = last;
+    const s = phys.current;
+
+    const tick = (now: number) => {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+      const t = (now - t0) / 1000;
+
+      // มุมหมุน: ตามเมาส์ถ้าชี้อยู่บนชิ้นนี้ ถ้าไม่ก็หมุนช้าๆ ไปมาเอง
+      const target = aim.current ?? 62 * Math.sin(t * 0.75);
+      const aT = 40 * (target - s.theta) - 7.5 * s.tv;
+      s.tv += aT * dt;
+      s.theta = clamp(s.theta + s.tv * dt, -84, 84);
+
+      // การแกว่งของลูกตุ้ม: แรงเหวี่ยงจากการหมุน + สปริงดึงกลับ + แรงหน่วง
+      const aP = -24 * s.phi - 2.6 * s.pv - 0.22 * s.tv;
+      s.pv += aP * dt;
+      s.phi = clamp(s.phi + s.pv * dt, -12, 12);
+
+      // ด้านหน้ากับด้านข้างสลับกันด้วยการบีบความกว้างตามมุม
+      const rad = (s.theta * Math.PI) / 180;
+      const mix = clamp((Math.abs(s.theta) - 30) / 25, 0, 1);
+      if (front.current) {
+        front.current.style.transform = `scaleX(${Math.max(0.02, Math.cos(rad)).toFixed(4)})`;
+        front.current.style.opacity = (1 - mix).toFixed(3);
+      }
+      if (side.current) {
+        const w = Math.max(0.02, Math.abs(Math.sin(rad)));
+        side.current.style.transform = `scaleX(${(s.theta < 0 ? -w : w).toFixed(4)})`;
+        side.current.style.opacity = mix.toFixed(3);
+      }
+      if (swing.current) {
+        const flutter = 0.9 * Math.sin(t * 3.1) * Math.min(1, Math.abs(s.tv) / 80);
+        swing.current.style.transform = `rotate(${(s.phi + flutter).toFixed(3)}deg)`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [live]);
+
   function move(e: ReactPointerEvent<HTMLSpanElement>) {
     if (!live || e.pointerType !== "mouse") return;
     const r = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width; // 0..1
-    setTurn(Math.round((x - 0.5) * 120)); // -60..60 องศา
+    aim.current = ((e.clientX - r.left) / r.width - 0.5) * 140;
   }
 
   return (
-    <span
-      className="hg"
-      style={{ ...hookStyle, translate: `${shift}px 0` }}
-      onPointerEnter={() => setHover(true)}
-      onPointerMove={move}
-      onPointerLeave={() => {
-        setHover(false);
-        setTurn(0);
-      }}
-    >
+    <span className="hg" style={{ ...hookStyle, translate: `${shift}px 0` }} onPointerMove={move} onPointerLeave={() => (aim.current = null)}>
       <svg className="hg-hanger" viewBox="0 0 60 30" aria-hidden="true">
-        <path d="M30 2 Q30 0 32 0 Q34 0 34 3 Q34 6 30 10 L30 14" fill="none" stroke="#9a9aa3" strokeWidth="2" strokeLinecap="round" />
+        <path d="M30 15 L30 8 A 5 5 0 1 1 25 3" fill="none" stroke="#9a9aa3" strokeWidth="2" strokeLinecap="round" />
         <path d="M30 14 L6 26 Q4 28 7 28 L53 28 Q56 28 54 26 Z" fill="none" stroke="#9a9aa3" strokeWidth="2" strokeLinejoin="round" />
       </svg>
-      <span className={`hg-swing ${hover ? "still" : ""}`}>
-        <span className="hg-card" style={{ transform: `rotateY(${turn}deg)` }}>
-          <span className="hg-face front">
-            {p.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.image} alt={p.name} className="hg-img" draggable={false} />
-            ) : (
-              <FrontPlaceholder color={p.color} />
-            )}
-          </span>
-          <span className="hg-face side">
-            {p.side ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.side} alt="" className="hg-img" draggable={false} />
-            ) : (
-              <SidePlaceholder color={p.color} />
-            )}
-          </span>
+      <span className="hg-swing" ref={swing}>
+        <span className="hg-face front" ref={front}>
+          {p.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.image} alt={p.name} className="hg-img" draggable={false} />
+          ) : (
+            <FrontPlaceholder color={p.color} />
+          )}
+        </span>
+        <span className="hg-face side" ref={side} style={{ opacity: 0 }}>
+          {p.side ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.side} alt="" className="hg-img" draggable={false} />
+          ) : (
+            <SidePlaceholder color={p.color} />
+          )}
         </span>
       </span>
     </span>
