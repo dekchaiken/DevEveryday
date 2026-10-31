@@ -89,9 +89,9 @@ textarea {
 }
 
 .container {
-  max-width: 1120px;
+  max-width: none;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(20px, 4vw, 88px);
 }
 .section {
   padding: 120px 0;
@@ -2152,9 +2152,9 @@ textarea.input {
   border-bottom: 1px solid var(--border);
 }
 .shop-top-inner {
-  max-width: 1200px;
+  max-width: none;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 14px clamp(20px, 4vw, 88px);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -2219,9 +2219,9 @@ textarea.input {
 }
 
 .shop-filters {
-  max-width: 1200px;
+  max-width: none;
   margin: 0 auto;
-  padding: 22px 24px 0;
+  padding: 22px clamp(20px, 4vw, 88px) 0;
   display: grid;
   gap: 12px;
 }
@@ -2289,9 +2289,9 @@ textarea.input {
 
 /* ราวแขวน */
 .rack-wrap {
-  max-width: 1200px;
+  max-width: none;
   margin: 0 auto;
-  padding: 24px 24px 80px;
+  padding: 24px clamp(20px, 4vw, 88px) 80px;
 }
 .rack {
   position: relative;
@@ -2732,9 +2732,9 @@ textarea.input {
 /* ============ shop: hero ============ */
 .shop-hero {
   position: relative;
-  max-width: 1200px;
+  max-width: none;
   margin: 0 auto;
-  padding: 56px 24px 24px;
+  padding: 56px 24px clamp(20px, 4vw, 88px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
@@ -3190,4 +3190,55 @@ textarea.input {
   pointer-events: none;
   /* อยู่ระหว่างด้านหน้าและด้านหลังของเสื้อ โผล่เฉพาะตรงคอเสื้อ */
   transform: translateZ(-2px);
+}
+
+/* ============ กลับเข้าเว็บ: ม่านเปลี่ยนฉากสั้นๆ ============ */
+.return-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: var(--bg);
+  pointer-events: none;
+  animation: return-veil 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.return-veil strong {
+  font-family: var(--font-code);
+  font-size: clamp(22px, 4vw, 32px);
+  letter-spacing: -0.02em;
+}
+.return-veil span {
+  display: block;
+  width: 180px;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.return-veil span::after {
+  content: "";
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: return-bar 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes return-bar {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes return-veil {
+  0%,
+  70% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ReturnTransition } from "@/components/ReturnTransition";
 
 const plexThai = IBM_Plex_Sans_Thai({
   subsets: ["thai", "latin"],
@@ -38,7 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <ReturnTransition name="DevEveryday" />
+        {children}
+      </body>
     </html>
   );
 }

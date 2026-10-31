@@ -33,6 +33,8 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 export function HangingGarment({ product: p, shift, live = false }: { product: Product; shift: number; live?: boolean }) {
   const swing = useRef<HTMLSpanElement>(null);
   const card = useRef<HTMLSpanElement>(null);
+  const front = useRef<HTMLSpanElement>(null);
+  const side = useRef<HTMLSpanElement>(null);
   const aim = useRef<number | null>(null); // มุมที่เมาส์ชี้ (องศา) หรือ null เมื่อไม่ได้ชี้
   const phys = useRef({ theta: 0, tv: 0, phi: 0, pv: 0 });
 
@@ -65,6 +67,13 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
       // ด้านหน้ากับด้านข้างสลับกันด้วยการบีบความกว้างตามมุม
       // หมุนทั้งการ์ดรอบแกนดิ่งเดียวกับไม้แขวน ไม้แขวนจึงหมุนไปพร้อมตัวเสื้อ
       if (card.current) card.current.style.transform = `rotateY(${s.theta.toFixed(3)}deg)`;
+      // แสดงด้านหน้าหรือด้านข้างทีละด้านเท่านั้น ไม่ให้ซ้อนกัน ด้านข้างหมุนให้หันออกตามทิศที่เสื้อเอียง
+      const aside = Math.abs(s.theta) > 45;
+      if (front.current) front.current.style.visibility = aside ? "hidden" : "visible";
+      if (side.current) {
+        side.current.style.visibility = aside ? "visible" : "hidden";
+        side.current.style.transform = `rotateY(${s.theta >= 0 ? -90 : 90}deg)`;
+      }
       if (swing.current) {
         const flutter = 0.9 * Math.sin(t * 3.1) * Math.min(1, Math.abs(s.tv) / 80);
         swing.current.style.transform = `rotate(${(s.phi + flutter).toFixed(3)}deg)`;
@@ -89,7 +98,7 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
             <path d="M30 15 L30 8 A 5 5 0 1 1 25 3" fill="none" stroke="#9a9aa3" strokeWidth="2.4" strokeLinecap="round" />
             <path d="M30 15 L8 26 Q5 28 8 28 L52 28 Q55 28 52 26 Z" fill="none" stroke="#9a9aa3" strokeWidth="2.4" strokeLinejoin="round" />
           </svg>
-          <span className="hg-face front">
+          <span className="hg-face front" ref={front}>
             {p.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.image} alt={p.name} className="hg-img" draggable={false} />
@@ -97,7 +106,7 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
               <FrontPlaceholder color={p.color} />
             )}
           </span>
-          <span className="hg-face side">
+          <span className="hg-face side" ref={side}>
             {p.side ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.side} alt="" className="hg-img" draggable={false} />
