@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevEveryday · Cyber Shooter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<style>
+:root{--bg:#03060a;--ink:#dcfff6;--muted:#6c8a86;--g:#3dffb0;--c:#33d6ff;--r:#ff4d6d;--panel:rgba(8,20,22,.7);--line:rgba(61,255,176,.22)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{cursor:none}
+body{background:var(--bg);color:var(--ink);font-family:'Chakra Petch','Sarabun',sans-serif;overflow-x:hidden;line-height:1.6}
+a,button,input,select,textarea{cursor:none}
+#bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:90;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.wrap{max-width:1140px;margin:0 auto;padding:0 22px}
+section{padding:110px 0;position:relative}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* crosshair */
+#aim{position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;z-index:250;transition:width .2s,height .2s,margin .2s}
+#aim::before,#aim::after{content:'';position:absolute;background:var(--g);box-shadow:0 0 8px var(--g)}
+#aim::before{left:50%;top:0;width:2px;height:100%;margin-left:-1px;background:linear-gradient(var(--g) 0 35%,transparent 35% 65%,var(--g) 65%)}
+#aim::after{top:50%;left:0;height:2px;width:100%;margin-top:-1px;background:linear-gradient(90deg,var(--g) 0 35%,transparent 35% 65%,var(--g) 65%)}
+#aim.hot{width:64px;height:64px;margin:-32px 0 0 -32px}
+#aim .dot{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;border-radius:50%;background:var(--r);box-shadow:0 0 10px var(--r)}
+
+/* hud top */
+.hud{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:space-between;align-items:center;padding:14px 26px;border-bottom:1px solid var(--line);background:rgba(3,6,10,.7);backdrop-filter:blur(8px)}
+.hud .logo{font-weight:700;letter-spacing:.08em;font-size:18px;color:var(--g)}
+.hud nav{display:flex;gap:24px;font-family:'JetBrains Mono';font-size:12px;color:var(--muted)}
+.hud nav a{color:inherit;text-decoration:none;transition:color .2s}
+.hud nav a:hover{color:var(--g)}
+.score{font-family:'JetBrains Mono';font-size:13px;color:var(--c)}
+
+/* intro: countdown */
+#intro{position:fixed;inset:0;z-index:200;background:var(--bg);display:grid;place-items:center;transition:opacity .6s,visibility .6s}
+#intro.done{opacity:0;visibility:hidden}
+#intro .n{font-family:'JetBrains Mono';font-size:120px;font-weight:700;color:var(--g);text-shadow:0 0 40px var(--g)}
+#intro .t{font-family:'JetBrains Mono';color:var(--muted);text-align:center;margin-top:10px;font-size:13px}
+
+/* hero */
+.hero{min-height:100vh;display:flex;align-items:center;padding-top:90px}
+.hero .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+.tag{font-family:'JetBrains Mono';font-size:12px;color:var(--g);border:1px solid var(--line);padding:5px 12px;display:inline-block;margin-bottom:20px}
+h1{font-size:clamp(42px,6.4vw,84px);font-weight:700;line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+h1 .hit{color:var(--g);text-shadow:0 0 22px rgba(61,255,176,.6);position:relative}
+h1 .hit::after{content:'';position:absolute;left:0;right:0;bottom:6px;height:4px;background:var(--r);box-shadow:0 0 14px var(--r);transform:scaleX(0);transform-origin:left;animation:shot .5s .9s forwards}
+@keyframes shot{to{transform:scaleX(1)}}
+.hero p{color:var(--muted);margin-top:22px;max-width:560px;font-family:'Sarabun'}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;font-family:'JetBrains Mono';font-weight:700;font-size:14px;color:#02140d;background:var(--g);text-decoration:none;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);transition:transform .15s,box-shadow .3s;border:0}
+.btn:hover{box-shadow:0 0 30px var(--g);transform:translateY(-2px)}
+.btn.ghost{background:transparent;color:var(--g);box-shadow:inset 0 0 0 1px var(--g)}
+.btns{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+
+/* target panel */
+.panel{background:var(--panel);border:1px solid var(--line);padding:24px;position:relative;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
+.panel .row{display:flex;justify-content:space-between;font-family:'JetBrains Mono';font-size:13px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.panel .row b{color:var(--c)}
+.bar{height:6px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c),var(--g));transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+
+/* targets: services as clickable targets */
+.h2{font-family:'JetBrains Mono';font-size:12px;color:var(--g);letter-spacing:.2em}
+h2{font-size:clamp(30px,4vw,48px);font-weight:700;text-transform:uppercase;margin:10px 0 12px}
+.lead{color:var(--muted);font-family:'Sarabun';max-width:620px}
+.targets{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:46px}
+.target{background:var(--panel);border:1px solid var(--line);padding:26px;position:relative;transition:transform .25s,border-color .25s,box-shadow .25s;overflow:hidden}
+.target::before{content:'[ ]';position:absolute;top:12px;right:14px;font-family:'JetBrains Mono';color:var(--muted);font-size:12px;transition:color .2s}
+.target:hover{border-color:var(--g);transform:translateY(-4px);box-shadow:0 0 30px rgba(61,255,176,.18)}
+.target:hover::before{content:'[ LOCKED ]';color:var(--r)}
+.target.down{animation:down .5s forwards}
+@keyframes down{to{opacity:.25;filter:grayscale(1)}}
+.target h3{font-size:22px;font-weight:600;margin:8px 0}
+.target p{color:var(--muted);font-family:'Sarabun';font-size:15px}
+.target .ps{font-family:'JetBrains Mono';font-size:12px;color:var(--c);margin-top:12px}
+
+/* process */
+.seq{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:46px;border:1px solid var(--line)}
+.seq div{padding:24px;border-right:1px solid var(--line);transition:background .4s}
+.seq div:last-child{border-right:0}
+.seq div.lit{background:rgba(61,255,176,.08)}
+.seq b{font-family:'JetBrains Mono';color:var(--g);font-size:13px}
+.seq h3{font-size:20px;margin:8px 0}
+.seq p{color:var(--muted);font-family:'Sarabun';font-size:14px}
+
+/* team as operatives */
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:46px}
+.op{background:var(--panel);border:1px solid var(--line);padding:20px;transition:border-color .3s}
+.op:hover{border-color:var(--c)}
+.op .face{aspect-ratio:1;background:repeating-linear-gradient(45deg,rgba(51,214,255,.07) 0 6px,transparent 6px 12px),radial-gradient(circle at 50% 40%,rgba(51,214,255,.25),transparent 60%);border:1px solid var(--line);display:grid;place-items:center;font-family:'JetBrains Mono';font-size:60px;font-weight:700;color:var(--c);position:relative;overflow:hidden;margin-bottom:14px}
+.op .face::after{content:'';position:absolute;left:0;right:0;height:2px;background:var(--c);box-shadow:0 0 12px var(--c);animation:scan 2.6s linear infinite}
+@keyframes scan{from{top:0}to{top:100%}}
+.op h4{font-size:18px}
+.op small{color:var(--muted);font-family:'Sarabun'}
+.op .log{margin-top:12px;font-family:'JetBrains Mono';font-size:12px;color:var(--muted);min-height:70px}
+.op .log div{opacity:0;animation:typeIn .4s forwards}
+@keyframes typeIn{to{opacity:1}}
+.op .log b{color:var(--g)}
+
+/* contact */
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+form{padding:28px;display:grid;gap:12px;font-family:'JetBrains Mono';font-size:13px}
+form label{color:var(--muted)}
+input,select,textarea{width:100%;margin-top:6px;padding:12px;background:rgba(3,6,10,.8);border:1px solid var(--line);color:var(--ink);font:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--g);box-shadow:0 0 14px rgba(61,255,176,.25)}
+select option{background:#031010}
+.note{color:var(--g);font-family:'JetBrains Mono';font-size:13px;min-height:20px}
+footer{padding:30px 0 40px;text-align:center;color:var(--muted);font-family:'JetBrains Mono';font-size:12px;border-top:1px solid var(--line)}
+
+/* tracer + hit */
+.tracer{position:fixed;height:2px;background:linear-gradient(90deg,transparent,var(--g));transform-origin:0 50%;pointer-events:none;z-index:240;animation:tr .25s forwards}
+@keyframes tr{from{opacity:1}to{opacity:0}}
+.hitpop{position:fixed;font-family:'JetBrains Mono';font-weight:700;color:var(--r);pointer-events:none;z-index:240;animation:pop .7s forwards;text-shadow:0 0 8px var(--r)}
+@keyframes pop{to{transform:translateY(-40px);opacity:0}}
+
+.rv{opacity:0;transform:translateY(30px);transition:all .8s cubic-bezier(.2,.8,.2,1)}
+.rv.on{opacity:1;transform:none}
+
+@media (max-width:900px){
+  .hero .grid,.contact{grid-template-columns:1fr}
+  .targets,.team{grid-template-columns:1fr 1fr}
+  .seq{grid-template-columns:1fr 1fr}
+  .hud nav{display:none}
+}
+@media (max-width:620px){.targets,.team,.seq{grid-template-columns:1fr}html,body,a,button,input,select,textarea{cursor:auto}#aim{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="scan"></div>
+<div id="aim"><span class="dot"></span></div>
+<div id="intro"><div><div class="n" id="count">3</div><div class="t">INITIALIZING · คลิกเพื่อยิง</div></div></div>
+
+<div class="hud">
+  <div class="logo">DEV//EVERYDAY</div>
+  <nav><a href="#services">SERVICES</a><a href="#process">PROCESS</a><a href="#team">OPERATIVES</a><a href="#contact">CONTACT</a></nav>
+  <div class="score" id="score">HITS 000</div>
+</div>
+
+<header class="wrap hero">
+  <div class="grid">
+    <div>
+      <span class="tag">● MISSION OPEN — รับงานใหม่</span>
+      <h1>สร้างเว็บที่ <span class="hit">ยิงตรงเป้า</span> ธุรกิจคุณ</h1>
+      <p>DevEveryday รับทำ Landing Page, เว็บองค์กร, Web App, E-commerce และระบบ API ทำงานเร็ว โค้ดสะอาด ส่งมอบตรงเวลา</p>
+      <div class="btns"><a class="btn" href="#contact">▶ START MISSION</a><a class="btn ghost" href="#services">VIEW TARGETS</a></div>
+    </div>
+    <div class="panel">
+      <div class="row"><span>DELIVERY_RATE</span><b>98%</b></div>
+      <div class="bar"><i id="b1"></i></div>
+      <div class="row" style="margin-top:14px"><span>SPEED_SCORE</span><b>A+</b></div>
+      <div class="bar"><i id="b2"></i></div>
+      <div class="row" style="margin-top:14px"><span>SEO_READY</span><b>ON</b></div>
+      <div class="bar"><i id="b3"></i></div>
+      <p class="mono" style="margin-top:16px;font-size:12px;color:var(--muted)">// คลิกเป้าหมายด้านล่างเพื่อยิง</p>
+    </div>
+  </div>
+</header>
+
+<section id="services" class="wrap">
+  <div class="rv"><div class="h2">// TARGETS / SERVICES</div><h2>เลือกเป้าหมาย</h2><p class="lead">คลิกการ์ดเพื่อยิง ดูว่าบริการไหนตรงกับโปรเจกต์ของคุณ</p></div>
+  <div class="targets">
+    <article class="target rv" data-hit="Landing Page"><h3>Landing Page</h3><p>หน้าเดียวที่ขายได้ โหลดไว มี motion</p><div class="ps">ETA 3–7 วัน</div></article>
+    <article class="target rv" data-hit="เว็บองค์กร"><h3>เว็บองค์กร</h3><p>ผลงาน บริการ SEO และ CMS</p><div class="ps">ETA 2–4 สัปดาห์</div></article>
+    <article class="target rv" data-hit="Web App"><h3>Web Application</h3><p>แดชบอร์ด ระบบจอง ระบบสมาชิก</p><div class="ps">ETA ตามขอบเขต</div></article>
+    <article class="target rv" data-hit="E-commerce"><h3>E-commerce</h3><p>ร้านค้า ชำระเงิน สต็อก จัดส่ง</p><div class="ps">ETA ตามขอบเขต</div></article>
+    <article class="target rv" data-hit="API"><h3>API & Backend</h3><p>เชื่อมระบบเดิม Admin และ Automation</p><div class="ps">ETA ตามขอบเขต</div></article>
+    <article class="target rv" data-hit="3D"><h3>3D Experience</h3><p>Three.js / WebGL สำหรับหน้าแบรนด์</p><div class="ps">ETA ตามขอบเขต</div></article>
+  </div>
+</section>
+
+<section id="process" class="wrap">
+  <div class="rv"><div class="h2">// SEQUENCE</div><h2>ลำดับการทำงาน</h2></div>
+  <div class="seq" id="seq">
+    <div><b>STEP_01</b><h3>ปรึกษา</h3><p>เข้าใจเป้าหมายและงบประมาณ</p></div>
+    <div><b>STEP_02</b><h3>ออกแบบ</h3><p>Prototype ก่อนลงมือพัฒนา</p></div>
+    <div><b>STEP_03</b><h3>พัฒนา</h3><p>โค้ดสะอาด ทดสอบทุกอุปกรณ์</p></div>
+    <div><b>STEP_04</b><h3>ส่งมอบ</h3><p>Deploy และดูแลหลังส่งมอบ</p></div>
+  </div>
+</section>
+
+<section id="team" class="wrap">
+  <div class="rv"><div class="h2">// OPERATIVES</div><h2>ทีมงาน</h2><p class="lead">คลิกการ์ดเพื่อดูประวัติ</p></div>
+  <div class="team" id="team"></div>
+</section>
+
+<section id="contact" class="wrap">
+  <div class="contact">
+    <div class="rv"><div class="h2">// CONTACT</div><h2>เริ่มภารกิจ</h2><p class="lead">กรอกข้อมูล ทีมจะติดต่อกลับเร็วที่สุด</p></div>
+    <form class="panel" id="form">
+      <label>> NAME<input required placeholder="ชื่อ / บริษัท"></label>
+      <label>> EMAIL<input required type="email" placeholder="you@example.com"></label>
+      <label>> TYPE<select required><option value="">-- เลือก --</option><option>Landing Page</option><option>เว็บองค์กร</option><option>Web App</option><option>E-commerce</option></select></label>
+      <label>> BRIEF<textarea rows="3" placeholder="รายละเอียดโปรเจกต์"></textarea></label>
+      <button class="btn" type="submit" style="justify-content:center">SEND ▶</button>
+      <div class="note" id="note"></div>
+    </form>
+  </div>
+</section>
+
+<footer>© DEVEVERYDAY · MISSION COMPLETE</footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- three.js: starfield + grid floor ---------- */
+const canvas = document.getElementById('bg');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 300);
+camera.position.set(0, 4, 18);
+const resize = () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
+resize(); addEventListener('resize', resize);
+
+const grid = new THREE.GridHelper(200, 80, 0x3dffb0, 0x0c3a2c);
+grid.position.y = -6;
+scene.add(grid);
+
+const N = 600;
+const sp = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) { sp[i * 3] = (Math.random() - 0.5) * 120; sp[i * 3 + 1] = Math.random() * 40 - 4; sp[i * 3 + 2] = -Math.random() * 200; }
+const sg = new THREE.BufferGeometry();
+sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0x33d6ff, size: 0.12, transparent: true, opacity: 0.8 }));
+scene.add(stars);
+
+let mx = 0, my = 0;
+addEventListener('pointermove', (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
+const clock = new THREE.Clock();
+(function loop() {
+  const t = clock.getElapsedTime();
+  grid.position.z = (t * 3) % 4;
+  camera.position.x += (mx * 4 - camera.position.x) * 0.04;
+  camera.position.y += (4 - my * 2 - camera.position.y) * 0.04;
+  camera.lookAt(0, 0, -10);
+  const p = sg.attributes.position;
+  for (let i = 0; i < N; i++) { p.array[i * 3 + 2] += 0.25; if (p.array[i * 3 + 2] > 5) p.array[i * 3 + 2] = -200; }
+  p.needsUpdate = true;
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+})();
+
+/* ---------- aim cursor ---------- */
+const aim = document.getElementById('aim');
+addEventListener('pointermove', (e) => { aim.style.left = e.clientX + 'px'; aim.style.top = e.clientY + 'px'; });
+document.querySelectorAll('a,button,.target,.op,input,select,textarea').forEach((el) => {
+  el.addEventListener('pointerenter', () => aim.classList.add('hot'));
+  el.addEventListener('pointerleave', () => aim.classList.remove('hot'));
+});
+
+/* ---------- shooting: tracer + hit + score ---------- */
+let hits = 0;
+const scoreEl = document.getElementById('score');
+addEventListener('pointerdown', (e) => {
+  // tracer from bottom-center to the click point
+  const x0 = innerWidth / 2, y0 = innerHeight;
+  const dx = e.clientX - x0, dy = e.clientY - y0;
+  const tr = document.createElement('div');
+  tr.className = 'tracer';
+  tr.style.left = x0 + 'px'; tr.style.top = y0 + 'px';
+  tr.style.width = Math.hypot(dx, dy) + 'px';
+  tr.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+  document.body.appendChild(tr);
+  setTimeout(() => tr.remove(), 260);
+
+  // impact popup
+  const pop = document.createElement('div');
+  pop.className = 'hitpop';
+  pop.textContent = '+' + (10 + Math.floor(Math.random() * 40));
+  pop.style.left = e.clientX + 12 + 'px'; pop.style.top = e.clientY - 12 + 'px';
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 700);
+
+  hits++;
+  scoreEl.textContent = 'HITS ' + String(hits).padStart(3, '0');
+});
+document.querySelectorAll('.target').forEach((el) => el.addEventListener('pointerdown', () => {
+  el.classList.add('down');
+  setTimeout(() => el.classList.remove('down'), 900);
+}));
+
+/* ---------- intro countdown ---------- */
+let c = 3;
+const cnt = document.getElementById('count');
+const iv = setInterval(() => {
+  c--;
+  if (c <= 0) { clearInterval(iv); document.getElementById('intro').classList.add('done'); }
+  else cnt.textContent = c;
+}, 700);
+
+/* ---------- panel bars + sequence ---------- */
+setTimeout(() => { document.getElementById('b1').style.width = '98%'; document.getElementById('b2').style.width = '92%'; document.getElementById('b3').style.width = '100%'; }, 600);
+const seqIO = new IntersectionObserver((es) => es.forEach((e) => {
+  if (!e.isIntersecting) return;
+  e.target.querySelectorAll('div').forEach((d, i) => setTimeout(() => d.classList.add('lit'), i * 400));
+  seqIO.unobserve(e.target);
+}), { threshold: 0.4 });
+seqIO.observe(document.getElementById('seq'));
+
+/* ---------- team ---------- */
+const team = [
+  { name: 'ชื่อสมาชิก 1', role: 'FRONTEND // MOTION', init: 'A', c: '#33d6ff', h: ['2019 เริ่มเขียนเว็บ', '2022 Frontend องค์กร', '2025 นำทีม Motion'] },
+  { name: 'ชื่อสมาชิก 2', role: 'BACKEND // ARCH', init: 'B', c: '#3dffb0', h: ['2018 เริ่มงาน Backend', '2022 ระบบ E-commerce', '2025 ระบบ Automation'] },
+  { name: 'ชื่อสมาชิก 3', role: 'UX // UI DESIGN', init: 'C', c: '#ff4d6d', h: ['2020 UX Research', '2023 Design System', '2025 Prototype-first'] },
+  { name: 'ชื่อสมาชิก 4', role: 'PROJECT // MGMT', init: 'D', c: '#ffc857', h: ['2017 Project Coordinator', '2021 ดูแล 40+ โปรเจกต์', '2024 ระบบ Milestone'] }
+];
+const teamEl = document.getElementById('team');
+teamEl.innerHTML = team.map((m) => `
+  <article class="op rv" data-i="${team.indexOf(m)}" style="--c:${m.c}">
+    <div class="face">${m.init}</div>
+    <h4>${m.name}</h4>
+    <small>${m.role}</small>
+    <div class="log"></div>
+  </article>`).join('');
+teamEl.addEventListener('click', (e) => {
+  const card = e.target.closest('.op');
+  if (!card) return;
+  const m = team[+card.dataset.i];
+  const log = card.querySelector('.log');
+  log.innerHTML = m.h.map((h, k) => `<div style="animation-delay:${k * .3}s"><b>></b> ${h}</div>`).join('');
+});
+
+/* ---------- reveal ---------- */
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } }), { threshold: 0.15 });
+document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+
+document.getElementById('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('note').textContent = '> TRANSMISSION SENT (เดโม)';
+});
+</script>
+</body>
+</html>

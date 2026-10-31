@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevEveryday · Light Swiss</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;800&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<style>
+:root{--bg:#f7f6f2;--ink:#111;--muted:#6b6b66;--line:#dcdad2;--acc:#ff4f1a;--blue:#0a3cff;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Inter Tight','Sarabun',sans-serif;overflow-x:hidden;line-height:1.5;-webkit-font-smoothing:antialiased}
+#dots{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+main,header,section,footer,nav{position:relative;z-index:1}
+.wrap{max-width:1200px;margin:0 auto;padding:0 28px}
+section{padding:120px 0;border-top:1px solid var(--line)}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:600}
+
+/* intro: color-block slide */
+#intro{position:fixed;inset:0;z-index:200;display:flex;pointer-events:none}
+#intro i{flex:1;background:var(--acc);transform:scaleY(1);transform-origin:top;animation:wipe .8s cubic-bezier(.7,0,.2,1) forwards}
+#intro i:nth-child(2){background:var(--blue);animation-delay:.08s}
+#intro i:nth-child(3){background:var(--ink);animation-delay:.16s}
+#intro i:nth-child(4){background:#fff;animation-delay:.24s}
+#intro i:nth-child(5){background:var(--bg);animation-delay:.32s}
+@keyframes wipe{0%{transform:scaleY(1)}100%{transform:scaleY(0);transform-origin:bottom}}
+
+nav{position:sticky;top:0;background:rgba(247,246,242,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .in{max-width:1200px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;gap:40px}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.03em}
+.logo sup{color:var(--acc);font-size:12px}
+nav ul{display:flex;gap:26px;list-style:none;font-size:15px}
+nav a{color:var(--ink);text-decoration:none;position:relative}
+nav a::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:2px;background:var(--acc);transition:width .3s}
+nav a:hover::after{width:100%}
+nav .right{margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;background:var(--ink);color:#fff;text-decoration:none;font-weight:600;font-size:15px;border:0;cursor:pointer;transition:transform .2s,background .2s}
+.btn:hover{transform:translateX(4px);background:var(--acc)}
+.btn.line{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.btn.line:hover{background:var(--ink);color:#fff}
+
+/* hero: huge type + moving square */
+.hero{min-height:calc(100vh - 62px);display:flex;flex-direction:column;justify-content:center;padding:80px 0}
+.hero .meta{display:flex;justify-content:space-between;color:var(--muted);font-size:14px;margin-bottom:40px;border-bottom:1px solid var(--line);padding-bottom:14px}
+h1{font-size:clamp(56px,11vw,168px);font-weight:800;letter-spacing:-.06em;line-height:.88}
+h1 .sq{display:inline-block;width:.7em;height:.7em;background:var(--acc);border-radius:0;vertical-align:baseline;margin-left:.04em;animation:spin 8s linear infinite}
+h1 .o{color:transparent;-webkit-text-stroke:2px var(--ink)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero-foot{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end;margin-top:50px}
+.hero-foot p{font-family:'Sarabun';font-size:21px;max-width:620px;line-height:1.6}
+.hero-foot p b{background:linear-gradient(transparent 60%,#ffd7c7 60%);font-weight:600}
+.row-cta{display:flex;gap:12px;flex-wrap:wrap}
+
+h2{font-size:clamp(40px,5.4vw,80px);font-weight:800;letter-spacing:-.05em;line-height:.95;margin:18px 0 0}
+.lead{font-family:'Sarabun';font-size:19px;color:var(--muted);max-width:560px;margin-top:20px}
+
+/* services: swiss grid table */
+.table{margin-top:60px;border-top:2px solid var(--ink)}
+.trow{display:grid;grid-template-columns:70px 1.2fr 2fr 160px;gap:24px;padding:28px 0;border-bottom:1px solid var(--line);align-items:center;transition:padding .35s,background .35s}
+.trow:hover{padding-left:20px;background:#fff}
+.trow .no{font-weight:600;color:var(--acc);font-size:15px}
+.trow h3{font-size:30px;font-weight:700;letter-spacing:-.03em}
+.trow p{font-family:'Sarabun';color:var(--muted);font-size:16px}
+.trow .arr{justify-self:end;font-size:26px;transition:transform .3s}
+.trow:hover .arr{transform:translateX(8px)}
+
+/* pricing: swiss cards */
+.price{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:60px;border:1px solid var(--ink)}
+.pl{padding:36px;background:var(--card);border-right:1px solid var(--ink);display:flex;flex-direction:column;transition:background .3s}
+.pl:last-child{border-right:0}
+.pl.hot{background:var(--ink);color:#fff}
+.pl h3{font-size:24px;font-weight:700}
+.pl .amt{font-size:56px;font-weight:800;letter-spacing:-.05em;margin:24px 0 6px}
+.pl .amt small{font-size:15px;font-weight:500;letter-spacing:0;color:inherit;opacity:.6}
+.pl ul{list-style:none;font-family:'Sarabun';font-size:16px;margin:20px 0 30px;flex:1}
+.pl li{padding:10px 0;border-top:1px solid rgba(127,127,127,.3)}
+.pl .btn{justify-content:center}
+.pl.hot .btn{background:var(--acc)}
+.pl:not(.hot) .btn{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pl:not(.hot) .btn:hover{background:var(--ink);color:#fff}
+
+/* team: big names list */
+.people{margin-top:60px}
+.person{border-top:1px solid var(--ink);padding:26px 0;display:grid;grid-template-columns:90px 1fr 1fr;gap:20px;align-items:start;cursor:pointer}
+.person:last-child{border-bottom:1px solid var(--ink)}
+.person .idx{font-weight:600;color:var(--muted)}
+.person h3{font-size:clamp(28px,3.4vw,44px);font-weight:800;letter-spacing:-.04em;transition:color .3s}
+.person:hover h3{color:var(--acc)}
+.person .r{font-family:'Sarabun';color:var(--muted)}
+.person .hist{grid-column:2/4;display:grid;grid-template-rows:0fr;transition:grid-template-rows .6s cubic-bezier(.2,.8,.2,1)}
+.person.open .hist{grid-template-rows:1fr}
+.person .hist>div{overflow:hidden}
+.person .hist ul{list-style:none;padding-top:14px;font-family:'Sarabun'}
+.person .hist li{padding:8px 0;border-top:1px dashed var(--line);display:flex;gap:20px}
+.person .hist li b{min-width:70px;font-family:'Inter Tight'}
+.person .mock{grid-column:2/4;height:0;overflow:hidden;transition:height .6s}
+.person.open .mock{height:140px}
+.mock-in{margin-top:16px;height:120px;border-radius:0;background:var(--ink);position:relative;overflow:hidden}
+.mock-in i{position:absolute;bottom:0;width:14%;background:var(--acc);transform:scaleY(0);transform-origin:bottom;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.person.open .mock-in i{transform:scaleY(1)}
+
+/* contact */
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+form{display:grid;gap:0;border-top:2px solid var(--ink)}
+form label{display:block;padding:18px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+input,select,textarea{display:block;width:100%;margin-top:8px;padding:6px 0;border:0;background:transparent;font:inherit;font-size:22px;color:var(--ink);outline:none;text-transform:none;letter-spacing:0;font-family:'Inter Tight'}
+select option{font-size:16px}
+form .btn{margin-top:26px;justify-self:start}
+.note{margin-top:14px;color:var(--blue);font-size:15px;min-height:22px}
+footer{padding:40px 0;border-top:1px solid var(--ink);font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between}
+
+.rv{opacity:0;transform:translateY(24px);transition:all .9s cubic-bezier(.2,.8,.2,1)}
+.rv.on{opacity:1;transform:none}
+
+@media (max-width:900px){
+  .trow{grid-template-columns:50px 1fr;}
+  .trow p,.trow .arr{grid-column:2}
+  .price,.contact,.hero-foot{grid-template-columns:1fr}
+  .pl{border-right:0;border-bottom:1px solid var(--ink)}
+  .person{grid-template-columns:50px 1fr}
+  .person .r,.person .hist,.person .mock{grid-column:2}
+  nav ul{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<canvas id="dots"></canvas>
+<div id="intro"><i></i><i></i><i></i><i></i><i></i></div>
+
+<main>
+<nav>
+  <div class="in">
+    <div class="logo">DevEveryday<sup>®</sup></div>
+    <ul><li><a href="#services">Services</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#team">Team</a></li><li><a href="#contact">Contact</a></li></ul>
+    <div class="right"><a class="btn" href="#contact">Connect →</a></div>
+  </div>
+</nav>
+
+<header class="wrap hero">
+  <div class="meta"><span>Web Studio — Bangkok</span><span>Est. 2017 · 4 people</span></div>
+  <h1>Websites that <span class="o">work</span> hard.<span class="sq"></span></h1>
+  <div class="hero-foot">
+    <p>เรารับทำ <b>Landing Page, เว็บองค์กร, Web App, E-commerce และ API</b> ด้วย Next.js และ React — เรียบ ชัด เร็ว และพร้อมขยาย</p>
+    <div class="row-cta"><a class="btn" href="#pricing">See plans →</a><a class="btn line" href="#services">Services</a></div>
+  </div>
+</header>
+
+<section id="services" class="wrap">
+  <div class="rv"><div class="label">01 — Services</div><h2>What we<br>build.</h2></div>
+  <div class="table">
+    <div class="trow rv"><span class="no">01</span><h3>Landing Page</h3><p>หน้าเดียวที่ขายได้ โหลดไว มี motion ตามแคมเปญ</p><span class="arr">→</span></div>
+    <div class="trow rv"><span class="no">02</span><h3>เว็บไซต์องค์กร</h3><p>ผลงาน บริการ ข่าวสาร SEO และ CMS</p><span class="arr">→</span></div>
+    <div class="trow rv"><span class="no">03</span><h3>Web Application</h3><p>แดชบอร์ด ระบบจอง ระบบสมาชิก พร้อมสิทธิ์การใช้งาน</p><span class="arr">→</span></div>
+    <div class="trow rv"><span class="no">04</span><h3>E-commerce</h3><p>ร้านค้า ตะกร้า ชำระเงิน สต็อก และการจัดส่ง</p><span class="arr">→</span></div>
+    <div class="trow rv"><span class="no">05</span><h3>API & Backend</h3><p>เชื่อมระบบเดิม ทำ Admin และ Automation</p><span class="arr">→</span></div>
+  </div>
+</section>
+
+<section id="pricing" class="wrap">
+  <div class="rv"><div class="label">02 — Pricing</div><h2>Plans.</h2><p class="lead">ราคาเป็นตัวอย่าง ปรับตามขอบเขตโปรเจกต์ได้เสมอ</p></div>
+  <div class="price">
+    <div class="pl rv"><h3>Basic</h3><div class="amt">฿—<small> / project</small></div><ul><li>Landing Page 1 หน้า</li><li>Responsive ทุกอุปกรณ์</li><li>ส่งมอบใน 1 สัปดาห์</li></ul><a class="btn" href="#contact">Choose →</a></div>
+    <div class="pl hot rv"><h3>Pro</h3><div class="amt">฿—<small> / project</small></div><ul><li>เว็บองค์กรสูงสุด 10 หน้า</li><li>SEO + CMS พื้นฐาน</li><li>Motion หรือ 3D 1 ชิ้น</li><li>ดูแลหลังส่งมอบ 30 วัน</li></ul><a class="btn" href="#contact">Choose →</a></div>
+    <div class="pl rv"><h3>Custom</h3><div class="amt">Talk<small> to us</small></div><ul><li>Web App / E-commerce เต็มรูปแบบ</li><li>ทีมประจำโปรเจกต์</li><li>SLA และการดูแลต่อเนื่อง</li></ul><a class="btn" href="#contact">Choose →</a></div>
+  </div>
+</section>
+
+<section id="team" class="wrap">
+  <div class="rv"><div class="label">03 — Team</div><h2>People.</h2></div>
+  <div class="people" id="people"></div>
+</section>
+
+<section id="contact" class="wrap">
+  <div class="contact">
+    <div class="rv"><div class="label">04 — Contact</div><h2>Let's<br>talk.</h2><p class="lead">บอกเราว่าอยากทำอะไร ทีมจะตอบกลับภายใน 24 ชั่วโมง</p></div>
+    <form id="form" class="rv">
+      <label>Name<input required placeholder="ชื่อ / บริษัท"></label>
+      <label>Email<input required type="email" placeholder="you@example.com"></label>
+      <label>Project type<select required><option value="">เลือก</option><option>Landing Page</option><option>เว็บองค์กร</option><option>Web App</option><option>E-commerce</option></select></label>
+      <label>Brief<textarea rows="2" placeholder="รายละเอียดและงบโดยประมาณ"></textarea></label>
+      <button class="btn" type="submit">Send →</button>
+      <div class="note" id="note"></div>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>© DevEveryday</span><span>Light Swiss — demo</span></div></footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- three.js: dot-field that bends toward the cursor ---------- */
+const canvas = document.getElementById('dots');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+camera.position.z = 5;
+const COLS = 60, ROWS = 36;
+const geo = new THREE.BufferGeometry();
+const base = [];
+for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) base.push([c / (COLS - 1) * 2 - 1, r / (ROWS - 1) * 2 - 1]);
+const pos = new Float32Array(base.length * 3);
+geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+const dots = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x111111, size: 2.2, sizeAttenuation: false, transparent: true, opacity: 0.22 }));
+scene.add(dots);
+const resize = () => { renderer.setSize(innerWidth, innerHeight, false); const a = innerWidth / innerHeight; camera.left = -a; camera.right = a; camera.updateProjectionMatrix(); };
+resize(); addEventListener('resize', resize);
+
+let mx = 0, my = 0, px = 0, py = 0;
+addEventListener('pointermove', (e) => { mx = (e.clientX / innerWidth * 2 - 1) * (innerWidth / innerHeight); my = -(e.clientY / innerHeight * 2 - 1); });
+(function loop() {
+  px += (mx - px) * 0.08; py += (my - py) * 0.08;
+  const a = innerWidth / innerHeight;
+  for (let i = 0; i < base.length; i++) {
+    const [bx, by] = base[i];
+    const x = bx * a, y = by;
+    const dx = x - px, dy = y - py;
+    const d = Math.hypot(dx, dy);
+    const push = 0.18 / (1 + d * d * 8);
+    pos[i * 3] = (x + dx * push) ;
+    pos[i * 3 + 1] = (y + dy * push);
+    pos[i * 3 + 2] = 0;
+  }
+  geo.attributes.position.needsUpdate = true;
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+})();
+
+/* ---------- intro ---------- */
+setTimeout(() => document.getElementById('intro').remove(), 1400);
+
+/* ---------- team ---------- */
+const team = [
+  { name: 'ชื่อสมาชิก 1', role: 'Frontend & Motion Lead', h: [['2019', 'เริ่มเขียนเว็บจากโปรเจกต์ส่วนตัว'], ['2022', 'Frontend ให้ลูกค้าองค์กร'], ['2025', 'นำทีม Motion & 3D']] },
+  { name: 'ชื่อสมาชิก 2', role: 'Backend & Architecture', h: [['2018', 'เริ่มงาน Backend'], ['2022', 'ระบบ E-commerce หลายสาขา'], ['2025', 'ระบบ Automation ฝั่งโลจิสติกส์']] },
+  { name: 'ชื่อสมาชิก 3', role: 'UX / UI Design', h: [['2020', 'UX Research กับสตาร์ทอัพ'], ['2023', 'Design System ให้ 3 บริษัท'], ['2025', 'Prototype-first ทั้งทีม']] },
+  { name: 'ชื่อสมาชิก 4', role: 'Project Management', h: [['2017', 'Project Coordinator'], ['2021', 'ดูแลงานเว็บ 40+ โปรเจกต์'], ['2024', 'กระบวนการส่งมอบแบบ Milestone']] }
+];
+const people = document.getElementById('people');
+people.innerHTML = team.map((m, i) => `
+  <article class="person rv">
+    <span class="idx">0${i + 1}</span>
+    <h3>${m.name}</h3>
+    <span class="r">${m.role}</span>
+    <div class="mock"><div class="mock-in"><i style="left:4%;height:40%"></i><i style="left:22%;height:70%;transition-delay:.1s"></i><i style="left:40%;height:55%;transition-delay:.2s"></i><i style="left:58%;height:90%;transition-delay:.3s"></i><i style="left:76%;height:65%;transition-delay:.4s"></i></div></div>
+    <div class="hist"><div><ul>${m.h.map((x) => `<li><b>${x[0]}</b>${x[1]}</li>`).join('')}</ul></div></div>
+  </article>`).join('');
+people.addEventListener('click', (e) => {
+  const p = e.target.closest('.person');
+  if (p) p.classList.toggle('open');
+});
+
+/* ---------- reveal ---------- */
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } }), { threshold: 0.12 });
+document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+
+document.getElementById('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('note').textContent = 'Thanks — message received (demo).';
+});
+</script>
+</body>
+</html>

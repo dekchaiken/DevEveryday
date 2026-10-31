@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevEveryday · Dev Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<style>
+:root{
+  --bg:#05080a; --panel:#0b1116; --line:#1b2630;
+  --ink:#d6f5ea; --muted:#6f8a80; --green:#3dffa2; --cyan:#4fd8ff; --amber:#ffc857; --pink:#ff6ea8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:'Sarabun',system-ui,sans-serif;line-height:1.75;overflow-x:hidden}
+code,pre,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+#bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1}
+.wrap{max-width:1140px;margin:0 auto;padding:0 22px}
+section{padding:110px 0}
+.c{color:var(--green)} .k{color:var(--cyan)} .s{color:var(--amber)} .m{color:var(--muted)} .p{color:var(--pink)}
+
+/* top bar: looks like an editor tab strip */
+header.bar{position:fixed;top:0;left:0;right:0;z-index:20;background:rgba(5,8,10,.75);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1140px;margin:0 auto;padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.tabs-ide{display:flex;gap:4px;font-family:'JetBrains Mono';font-size:13px;overflow-x:auto}
+.tabs-ide a{padding:8px 14px;color:var(--muted);text-decoration:none;border-radius:6px 6px 0 0;border:1px solid transparent;border-bottom:none}
+.tabs-ide a.on{background:var(--panel);color:var(--green);border-color:var(--line)}
+.tabs-ide a:hover{color:var(--ink)}
+.brand{font-family:'JetBrains Mono';font-weight:800;color:var(--green);white-space:nowrap}
+
+/* hero */
+.hero{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;gap:50px;align-items:center;padding-top:90px}
+.kicker{font-family:'JetBrains Mono';color:var(--cyan);font-size:14px}
+h1{font-family:'JetBrains Mono';font-size:clamp(34px,5.4vw,64px);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin:14px 0 18px}
+h1 .g{color:var(--green)}
+h1 .cursor::after{content:'▋';color:var(--green);animation:blink 1s steps(2) infinite;margin-left:4px}
+@keyframes blink{50%{opacity:0}}
+.lead{color:var(--muted);font-size:17px;max-width:560px}
+.btns{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
+.btn{font-family:'JetBrains Mono';font-weight:600;font-size:14px;padding:13px 20px;border-radius:6px;text-decoration:none;border:1px solid var(--green);color:var(--green);background:rgba(61,255,162,.06);transition:all .25s;cursor:pointer}
+.btn:hover{background:var(--green);color:#03140c;box-shadow:0 0 28px rgba(61,255,162,.45)}
+.btn.alt{border-color:var(--line);color:var(--ink);background:transparent}
+.btn.alt:hover{background:var(--panel);color:var(--cyan);border-color:var(--cyan);box-shadow:none}
+
+/* terminal window */
+.term{background:rgba(11,17,22,.86);border:1px solid var(--line);border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(61,255,162,.05);overflow:hidden}
+.term-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);font-family:'JetBrains Mono';font-size:12px;color:var(--muted)}
+.term-head i{width:11px;height:11px;border-radius:50%;background:#2a3640}
+.term-head i:nth-child(1){background:#ff5f56}.term-head i:nth-child(2){background:#ffbd2e}.term-head i:nth-child(3){background:#27c93f}
+.term-body{padding:20px 22px;font-family:'JetBrains Mono';font-size:14px;min-height:340px;white-space:pre-wrap;line-height:1.9}
+.line{opacity:0;transform:translateY(4px);transition:all .3s}
+.line.show{opacity:1;transform:none}
+
+/* section headers */
+.sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:10px;font-family:'JetBrains Mono';color:var(--muted);font-size:14px}
+.sec-h b{color:var(--green)}
+h2{font-family:'JetBrains Mono';font-size:clamp(26px,3.6vw,40px);font-weight:800;letter-spacing:-.02em}
+.desc{color:var(--muted);margin-top:10px;max-width:640px}
+
+/* services as package.json */
+.pkg{margin-top:44px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s}
+.card:hover{border-color:var(--green);transform:translateY(-4px)}
+.card::after{content:'';position:absolute;inset:auto 0 0 0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);transform:translateX(-100%);transition:transform .8s}
+.card:hover::after{transform:translateX(100%)}
+.card .fn{font-family:'JetBrains Mono';color:var(--cyan);font-size:14px}
+.card h3{font-family:'JetBrains Mono';font-size:18px;margin:8px 0;color:var(--ink)}
+.card p{color:var(--muted);font-size:15px}
+.tagline{font-family:'JetBrains Mono';font-size:12px;color:var(--amber);margin-top:12px}
+
+/* accepted work: a checklist with a pipeline bar */
+.accept{margin-top:40px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px;font-family:'JetBrains Mono';font-size:14px}
+.accept li{list-style:none;padding:6px 0}
+.accept li::before{content:'✔ ';color:var(--green)}
+.accept ul{display:grid;grid-template-columns:repeat(2,1fr);gap:0 24px}
+
+/* pipeline */
+.pipe{margin-top:44px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+.stage{padding:22px 18px;border:1px solid var(--line);background:var(--panel);position:relative;margin-left:-1px}
+.stage:first-child{border-radius:12px 0 0 12px;margin-left:0}
+.stage:last-child{border-radius:0 12px 12px 0}
+.stage .dot{width:12px;height:12px;border-radius:50%;background:var(--line);margin-bottom:14px;transition:all .5s}
+.stage.done .dot{background:var(--green);box-shadow:0 0 14px var(--green)}
+.stage.run .dot{background:var(--amber);animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(255,200,87,0)}0%{box-shadow:0 0 0 0 rgba(255,200,87,.6)}}
+.stage h3{font-family:'JetBrains Mono';font-size:15px}
+.stage p{color:var(--muted);font-size:14px}
+.stage .st{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);margin-top:8px;text-transform:uppercase}
+
+/* team: git log */
+.log{margin-top:44px;display:grid;grid-template-columns:320px 1fr;gap:20px}
+.commits{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.commit{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:16px 18px;color:var(--ink);cursor:pointer;font-family:inherit;transition:background .25s}
+.commit:last-child{border-bottom:0}
+.commit:hover{background:rgba(255,255,255,.02)}
+.commit.on{background:rgba(61,255,162,.07);box-shadow:inset 3px 0 0 var(--green)}
+.commit .hash{font-family:'JetBrains Mono';color:var(--amber);font-size:12px}
+.commit b{display:block;font-size:16px;margin-top:2px}
+.commit small{color:var(--muted)}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:28px;font-family:'JetBrains Mono';font-size:14px;min-height:420px;position:relative}
+.detail .h1{font-size:20px;font-weight:800;color:var(--green)}
+.detail .role{color:var(--cyan)}
+.detail .bio{font-family:'Sarabun';color:var(--muted);font-size:16px;margin:12px 0 18px;min-height:52px}
+.detail .hist{border-left:1px dashed var(--line);margin-left:6px;padding-left:18px}
+.detail .hist div{padding:4px 0;opacity:0;transform:translateX(-8px);animation:fadeR .5s forwards}
+.detail .hist span{color:var(--amber);margin-right:10px}
+@keyframes fadeR{to{opacity:1;transform:none}}
+.detail .chips span{display:inline-block;border:1px solid var(--line);padding:3px 10px;border-radius:999px;margin:4px 6px 0 0;color:var(--cyan);font-size:12px}
+.detail .mockw{margin-top:22px;border:1px solid var(--line);border-radius:10px;padding:12px;background:#070c10}
+.detail .mockw .row{height:14px;border-radius:4px;background:linear-gradient(90deg,var(--green),transparent);margin:8px 0;transform-origin:left;animation:grow 1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes grow{from{transform:scaleX(0)}}
+
+/* contact */
+.cmd{margin-top:44px;max-width:700px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px;font-family:'JetBrains Mono';font-size:14px}
+.cmd label{display:block;color:var(--muted);margin-top:14px}
+.cmd label b{color:var(--green)}
+.cmd input,.cmd select,.cmd textarea{width:100%;margin-top:6px;background:#070c10;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font:inherit;outline:none}
+.cmd input:focus,.cmd select:focus,.cmd textarea:focus{border-color:var(--green)}
+.cmd .btn{margin-top:20px}
+.note{color:var(--amber);margin-top:12px;min-height:22px}
+
+footer{border-top:1px solid var(--line);padding:30px 0;font-family:'JetBrains Mono';color:var(--muted);font-size:13px;text-align:center}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;min-height:auto;padding-top:120px}
+  .pkg,.accept ul{grid-template-columns:1fr}
+  .pipe{grid-template-columns:1fr 1fr}
+  .stage:first-child{border-radius:12px 0 0 0}.stage:nth-child(2){border-radius:0 12px 0 0}
+  .stage:nth-child(3){border-radius:0 0 0 12px}.stage:last-child{border-radius:0 0 12px 0}
+  .log{grid-template-columns:1fr}
+  .tabs-ide{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand">~/devEveryday</div>
+    <nav class="tabs-ide">
+      <a class="on" href="#top">index.ts</a>
+      <a href="#services">services.json</a>
+      <a href="#how">pipeline.yml</a>
+      <a href="#team">git log</a>
+      <a href="#contact">contact.sh</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<header class="wrap hero" id="top">
+  <div>
+    <div class="kicker">// รับทำเว็บไซต์ &amp; โปรเจกต์ซอฟต์แวร์</div>
+    <h1>เราสร้างเว็บ<br><span class="g">ที่รันได้จริง</span><span class="cursor"></span></h1>
+    <p class="lead">DevEveryday ทีมนักพัฒนาที่รับทำ Landing Page, เว็บองค์กร, Web App, E-commerce และ API ตั้งแต่วางโครงสร้าง ไปจนถึง deploy และดูแลหลังส่งมอบ</p>
+    <div class="btns">
+      <a class="btn" href="#contact">$ start_project</a>
+      <a class="btn alt" href="#services">ดูบริการ →</a>
+    </div>
+  </div>
+  <div class="term">
+    <div class="term-head"><i></i><i></i><i></i><span style="margin-left:10px">devEveryday — zsh</span></div>
+    <div class="term-body" id="termBody"></div>
+  </div>
+</header>
+
+<!-- ============ SERVICES ============ -->
+<section id="services" class="wrap">
+  <div class="sec-h"><b>01</b> services.json</div>
+  <h2>เรารับทำอะไรบ้าง</h2>
+  <p class="desc">เลือกโมดูลที่ต้องการ หรือให้ทีมวางแผนทั้งระบบตั้งแต่ต้นจนจบ</p>
+  <div class="pkg">
+    <div class="card reveal"><div class="fn">landing()</div><h3>Landing Page</h3><p>หน้าเดียวที่ขายได้ โหลดเร็ว มี animation ตามแคมเปญ</p><div class="tagline">// ~ 3-7 วัน</div></div>
+    <div class="card reveal"><div class="fn">corporate()</div><h3>เว็บไซต์องค์กร</h3><p>ข้อมูลบริษัท ผลงาน ข่าวสาร พร้อม SEO และ CMS</p><div class="tagline">// ~ 2-4 สัปดาห์</div></div>
+    <div class="card reveal"><div class="fn">webApp()</div><h3>Web Application</h3><p>แดชบอร์ด ระบบจอง ระบบสมาชิก พร้อม role & permission</p><div class="tagline">// ตามขอบเขตโปรเจกต์</div></div>
+    <div class="card reveal"><div class="fn">shop()</div><h3>E-commerce</h3><p>ร้านค้า ตะกร้า ชำระเงิน สต็อก และการจัดส่ง</p><div class="tagline">// ตามขอบเขตโปรเจกต์</div></div>
+    <div class="card reveal"><div class="fn">api()</div><h3>API & Backend</h3><p>เชื่อมระบบเดิม ทำ Admin Panel และ Automation</p><div class="tagline">// ตามขอบเขตโปรเจกต์</div></div>
+    <div class="card reveal"><div class="fn">immersive()</div><h3>3D & Interactive</h3><p>Three.js / WebGL สำหรับประสบการณ์เว็บที่จดจำได้</p><div class="tagline">// ตามขอบเขตโปรเจกต์</div></div>
+  </div>
+  <div class="accept reveal">
+    <div class="m">// งานที่เรารับ (accepted)</div>
+    <ul style="margin-top:10px">
+      <li>เว็บไซต์ / Landing Page</li>
+      <li>Web App และระบบหลังบ้าน</li>
+      <li>ร้านค้าออนไลน์และการชำระเงิน</li>
+      <li>API และการเชื่อมต่อระบบ</li>
+      <li>ปรับปรุงเว็บเดิม / Migration</li>
+      <li>งาน 3D และ Motion</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ PROCESS ============ -->
+<section id="how" class="wrap">
+  <div class="sec-h"><b>02</b> pipeline.yml</div>
+  <h2>วิธีทำงาน</h2>
+  <p class="desc">ทุกโปรเจกต์ผ่าน pipeline เดียวกัน: ชัดเจน ตรวจสอบได้ และเห็นความคืบหน้าทุกขั้น</p>
+  <div class="pipe" id="pipe">
+    <div class="stage"><div class="dot"></div><h3>discover</h3><p>เข้าใจเป้าหมาย กลุ่มลูกค้า และงบประมาณ</p><div class="st">status: pending</div></div>
+    <div class="stage"><div class="dot"></div><h3>design</h3><p>Wireframe และ Prototype ให้เห็นก่อนพัฒนา</p><div class="st">status: pending</div></div>
+    <div class="stage"><div class="dot"></div><h3>build</h3><p>โค้ดสะอาด ทดสอบบนมือถือ อัปเดตเป็นระยะ</p><div class="st">status: pending</div></div>
+    <div class="stage"><div class="dot"></div><h3>deploy</h3><p>ขึ้นระบบจริง ส่งเอกสาร และดูแลต่อเนื่อง</p><div class="st">status: pending</div></div>
+  </div>
+</section>
+
+<!-- ============ TEAM ============ -->
+<section id="team" class="wrap">
+  <div class="sec-h"><b>03</b> git log --team</div>
+  <h2>ทีมงานของเรา</h2>
+  <p class="desc">คลิก commit เพื่อดูประวัติของแต่ละคน ระบบจะพิมพ์ข้อมูลให้ทีละบรรทัด</p>
+  <div class="log">
+    <div class="commits" id="commits"></div>
+    <div class="detail" id="detail">
+      <div class="h1" id="dName"></div>
+      <div class="role" id="dRole"></div>
+      <p class="bio" id="dBio"></p>
+      <div class="chips" id="dSkills"></div>
+      <div class="hist" id="dHist" style="margin-top:18px"></div>
+      <div class="mockw" id="dMock"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section id="contact" class="wrap">
+  <div class="sec-h"><b>04</b> contact.sh</div>
+  <h2>เริ่มโปรเจกต์กับเรา</h2>
+  <p class="desc">กรอกข้อมูลคร่าวๆ แล้วทีมจะตอบกลับพร้อมแนวทาง (ฟอร์มนี้เป็นเดโม)</p>
+  <form class="cmd" id="form">
+    <label><b>$</b> name <input required placeholder="ชื่อ / บริษัท"></label>
+    <label><b>$</b> email <input required type="email" placeholder="you@example.com"></label>
+    <label><b>$</b> type
+      <select required>
+        <option value="">-- เลือก --</option>
+        <option>landing</option><option>corporate</option><option>webApp</option><option>shop</option><option>api</option><option>immersive</option>
+      </select>
+    </label>
+    <label><b>$</b> brief <textarea rows="3" placeholder="อธิบายโปรเจกต์และงบโดยประมาณ"></textarea></label>
+    <button class="btn" type="submit">./send --project</button>
+    <div class="note" id="note"></div>
+  </form>
+</section>
+
+<footer>© DevEveryday · exit 0</footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- three.js: particle network ---------- */
+const canvas = document.getElementById('bg');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
+camera.position.z = 26;
+const resize = () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
+resize(); addEventListener('resize', resize);
+
+const N = 110, LIMIT = 6.2;
+const pts = [];
+const geo = new THREE.BufferGeometry();
+const positions = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) {
+  const p = new THREE.Vector3((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 20);
+  pts.push({ p, v: new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.01) });
+}
+geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const dots = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x3dffa2, size: 0.18, transparent: true, opacity: 0.9 }));
+scene.add(dots);
+
+const maxLines = N * N * 3;
+const linePos = new Float32Array(maxLines * 3);
+const lineGeo = new THREE.BufferGeometry();
+lineGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+const lines = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0x4fd8ff, transparent: true, opacity: 0.25 }));
+scene.add(lines);
+
+let mx = 0, my = 0;
+addEventListener('pointermove', (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
+
+function tick() {
+  for (let i = 0; i < N; i++) {
+    const { p, v } = pts[i];
+    p.add(v);
+    if (Math.abs(p.x) > 25) v.x *= -1;
+    if (Math.abs(p.y) > 15) v.y *= -1;
+    if (Math.abs(p.z) > 10) v.z *= -1;
+    positions[i * 3] = p.x; positions[i * 3 + 1] = p.y; positions[i * 3 + 2] = p.z;
+  }
+  let k = 0;
+  for (let i = 0; i < N; i++) {
+    for (let j = i + 1; j < N; j++) {
+      const a = pts[i].p, b = pts[j].p;
+      if (a.distanceTo(b) < LIMIT) {
+        linePos.set([a.x, a.y, a.z, b.x, b.y, b.z], k * 3); k += 2;
+      }
+    }
+  }
+  lineGeo.setDrawRange(0, k);
+  lineGeo.attributes.position.needsUpdate = true;
+  geo.attributes.position.needsUpdate = true;
+
+  scene.rotation.y += (mx * 0.5 - scene.rotation.y) * 0.03;
+  scene.rotation.x += (my * 0.3 - scene.rotation.x) * 0.03;
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+
+/* ---------- typed terminal hero ---------- */
+const script = [
+  ['<span class="m">$</span> <span class="c">npx</span> devEveryday init', 500],
+  ['<span class="k">▸</span> loading modules...', 400],
+  ['  <span class="c">✔</span> landing · corporate · webApp · shop · api', 350],
+  ['  <span class="c">✔</span> three.js / animation ready', 350],
+  ['  <span class="c">✔</span> ทีมงาน 4 คน พร้อมเริ่มงาน', 350],
+  ['<span class="m">$</span> <span class="c">project.start</span>({ budget: <span class="s">"ตามตกลง"</span> })', 500],
+  ['<span class="p">→</span> <span class="s">รับงานแล้ว · ตอบกลับภายใน 24 ชม.</span>', 0]
+];
+const termBody = document.getElementById('termBody');
+let lineIdx = 0;
+function typeNext() {
+  if (lineIdx >= script.length) return;
+  const [html, delay] = script[lineIdx++];
+  const el = document.createElement('div');
+  el.className = 'line';
+  el.innerHTML = html;
+  termBody.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  if (delay) setTimeout(typeNext, delay);
+}
+setTimeout(typeNext, 400);
+
+/* ---------- scroll reveal ---------- */
+const io = new IntersectionObserver((es) => es.forEach((e) => {
+  if (e.isIntersecting) { e.target.classList.add('reveal-on'); io.unobserve(e.target); }
+}), { threshold: 0.2 });
+document.querySelectorAll('.card, .accept').forEach((el) => {
+  el.style.opacity = 0; el.style.transform = 'translateY(20px)'; el.style.transition = 'all .8s cubic-bezier(.2,.8,.2,1)';
+  io.observe(el);
+});
+document.head.insertAdjacentHTML('beforeend', '<style>.reveal-on{opacity:1!important;transform:none!important}</style>');
+
+/* ---------- pipeline status animation ---------- */
+const stages = [...document.querySelectorAll('.stage')];
+const pio = new IntersectionObserver((es) => {
+  if (!es[0].isIntersecting) return;
+  pio.disconnect();
+  stages.forEach((s, i) => setTimeout(() => {
+    s.classList.add('run');
+    s.querySelector('.st').textContent = 'status: running';
+    setTimeout(() => {
+      s.classList.replace('run', 'done');
+      s.querySelector('.st').textContent = 'status: passed ✔';
+    }, 700);
+  }, i * 900));
+}, { threshold: 0.4 });
+pio.observe(document.getElementById('pipe'));
+
+/* ---------- team: git log ---------- */
+// แก้ข้อมูลสมาชิกตรงนี้ได้เลย (ข้อมูลเป็น placeholder)
+const team = [
+  { name: 'ชื่อสมาชิก 1', role: 'Frontend & Motion Lead', hash: 'a1f3c9e', color: '#3dffa2',
+    bio: 'ดูแล UI และ Animation ของทุกโปรเจกต์ ทำให้เว็บมีชีวิตโดยไม่กระทบความเร็ว',
+    skills: ['React', 'GSAP', 'Three.js'],
+    history: [['2019', 'เริ่มเขียน HTML/CSS'], ['2021', 'ทำ Frontend ให้ลูกค้าองค์กร'], ['2024', 'นำทีม Motion & 3D'], ['2026', 'วางมาตรฐาน UI ของทีม']],
+    mock: 'Motion system' },
+  { name: 'ชื่อสมาชิก 2', role: 'Backend & System Architect', hash: 'b72d0a4', color: '#4fd8ff',
+    bio: 'ออกแบบโครงสร้างระบบ API และฐานข้อมูลให้รองรับการขยายตัวของธุรกิจ',
+    skills: ['Node.js', 'PostgreSQL', 'Docker'],
+    history: [['2018', 'เริ่มงาน Backend'], ['2022', 'ระบบ E-commerce หลายสาขา'], ['2025', 'ระบบ Automation ฝั่งโลจิสติกส์']],
+    mock: 'API & Admin panel' },
+  { name: 'ชื่อสมาชิก 3', role: 'UX / UI Designer', hash: 'c94e1f7', color: '#ffc857',
+    bio: 'ออกแบบ Prototype และ Design System ให้ลูกค้าเห็นภาพก่อนลงมือพัฒนา',
+    skills: ['Figma', 'Design System', 'Prototype'],
+    history: [['2020', 'UX Research กับสตาร์ทอัพ'], ['2023', 'สร้าง Design System 3 บริษัท'], ['2025', 'Prototype-first ทั้งทีม']],
+    mock: 'Components library' },
+  { name: 'ชื่อสมาชิก 4', role: 'Project Manager', hash: 'd0e8b6c', color: '#ff6ea8',
+    bio: 'ดูแลไทม์ไลน์ งบ และการสื่อสารกับลูกค้า ทำให้ส่งมอบตรงเวลา',
+    skills: ['Agile', 'Scrum', 'Client Success'],
+    history: [['2017', 'Project Coordinator'], ['2021', 'ดูแลงานเว็บกว่า 40 โปรเจกต์'], ['2024', 'กระบวนการส่งมอบแบบ Milestone']],
+    mock: 'Roadmap & milestones' }
+];
+
+const commitsEl = document.getElementById('commits');
+commitsEl.innerHTML = team.map((m, i) => `
+  <button class="commit" data-i="${i}">
+    <span class="hash">commit ${m.hash}</span>
+    <b>${m.name}</b>
+    <small>${m.role}</small>
+  </button>`).join('');
+
+let typingToken = 0;
+function typeText(el, text, speed = 22, token) {
+  el.textContent = '';
+  let i = 0;
+  const step = () => {
+    if (token !== typingToken) return;
+    el.textContent = text.slice(0, i++);
+    if (i <= text.length) setTimeout(step, speed);
+  };
+  step();
+}
+
+function showMember(i) {
+  const m = team[i];
+  const token = ++typingToken;
+  document.querySelectorAll('.commit').forEach((b, j) => b.classList.toggle('on', j === i));
+  document.getElementById('detail').style.setProperty('--c', m.color);
+  document.getElementById('dName').textContent = m.name;
+  document.getElementById('dRole').textContent = '→ ' + m.role;
+  typeText(document.getElementById('dBio'), m.bio, 18, token);
+  document.getElementById('dSkills').innerHTML = m.skills.map((s) => `<span>${s}</span>`).join('');
+  document.getElementById('dHist').innerHTML = m.history.map((h, k) =>
+    `<div style="animation-delay:${0.8 + k * 0.35}s"><span>${h[0]}</span>${h[1]}</div>`).join('');
+  document.getElementById('dMock').innerHTML = `
+    <div class="m" style="font-size:12px;margin-bottom:6px">// ${m.mock}</div>
+    <div class="row" style="width:92%;animation-delay:.2s"></div>
+    <div class="row" style="width:70%;animation-delay:.4s;background:linear-gradient(90deg,#4fd8ff,transparent)"></div>
+    <div class="row" style="width:84%;animation-delay:.6s;background:linear-gradient(90deg,#ffc857,transparent)"></div>`;
+  document.querySelector('#detail .hist').style.borderColor = m.color;
+  document.getElementById('dName').style.color = m.color;
+}
+
+let cur = 0, timer;
+commitsEl.addEventListener('click', (e) => {
+  const b = e.target.closest('.commit');
+  if (!b) return;
+  cur = +b.dataset.i; showMember(cur); restart();
+});
+function restart() {
+  clearInterval(timer);
+  timer = setInterval(() => { cur = (cur + 1) % team.length; showMember(cur); }, 8000);
+}
+showMember(0);
+restart();
+
+/* ---------- contact demo ---------- */
+document.getElementById('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const note = document.getElementById('note');
+  note.textContent = '> request queued (เดโม — ต่อ backend เองได้ภายหลัง)';
+});
+</script>
+</body>
+</html>

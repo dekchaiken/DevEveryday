@@ -1,0 +1,61 @@
+export type HistoryItem = {
+  year: string;
+  title: string;
+  detail: string;
+};
+
+export type Member = {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  skills: string[];
+  color: string;
+  joinedAt: string; // YYYY-MM-DD
+  isNew: boolean;
+  history: HistoryItem[];
+};
+
+export type Service = {
+  id: string;
+  title: string;
+  description: string;
+  eta: string;
+};
+
+export type Plan = {
+  id: string;
+  name: string;
+  price: string;
+  unit: string;
+  highlight: boolean;
+  features: string[];
+};
+
+export type Step = {
+  id: string;
+  title: string;
+  description: string;
+};
+
+export type SiteInfo = {
+  name: string;
+  tagline: string;
+  headline: string;
+  subheadline: string;
+  badge: string;
+  ctaPrimary: string;
+  ctaSecondary: string;
+  email: string;
+  footer: string;
+};
+
+export type Content = {
+  site: SiteInfo;
+  stack: string[];
+  services: Service[];
+  plans: Plan[];
+  process: Step[];
+  team: Member[];
+  contact: { types: string[] };
+};

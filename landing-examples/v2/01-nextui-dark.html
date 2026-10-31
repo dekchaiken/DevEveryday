@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="th" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevEveryday · NextUI Dark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000; --surface:#18181b; --surface2:#27272a; --border:#3f3f46;
+  --text:#ececee; --muted:#a1a1aa; --primary:#006fee; --primary-2:#338ef7; --success:#17c964;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Sarabun',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1152px;margin:0 auto;padding:0 24px}
+section{padding:96px 0;position:relative}
+.muted{color:var(--muted)}
+
+/* intro loader */
+#intro{position:fixed;inset:0;background:#000;z-index:200;display:grid;place-items:center;transition:opacity .7s,visibility .7s}
+#intro.done{opacity:0;visibility:hidden}
+#intro .box{text-align:center}
+#intro .word{font-size:26px;font-weight:700;letter-spacing:-.02em}
+#intro .word span{color:var(--primary-2)}
+#intro .bar{width:220px;height:2px;background:var(--surface2);margin:18px auto 0;border-radius:4px;overflow:hidden}
+#intro .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--primary-2));animation:load 1.4s cubic-bezier(.6,0,.2,1) forwards}
+@keyframes load{to{width:100%}}
+
+/* navbar */
+nav{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.6);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--surface2)}
+nav .in{max-width:1152px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:36px}
+.logo{font-size:20px;font-weight:600;letter-spacing:-.02em}
+nav .links{display:flex;gap:28px;font-size:14px;color:var(--muted)}
+nav .links a{color:inherit;text-decoration:none;transition:color .2s}
+nav .links a:hover{color:var(--text)}
+.dd{position:relative;cursor:pointer}
+.dd:hover .menu{opacity:1;transform:none;pointer-events:auto}
+.menu{position:absolute;top:28px;left:-14px;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:6px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:.2s;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+.menu a{display:block;padding:8px 12px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+.menu a:hover{background:var(--surface2)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.theme{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:grid;place-items:center}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:12px;font-family:inherit;font-weight:500;font-size:14px;color:#fff;background:var(--primary);border:0;cursor:pointer;text-decoration:none;transition:transform .15s,background .2s,box-shadow .3s;box-shadow:0 0 0 rgba(0,111,238,0)}
+.btn:hover{background:var(--primary-2);box-shadow:0 0 28px rgba(0,111,238,.55)}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.btn.ghost:hover{background:var(--surface2);box-shadow:none}
+.btn.lg{height:48px;padding:0 26px;font-size:15px}
+
+/* hero */
+.hero{min-height:calc(100vh - 62px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px}
+.hero::before{content:'';position:absolute;inset:-20% -10% auto;height:120%;background:radial-gradient(ellipse 60% 45% at 50% 30%,rgba(0,111,238,.35),transparent 70%);pointer-events:none;z-index:-1}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:13px;color:var(--muted);margin-bottom:28px}
+.pill b{color:var(--text);font-weight:500}
+h1{font-size:clamp(40px,6.4vw,72px);font-weight:700;letter-spacing:-.035em;line-height:1.05;max-width:880px}
+h1 .g{background:linear-gradient(120deg,#fff 20%,#8fb8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin-top:22px;font-size:19px;color:var(--muted);max-width:640px;font-family:'Sarabun',sans-serif}
+.hero .btns{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap;justify-content:center}
+
+/* partners */
+.partners{text-align:center}
+.partners h3{font-size:18px;font-weight:600;color:var(--muted);margin-bottom:32px}
+.logos{display:flex;gap:56px;justify-content:center;flex-wrap:wrap;align-items:center}
+.logos span{font-weight:700;font-size:18px;color:#6b6b75;letter-spacing:-.01em;transition:color .3s,transform .3s;display:inline-flex;align-items:center;gap:8px}
+.logos span:hover{color:var(--text);transform:translateY(-2px)}
+.logos i{width:22px;height:22px;border-radius:6px;background:currentColor;opacity:.6;display:inline-block}
+
+/* sections */
+.kicker{font-size:13px;color:var(--primary-2);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+h2{font-size:clamp(28px,3.6vw,42px);font-weight:700;letter-spacing:-.03em;margin:10px 0 14px}
+
+/* cards (NextUI card) */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px}
+.card{background:var(--surface);border:1px solid var(--surface2);border-radius:18px;padding:26px;transition:transform .3s,border-color .3s,box-shadow .3s;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-4px);border-color:var(--border);box-shadow:0 24px 50px -20px rgba(0,111,238,.35)}
+.card .ico{width:40px;height:40px;border-radius:12px;background:rgba(0,111,238,.15);color:var(--primary-2);display:grid;place-items:center;font-weight:700}
+.card h3{font-size:18px;margin:18px 0 8px;font-weight:600}
+.card p{color:var(--muted);font-size:15px;font-family:'Sarabun',sans-serif}
+
+/* pricing */
+.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px;align-items:stretch}
+.plan{background:var(--surface);border:1px solid var(--surface2);border-radius:18px;padding:30px;display:flex;flex-direction:column;transition:transform .3s}
+.plan:hover{transform:translateY(-6px)}
+.plan.hot{border:2px solid var(--primary);box-shadow:0 0 0 6px rgba(0,111,238,.12)}
+.plan .tag{font-size:12px;color:var(--primary-2);font-weight:600}
+.plan h3{font-size:22px;margin:10px 0 4px}
+.plan .price{font-size:40px;font-weight:700;letter-spacing:-.03em}
+.plan .price small{font-size:14px;color:var(--muted);font-weight:400}
+.plan ul{list-style:none;margin:22px 0 26px;display:grid;gap:10px;font-size:15px;color:var(--muted);font-family:'Sarabun',sans-serif;flex:1}
+.plan li::before{content:'✓ ';color:var(--success);font-weight:700}
+.plan .btn{justify-content:center}
+
+/* team */
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:48px}
+.person{background:var(--surface);border:1px solid var(--surface2);border-radius:18px;padding:20px;transition:transform .3s,border-color .3s;cursor:pointer}
+.person:hover,.person.on{transform:translateY(-4px);border-color:var(--primary)}
+.avatar{width:100%;aspect-ratio:1.1;border-radius:14px;background:linear-gradient(135deg,var(--c,#006fee),#0b0b0f);display:grid;place-items:center;font-size:44px;font-weight:700;color:#fff;margin-bottom:14px;position:relative;overflow:hidden}
+.avatar::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.25) 50%,transparent 60%);transform:translateX(-100%);transition:transform .9s}
+.person:hover .avatar::after{transform:translateX(100%)}
+.person h4{font-size:16px;font-weight:600}
+.person small{color:var(--muted);font-size:13px}
+.hist{display:none;margin-top:14px;border-top:1px solid var(--surface2);padding-top:12px;font-size:13px;color:var(--muted);font-family:'Sarabun',sans-serif}
+.person.on .hist{display:block}
+.hist div{padding:4px 0;opacity:0;transform:translateY(6px);animation:up .5s forwards}
+@keyframes up{to{opacity:1;transform:none}}
+.hist b{color:var(--text);font-weight:500;margin-right:8px}
+
+/* contact */
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+form.card{display:grid;gap:12px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font:inherit;outline:none;transition:border .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,111,238,.25)}
+.note{color:var(--success);font-size:14px;min-height:20px}
+footer{border-top:1px solid var(--surface2);padding:32px 0;text-align:center;color:var(--muted);font-size:14px}
+
+/* click burst */
+.spark{position:fixed;width:6px;height:6px;border-radius:50%;background:var(--primary-2);box-shadow:0 0 10px var(--primary);pointer-events:none;z-index:300;animation:sp .6s ease-out forwards}
+@keyframes sp{to{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}
+
+/* reveal */
+.rv{opacity:0;translate:0 24px;transition:all .8s cubic-bezier(.2,.8,.2,1)}
+.rv.on{opacity:1;translate:none}
+
+@media (max-width:900px){
+  .cards,.pricing{grid-template-columns:1fr}
+  .team{grid-template-columns:1fr 1fr}
+  .contact{grid-template-columns:1fr}
+  nav .links{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;translate:none}}
+</style>
+</head>
+<body>
+
+<div id="intro"><div class="box"><div class="word">Dev<span>Everyday</span></div><div class="bar"><i></i></div></div></div>
+
+<nav>
+  <div class="in">
+    <div class="logo">DevEveryday</div>
+    <div class="links">
+      <a href="#services">บริการ</a>
+      <div class="dd">Dropdown ⌄
+        <div class="menu"><a href="#models">รูปแบบงาน</a><a href="#pricing">ราคา</a><a href="#process">วิธีทำงาน</a></div>
+      </div>
+      <a href="#team">ทีมงาน</a>
+      <a href="#contact">ติดต่อ</a>
+    </div>
+    <div class="nav-right">
+      <a class="btn" href="#contact">Connect →</a>
+      <button class="theme" title="theme" id="theme">◐</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" style="position:relative">
+  <span class="pill"><b>New</b> DevEveryday template is here!</span>
+  <h1>รับทำเว็บไซต์และแอป <span class="g">ด้วย Next.js</span> ให้ธุรกิจของคุณโตไว</h1>
+  <p>ทีมพัฒนาที่รับทำ Landing Page, เว็บองค์กร, Web App และ E-commerce ใช้ Next.js + Tailwind ให้ความเร็วและ SEO ที่ดี</p>
+  <div class="btns">
+    <a class="btn lg" href="#pricing">See plans</a>
+    <a class="btn lg ghost" href="#services">See more</a>
+  </div>
+</header>
+
+<section class="partners wrap">
+  <h3>Our Partners &amp; Stack</h3>
+  <div class="logos">
+    <span><i></i>Next.js</span><span><i></i>React</span><span><i></i>Tailwind</span><span><i></i>Node.js</span><span><i></i>Docker</span><span><i></i>Figma</span>
+  </div>
+</section>
+
+<section id="services" class="wrap">
+  <div class="rv"><div class="kicker">Services</div><h2>เรารับทำอะไรบ้าง</h2><p class="muted" style="font-family:'Sarabun'">เลือกเฉพาะส่วนที่ต้องการ หรือให้ทีมวางแผนทั้งโปรเจกต์</p></div>
+  <div class="cards">
+    <article class="card rv"><div class="ico">L</div><h3>Landing Page</h3><p>หน้าเดียวที่ขายได้ โหลดเร็ว พร้อม animation ตามแคมเปญ</p></article>
+    <article class="card rv"><div class="ico">W</div><h3>เว็บไซต์องค์กร</h3><p>ผลงาน บริการ ข่าวสาร SEO และระบบจัดการคอนเทนต์</p></article>
+    <article class="card rv"><div class="ico">A</div><h3>Web Application</h3><p>แดชบอร์ด ระบบจอง ระบบสมาชิก พร้อมสิทธิ์การใช้งาน</p></article>
+    <article class="card rv"><div class="ico">S</div><h3>E-commerce</h3><p>ร้านค้า ตะกร้า ชำระเงิน สต็อก และการจัดส่ง</p></article>
+    <article class="card rv"><div class="ico">P</div><h3>API & Backend</h3><p>เชื่อมระบบเดิม ทำ Admin Panel และ Automation</p></article>
+    <article class="card rv"><div class="ico">3</div><h3>3D & Motion</h3><p>Three.js และ Motion สำหรับหน้าแบรนด์ที่จดจำได้</p></article>
+  </div>
+</section>
+
+<section id="pricing" class="wrap">
+  <div class="rv" style="text-align:center"><div class="kicker">Pricing</div><h2>แพ็กเกจสำหรับธุรกิจของคุณ</h2><p class="muted" style="font-family:'Sarabun'">เลือกแพ็กเกจที่เหมาะกับงบ ปรับขอบเขตได้ทุกเมื่อ</p></div>
+  <div class="pricing">
+    <div class="plan rv"><span class="tag">STARTER</span><h3>Basic Plan</h3><div class="price">฿—<small> / โปรเจกต์</small></div>
+      <ul><li>Landing Page 1 หน้า</li><li>Responsive ทุกอุปกรณ์</li><li>ส่งมอบภายใน 1 สัปดาห์</li></ul>
+      <a class="btn ghost" href="#contact">เลือกแพ็กเกจ</a></div>
+    <div class="plan hot rv"><span class="tag">MOST POPULAR</span><h3>Pro Plan</h3><div class="price">฿—<small> / โปรเจกต์</small></div>
+      <ul><li>เว็บไซต์องค์กรสูงสุด 10 หน้า</li><li>SEO + CMS พื้นฐาน</li><li>Animation และ 3D 1 ชิ้น</li><li>ดูแลหลังส่งมอบ 30 วัน</li></ul>
+      <a class="btn" href="#contact">เลือกแพ็กเกจ</a></div>
+    <div class="plan rv"><span class="tag">ENTERPRISE</span><h3>Custom Plan</h3><div class="price">ติดต่อ<small> เพื่อประเมิน</small></div>
+      <ul><li>Web App / E-commerce เต็มรูปแบบ</li><li>ทีมประจำโปรเจกต์</li><li>SLA และการดูแลต่อเนื่อง</li></ul>
+      <a class="btn ghost" href="#contact">คุยกับทีม</a></div>
+  </div>
+</section>
+
+<section id="team" class="wrap">
+  <div class="rv"><div class="kicker">Team</div><h2>ทีมงานของเรา</h2><p class="muted" style="font-family:'Sarabun'">คลิกการ์ดเพื่อดูประวัติ</p></div>
+  <div class="team" id="team"></div>
+</section>
+
+<section id="contact" class="wrap">
+  <div class="contact">
+    <div class="rv"><div class="kicker">Contact</div><h2>เริ่มโปรเจกต์กับเรา</h2><p class="muted" style="font-family:'Sarabun'">บอกเราคร่าวๆ ทีมจะตอบกลับภายใน 24 ชั่วโมง</p></div>
+    <form class="card rv" id="form">
+      <input required placeholder="ชื่อ / บริษัท">
+      <input required type="email" placeholder="อีเมล">
+      <select required><option value="">เลือกประเภทงาน</option><option>Landing Page</option><option>เว็บองค์กร</option><option>Web App</option><option>E-commerce</option></select>
+      <textarea rows="3" placeholder="รายละเอียดโปรเจกต์"></textarea>
+      <button class="btn lg" type="submit" style="justify-content:center">ส่งข้อความ</button>
+      <div class="note" id="note"></div>
+    </form>
+  </div>
+</section>
+
+<footer>© DevEveryday · Built with Next.js style UI</footer>
+
+<script>
+/* ---------- intro ---------- */
+setTimeout(() => document.getElementById('intro').classList.add('done'), 1500);
+
+/* ---------- theme toggle (dark / light) ---------- */
+document.getElementById('theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  const light = root.classList.toggle('light');
+  root.style.setProperty('--bg', light ? '#fff' : '#000');
+  root.style.setProperty('--surface', light ? '#f4f4f5' : '#18181b');
+  root.style.setProperty('--surface2', light ? '#e4e4e7' : '#27272a');
+  root.style.setProperty('--border', light ? '#d4d4d8' : '#3f3f46');
+  root.style.setProperty('--text', light ? '#18181b' : '#ececee');
+  root.style.setProperty('--muted', light ? '#52525b' : '#a1a1aa');
+});
+
+/* ---------- click burst ---------- */
+addEventListener('pointerdown', (e) => {
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('i');
+    s.className = 'spark';
+    const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 90;
+    s.style.left = e.clientX + 'px'; s.style.top = e.clientY + 'px';
+    s.style.setProperty('--x', Math.cos(a) * d + 'px');
+    s.style.setProperty('--y', Math.sin(a) * d + 'px');
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 600);
+  }
+});
+
+/* ---------- reveal ---------- */
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } }), { threshold: 0.15 });
+document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+
+/* ---------- team (placeholder data) ---------- */
+const team = [
+  { name: 'ชื่อสมาชิก 1', role: 'Frontend Lead', c: '#006fee', h: [['2019', 'เริ่มเขียนเว็บ'], ['2022', 'นำทีม Frontend'], ['2025', 'วาง Design System']] },
+  { name: 'ชื่อสมาชิก 2', role: 'Backend Architect', c: '#7828c8', h: [['2018', 'เริ่มงาน Backend'], ['2022', 'ระบบ E-commerce'], ['2025', 'ระบบ Automation']] },
+  { name: 'ชื่อสมาชิก 3', role: 'UX / UI Designer', c: '#17c964', h: [['2020', 'UX Research'], ['2023', 'Design System 3 โปรเจกต์'], ['2025', 'Prototype-first']] },
+  { name: 'ชื่อสมาชิก 4', role: 'Project Manager', c: '#f5a524', h: [['2017', 'Project Coordinator'], ['2021', 'ดูแล 40+ โปรเจกต์'], ['2024', 'ระบบ Milestone']] }
+];
+const teamEl = document.getElementById('team');
+teamEl.innerHTML = team.map((m, i) => `
+  <article class="person rv" data-i="${i}" style="--c:${m.c}">
+    <div class="avatar">${m.name.slice(-1)}</div>
+    <h4>${m.name}</h4><small>${m.role}</small>
+    <div class="hist">${m.h.map((x, k) => `<div style="animation-delay:${k * .2}s"><b>${x[0]}</b>${x[1]}</div>`).join('')}</div>
+  </article>`).join('');
+teamEl.addEventListener('click', (e) => {
+  const p = e.target.closest('.person');
+  if (!p) return;
+  const on = !p.classList.contains('on');
+  teamEl.querySelectorAll('.person').forEach((x) => x.classList.remove('on'));
+  if (on) p.classList.add('on');
+});
+
+/* ---------- demo form ---------- */
+document.getElementById('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('note').textContent = '✓ รับข้อความแล้ว (เดโม)';
+});
+</script>
+</body>
+</html>

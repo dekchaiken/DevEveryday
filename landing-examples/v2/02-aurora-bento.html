@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevEveryday · Aurora Bento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<style>
+:root{--bg:#07080d;--card:rgba(20,22,34,.6);--line:rgba(255,255,255,.08);--ink:#f5f7ff;--muted:#8d93b0;--a:#7cf5ff;--b:#8b7bff;--c:#ff9ad5;--r:24px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Manrope','Sarabun',sans-serif;overflow-x:hidden;line-height:1.6}
+#bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;opacity:.9}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+section{padding:100px 0}
+
+/* intro: blinking aurora wipe */
+#intro{position:fixed;inset:0;z-index:200;background:var(--bg);display:grid;place-items:center;transition:transform 1s cubic-bezier(.7,0,.2,1)}
+#intro.done{transform:translateY(-100%)}
+#intro span{font-weight:800;font-size:28px;letter-spacing:-.03em;animation:fadeIn .8s both}
+@keyframes fadeIn{from{opacity:0;filter:blur(8px)}}
+
+nav{position:fixed;top:16px;left:50%;translate:-50% 0;z-index:40;width:min(1080px,calc(100% - 28px));display:flex;align-items:center;justify-content:space-between;padding:10px 10px 10px 22px;border-radius:999px;background:rgba(15,17,28,.6);border:1px solid var(--line);backdrop-filter:blur(18px);}
+.logo{font-weight:800;font-size:18px}
+.logo b{background:linear-gradient(90deg,var(--a),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+nav ul{display:flex;gap:24px;list-style:none;font-size:14px;color:var(--muted)}
+nav a{color:inherit;text-decoration:none}
+nav a:hover{color:var(--ink)}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:999px;background:linear-gradient(120deg,var(--b),var(--a));color:#070812;font-weight:800;text-decoration:none;font-size:14px;transition:transform .3s,box-shadow .3s}
+.cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(124,245,255,.35)}
+
+/* hero */
+.hero{min-height:100vh;display:flex;align-items:center;padding-top:120px}
+.hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;width:100%}
+.glass{background:var(--card);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(20px);padding:30px;position:relative;overflow:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s}
+.glass:hover{border-color:rgba(124,245,255,.35)}
+.glass::after{content:'';position:absolute;inset:0;background:radial-gradient(400px circle at var(--mx,50%) var(--my,0%),rgba(124,245,255,.12),transparent 50%);opacity:0;transition:opacity .4s;pointer-events:none}
+.glass:hover::after{opacity:1}
+.hero-main{padding:48px;min-height:460px;display:flex;flex-direction:column;justify-content:flex-end}
+.badge{display:inline-flex;align-self:flex-start;gap:8px;font-size:13px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-bottom:20px}
+.badge i{width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 10px var(--a)}
+h1{font-size:clamp(40px,6vw,76px);font-weight:800;letter-spacing:-.04em;line-height:1}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--a),var(--b),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin-top:18px;color:var(--muted);max-width:560px;font-family:'Sarabun'}
+.hero-side{display:grid;gap:20px}
+.stat{padding:26px}
+.stat b{font-size:44px;font-weight:800;letter-spacing:-.03em}
+.stat small{display:block;color:var(--muted);font-family:'Sarabun'}
+
+/* bento services */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin-top:50px}
+.bento .glass{grid-column:span 2;min-height:230px;display:flex;flex-direction:column;justify-content:space-between}
+.bento .big{grid-column:span 4}
+.bento .tall{grid-row:span 2}
+.bento h3{font-size:22px;font-weight:700;margin-top:14px}
+.bento p{color:var(--muted);font-family:'Sarabun';font-size:15px}
+.n{font-size:13px;color:var(--a);font-weight:700}
+.kicker{color:var(--a);font-size:13px;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+h2{font-size:clamp(30px,4vw,50px);font-weight:800;letter-spacing:-.03em;margin:12px 0}
+.lead{color:var(--muted);font-family:'Sarabun';max-width:600px}
+
+/* stack marquee */
+.marquee{overflow:hidden;border-block:1px solid var(--line);padding:22px 0;mask-image:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent)}
+.track{display:flex;gap:60px;width:max-content;animation:mq 22s linear infinite;font-size:26px;font-weight:800;color:#3d4259}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* team */
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:50px}
+.member{padding:24px;text-align:left;cursor:pointer}
+.member .orb{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,var(--c) 40%,#0b0d18);box-shadow:0 0 40px var(--c);margin-bottom:22px;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.member:hover .orb{transform:scale(1.15) rotate(20deg)}
+.member h4{font-size:18px;font-weight:700}
+.member small{color:var(--muted);font-family:'Sarabun'}
+.member .tl{height:0;overflow:hidden;transition:height .6s cubic-bezier(.2,.8,.2,1)}
+.member.open .tl{height:auto}
+.tl div{border-left:2px solid var(--c);padding:6px 0 6px 12px;margin-top:10px;font-family:'Sarabun';font-size:14px;color:var(--muted);opacity:0;transform:translateX(-10px);transition:all .5s}
+.member.open .tl div{opacity:1;transform:none}
+.tl b{color:var(--ink);margin-right:6px}
+
+/* process + contact */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:50px}
+.step{padding:26px}
+.step .n{font-size:40px;font-weight:800;background:linear-gradient(var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.step h3{font-size:19px;margin:8px 0}
+.step p{color:var(--muted);font-family:'Sarabun';font-size:15px}
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+form{padding:34px;display:grid;gap:12px}
+input,select,textarea{width:100%;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:rgba(7,8,13,.6);color:var(--ink);font:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--a)}
+select option{background:#101320}
+.note{color:var(--a);min-height:22px;font-size:14px}
+footer{padding:30px 0 50px;text-align:center;color:var(--muted);font-size:14px;font-family:'Sarabun'}
+
+.rv{opacity:0;translate:0 40px;transition:all 1s cubic-bezier(.2,.8,.2,1)}
+.rv.on{opacity:1;translate:none}
+
+@media (max-width:960px){
+  .hero-grid,.contact{grid-template-columns:1fr}
+  .bento{grid-template-columns:1fr 1fr}
+  .bento .glass,.bento .big{grid-column:span 2}
+  .team,.steps{grid-template-columns:1fr 1fr}
+  nav ul{display:none}
+}
+@media (max-width:620px){.bento,.team,.steps{grid-template-columns:1fr}.bento .glass,.bento .big{grid-column:span 1}.hero-main{padding:28px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;translate:none}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="intro"><span>DevEveryday<span style="color:var(--a)">.</span></span></div>
+
+<nav>
+  <div class="logo">Dev<b>Everyday</b></div>
+  <ul><li><a href="#services">บริการ</a></li><li><a href="#process">วิธีทำงาน</a></li><li><a href="#team">ทีมงาน</a></li><li><a href="#contact">ติดต่อ</a></li></ul>
+  <a class="cta" href="#contact">เริ่มโปรเจกต์ →</a>
+</nav>
+
+<header class="wrap hero">
+  <div class="hero-grid">
+    <div class="glass hero-main" data-glow>
+      <span class="badge"><i></i> รับงานใหม่ เปิดรับ Q3</span>
+      <h1>เว็บที่ <em>สวยและเร็ว</em> สร้างจากทีมเดียวกัน</h1>
+      <p>รับทำ Landing Page, เว็บองค์กร, Web App และ E-commerce ด้วย Next.js และ React ตั้งแต่ออกแบบจนถึง deploy</p>
+      <div style="margin-top:26px;display:flex;gap:12px;flex-wrap:wrap"><a class="cta" href="#contact">ขอใบเสนอราคา →</a><a class="cta" href="#services" style="background:var(--card);color:var(--ink);border:1px solid var(--line)">ดูบริการ</a></div>
+    </div>
+    <div class="hero-side">
+      <div class="glass stat" data-glow><b>4</b><small>สมาชิกหลักที่ดูแลทุกโปรเจกต์</small></div>
+      <div class="glass stat" data-glow><b>100%</b><small>ส่งมอบพร้อม Responsive และ SEO พื้นฐาน</small></div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee"><div class="track" id="track"></div></div>
+
+<section id="services" class="wrap">
+  <div class="rv"><div class="kicker">Services</div><h2>เรารับทำอะไร</h2><p class="lead">เลือกเฉพาะโมดูลที่ต้องการ หรือให้ทีมวางแผนทั้งระบบ</p></div>
+  <div class="bento">
+    <div class="glass big rv" data-glow><div class="n">01</div><div><h3>Web Application</h3><p>แดชบอร์ด ระบบจอง ระบบสมาชิก พร้อมสิทธิ์การใช้งานหลายระดับ เชื่อมต่อ API และฐานข้อมูลจริง</p></div></div>
+    <div class="glass rv" data-glow><div class="n">02</div><h3>Landing Page</h3><p>หน้าเดียวที่ขายได้ โหลดไว มี motion</p></div>
+    <div class="glass rv" data-glow><div class="n">03</div><h3>เว็บองค์กร</h3><p>ผลงาน บริการ SEO และ CMS</p></div>
+    <div class="glass tall rv" data-glow><div class="n">04</div><h3>E-commerce</h3><p>ร้านค้า ตะกร้า ชำระเงิน สต็อก และการจัดส่ง ปรับแต่งตามธุรกิจ</p></div>
+    <div class="glass rv" data-glow><div class="n">05</div><h3>API & Backend</h3><p>เชื่อมระบบเดิมและทำ Automation</p></div>
+    <div class="glass rv" data-glow><div class="n">06</div><h3>3D Experience</h3><p>Three.js สำหรับหน้าแบรนด์ที่จดจำได้</p></div>
+  </div>
+</section>
+
+<section id="process" class="wrap">
+  <div class="rv"><div class="kicker">Process</div><h2>4 ขั้นตอนสู่งานที่ส่งมอบได้</h2></div>
+  <div class="steps">
+    <div class="glass step rv" data-glow><div class="n">01</div><h3>ปรึกษา</h3><p>เข้าใจเป้าหมายและงบประมาณ</p></div>
+    <div class="glass step rv" data-glow><div class="n">02</div><h3>ออกแบบ</h3><p>Prototype ให้เห็นก่อนพัฒนา</p></div>
+    <div class="glass step rv" data-glow><div class="n">03</div><h3>พัฒนา</h3><p>โค้ดสะอาด ทดสอบบนมือถือ</p></div>
+    <div class="glass step rv" data-glow><div class="n">04</div><h3>ส่งมอบ</h3><p>Deploy และดูแลหลังส่งมอบ</p></div>
+  </div>
+</section>
+
+<section id="team" class="wrap">
+  <div class="rv"><div class="kicker">Team</div><h2>พบกับทีมงาน</h2><p class="lead">กดการ์ดเพื่อดูประวัติ</p></div>
+  <div class="team" id="team"></div>
+</section>
+
+<section id="contact" class="wrap">
+  <div class="contact">
+    <div class="rv"><div class="kicker">Contact</div><h2>มาคุยกันเรื่องงาน</h2><p class="lead">ทีมจะตอบกลับพร้อมแนวทางเบื้องต้น</p></div>
+    <form class="glass rv" id="form">
+      <input required placeholder="ชื่อ / บริษัท">
+      <input required type="email" placeholder="อีเมล">
+      <select required><option value="">ประเภทงาน</option><option>Landing Page</option><option>เว็บองค์กร</option><option>Web App</option><option>E-commerce</option></select>
+      <textarea rows="3" placeholder="รายละเอียดโปรเจกต์"></textarea>
+      <button class="cta" type="submit" style="justify-content:center;border:0;cursor:pointer">ส่งข้อความ →</button>
+      <div class="note" id="note"></div>
+    </form>
+  </div>
+</section>
+
+<footer>© DevEveryday</footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- aurora background: flowing gradient blobs in three.js ---------- */
+const canvas = document.getElementById('bg');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+const scene = new THREE.Scene();
+const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const uniforms = { t: { value: 0 }, res: { value: new THREE.Vector2() } };
+const mat = new THREE.ShaderMaterial({
+  uniforms,
+  vertexShader: `void main(){ gl_Position = vec4(position, 1.0); }`,
+  fragmentShader: `
+    uniform float t; uniform vec2 res;
+    void main(){
+      vec2 uv = gl_FragCoord.xy / res;
+      vec3 c = vec3(0.0);
+      for (int i = 0; i < 3; i++){
+        float fi = float(i);
+        vec2 p = vec2(0.5 + 0.35*sin(t*0.2 + fi*2.1), 0.5 + 0.3*cos(t*0.17 + fi*1.7));
+        float d = length((uv - p) * vec2(res.x/res.y, 1.0));
+        vec3 col = fi < 0.5 ? vec3(0.49,0.96,1.0) : (fi < 1.5 ? vec3(0.55,0.48,1.0) : vec3(1.0,0.6,0.84));
+        c += col * 0.09 / (d*d*6.0 + 0.08);
+      }
+      gl_FragColor = vec4(c * 0.6, 1.0);
+    }`
+});
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
+const resize = () => { renderer.setSize(innerWidth, innerHeight, false); uniforms.res.value.set(canvas.width, canvas.height); };
+resize(); addEventListener('resize', resize);
+const clock = new THREE.Clock();
+(function loop() { uniforms.t.value = clock.getElapsedTime(); renderer.render(scene, cam); requestAnimationFrame(loop); })();
+
+/* ---------- intro ---------- */
+setTimeout(() => document.getElementById('intro').classList.add('done'), 1300);
+
+/* ---------- glass hover spotlight ---------- */
+document.querySelectorAll('[data-glow]').forEach((el) => el.addEventListener('pointermove', (e) => {
+  const r = el.getBoundingClientRect();
+  el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+  el.style.setProperty('--my', (e.clientY - r.top) + 'px');
+}));
+
+/* ---------- marquee ---------- */
+const stack = ['Next.js', 'React', 'Three.js', 'Tailwind', 'Node.js', 'PostgreSQL', 'Docker', 'Figma'];
+const track = document.getElementById('track');
+track.innerHTML = [...stack, ...stack].map((s) => `<span>${s}</span>`).join('');
+
+/* ---------- team (placeholder data) ---------- */
+const team = [
+  { name: 'ชื่อสมาชิก 1', role: 'Frontend & Motion', c: '#7cf5ff', h: [['2019', 'เริ่มเขียนเว็บ'], ['2022', 'Frontend องค์กร'], ['2025', 'นำทีม Motion']] },
+  { name: 'ชื่อสมาชิก 2', role: 'Backend & Architecture', c: '#8b7bff', h: [['2018', 'เริ่มงาน Backend'], ['2022', 'ระบบ E-commerce'], ['2025', 'ระบบ Automation']] },
+  { name: 'ชื่อสมาชิก 3', role: 'UX / UI Design', c: '#ff9ad5', h: [['2020', 'UX Research'], ['2023', 'Design System'], ['2025', 'Prototype-first']] },
+  { name: 'ชื่อสมาชิก 4', role: 'Project Management', c: '#ffd27a', h: [['2017', 'Project Coordinator'], ['2021', 'ดูแล 40+ โปรเจกต์'], ['2024', 'ระบบ Milestone']] }
+];
+const teamEl = document.getElementById('team');
+teamEl.innerHTML = team.map((m) => `
+  <article class="glass member rv" style="--c:${m.c}" data-glow>
+    <div class="orb"></div>
+    <h4>${m.name}</h4><small>${m.role}</small>
+    <div class="tl">${m.h.map((x) => `<div><b>${x[0]}</b>${x[1]}</div>`).join('')}</div>
+  </article>`).join('');
+teamEl.addEventListener('click', (e) => {
+  const card = e.target.closest('.member');
+  if (card) card.classList.toggle('open');
+});
+
+/* ---------- reveal ---------- */
+const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } }), { threshold: 0.12 });
+document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+
+/* ---------- click burst ---------- */
+addEventListener('pointerdown', (e) => {
+  const ring = document.createElement('i');
+  ring.style.cssText = `position:fixed;left:${e.clientX - 30}px;top:${e.clientY - 30}px;width:60px;height:60px;border-radius:50%;border:2px solid #7cf5ff;pointer-events:none;z-index:300;animation:ring .7s ease-out forwards`;
+  document.body.appendChild(ring);
+  setTimeout(() => ring.remove(), 700);
+});
+const st = document.createElement('style');
+st.textContent = '@keyframes ring{to{transform:scale(2.4);opacity:0}}';
+document.head.appendChild(st);
+
+document.getElementById('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('note').textContent = '✓ รับข้อความแล้ว (เดโม)';
+});
+</script>
+</body>
+</html>

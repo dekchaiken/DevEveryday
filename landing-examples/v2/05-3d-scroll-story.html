@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DevEveryday · 3D Scroll Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<style>
+:root{--bg:#0a0a10;--ink:#f2f2f7;--muted:#9a9ab0;--a:#ffb36b;--b:#6bd0ff;--c:#c59bff;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:auto}
+body{background:var(--bg);color:var(--ink);font-family:'Space Grotesk','Sarabun',sans-serif;overflow-x:hidden;line-height:1.6}
+#gl{position:fixed;inset:0;width:100vw;height:100vh;z-index:0}
+main{position:relative;z-index:1}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+.chapter{min-height:100vh;display:flex;align-items:center;padding:100px 0}
+.chapter.tall{min-height:auto;padding:120px 0}
+.kick{font-size:13px;letter-spacing:.25em;text-transform:uppercase;color:var(--a)}
+h1{font-size:clamp(50px,9vw,128px);font-weight:700;letter-spacing:-.04em;line-height:.95}
+h2{font-size:clamp(36px,5vw,64px);font-weight:700;letter-spacing:-.03em;line-height:1}
+.sub{font-family:'Sarabun';font-size:19px;color:var(--muted);max-width:540px;margin-top:20px}
+.glass{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);border-radius:24px;padding:30px}
+.side{margin-left:auto;max-width:520px}
+
+/* intro: loading ring */
+#intro{position:fixed;inset:0;background:var(--bg);z-index:100;display:grid;place-items:center;transition:opacity .8s;}
+#intro.done{opacity:0;pointer-events:none}
+#intro .ring{width:70px;height:70px;border:2px solid var(--line);border-top-color:var(--a);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:18px 28px;transition:background .3s,backdrop-filter .3s}
+nav.s{background:rgba(10,10,16,.7);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.logo{font-weight:700;font-size:20px}
+.logo b{color:var(--a)}
+.prog{position:absolute;left:0;bottom:0;height:2px;width:0;background:linear-gradient(90deg,var(--a),var(--c))}
+nav ul{display:flex;gap:24px;list-style:none;font-size:15px}
+nav a{color:var(--muted);text-decoration:none;transition:color .2s}
+nav a:hover{color:var(--ink)}
+
+.btn{display:inline-flex;align-items:center;gap:10px;padding:16px 28px;border-radius:999px;background:linear-gradient(120deg,var(--a),var(--c));color:#0a0a10;font-weight:700;text-decoration:none;border:0;cursor:pointer;font-size:15px;transition:transform .3s,box-shadow .3s}
+.btn:hover{transform:translateY(-3px);box-shadow:0 20px 40px -10px rgba(197,155,255,.5)}
+.btn.line{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* chapter animation hooks */
+.fx{opacity:0;transform:translateY(40px);transition:all 1s cubic-bezier(.2,.8,.2,1)}
+.fx.on{opacity:1;transform:none}
+
+/* services as 3D cards that tilt on scroll-into-view */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:50px;perspective:1200px}
+.card{padding:30px;transform:rotateX(18deg) translateY(60px);opacity:0;transition:transform 1s cubic-bezier(.2,.8,.2,1),opacity 1s}
+.card.on{transform:none;opacity:1}
+.card:hover{transform:translateY(-8px) rotateY(-4deg)}
+.card .i{font-size:12px;color:var(--b);font-weight:700}
+.card h3{font-size:24px;margin:14px 0 8px}
+.card p{color:var(--muted);font-family:'Sarabun';font-size:15px}
+
+/* team: scroll-pinned story */
+.team-stage{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.stage-card{padding:36px;min-height:420px;position:relative;overflow:hidden}
+.stage-card .big{font-size:150px;font-weight:700;line-height:1;background:linear-gradient(var(--a),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent;transition:opacity .4s}
+.stage-card h3{font-size:34px;margin-top:10px}
+.stage-card .r{color:var(--b);font-family:'Sarabun'}
+.stage-card .hist{margin-top:26px;font-family:'Sarabun';color:var(--muted);list-style:none}
+.stage-card .hist li{padding:10px 0;border-top:1px solid var(--line);opacity:.35;transition:opacity .5s,color .5s}
+.stage-card .hist li.on{opacity:1;color:var(--ink)}
+.stage-card .hist b{color:var(--a);margin-right:10px}
+.dots{display:flex;gap:10px;margin-top:24px}
+.dots i{width:28px;height:4px;background:var(--line);transition:background .4s,width .4s;border-radius:4px}
+.dots i.on{background:var(--a);width:52px}
+.team-nav{display:grid;gap:10px}
+.team-nav button{text-align:left;background:transparent;border:1px solid var(--line);border-radius:18px;padding:18px 22px;color:var(--ink);font:inherit;font-size:20px;cursor:pointer;transition:all .3s}
+.team-nav button:hover{border-color:var(--c)}
+.team-nav button.on{background:var(--glass);border-color:var(--a);transform:translateX(12px)}
+.team-nav small{display:block;font-family:'Sarabun';font-size:14px;color:var(--muted)}
+
+/* contact */
+form{display:grid;gap:14px}
+input,select,textarea{width:100%;padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);font:inherit;outline:none;transition:border .3s,box-shadow .3s}
+input:focus,select:focus,textarea:focus{border-color:var(--c);box-shadow:0 0 0 4px rgba(197,155,255,.18)}
+select option{background:#14141d}
+.note{color:var(--b);font-size:14px;min-height:22px}
+footer{padding:50px 0;text-align:center;color:var(--muted);font-size:14px;font-family:'Sarabun'}
+
+@media (max-width:900px){
+  .cards,.team-stage{grid-template-columns:1fr}
+  .side{margin-left:0}
+  nav ul{display:none}
+  .stage-card .big{font-size:110px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.fx,.card{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="intro"><div class="ring"></div></div>
+
+<nav id="nav">
+  <div class="logo">Dev<b>Everyday</b></div>
+  <ul><li><a href="#s1">บริการ</a></li><li><a href="#s2">ทีมงาน</a></li><li><a href="#s3">ติดต่อ</a></li></ul>
+  <div class="prog" id="prog"></div>
+</nav>
+
+<main>
+  <section class="chapter wrap" id="s0">
+    <div class="fx on">
+      <div class="kick">Scroll to explore ↓</div>
+      <h1>เว็บที่<br>เล่าเรื่อง<br>ได้จริง</h1>
+      <p class="sub">DevEveryday รับทำเว็บไซต์และประสบการณ์ 3D ทุกขั้นตอนเหมือนหนังสั้นที่เลื่อนอ่านได้ เริ่มจาก Landing Page ไปจนถึงระบบ Web App ครบวงจร</p>
+    </div>
+  </section>
+
+  <section class="chapter wrap" id="s1">
+    <div class="fx" style="width:100%">
+      <div class="kick">01 — Services</div>
+      <h2>เรารับทำอะไร</h2>
+      <div class="cards">
+        <article class="glass card"><div class="i">01</div><h3>Landing Page</h3><p>หน้าเดียวที่ขายได้ โหลดไว มี motion</p></article>
+        <article class="glass card"><div class="i">02</div><h3>เว็บองค์กร</h3><p>ผลงาน บริการ SEO และ CMS</p></article>
+        <article class="glass card"><div class="i">03</div><h3>Web App</h3><p>แดชบอร์ด ระบบจอง ระบบสมาชิก</p></article>
+        <article class="glass card"><div class="i">04</div><h3>E-commerce</h3><p>ร้านค้า ชำระเงิน สต็อก จัดส่ง</p></article>
+        <article class="glass card"><div class="i">05</div><h3>API & Backend</h3><p>เชื่อมระบบเดิม Automation</p></article>
+        <article class="glass card"><div class="i">06</div><h3>3D Experience</h3><p>Three.js สำหรับหน้าแบรนด์</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wrap" id="s2">
+    <div style="width:100%">
+      <div class="kick fx">02 — Team</div>
+      <h2 class="fx" style="margin-bottom:40px">ทีมงานของเรา</h2>
+      <div class="team-stage">
+        <div class="team-nav fx" id="teamNav"></div>
+        <div class="glass stage-card fx" id="stage">
+          <div class="big" id="bigNo">01</div>
+          <h3 id="tName"></h3>
+          <div class="r" id="tRole"></div>
+          <ul class="hist" id="tHist"></ul>
+          <div class="dots" id="dots"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wrap tall" id="s3">
+    <div class="fx" style="width:100%">
+      <div class="kick">03 — Contact</div>
+      <h2 style="margin-bottom:30px">มาสร้างอะไรด้วยกัน</h2>
+      <form id="form" style="max-width:640px">
+        <input required placeholder="ชื่อ / บริษัท">
+        <input required type="email" placeholder="อีเมล">
+        <select required><option value="">เลือกประเภทงาน</option><option>Landing Page</option><option>เว็บองค์กร</option><option>Web App</option><option>E-commerce</option><option>3D Experience</option></select>
+        <textarea rows="3" placeholder="รายละเอียดโปรเจกต์ / งบโดยประมาณ"></textarea>
+        <button class="btn" type="submit" style="justify-self:start">ส่งข้อความ →</button>
+        <div class="note" id="note"></div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>© DevEveryday · Scroll story demo</footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------- three.js: a glass object that changes shape per chapter ---------- */
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+camera.position.z = 9;
+const resize = () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
+resize(); addEventListener('resize', resize);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const l1 = new THREE.DirectionalLight(0xffb36b, 2.2); l1.position.set(3, 4, 5); scene.add(l1);
+const l2 = new THREE.DirectionalLight(0x6bd0ff, 1.6); l2.position.set(-4, -2, 3); scene.add(l2);
+const l3 = new THREE.PointLight(0xc59bff, 30, 20); l3.position.set(0, 0, 4); scene.add(l3);
+
+// three shapes that morph between chapters
+const mat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0, roughness: 0.15, transmission: 0.9, thickness: 1.2, ior: 1.4, clearcoat: 1, iridescence: 0.5 });
+// one dense sphere; each chapter maps every vertex to a different shape
+const base = new THREE.SphereGeometry(2.2, 96, 96);
+const mesh = new THREE.Mesh(base, mat);
+scene.add(mesh);
+const pos = base.attributes.position;
+const N = pos.count;
+const dirs = Array.from({ length: N }, (_, i) => new THREE.Vector3().fromBufferAttribute(pos, i).normalize());
+const shapeFns = [
+  (v) => v.clone().multiplyScalar(2.2),                                   // sphere
+  (v) => {                                                                // lumpy knot-like blob
+    const th = Math.atan2(v.y, v.x), ph = Math.acos(THREE.MathUtils.clamp(v.z, -1, 1));
+    return v.clone().multiplyScalar(2 + 0.7 * Math.sin(3 * th) * Math.cos(2 * ph));
+  },
+  (v) => new THREE.Vector3(                                               // cube-like superellipsoid
+    Math.sign(v.x) * Math.pow(Math.abs(v.x), 0.3) * 2.3,
+    Math.sign(v.y) * Math.pow(Math.abs(v.y), 0.3) * 2.3,
+    Math.sign(v.z) * Math.pow(Math.abs(v.z), 0.3) * 2.3),
+];
+const targets = shapeFns.map((fn) => {
+  const a = new Float32Array(N * 3);
+  dirs.forEach((d, i) => { const p = fn(d); a[i * 3] = p.x; a[i * 3 + 1] = p.y; a[i * 3 + 2] = p.z; });
+  return a;
+});
+const current = new Float32Array(targets[0]);
+
+let scrollP = 0;
+function currentShapeIndex() {
+  const sections = ['s0', 's1', 's2', 's3'].map((id) => document.getElementById(id));
+  const mid = innerHeight * 0.5;
+  let idx = 0;
+  sections.forEach((s, i) => { if (s.getBoundingClientRect().top < mid) idx = i; });
+  return Math.min(idx, targets.length - 1);
+}
+
+const clock = new THREE.Clock();
+(function loop() {
+  const t = clock.getElapsedTime();
+  const goal = targets[currentShapeIndex()];
+  for (let i = 0; i < current.length; i++) {
+    current[i] += (goal[i] - current[i]) * 0.04;
+    pos.array[i] = current[i];
+  }
+  pos.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+
+  mesh.rotation.y = t * 0.2 + scrollP * 2;
+  mesh.rotation.x = Math.sin(t * 0.3) * 0.2;
+  const sy = window.scrollY / (document.body.scrollHeight - innerHeight || 1);
+  scrollP = sy;
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+})();
+
+/* ---------- nav + progress bar ---------- */
+const nav = document.getElementById('nav');
+const prog = document.getElementById('prog');
+addEventListener('scroll', () => {
+  nav.classList.toggle('s', window.scrollY > 40);
+  prog.style.width = (scrollP * 100) + '%';
+}, { passive: true });
+prog.style.width = '0';
+
+/* ---------- team: pinned chapters ---------- */
+// แก้ข้อมูลสมาชิกตรงนี้ได้เลย (placeholder)
+const team = [
+  { name: 'ชื่อสมาชิก 1', role: 'Frontend & Motion Lead', h: [['2019', 'เริ่มเขียนเว็บจากโปรเจกต์ส่วนตัว'], ['2022', 'Frontend ให้ลูกค้าองค์กร'], ['2025', 'นำทีม Motion & 3D']] },
+  { name: 'ชื่อสมาชิก 2', role: 'Backend & Architecture', h: [['2018', 'เริ่มงาน Backend'], ['2022', 'ระบบ E-commerce หลายสาขา'], ['2025', 'ระบบ Automation']] },
+  { name: 'ชื่อสมาชิก 3', role: 'UX / UI Design', h: [['2020', 'UX Research กับสตาร์ทอัพ'], ['2023', 'Design System ให้ 3 บริษัท'], ['2025', 'Prototype-first ทั้งทีม']] },
+  { name: 'ชื่อสมาชิก 4', role: 'Project Management', h: [['2017', 'Project Coordinator'], ['2021', 'ดูแลงานเว็บ 40+ โปรเจกต์'], ['2024', 'กระบวนการส่งมอบแบบ Milestone']] }
+];
+const teamNav = document.getElementById('teamNav');
+teamNav.innerHTML = team.map((m, i) => `<button data-i="${i}">0${i + 1} · ${m.name}<small>${m.role}</small></button>`).join('');
+const dotsEl = document.getElementById('dots');
+dotsEl.innerHTML = team.map(() => '<i></i>').join('');
+
+let cur = 0, timer;
+function showMember(i) {
+  cur = i;
+  teamNav.querySelectorAll('button').forEach((b, j) => b.classList.toggle('on', j === i));
+  dotsEl.querySelectorAll('i').forEach((d, j) => d.classList.toggle('on', j === i));
+  const m = team[i];
+  document.getElementById('bigNo').textContent = '0' + (i + 1);
+  document.getElementById('tName').textContent = m.name;
+  document.getElementById('tRole').textContent = m.role;
+  const hist = document.getElementById('tHist');
+  hist.innerHTML = m.h.map((x) => `<li><b>${x[0]}</b>${x[1]}</li>`).join('');
+  requestAnimationFrame(() => hist.querySelectorAll('li').forEach((li, k) => setTimeout(() => li.classList.add('on'), 200 + k * 350)));
+}
+teamNav.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  showMember(+b.dataset.i);
+  restart();
+});
+function restart() {
+  clearInterval(timer);
+  timer = setInterval(() => showMember((cur + 1) % team.length), 6500);
+}
+showMember(0);
+restart();
+
+/* ---------- reveal on scroll ---------- */
+const io = new IntersectionObserver((es) => es.forEach((e) => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('on');
+  e.target.querySelectorAll('.card').forEach((c, k) => setTimeout(() => c.classList.add('on'), k * 120));
+}), { threshold: 0.3 });
+document.querySelectorAll('.fx, .card').forEach((el) => io.observe(el));
+
+/* ---------- intro ---------- */
+setTimeout(() => document.getElementById('intro').classList.add('done'), 1100);
+
+document.getElementById('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  document.getElementById('note').textContent = '✦ รับข้อความแล้ว (เดโม)';
+});
+</script>
+</body>
+</html>

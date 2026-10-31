@@ -1,0 +1,90 @@
+{
+  "site": {
+    "name": "DevEveryday",
+    "tagline": "รับทำเว็บไซต์และแอปพลิเคชัน",
+    "headline": "สร้างเว็บที่ดูดี ทำงานได้จริง",
+    "subheadline": "ทีมพัฒนาที่รับทำ Landing Page, เว็บองค์กร, Web App, E-commerce และระบบ API ตั้งแต่ออกแบบจนถึง deploy",
+    "badge": "รับงานใหม่ ตอบกลับภายใน 24 ชม.",
+    "ctaPrimary": "เริ่มโปรเจกต์",
+    "ctaSecondary": "ดูบริการ",
+    "email": "hello@example.com",
+    "footer": "© DevEveryday. Built with Next.js & three.js."
+  },
+  "stack": ["Next.js", "React", "TypeScript", "Three.js", "Node.js", "PostgreSQL", "Tailwind", "Docker"],
+  "services": [
+    { "id": "s1", "title": "Landing Page", "description": "หน้าเดียวที่ขายได้ โหลดไว มี motion ตามแคมเปญ", "eta": "3–7 วัน" },
+    { "id": "s2", "title": "เว็บไซต์องค์กร", "description": "ผลงาน บริการ ข่าวสาร SEO และระบบจัดการคอนเทนต์", "eta": "2–4 สัปดาห์" },
+    { "id": "s3", "title": "Web Application", "description": "แดชบอร์ด ระบบจอง ระบบสมาชิก พร้อมสิทธิ์การใช้งาน", "eta": "ตามขอบเขต" },
+    { "id": "s4", "title": "E-commerce", "description": "ร้านค้า ตะกร้า ชำระเงิน สต็อก และการจัดส่ง", "eta": "ตามขอบเขต" },
+    { "id": "s5", "title": "API & Backend", "description": "เชื่อมระบบเดิม ทำ Admin Panel และ Automation", "eta": "ตามขอบเขต" },
+    { "id": "s6", "title": "3D & Motion", "description": "Three.js และ Motion สำหรับหน้าแบรนด์ที่จดจำได้", "eta": "ตามขอบเขต" }
+  ],
+  "plans": [
+    {
+      "id": "p1", "name": "Starter", "price": "ติดต่อ", "unit": "ต่อโปรเจกต์", "highlight": false,
+      "features": ["Landing Page 1 หน้า", "Responsive ทุกอุปกรณ์", "ส่งมอบภายใน 1 สัปดาห์"]
+    },
+    {
+      "id": "p2", "name": "Pro", "price": "ติดต่อ", "unit": "ต่อโปรเจกต์", "highlight": true,
+      "features": ["เว็บองค์กรสูงสุด 10 หน้า", "SEO และ CMS พื้นฐาน", "Motion หรือ 3D 1 ชิ้น", "ดูแลหลังส่งมอบ 30 วัน"]
+    },
+    {
+      "id": "p3", "name": "Custom", "price": "ประเมินให้", "unit": "ตามขอบเขต", "highlight": false,
+      "features": ["Web App / E-commerce เต็มรูปแบบ", "ทีมประจำโปรเจกต์", "SLA และการดูแลต่อเนื่อง"]
+    }
+  ],
+  "process": [
+    { "id": "pr1", "title": "ปรึกษา", "description": "เข้าใจเป้าหมาย กลุ่มลูกค้า และงบประมาณ" },
+    { "id": "pr2", "title": "ออกแบบ", "description": "Prototype ให้เห็นภาพก่อนลงมือพัฒนา" },
+    { "id": "pr3", "title": "พัฒนา", "description": "โค้ดสะอาด ทดสอบบนมือถือ อัปเดตทุกสัปดาห์" },
+    { "id": "pr4", "title": "ส่งมอบ", "description": "Deploy ขึ้นระบบจริง และดูแลหลังส่งมอบ" }
+  ],
+  "team": [
+    {
+      "id": "m1", "name": "ชื่อสมาชิก 1", "role": "Frontend & Motion Lead", "bio": "ดูแล UI และ Animation ของทุกโปรเจกต์ ทำให้เว็บมีชีวิตโดยไม่กระทบความเร็ว",
+      "skills": ["React", "Three.js", "GSAP"], "color": "#0070f3", "joinedAt": "2019-06-01", "isNew": false,
+      "history": [
+        { "year": "2019", "title": "เริ่มเขียนเว็บ", "detail": "เรียนรู้ HTML/CSS จากโปรเจกต์ส่วนตัว" },
+        { "year": "2022", "title": "Frontend องค์กร", "detail": "ทำ Frontend ให้ลูกค้าองค์กรชุดแรก" },
+        { "year": "2025", "title": "นำทีม Motion", "detail": "วางมาตรฐาน Motion และ 3D ของทีม" }
+      ]
+    },
+    {
+      "id": "m2", "name": "ชื่อสมาชิก 2", "role": "Backend Architect", "bio": "ออกแบบโครงสร้างระบบ API และฐานข้อมูลให้รองรับการขยายตัวของธุรกิจ",
+      "skills": ["Node.js", "PostgreSQL", "Docker"], "color": "#7928ca", "joinedAt": "2018-03-15", "isNew": false,
+      "history": [
+        { "year": "2018", "title": "เริ่มงาน Backend", "detail": "พัฒนา API ด้วย PHP และ Laravel" },
+        { "year": "2022", "title": "ระบบ E-commerce", "detail": "ออกแบบระบบหลายสาขาให้ลูกค้ารายใหญ่" },
+        { "year": "2025", "title": "ระบบ Automation", "detail": "ทำระบบอัตโนมัติฝั่งโลจิสติกส์" }
+      ]
+    },
+    {
+      "id": "m3", "name": "ชื่อสมาชิก 3", "role": "UX / UI Designer", "bio": "ออกแบบ Prototype และ Design System ให้ลูกค้าเห็นภาพก่อนลงมือพัฒนา",
+      "skills": ["Figma", "Design System", "Prototype"], "color": "#17c964", "joinedAt": "2020-08-10", "isNew": false,
+      "history": [
+        { "year": "2020", "title": "UX Research", "detail": "ทำวิจัยผู้ใช้กับสตาร์ทอัพ" },
+        { "year": "2023", "title": "Design System", "detail": "สร้างระบบดีไซน์ให้ลูกค้า 3 บริษัท" },
+        { "year": "2025", "title": "Prototype-first", "detail": "นำกระบวนการ Prototype เข้าทั้งทีม" }
+      ]
+    },
+    {
+      "id": "m4", "name": "ชื่อสมาชิก 4", "role": "Project Manager", "bio": "ดูแลไทม์ไลน์ งบ และการสื่อสารกับลูกค้า ทำให้ส่งมอบตรงเวลา",
+      "skills": ["Agile", "Scrum", "Client Success"], "color": "#f5a524", "joinedAt": "2017-01-20", "isNew": false,
+      "history": [
+        { "year": "2017", "title": "Project Coordinator", "detail": "เริ่มประสานงานโปรเจกต์เว็บ" },
+        { "year": "2021", "title": "ดูแล 40+ โปรเจกต์", "detail": "คุมไทม์ไลน์งานเว็บหลายขนาด" },
+        { "year": "2024", "title": "Milestone Delivery", "detail": "วางกระบวนการส่งมอบแบบ Milestone" }
+      ]
+    },
+    {
+      "id": "m5", "name": "ชื่อสมาชิกใหม่", "role": "Full-stack Developer", "bio": "เข้าร่วมทีมเพื่อดูแลงาน Web App และระบบหลังบ้านของลูกค้า",
+      "skills": ["TypeScript", "Next.js", "Prisma"], "color": "#ff4d8d", "joinedAt": "2026-10-01", "isNew": true,
+      "history": [
+        { "year": "2026", "title": "เข้าร่วม DevEveryday", "detail": "เริ่มงานกับทีมในโปรเจกต์ Web App" }
+      ]
+    }
+  ],
+  "contact": {
+    "types": ["Landing Page", "เว็บองค์กร", "Web App", "E-commerce", "API / Backend", "3D & Motion"]
+  }
+}
