@@ -1,19 +1,48 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-// ออฟฟิศพิกเซล: ทีมนักพัฒนาเดินไปมา นั่งพิมพ์โค้ด และช่วยกันวาง logo DevEveryDay ทีละพิกเซล
-const W = 320;
-const H = 180;
-const FLOOR = 120;
-const DESK_Y = 98;
-const DESKS = [22, 112, 202];
-const COFFEE_X = 262;
-const BUILD_X = 150;
-const BOARD = { x: 56, y: 14, w: 208, h: 50 };
-const CELL = 3;
+// ห้องประชุมพิกเซล: ทีม 5 คนคุยงานกัน แล้วแต่ละคนส่งชิ้นงานขึ้นจอใหญ่
+// ชื่อทีมค่อยๆ render ออกมาทีละส่วนจนครบ จากนั้นทุกคนฉลอง แล้วเริ่มรอบใหม่
+type Layout = {
+  W: number;
+  H: number;
+  FLOOR: number;
+  CELL: number;
+  SCREEN: { x: number; y: number; w: number; h: number };
+  TABLE: { x: number; w: number };
+  SEATS: number[];
+  LEAD_X: number;
+  PLANTS: number[];
+};
+
+// จอกว้าง (เดสก์ท็อปและแท็บเล็ต)
+const WIDE: Layout = {
+  W: 480,
+  H: 220,
+  FLOOR: 186,
+  CELL: 4,
+  SCREEN: { x: 90, y: 12, w: 300, h: 124 },
+  TABLE: { x: 116, w: 248 },
+  SEATS: [148, 210, 272, 334],
+  LEAD_X: 60,
+  PLANTS: [8, 452],
+};
+
+// จอแคบ (มือถือ) จัดสัดส่วนให้คนและโต๊ะยังสมดุล
+const NARROW: Layout = {
+  W: 320,
+  H: 200,
+  FLOOR: 160,
+  CELL: 3,
+  SCREEN: { x: 40, y: 10, w: 240, h: 96 },
+  TABLE: { x: 56, w: 208 },
+  SEATS: [84, 136, 188, 240],
+  LEAD_X: 20,
+  PLANTS: [292],
+};
+
 const WORD = "DevEveryDay";
-
 const GLYPHS: Record<string, string[]> = {
   D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
   e: ["00000", "00000", "01110", "10001", "11111", "10000", "01110"],
@@ -24,331 +53,532 @@ const GLYPHS: Record<string, string[]> = {
   a: ["00000", "00000", "01110", "00001", "01111", "10001", "01111"],
 };
 
-type Px = { x: number; y: number; c: number };
+// ไอคอนฟองพูด 5x5 ใช้แทนอารมณ์ เพราะฟอนต์พิกเซลไม่มีตัวอักษรไทย
+const ICONS = {
+  bang: ["00100", "00100", "00100", "00000", "00100"],
+  ask: ["01110", "10001", "00110", "00000", "00100"],
+  check: ["00001", "00010", "10100", "01000", "00000"],
+  heart: ["01010", "11111", "11111", "01110", "00100"],
+  star: ["00100", "10101", "01110", "10101", "00100"],
+  zap: ["00010", "00100", "01110", "00100", "01000"],
+  dots: ["00000", "00000", "10101", "00000", "00000"],
+};
+type Icon = keyof typeof ICONS;
 
-// สร้างลำดับพิกเซลของโลโก้ (เรียงจากซ้ายไปขวา ตัวอักษรต่อตัว)
-function buildLogo(): Px[] {
+const SCREEN_LOGO = ["#3b9cff", "#8f85ff", "#3dffb0", "#ededed"];
+
+type Px = { x: number; y: number; c: number };
+type Shown = Px & { born: number };
+
+function logoPixels(L: Layout): Px[] {
   const out: Px[] = [];
   const total = WORD.length * 6 - 1;
-  const ox = Math.round(BOARD.x + (BOARD.w - total * CELL) / 2);
-  const oy = Math.round(BOARD.y + (BOARD.h - 7 * CELL) / 2);
+  const ix = L.SCREEN.x + 8;
+  const iw = L.SCREEN.w - 16;
+  const iy = L.SCREEN.y + 8;
+  const ih = L.SCREEN.h - 16 - 10;
+  const ox = Math.round(ix + (iw - total * L.CELL) / 2);
+  const oy = Math.round(iy + (ih - 7 * L.CELL) / 2);
   [...WORD].forEach((ch, li) => {
     const g = GLYPHS[ch];
     if (!g) return;
     for (let r = 0; r < 7; r++) {
       for (let c = 0; c < 5; c++) {
-        if (g[r][c] === "1") out.push({ x: ox + (li * 6 + c) * CELL, y: oy + r * CELL, c: li % 4 });
+        if (g[r][c] === "1") out.push({ x: ox + (li * 6 + c) * L.CELL, y: oy + r * L.CELL, c: li % 4 });
       }
     }
   });
   return out;
 }
-const PIX = buildLogo();
 
 type Pal = {
   wall: string; wallDark: string; floor: string; floorLine: string;
-  board: string; boardFrame: string; desk: string; deskDark: string;
-  monitor: string; screen: string; code: string[];
+  frame: string; desk: string; deskDark: string; laptop: string; code: string[];
   skin: string; hair: string[]; shirt: string[]; pants: string; ink: string;
-  plant: string; pot: string; machine: string; cup: string; logo: string[];
+  plant: string; pot: string; cup: string; bubble: string; shadow: string;
 };
 
 const LIGHT: Pal = {
   wall: "#eef1f7", wallDark: "#dde3ee", floor: "#d9dfea", floorLine: "#cdd4e2",
-  board: "#ffffff", boardFrame: "#c3cbdc", desk: "#b4bdd1", deskDark: "#959fb8",
-  monitor: "#2b3142", screen: "#0c1322", code: ["#3ddc97", "#7aa7ff", "#ffb86b"],
-  skin: "#f2c7a5", hair: ["#2b2b33", "#7a4522"], shirt: ["#0070f3", "#17c964", "#ff4d8d", "#f5a524"], pants: "#2b3142", ink: "#1b1f2b",
-  plant: "#22a06b", pot: "#8e99b2", machine: "#6b7591", cup: "#ffffff",
-  logo: ["#0070f3", "#7c6cff", "#17c964", "#09090b"],
+  frame: "#8e99b2", desk: "#b4bdd1", deskDark: "#959fb8", laptop: "#7d879f",
+  code: ["#17c964", "#0070f3", "#f5a524"],
+  skin: "#f2c7a5", hair: ["#2b2b33", "#7a4522"], shirt: ["#0070f3", "#17c964", "#ff4d8d", "#f5a524"],
+  pants: "#2b3142", ink: "#1b1f2b",
+  plant: "#22a06b", pot: "#8e99b2", cup: "#ffffff", bubble: "#ffffff", shadow: "rgba(27,31,43,0.14)",
 };
 const DARK: Pal = {
   wall: "#0f1219", wallDark: "#0a0d13", floor: "#151a26", floorLine: "#1d2433",
-  board: "#141a27", boardFrame: "#2a3142", desk: "#2a3142", deskDark: "#1d2330",
-  monitor: "#0a0c12", screen: "#0b1020", code: ["#3dffb0", "#6fb6ff", "#ffc857"],
-  skin: "#e9b894", hair: ["#0c0c10", "#5a3418"], shirt: ["#3b9cff", "#3dffb0", "#ff6ea8", "#ffc857"], pants: "#1b2030", ink: "#0a0c12",
-  plant: "#2fd98e", pot: "#3a4158", machine: "#3a4158", cup: "#e6e9f2",
-  logo: ["#3b9cff", "#8f85ff", "#3dffb0", "#ededed"],
+  frame: "#2a3142", desk: "#2a3142", deskDark: "#1d2330", laptop: "#3a4158",
+  code: ["#3dffb0", "#6fb6ff", "#ffc857"],
+  skin: "#e9b894", hair: ["#0c0c10", "#5a3418"], shirt: ["#3b9cff", "#3dffb0", "#ff6ea8", "#ffc857"],
+  pants: "#1b2030", ink: "#0a0c12",
+  plant: "#2fd98e", pot: "#3a4158", cup: "#e6e9f2", bubble: "#e6e9f2", shadow: "rgba(0,0,0,0.35)",
 };
 
-type Dev = {
-  x: number; y: number; tx: number; ty: number;
-  home: number; state: "sit" | "walk" | "idle" | "build";
-  after: "sit" | "idle"; timer: number; walking: boolean; typing: boolean;
-  throwT: number; facing: 1 | -1; frame: number;
-  shirt: number; hair: number; role: "worker" | "builder";
-  phase: "go" | "place" | "hold" | "clear" | "return"; cool: number; idx: number;
+type Act = "type" | "listen" | "talk" | "point" | "sip" | "cheer" | "stand";
+type Mood = "focus" | "happy" | "surprise";
+type Look = -1 | 0 | 1;
+type Pose = { act: Act; mood?: Mood; icon?: Icon; look?: Look };
+type Beat = { dur: number; poses: Pose[]; start?: () => void };
+
+type Person = {
+  x: number; y: number; seated: boolean;
+  act: Act; mood: Mood; icon: Icon | null; iconT: number; look: Look;
+  shirt: number; hair: number; phase: number;
 };
 
-type Proj = { sx: number; sy: number; tx: number; ty: number; t: number; dur: number; c: number; px: Px };
+type Proj = {
+  sx: number; sy: number; tx: number; ty: number; t: number; dur: number; c: number;
+  onLand: () => void;
+};
+type Particle = {
+  x: number; y: number; vx: number; vy: number; c: string; life: number; kind: "confetti" | "spark";
+};
 
-const seat = (i: number) => ({ x: DESKS[i] + 10, y: DESK_Y - 13 });
-const COFFEE = { x: COFFEE_X - 14, y: FLOOR - 14 };
+// สร้างฉากทั้งหมดบน canvas และคืนฟังก์ชันสำหรับหยุดแอนิเมชัน
+function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () => void {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return () => {};
 
-function makeDev(i: number): Dev {
-  const s = seat(i);
-  return {
-    x: s.x, y: s.y, tx: s.x, ty: s.y, home: i,
-    state: "sit", after: "sit", timer: 60 + i * 90, walking: false, typing: true,
-    throwT: 0, facing: 1, frame: 0, shirt: i % 4, hair: i % 2,
-    role: "worker", phase: "go", cool: 0, idx: 0,
+  const { W, H, FLOOR, CELL, SCREEN, TABLE, SEATS, LEAD_X, PLANTS } = L;
+  const T = FLOOR - 10; // ระดับหน้าโต๊ะ ทำให้คนนั่งเห็นแค่หัวและไหล่
+  const IX = SCREEN.x + 8;
+  const IY = SCREEN.y + 8;
+  const IW = SCREEN.w - 16;
+  const IH = SCREEN.h - 16;
+  const PIX = logoPixels(L);
+  // แบ่งโลโก้เป็น 5 ส่วน ให้แต่ละคนรับผิดชอบคนละส่วน
+  const CHUNKS = [0, 1, 2, 3, 4].map((k) =>
+    PIX.slice(Math.floor((k * PIX.length) / 5), Math.floor(((k + 1) * PIX.length) / 5)),
+  );
+
+  const person = (x: number, y: number, seated: boolean, i: number): Person => ({
+    x, y, seated, act: seated ? "type" : "stand", mood: "focus", icon: null, iconT: 0,
+    look: 0, shirt: i === 4 ? 2 : i, hair: i % 2, phase: i,
+  });
+  const P: Person[] = [
+    ...SEATS.map((x, i) => person(x, T - 10, true, i)),
+    person(LEAD_X, FLOOR - 14, false, 4),
+  ];
+
+  let placed: Shown[] = [];
+  let pending: Px[] = [];
+  let erasing = false;
+  let projs: Proj[] = [];
+  let parts: Particle[] = [];
+  let t = 0;
+  let beatIdx = 0;
+  let beatT = 0;
+
+  const pick = (): Pal => (document.documentElement.dataset.theme === "dark" ? DARK : LIGHT);
+
+  const rect = (x: number, y: number, w: number, h: number, c: string) => {
+    ctx.fillStyle = c;
+    ctx.fillRect(Math.round(x), Math.round(y), w, h);
   };
-}
 
-// เดินไปยังจุดหมาย คืน true เมื่อถึง
-function step(d: Dev, speed: number): boolean {
-  const dx = d.tx - d.x;
-  const dy = d.ty - d.y;
-  if (Math.abs(dx) > 0.01) d.x += Math.sign(dx) * Math.min(speed, Math.abs(dx));
-  if (Math.abs(dy) > 0.01) d.y += Math.sign(dy) * Math.min(speed, Math.abs(dy));
-  if (dx < -0.01) d.facing = -1;
-  else if (dx > 0.01) d.facing = 1;
-  d.walking = true;
-  d.typing = false;
-  d.frame++;
-  const done = Math.abs(d.tx - d.x) < 0.5 && Math.abs(d.ty - d.y) < 0.5;
-  if (done) {
-    d.x = d.tx;
-    d.y = d.ty;
-    d.walking = false;
+  function say(q: Person, icon: Icon, n: number) {
+    q.icon = icon;
+    q.iconT = n;
   }
-  return done;
-}
 
-function tickWorker(d: Dev, devs: Dev[]) {
-  if (d.state === "sit") {
-    d.typing = true;
-    d.walking = false;
-    d.frame++;
-    if (--d.timer <= 0) {
-      if (Math.random() < 0.5) {
-        d.tx = COFFEE.x; d.ty = COFFEE.y; d.after = "idle";
-      } else {
-        const n = (d.home + 1 + Math.floor(Math.random() * 2)) % DESKS.length;
-        const busy = devs.some((o) => o !== d && o.role === "worker" && o.home === n && o.state === "sit");
-        const s = busy ? seat(d.home) : seat(n);
-        d.home = busy ? d.home : n;
-        d.tx = s.x; d.ty = s.y; d.after = "sit";
-      }
-      d.state = "walk";
-    }
-  } else if (d.state === "walk") {
-    if (step(d, 0.5)) {
-      if (d.after === "idle") {
-        d.state = "idle";
-        d.timer = 140;
-      } else {
-        d.state = "sit";
-        d.timer = 260 + Math.floor(Math.random() * 300);
-      }
-    }
-  } else if (d.state === "idle") {
-    d.walking = false;
-    d.typing = false;
-    d.frame++;
-    if (--d.timer <= 0) {
-      const s = seat(d.home);
-      d.tx = s.x; d.ty = s.y; d.after = "sit"; d.state = "walk";
+  // ทิศทางสายตาไปหาอีกคน
+  const toward = (i: number, j: number): Look => (P[j].x > P[i].x + 2 ? 1 : P[j].x < P[i].x - 2 ? -1 : 0);
+  const rest = (i: number): Pose => ({ act: P[i].seated ? "type" : "stand" });
+
+  function launch(c: number, k: number) {
+    const q = P[c];
+    const cells = CHUNKS[k];
+    const tx = cells.reduce((s, px) => s + px.x, 0) / cells.length;
+    const ty = cells.reduce((s, px) => s + px.y, 0) / cells.length;
+    projs.push({
+      sx: q.x + 4,
+      sy: q.seated ? T - 4 : q.y + 6,
+      tx,
+      ty,
+      t: 0,
+      dur: 40,
+      c: k,
+      onLand: () => {
+        pending.push(...cells);
+        sparkAt(tx, ty);
+      },
+    });
+  }
+
+  function sparkAt(x: number, y: number) {
+    parts.push({ x, y, vx: 0, vy: -0.1, c: SCREEN_LOGO[2], life: 24, kind: "spark" });
+  }
+
+  function startParty() {
+    const p = pick();
+    for (let i = 0; i < 70; i++) {
+      parts.push({
+        x: IX + Math.random() * IW,
+        y: IY + Math.random() * IH * 0.3,
+        vx: (Math.random() - 0.5) * 2.4,
+        vy: -(1 + Math.random() * 2.2),
+        c: i % 2 ? SCREEN_LOGO[i % 4] : p.code[i % p.code.length],
+        life: 120 + Math.random() * 60,
+        kind: "confetti",
+      });
     }
   }
+
+  // ---------- บทของการประชุม (วนเป็นรอบ) ----------
+  const beats: Beat[] = [];
+  beats.push({
+    dur: 150,
+    poses: P.map((_, i) => (i === 4 ? { act: "point", mood: "happy", icon: "bang" } : { act: "listen", look: toward(i, 4) })),
+  });
+  beats.push({
+    dur: 100,
+    poses: P.map((_, i) => (i === 4 ? { act: "talk", icon: "ask" } : { act: "listen", look: toward(i, 4) })),
+  });
+
+  const ORDER = [0, 1, 2, 3, 4];
+  ORDER.forEach((c, k) => {
+    const n = (c + 1) % 5;
+    beats.push({
+      dur: 50,
+      poses: P.map((_, i) => {
+        if (i === c) return { act: "point", mood: "happy", icon: "zap" };
+        if (i === 4) return { act: "stand", look: toward(i, c) };
+        return { act: "type" };
+      }),
+      start: () => launch(c, k),
+    });
+    beats.push({
+      dur: 60,
+      poses: P.map((_, i) => {
+        if (i === c) return { act: "type", mood: "happy", icon: "check" };
+        if (i === n) return { act: "talk", icon: "ask" };
+        if (i === 4) return { act: "stand", look: toward(i, n) };
+        return { act: "listen", look: toward(i, n) };
+      }),
+    });
+    if (k === 1) {
+      beats.push({
+        dur: 50,
+        poses: P.map((_, i) => (i === 2 ? { act: "sip", mood: "happy" } : rest(i))),
+      });
+    }
+  });
+
+  beats.push({
+    dur: 170,
+    poses: P.map(() => ({ act: "cheer", mood: "happy", icon: "heart" })),
+    start: startParty,
+  });
+  beats.push({
+    dur: 160,
+    poses: P.map((_, i) => (i === 4 ? { act: "talk", mood: "happy", icon: "star" } : { act: "type", mood: "happy" })),
+  });
+  beats.push({
+    dur: 60,
+    poses: P.map((_, i) => rest(i)),
+    start: () => {
+      pending = [];
+      erasing = true;
+    },
+  });
+
+  function applyBeat(b: Beat) {
+    b.poses.forEach((ps, i) => {
+      const q = P[i];
+      q.act = ps.act;
+      q.mood = ps.mood ?? "focus";
+      q.look = ps.look ?? 0;
+      if (ps.icon) say(q, ps.icon, b.dur);
+      else q.iconT = 0;
+    });
+    b.start?.();
+  }
+
+  // ---------- การอัปเดต ----------
+  function update() {
+    t++;
+
+    if (beatT === 0) applyBeat(beats[beatIdx]);
+    beatT++;
+    if (beatT >= beats[beatIdx].dur) {
+      beatT = 0;
+      beatIdx = (beatIdx + 1) % beats.length;
+    }
+
+    projs = projs.filter((pr) => {
+      pr.t++;
+      if (pr.t >= pr.dur) {
+        pr.onLand();
+        return false;
+      }
+      return true;
+    });
+
+    // ค่อยๆ render พิกเซลทีละตัวบนจอ
+    if (pending.length) {
+      const px = pending.shift();
+      if (px) placed.push({ ...px, born: t });
+    }
+    if (erasing) {
+      for (let k = 0; k < 3 && placed.length; k++) placed.pop();
+      if (!placed.length) erasing = false;
+    }
+
+    parts = parts.filter((q) => {
+      q.x += q.vx;
+      q.y += q.vy;
+      if (q.kind === "confetti") q.vy += 0.08;
+      q.life--;
+      return q.life > 0;
+    });
+    for (const q of P) {
+      if (q.iconT > 0 && --q.iconT === 0) q.icon = null;
+    }
+  }
+
+  // ---------- การวาด ----------
+  // ยกตัวขึ้นตอนดีใจ
+  function lift(q: Person): number {
+    if (q.act === "cheer") return Math.round(Math.abs(Math.sin((t + q.phase * 17) * 0.18)) * 8);
+    return 0;
+  }
+
+  function drawPlant(px: number, p: Pal) {
+    const sway = Math.round(Math.sin(t / 40 + px));
+    rect(px + 2, FLOOR - 12, 8, 8, p.pot);
+    rect(px + 5, FLOOR - 20, 2, 8, p.plant);
+    rect(px + 1 + sway, FLOOR - 28, 10, 7, p.plant);
+    rect(px + 3 + sway, FLOOR - 32, 6, 4, p.plant);
+  }
+
+  function drawScreen(p: Pal) {
+    rect(SCREEN.x - 3, SCREEN.y - 3, SCREEN.w + 6, SCREEN.h + 6, p.frame);
+    rect(SCREEN.x, SCREEN.y, SCREEN.w, SCREEN.h, "#05070d");
+    // ขาตั้งจอ
+    rect(SCREEN.x + SCREEN.w / 2 - 2, SCREEN.y + SCREEN.h + 3, 4, 4, p.frame);
+    rect(SCREEN.x + SCREEN.w / 2 - 14, SCREEN.y + SCREEN.h + 7, 28, 2, p.frame);
+
+    for (const px of placed) {
+      const age = t - px.born;
+      // พิกเซลใหม่กะพริบสีขาวก่อนติดถาวร
+      const c = age < 8 && age % 2 === 0 ? "#ffffff" : SCREEN_LOGO[px.c];
+      rect(px.x, px.y, CELL, CELL, c);
+    }
+
+    // เส้นสแกนขณะกำลัง render
+    if (pending.length && !erasing) {
+      rect(IX, IY + ((t * 2) % IH), IW, 1, "rgba(61,255,176,0.35)");
+    }
+    // แถบความคืบหน้า
+    rect(IX, IY + IH - 4, IW, 2, "#1d2a44");
+    rect(IX, IY + IH - 4, (IW * placed.length) / PIX.length, 2, SCREEN_LOGO[2]);
+  }
+
+  function drawRoom(p: Pal) {
+    rect(0, 0, W, FLOOR, p.wall);
+    rect(0, FLOOR - 3, W, 3, p.wallDark);
+    rect(0, FLOOR, W, H - FLOOR, p.floor);
+    for (let y = FLOOR + 10; y < H; y += 14) rect(0, y, W, 1, p.floorLine);
+    for (let x = 0; x < W; x += 40) rect(x, FLOOR, 1, H - FLOOR, p.floorLine);
+    drawScreen(p);
+    for (const px of PLANTS) drawPlant(px, p);
+  }
+
+  function drawChair(q: Person, p: Pal) {
+    const x = Math.round(q.x);
+    const y = Math.round(q.y);
+    rect(x - 5, y + 4, 10, T + 4 - (y + 4), p.deskDark);
+  }
+
+  function drawPerson(q: Person, p: Pal) {
+    const x = Math.round(q.x);
+    const y = Math.round(q.y) - lift(q);
+    const shirt = p.shirt[q.shirt];
+    const skin = p.skin;
+
+    if (!q.seated) rect(x - 1, Math.round(q.y) + 14, 10, 1, p.shadow);
+
+    // ผมและหน้า
+    rect(x + 1, y, 6, 2, p.hair[q.hair]);
+    rect(x + 1, y + 2, 6, 4, skin);
+    const ex1 = x + 2 + q.look;
+    const ex2 = x + 5 + q.look;
+    if (q.mood === "happy") {
+      rect(ex1, y + 3, 1, 1, p.ink);
+      rect(ex2, y + 3, 1, 1, p.ink);
+      rect(x + 3, y + 5, 2, 1, p.ink);
+    } else if (q.mood === "surprise") {
+      rect(ex1, y + 3, 1, 2, p.ink);
+      rect(ex2, y + 3, 1, 2, p.ink);
+      rect(x + 3, y + 5, 1, 1, p.ink);
+    } else {
+      rect(ex1, y + 4, 1, 1, p.ink);
+      rect(ex2, y + 4, 1, 1, p.ink);
+      if (q.act === "talk" && Math.floor(t / 6) % 2) rect(x + 3, y + 5, 2, 1, p.ink);
+    }
+
+    // ลำตัวและแขนตามท่า
+    rect(x, y + 6, 8, 5, shirt);
+    switch (q.act) {
+      case "type": {
+        const up = Math.floor(t / 5) % 2;
+        rect(x - 1, y + 8 + up, 2, 2, skin);
+        rect(x + 7, y + 9 - up, 2, 2, skin);
+        break;
+      }
+      case "listen":
+        rect(x - 1, y + 8, 2, 2, skin);
+        rect(x + 7, y + 8, 2, 2, skin);
+        break;
+      case "talk": {
+        const g = Math.floor(t / 8) % 2;
+        rect(x - 2, y + 3 + g, 2, 3, skin);
+        rect(x + 7, y + 8, 2, 2, skin);
+        break;
+      }
+      case "point":
+        rect(x + 7, y + 1, 2, 5, skin);
+        rect(x - 1, y + 8, 2, 2, skin);
+        break;
+      case "sip":
+        rect(x + 7, y + 3, 2, 2, skin);
+        rect(x + 8, y, 3, 3, p.cup);
+        rect(x - 1, y + 8, 2, 2, skin);
+        break;
+      case "cheer":
+        rect(x - 2, y - 2, 2, 4, skin);
+        rect(x + 8, y - 2, 2, 4, skin);
+        break;
+      case "stand":
+        rect(x - 1, y + 8, 2, 3, skin);
+        rect(x + 7, y + 8, 2, 3, skin);
+        break;
+    }
+
+    if (!q.seated) rect(x + 1, y + 11, 6, 3, p.pants);
+
+    if (q.icon && q.iconT > 0) {
+      rect(x - 1, y - 9, 11, 8, p.bubble);
+      rect(x + 3, y - 1, 2, 1, p.bubble);
+      ICONS[q.icon].forEach((row, r) => {
+        for (let c = 0; c < 5; c++) {
+          if (row[c] === "1") rect(x + 2 + c, y - 8 + r, 1, 1, p.ink);
+        }
+      });
+    }
+  }
+
+  // โน้ตบุ๊กบนโต๊ะ หน้าจอจะกะพริบตอนกำลังพิมพ์
+  function drawLaptop(q: Person, p: Pal) {
+    const x = Math.round(q.x);
+    rect(x - 3, T - 4, 7, 4, p.laptop);
+    const glow = q.act === "type" ? p.code[(Math.floor(t / 4) + q.phase) % p.code.length] : p.frame;
+    rect(x - 2, T - 3, 5, 1, glow);
+  }
+
+  function drawTable(p: Pal) {
+    rect(TABLE.x, T, TABLE.w, 3, p.desk);
+    rect(TABLE.x, T + 3, TABLE.w, 1, p.deskDark);
+    rect(TABLE.x + 5, T + 4, 3, FLOOR + 4 - (T + 4), p.deskDark);
+    rect(TABLE.x + TABLE.w - 8, T + 4, 3, FLOOR + 4 - (T + 4), p.deskDark);
+  }
+
+  // ชิ้นงานที่ลอยจากโน้ตบุ๊กขึ้นไปยังจอ
+  function drawProjs() {
+    for (const pr of projs) {
+      const k = pr.t / pr.dur;
+      const at = (kk: number) => ({
+        x: pr.sx + (pr.tx - pr.sx) * kk,
+        y: pr.sy + (pr.ty - pr.sy) * kk - Math.sin(kk * Math.PI) * 40,
+      });
+      const color = SCREEN_LOGO[pr.c % SCREEN_LOGO.length];
+      for (let j = 3; j >= 1; j--) {
+        const pos = at(Math.max(0, k - j * 0.03));
+        rect(pos.x + 1, pos.y + 1, 2, 2, color);
+      }
+      const head = at(k);
+      rect(head.x, head.y, 3, 3, color);
+    }
+  }
+
+  function drawParticles() {
+    for (const q of parts) {
+      const x = Math.round(q.x);
+      const y = Math.round(q.y);
+      if (q.kind === "confetti") {
+        rect(x, y, 2, 2, q.c);
+      } else {
+        rect(x - 1, y, 3, 1, q.c);
+        rect(x, y - 1, 1, 3, q.c);
+      }
+    }
+  }
+
+  function draw() {
+    const p = pick();
+    ctx!.clearRect(0, 0, W, H);
+    drawRoom(p);
+    P.filter((q) => q.seated).forEach((q) => drawChair(q, p));
+    P.forEach((q) => drawPerson(q, p));
+    P.filter((q) => q.seated).forEach((q) => drawLaptop(q, p));
+    drawTable(p);
+    drawProjs();
+    drawParticles();
+  }
+
+  if (reduce) {
+    // ผู้ใช้ที่ปิดแอนิเมชัน: แสดงชื่อทีมครบแบบนิ่งๆ
+    placed = PIX.map((px) => ({ ...px, born: -100 }));
+    P.forEach((q) => {
+      q.act = q.seated ? "type" : "stand";
+    });
+    draw();
+    return () => {};
+  }
+
+  const STEP = 1000 / 60;
+  let raf = 0;
+  let last = performance.now();
+  let acc = 0;
+  const loop = (now: number) => {
+    acc += Math.min(now - last, 100);
+    last = now;
+    while (acc >= STEP) {
+      update();
+      acc -= STEP;
+    }
+    draw();
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  return () => cancelAnimationFrame(raf);
 }
 
 export function PixelOffice() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [narrow, setNarrow] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 600px)");
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  const L = narrow ? NARROW : WIDE;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const devs = [0, 1, 2].map(makeDev);
-    let placed: Px[] = reduce ? [...PIX] : [];
-    let projs: Proj[] = [];
-    let t = 0;
-    let buildTimer = 180;
-    let raf = 0;
-
-    const pick = (): Pal => (document.documentElement.dataset.theme === "dark" ? DARK : LIGHT);
-
-    function spawn(d: Dev, px: Px) {
-      projs.push({ sx: d.x + 6, sy: d.y + 5, tx: px.x, ty: px.y, t: 0, dur: 16, c: px.c, px });
-      d.throwT = 6;
-    }
-
-    function tickBuilder(d: Dev) {
-      if (d.phase === "go") {
-        if (step(d, 0.7)) {
-          d.phase = "place"; d.cool = 0; d.idx = 0;
-        }
-      } else if (d.phase === "place") {
-        d.walking = false;
-        d.typing = false;
-        if (d.throwT > 0) d.throwT--;
-        if (--d.cool <= 0 && d.idx < PIX.length) {
-          spawn(d, PIX[d.idx++]);
-          d.cool = 4;
-        }
-        if (d.idx >= PIX.length && projs.length === 0) {
-          d.phase = "hold"; d.timer = 220;
-        }
-      } else if (d.phase === "hold") {
-        d.walking = false;
-        if (--d.timer <= 0) d.phase = "clear";
-      } else if (d.phase === "clear") {
-        if (t % 2 === 0) placed.pop();
-        if (placed.length === 0) {
-          const s = seat(d.home);
-          d.tx = s.x; d.ty = s.y; d.phase = "return";
-        }
-      } else if (d.phase === "return") {
-        if (step(d, 0.7)) {
-          d.role = "worker"; d.state = "sit"; d.after = "sit"; d.timer = 200; d.typing = true;
-          buildTimer = 500;
-        }
-      }
-    }
-
-    function update() {
-      t++;
-      if (!reduce) {
-        if (buildTimer > 0 && !devs.some((d) => d.role === "builder")) buildTimer--;
-        if (buildTimer === 0) {
-          const pool = devs.filter((d) => d.role === "worker" && d.state === "sit");
-          if (pool.length) {
-            const b = pool[Math.floor(Math.random() * pool.length)];
-            b.role = "builder"; b.phase = "go";
-            b.tx = BUILD_X; b.ty = FLOOR - 14;
-            buildTimer = -1;
-          }
-        }
-        devs.forEach((d) => (d.role === "builder" ? tickBuilder(d) : tickWorker(d, devs)));
-        projs = projs.filter((p) => {
-          p.t++;
-          if (p.t >= p.dur) {
-            placed.push(p.px);
-            return false;
-          }
-          return true;
-        });
-        devs.forEach((d) => { if (d.throwT > 0 && d.role !== "builder") d.throwT--; });
-      }
-    }
-
-    function rect(x: number, y: number, w: number, h: number, c: string) {
-      ctx!.fillStyle = c;
-      ctx!.fillRect(Math.round(x), Math.round(y), w, h);
-    }
-
-    function drawRoom(p: Pal) {
-      rect(0, 0, W, FLOOR, p.wall);
-      rect(0, FLOOR - 3, W, 3, p.wallDark);
-      rect(0, FLOOR, W, H - FLOOR, p.floor);
-      for (let y = FLOOR + 10; y < H; y += 14) rect(0, y, W, 1, p.floorLine);
-      for (let x = 0; x < W; x += 40) rect(x, FLOOR, 1, H - FLOOR, p.floorLine);
-      // กระดานไวท์บอร์ด
-      rect(BOARD.x - 3, BOARD.y - 3, BOARD.w + 6, BOARD.h + 6, p.boardFrame);
-      rect(BOARD.x, BOARD.y, BOARD.w, BOARD.h, p.board);
-      rect(BOARD.x, BOARD.y + BOARD.h + 3, BOARD.w, 2, p.boardFrame);
-      // ต้นไม้และเครื่องชงกาแฟ
-      rect(10, FLOOR - 26, 4, 14, p.plant);
-      rect(6, FLOOR - 30, 12, 6, p.plant);
-      rect(8, FLOOR - 12, 8, 8, p.pot);
-      rect(COFFEE_X, FLOOR - 26, 22, 22, p.machine);
-      rect(COFFEE_X + 4, FLOOR - 20, 14, 6, p.screen);
-      rect(COFFEE_X + 6, FLOOR - 8, 10, 2, p.cup);
-    }
-
-    function drawDeskBack(i: number, p: Pal) {
-      const dx = DESKS[i];
-      rect(dx + 2, DESK_Y + 3, 3, FLOOR - DESK_Y - 3, p.deskDark);
-      rect(dx + 39, DESK_Y + 3, 3, FLOOR - DESK_Y - 3, p.deskDark);
-      rect(dx + 14, DESK_Y - 12, 16, 10, p.monitor);
-      rect(dx + 15, DESK_Y - 11, 14, 8, p.screen);
-      for (let k = 0; k < 4; k++) {
-        const w = 3 + ((Math.floor(t / 9) + k * 4 + i * 3) % 9);
-        rect(dx + 16, DESK_Y - 10 + k * 2, Math.min(w, 12), 1, p.code[k % p.code.length]);
-      }
-      rect(dx + 20, DESK_Y - 2, 8, 2, p.monitor);
-    }
-
-    function drawDeskTop(i: number, p: Pal) {
-      const dx = DESKS[i];
-      rect(dx, DESK_Y, 44, 3, p.desk);
-      rect(dx + 16, DESK_Y + 1, 10, 1, p.deskDark);
-    }
-
-    function drawDev(d: Dev, p: Pal) {
-      const x = Math.round(d.x);
-      const y = Math.round(d.y);
-      const shirt = p.shirt[d.shirt];
-      rect(x + 1, y, 6, 2, p.hair[d.hair]);
-      rect(x + 1, y + 2, 6, 4, p.skin);
-      rect(x + 2 + (d.facing > 0 ? 1 : 0), y + 4, 1, 1, p.ink);
-      rect(x + 5 + (d.facing > 0 ? 1 : 0), y + 4, 1, 1, p.ink);
-      rect(x, y + 6, 8, 5, shirt);
-      // ขา
-      if (d.walking) {
-        const f = Math.floor(d.frame / 6) % 2;
-        rect(x + 1, y + 11, 2, f ? 2 : 3, p.pants);
-        rect(x + 5, y + 11, 2, f ? 3 : 2, p.pants);
-      } else {
-        rect(x + 1, y + 11, 6, 3, p.pants);
-      }
-      // แขน
-      if (d.role === "builder" && d.phase === "place" && d.throwT > 0) {
-        rect(x + 8, y + 2, 2, 4, p.skin);
-        rect(x + 9, y, 2, 2, p.skin);
-      } else if (d.typing) {
-        const up = Math.floor(t / 5) % 2;
-        rect(x - 1, y + 8 + up, 2, 2, p.skin);
-        rect(x + 7, y + 9 - up, 2, 2, p.skin);
-      } else {
-        const sw = d.walking ? Math.floor(d.frame / 6) % 2 : 0;
-        rect(x - 1, y + 7 + sw, 2, 3, p.skin);
-        rect(x + 7, y + 8 - sw, 2, 3, p.skin);
-      }
-    }
-
-    function drawLogo(p: Pal) {
-      // กระดานมีโลโก้เฉพาะพิกเซลที่วางแล้ว
-      for (const px of placed) rect(px.x, px.y, CELL, CELL, p.logo[px.c]);
-      for (const pr of projs) {
-        const k = pr.t / pr.dur;
-        const x = pr.sx + (pr.tx - pr.sx) * k;
-        const y = pr.sy + (pr.ty - pr.sy) * k - Math.sin(k * Math.PI) * 26;
-        rect(x, y, CELL, CELL, p.logo[pr.c]);
-      }
-    }
-
-    function draw() {
-      const p = pick();
-      ctx!.clearRect(0, 0, W, H);
-      drawRoom(p);
-      drawLogo(p);
-      DESKS.forEach((_, i) => drawDeskBack(i, p));
-      const order = [...devs].sort((a, b) => a.y - b.y);
-      order.forEach((d) => drawDev(d, p));
-      DESKS.forEach((_, i) => drawDeskTop(i, p));
-    }
-
-    function loop() {
-      update();
-      draw();
-      raf = requestAnimationFrame(loop);
-    }
-
-    if (reduce) {
-      draw();
-    } else {
-      loop();
-    }
-    return () => cancelAnimationFrame(raf);
-  }, []);
+    return createScene(canvas, L, reduce);
+  }, [L]);
 
   return (
     <div className="pixel-stage" aria-hidden>
-      <canvas ref={canvasRef} width={W} height={H} />
+      <canvas ref={canvasRef} width={L.W} height={L.H} />
     </div>
   );
 }

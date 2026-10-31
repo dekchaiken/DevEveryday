@@ -1180,10 +1180,10 @@ textarea.input {
 
 /* ============ pixel office (hero) ============ */
 .pixel-stage {
-  width: min(100%, 880px);
+  width: min(100%, 1040px);
   margin: 48px auto 0;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   background: var(--bg);
   box-shadow: var(--shadow);
@@ -1194,7 +1194,12 @@ textarea.input {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 320 / 180;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+@media (max-width: 600px) {
+  .pixel-stage {
+    margin-top: 32px;
+    border-radius: 14px;
+  }
 }
