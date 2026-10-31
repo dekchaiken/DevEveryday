@@ -46,6 +46,28 @@ export async function saveContent(content: Content): Promise<void> {
   if (!res.ok) throw new Error(`บันทึกไป GitHub ไม่สำเร็จ (${res.status})`);
 }
 
+// บันทึกไฟล์ JSON ใดก็ได้ใน repo (ใช้กับข้อมูลร้านเสื้อผ้า)
+export async function saveJsonFile(path: string, data: unknown, message: string): Promise<void> {
+  const { headers, repo, branch } = config();
+  const fileUrl = `${API}/repos/${repo}/contents/${path}`;
+
+  const current = await fetch(`${fileUrl}?ref=${encodeURIComponent(branch)}`, { headers, cache: "no-store" });
+  if (!current.ok) throw new Error(`อ่านไฟล์จาก GitHub ไม่สำเร็จ (${current.status})`);
+  const { sha } = (await current.json()) as { sha: string };
+
+  const res = await fetch(fileUrl, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({
+      message,
+      content: Buffer.from(JSON.stringify(data, null, 2) + "\n", "utf8").toString("base64"),
+      sha,
+      branch,
+    }),
+  });
+  if (!res.ok) throw new Error(`บันทึกไป GitHub ไม่สำเร็จ (${res.status})`);
+}
+
 // อัปโหลดรูปใหม่เข้า public/uploads แล้วคืน path ที่ใช้ในเว็บได้เลย
 export async function uploadImage(fileName: string, bytes: Buffer): Promise<void> {
   const { headers, repo, branch } = config();

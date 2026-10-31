@@ -103,6 +103,9 @@ export function AdminEditor({ initial }: { initial: Content }) {
           </strong>
           <span className={`admin-status ${dirty ? "dirty" : ""}`}>{dirty ? "มีการแก้ไขที่ยังไม่บันทึก" : "บันทึกล่าสุดแล้ว"}</span>
           <div className="spacer" />
+          <Link href="/admin/shop" className="btn btn-ghost btn-sm">
+            ร้านเสื้อผ้า
+          </Link>
           <Link href="/" target="_blank" className="btn btn-ghost btn-sm">
             ดูเว็บ ↗
           </Link>

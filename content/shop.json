@@ -1,0 +1,52 @@
+{
+  "brandName": "Chubby Man",
+  "tagline": "เสื้อผ้าไซส์ใหญ่ สวมใส่สบาย ดูดีทุกวัน",
+  "sizes": ["S", "M", "L", "XL", "2XL", "3XL"],
+  "categories": [
+    { "id": "c-tee", "name": "เสื้อยืด" },
+    { "id": "c-shirt", "name": "เสื้อเชิ้ต" },
+    { "id": "c-jacket", "name": "เสื้อแจ็คเก็ต" },
+    { "id": "c-pants", "name": "กางเกง" }
+  ],
+  "types": [
+    { "id": "t-oversize", "name": "Oversize" },
+    { "id": "t-regular", "name": "Regular" },
+    { "id": "t-hoodie", "name": "Hoodie" }
+  ],
+  "brands": [
+    { "id": "b-chubby", "name": "Chubby Man" },
+    { "id": "b-other", "name": "แบรนด์อื่น" }
+  ],
+  "products": [
+    {
+      "id": "p1", "name": "เสื้อยืด Oversize โลโก้ Chubby", "brandId": "b-chubby", "categoryId": "c-tee", "typeId": "t-oversize",
+      "condition": "new", "price": 490, "description": "ตัวอย่างสินค้า ผ้า cotton 100% ทรง oversize", "image": "", "color": "#2f4f3e",
+      "variants": [{ "size": "L", "qty": 5 }, { "size": "XL", "qty": 3 }, { "size": "2XL", "qty": 0 }]
+    },
+    {
+      "id": "p2", "name": "เสื้อยืด Regular สีครีม", "brandId": "b-chubby", "categoryId": "c-tee", "typeId": "t-regular",
+      "condition": "new", "price": 390, "description": "ตัวอย่างสินค้า ผ้านุ่ม ทรงพอดีตัว", "image": "", "color": "#d9c8a9",
+      "variants": [{ "size": "M", "qty": 4 }, { "size": "L", "qty": 6 }]
+    },
+    {
+      "id": "p3", "name": "เสื้อเชิ้ตลายสก็อต", "brandId": "b-chubby", "categoryId": "c-shirt", "typeId": "t-regular",
+      "condition": "new", "price": 690, "description": "ตัวอย่างสินค้า ลายสก็อตทรงสบาย", "image": "", "color": "#7a3b2e",
+      "variants": [{ "size": "XL", "qty": 2 }, { "size": "2XL", "qty": 2 }, { "size": "3XL", "qty": 1 }]
+    },
+    {
+      "id": "p4", "name": "Hoodie สีดำ Chubby", "brandId": "b-chubby", "categoryId": "c-jacket", "typeId": "t-hoodie",
+      "condition": "new", "price": 890, "description": "ตัวอย่างสินค้า ผ้าหนาเนื้อนุ่มด้านใน", "image": "", "color": "#1d1d20",
+      "variants": [{ "size": "L", "qty": 3 }, { "size": "XL", "qty": 0 }]
+    },
+    {
+      "id": "p5", "name": "เสื้อแจ็คเก็ตยีนส์มือสอง", "brandId": "b-other", "categoryId": "c-jacket", "typeId": "t-regular",
+      "condition": "used", "price": 550, "description": "ตัวอย่างสินค้ามือสอง มีชิ้นเดียว", "image": "", "color": "#3c5a80",
+      "variants": [{ "size": "XL", "qty": 1 }]
+    },
+    {
+      "id": "p6", "name": "กางเกงสแล็คมือสอง", "brandId": "b-other", "categoryId": "c-pants", "typeId": "t-regular",
+      "condition": "used", "price": 350, "description": "ตัวอย่างสินค้ามือสอง มีชิ้นเดียว", "image": "", "color": "#4a4a4a",
+      "variants": [{ "size": "2XL", "qty": 1 }]
+    }
+  ]
+}

@@ -2137,3 +2137,500 @@ textarea.input {
     border-radius: 14px;
   }
 }
+
+/* ============ shop (Chubby Man) ============ */
+.shop {
+  min-height: 100vh;
+  background: var(--bg);
+}
+.shop-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.shop-top-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.shop-back {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.shop-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: auto;
+}
+.shop-brand > div {
+  display: grid;
+  line-height: 1.2;
+}
+.shop-brand strong {
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+.shop-brand span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.shop-mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--text);
+  color: var(--bg);
+  font-family: var(--font-code);
+  font-weight: 700;
+  font-size: 13px;
+}
+.shop-bag-btn {
+  padding: 9px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.shop-bag-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+}
+
+.shop-filters {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 22px 24px 0;
+  display: grid;
+  gap: 12px;
+}
+.shop-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 7px 14px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.chip:hover {
+  color: var(--text);
+}
+.chip.on {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.chip.size {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 64px;
+  line-height: 1.3;
+}
+.chip.size small {
+  font-size: 11px;
+  opacity: 0.8;
+}
+.shop-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.shop-size select {
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ราวแขวน */
+.rack-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+}
+.rack {
+  position: relative;
+  padding-top: 26px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent 60%),
+    var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.rail {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 34px;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #9a9aa3, #d7d7de, #9a9aa3);
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.35);
+}
+.rack-items {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 28px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  align-items: flex-start;
+}
+.hang {
+  position: relative;
+  flex: 0 0 180px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  scroll-snap-align: start;
+  animation: hang-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) both;
+}
+.hook {
+  width: 22px;
+  height: 22px;
+  margin-top: 4px;
+  border: 2px solid #9a9aa3;
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  position: relative;
+  transform-origin: top center;
+  animation: sway 4s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+.garment-wrap {
+  display: grid;
+  place-items: center;
+  width: 150px;
+  height: 170px;
+  transform-origin: top center;
+  animation: sway 4s ease-in-out infinite;
+  animation-delay: var(--d);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.hang:hover .garment-wrap {
+  transform: translateY(-8px) scale(1.04);
+}
+.garment,
+.garment-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 12px rgba(0, 0, 0, 0.2));
+}
+.garment-wrap.big {
+  width: min(360px, 80%);
+  height: auto;
+  aspect-ratio: 120 / 130;
+  animation: none;
+}
+.hang-label {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+  margin-top: 6px;
+}
+.hang-label strong {
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 170px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hang-label > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.hang-label em {
+  font-style: normal;
+  font-size: 11px;
+  color: #e5484d;
+}
+.hang.sold .garment-wrap {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+.rack-empty {
+  color: var(--muted);
+  padding: 40px 0;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+}
+@keyframes hang-in {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+@keyframes sway {
+  50% {
+    transform: rotate(1.2deg);
+  }
+}
+
+/* modal สินค้า */
+.shop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.shop-modal {
+  position: relative;
+  width: min(900px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+.shop-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.shop-modal-art {
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  background:
+    radial-gradient(circle at 70% 20%, color-mix(in srgb, var(--c) 30%, transparent), transparent 60%),
+    var(--surface-2);
+}
+.shop-modal-info {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 34px 30px;
+}
+.shop-modal-info h2 {
+  margin: 0;
+  font-size: 24px;
+}
+.shop-kicker {
+  font-family: var(--font-code);
+  font-size: 11px;
+  color: var(--muted);
+}
+.shop-price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.shop-price {
+  font-size: 22px;
+  font-weight: 600;
+}
+.cond {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+}
+.cond.used {
+  color: #f5a524;
+  border-color: #f5a524;
+}
+.shop-desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.shop-sizes {
+  display: grid;
+  gap: 10px;
+}
+.shop-sizes > span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.shop-add {
+  margin-top: 6px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  border: 0;
+  background: var(--text);
+  color: var(--bg);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.shop-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ตะกร้า */
+.shop-bag {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 210;
+  width: min(380px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -20px 0 40px -30px rgba(0, 0, 0, 0.4);
+  animation: bag-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes bag-in {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+}
+.shop-bag-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.shop-bag-head .shop-close {
+  position: static;
+}
+.bag-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+  overflow: auto;
+  flex: 1;
+}
+.bag-lines li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.bag-lines li > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+.bag-lines span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.qty button {
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+.shop-bag-foot {
+  display: grid;
+  gap: 12px;
+}
+.shop-bag-foot > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 760px) {
+  .shop-modal {
+    grid-template-columns: 1fr;
+  }
+  .shop-modal-art {
+    padding: 24px;
+  }
+  .hang {
+    flex-basis: 150px;
+  }
+  .garment-wrap {
+    width: 120px;
+    height: 140px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hang,
+  .hook,
+  .garment-wrap,
+  .shop-bag {
+    animation: none;
+  }
+}
