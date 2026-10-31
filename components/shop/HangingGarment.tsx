@@ -31,7 +31,9 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 //   - ถ้ามีรูปมุมเดียว จะเอียงเล็กน้อยให้เห็นมิติ
 // - ถ้ายังไม่มีรูป: วาดเสื้อด้วยสีและไม้แขวนเอง หมุนด้วย rotateY บนการ์ด 3D
 // - การแกว่งเป็นลูกตุ้มสปริง-ดิมพ์ ขับด้วย requestAnimationFrame และเขียนลง DOM โดยตรง
-export function HangingGarment({ product: p, shift, live = false }: { product: Product; shift: number; live?: boolean }) {
+export type Kick = { id: number; dir: number };
+
+export function HangingGarment({ product: p, shift, live = false, kick }: { product: Product; shift: number; live?: boolean; kick?: Kick }) {
   const swing = useRef<HTMLSpanElement>(null);
   const card = useRef<HTMLSpanElement>(null);
   const front = useRef<HTMLSpanElement>(null);
@@ -44,6 +46,14 @@ export function HangingGarment({ product: p, shift, live = false }: { product: P
   const hookStyle = { "--hx": `${hook.x}%`, "--hy": `${hook.y}%` } as CSSProperties;
   const frames = p.image && p.views.length >= 2 ? p.views : [];
   const photo = Boolean(p.image);
+
+  // แรงกระตุ้นตอนถูกเลือก: เสื้อหมุนและแกว่งตามทิศที่เลื่อนมา
+  useEffect(() => {
+    if (!kick) return;
+    const s = phys.current;
+    s.tv += 120 * kick.dir;
+    s.pv += 40 * kick.dir;
+  }, [kick]);
 
   useEffect(() => {
     if (!live) return;

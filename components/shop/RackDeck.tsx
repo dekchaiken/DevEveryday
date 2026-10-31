@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type WheelEvent } from "react";
 import type { Product } from "@/lib/shop";
-import { HangingGarment } from "@/components/shop/HangingGarment";
+import { HangingGarment, type Kick } from "@/components/shop/HangingGarment";
 
 const VISIBLE_RANGE = 4; // จำนวนชิ้นที่เห็นข้างละกี่ชิ้น นอกนั้นซ่อน
 
@@ -25,6 +25,7 @@ export function RackDeck({
 }) {
   const [index, setIndex] = useState(0);
   const [sizes, setSizes] = useState<Record<string, string>>({});
+  const [kick, setKick] = useState<Kick | undefined>(undefined);
   const wheelLock = useRef(0);
   const drag = useRef<number | null>(null);
   const stage = useRef<HTMLDivElement>(null);
@@ -40,7 +41,9 @@ export function RackDeck({
 
   function step(delta: number) {
     if (count === 0) return;
-    setIndex((i) => Math.min(count - 1, Math.max(0, i + delta)));
+    const next = Math.min(count - 1, Math.max(0, idx + delta));
+    if (next !== idx) setKick({ id: Date.now(), dir: delta > 0 ? 1 : -1 });
+    setIndex(next);
   }
 
   function onKey(e: KeyboardEvent<HTMLDivElement>) {
@@ -109,7 +112,7 @@ export function RackDeck({
               aria-selected={d === 0}
               aria-label={p.name}
             >
-              <HangingGarment product={p} shift={0} live={d === 0} />
+              <HangingGarment product={p} shift={0} live={d === 0} kick={d === 0 ? kick : undefined} />
             </div>
           );
         })}
