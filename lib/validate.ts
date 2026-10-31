@@ -1,8 +1,8 @@
-import type { Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
+import type { Brand, Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
 
 type Result = { ok: true; value: Content } | { ok: false; error: string };
 
-const LIMITS = { short: 120, long: 600, services: 12, plans: 4, steps: 6, team: 30, history: 8, skills: 10, projects: 12, tags: 8 };
+const LIMITS = { short: 120, long: 600, services: 12, plans: 4, steps: 6, team: 30, history: 8, skills: 10, projects: 12, tags: 8, brands: 8 };
 
 class ValidationError extends Error {}
 
@@ -51,6 +51,28 @@ function build(input: unknown): Content {
   };
 
   const stack = arr(root.stack, "stack", LIMITS.skills, (x, i) => str(x, `stack #${i + 1}`)).filter(Boolean);
+
+  const brands: Brand[] = uniqueIds(
+    arr(root.brands, "ธุรกิจในเครือ", LIMITS.brands, (x, i) => {
+      const o = obj(x, `ธุรกิจ #${i + 1}`);
+      const color = str(o.color, "สีธุรกิจ", 7);
+      if (!/^#[0-9a-fA-F]{6}$/.test(color)) throw new ValidationError(`สีธุรกิจ ${color} ไม่ถูกต้อง (ต้องเป็น #rrggbb)`);
+      const url = str(o.url, "ลิงก์ธุรกิจ", 300);
+      if (url && !/^https:\/\//.test(url)) throw new ValidationError("ลิงก์ธุรกิจต้องขึ้นต้นด้วย https://");
+      const image = str(o.image, "รูปธุรกิจ", 200);
+      if (image && !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(image)) throw new ValidationError("รูปธุรกิจไม่ถูกต้อง");
+      return {
+        id: str(o.id, "id ธุรกิจ", 40, false),
+        name: str(o.name, "ชื่อธุรกิจ", LIMITS.short, false),
+        tagline: str(o.tagline, "คำโปรยธุรกิจ"),
+        description: str(o.description, "รายละเอียดธุรกิจ", LIMITS.long),
+        url,
+        image,
+        color,
+      };
+    }),
+    "ธุรกิจในเครือ",
+  );
 
   const projects: Project[] = uniqueIds(
     arr(root.projects, "ผลงาน", LIMITS.projects, (x, i) => {
@@ -158,6 +180,7 @@ function build(input: unknown): Content {
   return {
     site,
     stack,
+    brands,
     projects,
     services,
     plans,

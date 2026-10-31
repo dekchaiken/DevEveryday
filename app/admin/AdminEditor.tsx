@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import type { Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
+import type { Brand, Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
 
-type TabKey = "site" | "services" | "projects" | "process" | "plans" | "team" | "contact";
+type TabKey = "site" | "services" | "projects" | "brands" | "process" | "plans" | "team" | "contact";
 const TABS: { key: TabKey; label: string }[] = [
   { key: "site", label: "ข้อมูลทั่วไป" },
   { key: "services", label: "บริการ" },
   { key: "projects", label: "ผลงาน" },
+  { key: "brands", label: "ธุรกิจในเครือ" },
   { key: "process", label: "ขั้นตอน" },
   { key: "plans", label: "แพ็กเกจ" },
   { key: "team", label: "ทีมงาน" },
@@ -87,6 +88,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
   const counts: Partial<Record<TabKey, number>> = {
     services: data.services.length,
     projects: data.projects.length,
+    brands: data.brands.length,
     process: data.process.length,
     plans: data.plans.length,
     team: data.team.length,
@@ -127,6 +129,7 @@ export function AdminEditor({ initial }: { initial: Content }) {
           {tab === "site" && <SitePanel data={data} edit={edit} />}
           {tab === "services" && <ServicesPanel data={data} edit={edit} goTo={setTab} />}
           {tab === "projects" && <ProjectsPanel data={data} edit={edit} />}
+          {tab === "brands" && <BrandsPanel data={data} edit={edit} />}
           {tab === "process" && <ProcessPanel data={data} edit={edit} />}
           {tab === "plans" && <PlansPanel data={data} edit={edit} />}
           {tab === "team" && <TeamPanel data={data} edit={edit} />}
@@ -395,6 +398,49 @@ function ProjectsPanel({ data, edit }: { data: Content; edit: Edit }) {
             { id, title: "ผลงานใหม่", client: "", category: "", description: "", tags: [], url: "", image: "", color: "#0070f3", featured: false, serviceId: "", demoUrl: "", frame: "browser" },
           ]);
         }}
+      />
+    </div>
+  );
+}
+
+function BrandsPanel({ data, edit }: { data: Content; edit: Edit }) {
+  const list = data.brands;
+  const setList = (next: Brand[]) => edit((d) => ({ ...d, brands: next }));
+  return (
+    <div className="admin-card">
+      <div className="admin-head">
+        <h2>ธุรกิจในเครือ</h2>
+        <span className="admin-hint">{list.length}/8 รายการ · ขึ้นเป็นการ์ดในหัวข้อ “ในเครือ” ของหน้าแรก</span>
+      </div>
+      {list.map((b, i) => (
+        <Item key={b.id} title={b.name} tag={b.url ? "มีลิงก์" : "ยังไม่มีลิงก์"}>
+          <div className="admin-item-head">
+            ธุรกิจ {i + 1}
+            <ItemControls index={i} count={list.length} onUp={() => setList(moveItem(list, i, -1))} onDown={() => setList(moveItem(list, i, 1))} onRemove={() => setList(removeAt(list, i))} />
+          </div>
+          <div className="grid-2">
+            <Field label="ชื่อธุรกิจ"><Text value={b.name} onChange={(v) => setList(replaceAt(list, i, { ...b, name: v }))} /></Field>
+            <Field label="คำโปรย (บรรทัดเดียว)"><Text value={b.tagline} onChange={(v) => setList(replaceAt(list, i, { ...b, tagline: v }))} /></Field>
+          </div>
+          <Field label="รายละเอียด"><Text multiline value={b.description} onChange={(v) => setList(replaceAt(list, i, { ...b, description: v }))} /></Field>
+          <div className="grid-2">
+            <Field label="ลิงก์เว็บไซต์ (https)" hint="ว่างได้ ถ้าว่างการ์ดจะไม่เป็นลิงก์">
+              <Text type="url" value={b.url} onChange={(v) => setList(replaceAt(list, i, { ...b, url: v }))} />
+            </Field>
+            <Field label="สีประจำธุรกิจ">
+              <div className="row">
+                <input type="color" value={b.color} onChange={(e) => setList(replaceAt(list, i, { ...b, color: e.target.value }))} style={{ width: 44, height: 40, border: 0, background: "none", padding: 0 }} aria-label="เลือกสี" />
+                <Text value={b.color} onChange={(v) => setList(replaceAt(list, i, { ...b, color: v }))} />
+              </div>
+            </Field>
+          </div>
+          <ImageField value={b.image} onChange={(v) => setList(replaceAt(list, i, { ...b, image: v }))} />
+        </Item>
+      ))}
+      <AddButton
+        disabled={list.length >= 8}
+        label="เพิ่มธุรกิจ"
+        onClick={() => setList([...list, { id: uid("b"), name: "ธุรกิจใหม่", tagline: "", description: "", url: "", image: "", color: "#0070f3" }])}
       />
     </div>
   );

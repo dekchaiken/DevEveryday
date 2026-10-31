@@ -4,6 +4,7 @@ import { Loader } from "@/components/Loader";
 import { PixelOffice } from "@/components/PixelOffice";
 import { Magnetic } from "@/components/Magnetic";
 import { Nav } from "@/components/Nav";
+import { Brands } from "@/components/Brands";
 import { Projects } from "@/components/Projects";
 import { ServicesGrid } from "@/components/ServicesGrid";
 import { Reveal } from "@/components/Reveal";
@@ -112,6 +113,19 @@ export default function Home() {
                 <p className="lead">ตัวอย่างโปรเจกต์ที่ทีมส่งมอบแล้ว ดูรายละเอียดและลิงก์ของแต่ละงานได้ในการ์ด</p>
               </Reveal>
               <Projects items={c.projects} />
+            </div>
+          </section>
+        )}
+
+        {c.brands.length > 0 && (
+          <section id="brands" className="section" style={{ paddingTop: 0 }}>
+            <div className="container">
+              <Reveal>
+                <span className="eyebrow">ในเครือ</span>
+                <h2 className="section-title">ธุรกิจอื่นภายใต้ DevEveryday</h2>
+                <p className="lead">ทีมเดียวกันยังดูแลธุรกิจของตัวเองด้วย กดเข้าไปดูเว็บไซต์ของแต่ละธุรกิจได้เลย</p>
+              </Reveal>
+              <Brands items={c.brands} />
             </div>
           </section>
         )}

@@ -23,6 +23,7 @@ export function Nav({ site }: { site: SiteInfo }) {
         <nav className="nav-links" aria-label="เมนูหลัก">
           <a href="#services">บริการ</a>
           <a href="#projects">ผลงาน</a>
+          <a href="#brands">ในเครือ</a>
           <a href="#process">วิธีทำงาน</a>
           <a href="#pricing">แพ็กเกจ</a>
           <a href="#team">ทีมงาน</a>
