@@ -14,6 +14,11 @@ const ICON_PATHS: Record<BrandIcon, string[]> = {
   spark: ["M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"],
 };
 
+// ลิงก์ภายนอกเปิดแท็บใหม่ ส่วน path ภายในเว็บเปิดในหน้าเดิม
+function linkProps(url: string) {
+  return url.startsWith("/") ? {} : { target: "_blank", rel: "noopener noreferrer" };
+}
+
 function BrandIconSvg({ name, className }: { name: BrandIcon; className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -92,7 +97,7 @@ export function Brands({ items }: { items: Brand[] }) {
               <p className="bshow-tagline">{active.tagline}</p>
               <p className="bshow-desc">{active.description}</p>
               {active.url && (
-                <a href={active.url} target="_blank" rel="noopener noreferrer" className="bshow-cta">
+                <a href={active.url} {...linkProps(active.url)} className="bshow-cta">
                   เข้าชมเว็บไซต์ <span aria-hidden="true">↗</span>
                 </a>
               )}

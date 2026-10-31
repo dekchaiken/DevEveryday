@@ -427,8 +427,8 @@ function BrandsPanel({ data, edit }: { data: Content; edit: Edit }) {
           </div>
           <Field label="รายละเอียด"><Text multiline value={b.description} onChange={(v) => setList(replaceAt(list, i, { ...b, description: v }))} /></Field>
           <div className="grid-2">
-            <Field label="ลิงก์เว็บไซต์ (https)" hint="ว่างได้ ถ้าว่างการ์ดจะไม่เป็นลิงก์">
-              <Text type="url" value={b.url} onChange={(v) => setList(replaceAt(list, i, { ...b, url: v }))} />
+            <Field label="ลิงก์ (https:// หรือ path ภายในเว็บ)" hint="ว่างได้ ถ้าว่างการ์ดจะไม่เป็นลิงก์ ตัวอย่าง: https://example.com หรือ /shop">
+              <Text value={b.url} onChange={(v) => setList(replaceAt(list, i, { ...b, url: v }))} />
             </Field>
             <Field label="สีประจำธุรกิจ">
               <div className="row">

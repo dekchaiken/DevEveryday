@@ -58,7 +58,7 @@ function build(input: unknown): Content {
       const color = str(o.color, "สีธุรกิจ", 7);
       if (!/^#[0-9a-fA-F]{6}$/.test(color)) throw new ValidationError(`สีธุรกิจ ${color} ไม่ถูกต้อง (ต้องเป็น #rrggbb)`);
       const url = str(o.url, "ลิงก์ธุรกิจ", 300);
-      if (url && !/^https:\/\//.test(url)) throw new ValidationError("ลิงก์ธุรกิจต้องขึ้นต้นด้วย https://");
+      if (url && !/^(https:\/\/|\/(?!\/))/.test(url)) throw new ValidationError("ลิงก์ธุรกิจต้องขึ้นต้นด้วย https:// หรือเป็น path ภายในเว็บ เช่น /shop");
       const image = str(o.image, "รูปธุรกิจ", 200);
       if (image && !/^\/uploads\/[A-Za-z0-9._-]+\.(png|jpe?g|webp)$/.test(image)) throw new ValidationError("รูปธุรกิจไม่ถูกต้อง");
       return {
