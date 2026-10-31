@@ -68,13 +68,13 @@
         "Three.js",
         "GSAP"
       ],
-      "url": "",
-      "image": "",
+      "url": "https://dekchaiken.github.io/Warapon_Portfolio/",
+      "image": "/uploads/mvwe9hhy-1490bf.png",
       "color": "#17c964",
       "featured": false,
       "serviceId": "s1",
       "demoUrl": "https://dekchaiken.github.io/Warapon_Portfolio/",
-      "frame": "browser"
+      "frame": "phone"
     }
   ],
   "services": [
