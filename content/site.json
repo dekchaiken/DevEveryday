@@ -22,9 +22,14 @@
   ],
   "brands": [
     {
-      "id": "b1", "name": "Chubby Man", "tagline": "เสื้อผ้าสไตล์เรียบง่าย ใส่ได้ทุกวัน",
+      "id": "b1",
+      "name": "Chubby Man",
+      "tagline": "เสื้อผ้าสไตล์เรียบง่าย ใส่ได้ทุกวัน",
       "description": "ร้านเสื้อผ้าของเราเอง มือ 1 และมือ 2 เลือกดูบนราวแขวนได้เลย",
-      "url": "/shop", "image": "", "color": "#f5a524", "icon": "shirt"
+      "url": "/shop",
+      "image": "",
+      "color": "#f5a524",
+      "icon": "shirt"
     }
   ],
   "projects": [
@@ -67,17 +72,16 @@
     },
     {
       "id": "w3",
-      "title": "ตัวอย่าง: หน้า Landing แบรนด์กาแฟ",
+      "title": "ตัวอย่าง: หน้า Portfolio",
       "client": "ชื่อลูกค้า",
       "category": "Landing Page",
       "description": "ข้อมูลตัวอย่าง มี motion และ 3D เล็กน้อยตามแคมเปญ",
       "tags": [
-        "Three.js",
-        "GSAP"
+        "html"
       ],
       "url": "https://dekchaiken.github.io/Warapon_Portfolio/",
       "image": "/uploads/mvwe9hhy-1490bf.png",
-      "color": "#17c964",
+      "color": "#ffffff",
       "featured": false,
       "serviceId": "s1",
       "demoUrl": "https://dekchaiken.github.io/Warapon_Portfolio/",
