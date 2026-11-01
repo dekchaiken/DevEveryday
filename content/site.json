@@ -138,6 +138,21 @@
       "serviceId": "s1",
       "demoUrl": "https://dekchaiken.github.io/Warapon_Portfolio/",
       "frame": "browser"
+    },
+    {
+      "id": "wmvxl5mqjhid9",
+      "title": "Learning DevXLab",
+      "client": "DevxLab",
+      "category": "Learning Platform",
+      "description": "",
+      "tags": [],
+      "url": "https://devxlab-4b697.web.app/",
+      "image": "",
+      "color": "#ffffff",
+      "featured": false,
+      "serviceId": "",
+      "demoUrl": "https://devxlab-4b697.web.app/",
+      "frame": "browser"
     }
   ],
   "services": [
@@ -149,8 +164,8 @@
     },
     {
       "id": "s2",
-      "title": "เว็บไซต์องค์กร",
-      "description": "ผลงาน บริการ ข่าวสาร SEO และระบบจัดการคอนเทนต์",
+      "title": "Learning Platform",
+      "description": "",
       "eta": "2–4 สัปดาห์"
     },
     {
