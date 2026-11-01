@@ -143,14 +143,14 @@
       "id": "wmvxl5mqjhid9",
       "title": "Learning DevXLab",
       "client": "DevxLab",
-      "category": "Learning Platform",
+      "category": "",
       "description": "",
       "tags": [],
       "url": "https://devxlab-4b697.web.app/",
-      "image": "",
+      "image": "/uploads/mvxlfxd9-35a89e.png",
       "color": "#ffffff",
       "featured": false,
-      "serviceId": "",
+      "serviceId": "s2",
       "demoUrl": "https://devxlab-4b697.web.app/",
       "frame": "browser"
     }
