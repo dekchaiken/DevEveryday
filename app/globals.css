@@ -4249,3 +4249,116 @@ textarea.input {
   background: #fff;
   color: #0b0b0b;
 }
+
+/* ============ ฮาโลวีน: โทนมืดและของตกแต่ง ============ */
+html.season-dark {
+  color-scheme: dark;
+  --bg: #0d0906;
+  --surface: #17100b;
+  --surface-2: #22170f;
+  --border: #3d2a1c;
+  --border-strong: #5c3f2b;
+  --text: #fbeee2;
+  --muted: #c9a88e;
+  --shadow: 0 1px 0 rgba(255, 180, 120, 0.06) inset, 0 24px 60px -30px rgba(255, 122, 24, 0.25);
+}
+.sd {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+.sd-web {
+  position: absolute;
+  width: clamp(120px, 16vw, 210px);
+  height: auto;
+  opacity: 0.9;
+}
+.sd-web-tl {
+  left: 0;
+  top: 0;
+}
+.sd-web-tr {
+  right: 0;
+  top: 0;
+  transform: scaleX(-1);
+}
+.sd-spider {
+  position: absolute;
+  right: 16%;
+  top: 0;
+  width: 60px;
+  transform-origin: 50% 0;
+  animation: sd-swing 5s ease-in-out infinite;
+}
+.sd-thread {
+  width: 1px;
+  height: 90px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.5);
+}
+.sd-spider-body {
+  width: 56px;
+  height: auto;
+  display: block;
+}
+.sd-pumpkin {
+  position: absolute;
+  height: auto;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.5));
+}
+.sd-pumpkin-bl {
+  left: -12px;
+  bottom: -14px;
+  width: clamp(110px, 14vw, 170px);
+}
+.sd-pumpkin-br {
+  right: -10px;
+  bottom: -20px;
+  width: clamp(90px, 11vw, 130px);
+  transform: scaleX(-1) rotate(-6deg);
+}
+.sd-bat {
+  position: absolute;
+  width: 56px;
+  height: auto;
+  opacity: 0.85;
+}
+.sd-bat-1 {
+  top: 18%;
+  left: -80px;
+  animation: sd-fly 18s linear infinite;
+}
+.sd-bat-2 {
+  top: 34%;
+  left: -120px;
+  width: 40px;
+  animation: sd-fly 24s linear 7s infinite;
+}
+@keyframes sd-swing {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes sd-fly {
+  from {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(60vw, -30px);
+  }
+  to {
+    transform: translate(125vw, 10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-spider,
+  .sd-bat {
+    animation: none;
+  }
+}

@@ -288,12 +288,18 @@ function SeasonsPanel({ data, edit }: { data: Shop; edit: (fn: (d: Shop) => Shop
             <ColorField label="สีพื้นหลัง" value={s.theme.background} onChange={(v) => patch(i, { theme: { ...s.theme, background: v } })} />
             <ColorField label="สีตัวอักษร" value={s.theme.text} onChange={(v) => patch(i, { theme: { ...s.theme, text: v } })} />
           </div>
+          <Field label="ชุดตกแต่ง">
+            <select className="input" value={s.decor} onChange={(e) => patch(i, { decor: e.target.value })}>
+              <option value="none">ไม่มี</option>
+              <option value="halloween">ฮาโลวีน</option>
+            </select>
+          </Field>
           <label className="row" style={{ fontSize: 14 }}>
             <input type="checkbox" checked={s.active} onChange={(e) => patch(i, { active: e.target.checked })} /> เปิดใช้เทศกาลนี้
           </label>
         </Item>
       ))}
-      <Add label="เพิ่มเทศกาล" disabled={list.length >= SHOP_LIMITS.seasons} onClick={() => setList([...list, { id: uid("ss"), name: "เทศกาลใหม่", start: "01-01", end: "01-03", announcement: "", theme: { primary: "#0b0b0b", accent: "#c8a165", background: "#f6f4f0", text: "#111111" }, active: false }])} />
+      <Add label="เพิ่มเทศกาล" disabled={list.length >= SHOP_LIMITS.seasons} onClick={() => setList([...list, { id: uid("ss"), name: "เทศกาลใหม่", start: "01-01", end: "01-03", announcement: "", theme: { primary: "#0b0b0b", accent: "#c8a165", background: "#f6f4f0", text: "#111111" }, active: false, decor: "none" }])} />
     </Card>
   );
 }

@@ -346,6 +346,20 @@
   },
   "seasons": [
     {
+      "id": "land-halloween",
+      "name": "ฮาโลวีน",
+      "start": "10-15",
+      "end": "10-31",
+      "active": true,
+      "accent": "#ff7a18",
+      "badge": "Happy Halloween",
+      "announcement": "ช่วงฮาโลวีน: ปิดงานก่อนสิ้นเดือนรับสิทธิ์พิเศษ",
+      "decor": "halloween",
+      "dark": true
+    },
+    {
+      "decor": "none",
+      "dark": false,
       "id": "land-newyear",
       "name": "ปีใหม่",
       "start": "12-25",
@@ -356,6 +370,8 @@
       "announcement": "โปรปีใหม่: ลดค่าเริ่มต้นโปรเจกต์ 10% ถึง 5 ม.ค."
     },
     {
+      "decor": "none",
+      "dark": false,
       "id": "land-xmas",
       "name": "คริสต์มาส",
       "start": "12-15",

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { activeSeason, daysLeft, inSeason, isLive, type Product, type Season, type Shop } from "@/lib/shop";
 import { applyCoupon, type CartLine } from "@/lib/pricing";
 import { ShopIntro } from "@/components/shop/ShopIntro";
+import { SeasonDecor } from "@/components/SeasonDecor";
 
 type Line = CartLine;
 type Tab = "popular" | "collections" | "trending" | "branches";
@@ -187,6 +188,7 @@ export function Storefront({ shop, preview = false, previewDate = "" }: { shop: 
 
   return (
     <div className="sf" style={themeVars}>
+      <SeasonDecor kind={season?.decor ?? "none"} />
       {!preview && <ShopIntro name={shop.brandName} count={shop.products.length} />}
 
       {sec("announcement") && liveAnnouncements.length > 0 && (

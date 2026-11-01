@@ -269,6 +269,7 @@ export function validateShop(input: unknown): Result {
             text: hex(t.text, "สีตัวอักษรเทศกาล"),
           },
           active: o.active === true,
+          decor: o.decor === "halloween" ? "halloween" : "none",
         };
       }),
       "เทศกาล",

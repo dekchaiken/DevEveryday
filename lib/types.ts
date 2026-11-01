@@ -91,6 +91,8 @@ export type LandingSeason = {
   accent: string; // #rrggbb
   badge: string; // ข้อความป้ายเล็กบนหัวข้อ
   announcement: string; // แถบประกาศด้านบนสุด
+  decor: string; // ชุดตกแต่ง: none | halloween
+  dark: boolean; // ใช้พาเลทมืดของเทศกาลนั้น
 };
 
 export type Reason = { title: string; description: string };

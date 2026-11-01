@@ -196,6 +196,8 @@ function build(input: unknown): Content {
         accent,
         badge: str(o.badge ?? "", "ป้ายเทศกาล", 60),
         announcement: str(o.announcement ?? "", "แถบประกาศ", 160),
+        decor: o.decor === "halloween" ? "halloween" : "none",
+        dark: o.dark === true,
       };
     }),
     "เทศกาล",

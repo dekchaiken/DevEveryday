@@ -275,6 +275,15 @@ function SitePanel({ data, edit }: { data: Content; edit: Edit }) {
                   <Text value={z.accent} onChange={(v) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, accent: v }) }))} />
                 </div>
               </Field>
+              <Field label="ชุดตกแต่ง">
+                <select className="input" value={z.decor} onChange={(e) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, decor: e.target.value }) }))}>
+                  <option value="none">ไม่มี</option>
+                  <option value="halloween">ฮาโลวีน (ใยแมงมุม ฟักทอง แมงมุม ค้างคาว)</option>
+                </select>
+              </Field>
+              <label className="row" style={{ fontSize: 14 }}>
+                <input type="checkbox" checked={z.dark} onChange={(e) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, dark: e.target.checked }) }))} /> พาเลทโทนมืด
+              </label>
               <label className="row" style={{ fontSize: 14 }}>
                 <input type="checkbox" checked={z.active} onChange={(e) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, active: e.target.checked }) }))} /> เปิดใช้เทศกาลนี้
               </label>
@@ -284,7 +293,7 @@ function SitePanel({ data, edit }: { data: Content; edit: Edit }) {
         <AddButton
           disabled={data.seasons.length >= 8}
           label="เพิ่มเทศกาล"
-          onClick={() => edit((d) => ({ ...d, seasons: [...d.seasons, { id: uid("ls"), name: "เทศกาลใหม่", start: "01-01", end: "01-03", active: false, accent: "#0070f3", badge: "", announcement: "" }] }))}
+          onClick={() => edit((d) => ({ ...d, seasons: [...d.seasons, { id: uid("ls"), name: "เทศกาลใหม่", start: "01-01", end: "01-03", active: false, accent: "#0070f3", badge: "", announcement: "", decor: "none", dark: false }] }))}
         />
       </div>
       <div className="admin-card">

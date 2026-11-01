@@ -365,6 +365,22 @@
   ],
   "seasons": [
     {
+      "id": "season-halloween",
+      "name": "ฮาโลวีน",
+      "start": "10-15",
+      "end": "10-31",
+      "announcement": "คอลเลกชันฮาโลวีนมาแล้ว",
+      "theme": {
+        "primary": "#ff7a18",
+        "accent": "#ff7a18",
+        "background": "#120b07",
+        "text": "#fbeee2"
+      },
+      "active": true,
+      "decor": "halloween"
+    },
+    {
+      "decor": "none",
       "id": "season-newyear",
       "name": "ปีใหม่",
       "start": "12-25",
@@ -379,6 +395,7 @@
       "active": false
     },
     {
+      "decor": "none",
       "id": "season-1111",
       "name": "11.11",
       "start": "11-01",

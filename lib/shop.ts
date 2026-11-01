@@ -87,6 +87,7 @@ export type Season = {
   announcement: string; // ข้อความประกาศแถบบนสุดตอนเทศกาล
   theme: Theme;
   active: boolean;
+  decor: string; // ชุดตกแต่ง: none | halloween
 };
 
 export type SectionId = "announcement" | "hero" | "popular" | "collections" | "trending" | "branches" | "newsletter";
