@@ -1,4 +1,4 @@
-import { CONDITIONS, SECTION_IDS, SHOP_LIMITS, type Announcement, type Banner, type Branch, type Collection, type Coupon, type Option, type Product, type Schedule, type Section, type Shop, type Variant } from "@/lib/shop";
+import { CONDITIONS, SECTION_IDS, SHOP_LIMITS, type Announcement, type Banner, type Branch, type Collection, type Coupon, type Season, type Option, type Product, type Schedule, type Section, type Shop, type Variant } from "@/lib/shop";
 
 type Result = { ok: true; value: Shop } | { ok: false; error: string };
 
@@ -247,6 +247,33 @@ export function validateShop(input: unknown): Result {
     });
     const sections: Section[] = SECTION_IDS.map((id) => sectionsRaw.find((s) => s.id === id) ?? { id, enabled: true });
 
+    const seasons: Season[] = uniq(
+      list(root.seasons ?? [], "เทศกาล", SHOP_LIMITS.seasons, (x, i) => {
+        const o = obj(x, `เทศกาล #${i + 1}`);
+        const md = (v: unknown, field: string) => {
+          const s = text(v, field, 5, false);
+          if (!/^\d{2}-\d{2}$/.test(s)) fail(`${field} ต้องเป็นรูปแบบ MM-DD`);
+          return s;
+        };
+        const t = obj(o.theme, "ธีมของเทศกาล");
+        return {
+          id: text(o.id, "id เทศกาล", 40, false),
+          name: text(o.name, "ชื่อเทศกาล", 60, false),
+          start: md(o.start, "วันเริ่มเทศกาล"),
+          end: md(o.end, "วันจบเทศกาล"),
+          announcement: text(o.announcement ?? "", "ข้อความเทศกาล", 160),
+          theme: {
+            primary: hex(t.primary, "สีหลักเทศกาล"),
+            accent: hex(t.accent, "สีรองเทศกาล"),
+            background: hex(t.background, "สีพื้นหลังเทศกาล"),
+            text: hex(t.text, "สีตัวอักษรเทศกาล"),
+          },
+          active: o.active === true,
+        };
+      }),
+      "เทศกาล",
+    );
+
     const branches: Branch[] = uniq(
       list(root.branches ?? [], "สาขา", SHOP_LIMITS.branches, (x, i) => {
         const o = obj(x, `สาขา #${i + 1}`);
@@ -260,6 +287,7 @@ export function validateShop(input: unknown): Result {
       "สาขา",
     );
 
+    const pay = obj(root.payment ?? {}, "ข้อมูลการโอนเงิน");
     const footer = obj(root.footer, "ท้ายเว็บ");
 
     return {
@@ -283,6 +311,13 @@ export function validateShop(input: unknown): Result {
         collections,
         coupons,
         sections,
+        seasons,
+        payment: {
+          bankName: text(pay.bankName ?? "", "ชื่อธนาคาร", 60),
+          accountName: text(pay.accountName ?? "", "ชื่อบัญชี", 120),
+          accountNo: text(pay.accountNo ?? "", "เลขบัญชี", 40),
+          promptpay: text(pay.promptpay ?? "", "พร้อมเพย์", 40),
+        },
         branches,
         footer: {
           note: text(footer.note, "ข้อความท้ายเว็บ", 200),

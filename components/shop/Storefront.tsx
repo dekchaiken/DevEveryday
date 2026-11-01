@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { isLive, type Coupon, type Product, type Shop } from "@/lib/shop";
+import { activeSeason, daysLeft, isLive, type Product, type Season, type Shop } from "@/lib/shop";
+import { applyCoupon, type CartLine } from "@/lib/pricing";
 import { ShopIntro } from "@/components/shop/ShopIntro";
 
-type Line = { key: string; productId: string; size: string; qty: number };
+type Line = CartLine;
 type Tab = "popular" | "collections" | "trending" | "branches";
 
 const today0 = "";
@@ -29,26 +30,6 @@ function ProductArt({ p, className = "" }: { p: Product; className?: string }) {
 const baht = (n: number) => `฿${n.toLocaleString("th-TH")}`;
 const stock = (p: Product) => p.variants.reduce((s, v) => s + v.qty, 0);
 
-// ตรวจคูปองตามเงื่อนไข: ช่วงวัน สถานะ สิทธิ์การใช้ ยอดขั้นต่ำ และหมวดหรือคอลเลกชันที่กำหนด
-function applyCoupon(code: string, shop: Shop, lines: Line[], today: string) {
-  const c = shop.coupons.find((x) => x.code === code.trim().toUpperCase());
-  if (!c) return { error: "ไม่พบคูปองนี้" } as const;
-  if (!c.active || !isLive(c, today)) return { error: "คูปองนี้ไม่อยู่ในช่วงใช้งาน" } as const;
-  if (c.usageLimit > 0 && c.used >= c.usageLimit) return { error: "คูปองนี้ถูกใช้ครบแล้ว" } as const;
-  const items = lines.map((l) => ({ l, p: shop.products.find((x) => x.id === l.productId) })).filter((x) => x.p) as { l: Line; p: Product }[];
-  const inScope = items.filter(({ p }) => {
-    if (c.scope === "category") return p.categoryId === c.scopeId;
-    if (c.scope === "collection") return p.collectionIds.includes(c.scopeId);
-    return true;
-  });
-  const subtotal = items.reduce((s, { l, p }) => s + p.price * l.qty, 0);
-  const scoped = inScope.reduce((s, { l, p }) => s + p.price * l.qty, 0);
-  if (subtotal < c.minSpend) return { error: `ยอดขั้นต่ำ ${baht(c.minSpend)}` } as const;
-  if (scoped === 0) return { error: "คูปองนี้ใช้กับสินค้าในตะกร้าไม่ได้" } as const;
-  const discount = c.type === "percent" ? Math.floor((scoped * c.value) / 100) : Math.min(c.value, scoped);
-  return { coupon: c as Coupon, discount } as const;
-}
-
 export function Storefront({ shop, preview = false }: { shop: Shop; preview?: boolean }) {
   const [today, setToday] = useState(today0);
   const [slide, setSlide] = useState(0);
@@ -65,9 +46,19 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
   const [couponMsg, setCouponMsg] = useState("");
   const [wish, setWish] = useState<string[]>([]);
   const [cookie, setCookie] = useState(true);
+  // เทศกาลที่ตรงกับวันนี้ คำนวณหลังโหลดฝั่งเบราว์เซอร์เพื่อไม่ให้ค่า server กับ client ไม่ตรงกัน
+  const [season, setSeason] = useState<Season | null>(null);
+  // ขั้นตอนสั่งซื้อ: กรอกข้อมูลจัดส่ง แล้วได้เลขคำสั่งซื้อพร้อมข้อมูลโอนเงิน
+  const [checkout, setCheckout] = useState(false);
+  const [buyer, setBuyer] = useState({ name: "", phone: "", email: "", address: "", note: "" });
+  const [placing, setPlacing] = useState(false);
+  const [orderErr, setOrderErr] = useState("");
+  const [result, setResult] = useState<{ orderId: string; total: number; payment: Shop["payment"] } | null>(null);
 
   useEffect(() => {
-    setToday(new Date().toISOString().slice(0, 10));
+    const now = new Date();
+    setToday(now.toISOString().slice(0, 10));
+    setSeason(activeSeason(shop.seasons ?? [], now));
     try {
       const saved = JSON.parse(localStorage.getItem("cm-wish") ?? "[]");
       if (Array.isArray(saved)) setWish(saved.filter((x) => typeof x === "string"));
@@ -85,7 +76,7 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
     }
   }, [wish]);
 
-  const theme = shop.theme;
+  const theme = season ? season.theme : shop.theme;
   const themeVars = {
     "--shop-primary": theme.primary,
     "--shop-accent": theme.accent,
@@ -94,7 +85,12 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
   } as CSSProperties;
 
   const liveBanners = shop.banners.filter((b) => b.active && isLive(b, today));
-  const liveAnnouncements = shop.announcements.filter((a) => a.active && isLive(a, today));
+  const liveAnnouncements = [
+    ...(season
+      ? [{ id: "season", text: `${season.announcement} · เหลืออีก ${daysLeft(season.end, new Date())} วัน`, active: true, start: "", end: "" }]
+      : []),
+    ...shop.announcements.filter((a) => a.active && isLive(a, today)),
+  ];
   const sec = (id: string) => shop.sections.find((s) => s.id === id)?.enabled !== false;
 
   const popular = shop.products.filter((p) => p.popular);
@@ -135,7 +131,7 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
   }
 
   function tryCoupon() {
-    const r = applyCoupon(code, shop, lines, today);
+    const r = applyCoupon(shop, code, lines, today);
     if ("error" in r) {
       setApplied(null);
       setCouponMsg(r.error ?? "");
@@ -515,9 +511,67 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
               <strong>{baht(total)}</strong>
             </div>
           </div>
-          <button type="button" className="sf-add" disabled>
-            ชำระเงิน (เร็วๆ นี้)
-          </button>
+          {result && (
+            <div className="sf-result">
+              <strong>รับคำสั่งซื้อแล้ว</strong>
+              <span>เลขคำสั่งซื้อ {result.orderId}</span>
+              <span>ยอดชำระ {baht(result.total)}</span>
+              <span>
+                โอนเงินเข้าบัญชี {result.payment.bankName} · {result.payment.accountName} · {result.payment.accountNo}
+              </span>
+              {result.payment.promptpay && <span>พร้อมเพย์ {result.payment.promptpay}</span>}
+              <span>กรุณาแจ้งเลขคำสั่งซื้อพร้อมสลิปทางไลน์หรืออีเมลของร้าน</span>
+            </div>
+          )}
+          {!checkout && lines.length > 0 && (
+            <button type="button" className="sf-add" onClick={() => setCheckout(true)}>
+              ชำระเงินด้วยการโอน
+            </button>
+          )}
+          {checkout && lines.length > 0 && (
+            <form
+              className="sf-checkout"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setPlacing(true);
+                setOrderErr("");
+                try {
+                  const res = await fetch("/api/orders", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      items: lines.map((l) => ({ productId: l.productId, size: l.size, qty: l.qty })),
+                      coupon: applied?.code ?? "",
+                      customer: buyer,
+                    }),
+                  });
+                  const json = (await res.json().catch(() => ({}))) as { error?: string; orderId?: string; total?: number; payment?: Shop["payment"] };
+                  if (!res.ok || !json.orderId) throw new Error(json.error || "สั่งซื้อไม่สำเร็จ");
+                  setResult({ orderId: json.orderId, total: json.total ?? total, payment: json.payment ?? shop.payment });
+                  setLines([]);
+                  setApplied(null);
+                  setCheckout(false);
+                } catch (err) {
+                  setOrderErr((err as Error).message);
+                } finally {
+                  setPlacing(false);
+                }
+              }}
+            >
+              <input required placeholder="ชื่อผู้รับ" value={buyer.name} onChange={(e) => setBuyer({ ...buyer, name: e.target.value })} aria-label="ชื่อผู้รับ" />
+              <input required placeholder="เบอร์โทร" type="tel" value={buyer.phone} onChange={(e) => setBuyer({ ...buyer, phone: e.target.value })} aria-label="เบอร์โทร" />
+              <input placeholder="อีเมล (ไม่บังคับ)" type="email" value={buyer.email} onChange={(e) => setBuyer({ ...buyer, email: e.target.value })} aria-label="อีเมล" />
+              <textarea required placeholder="ที่อยู่จัดส่ง" rows={3} value={buyer.address} onChange={(e) => setBuyer({ ...buyer, address: e.target.value })} aria-label="ที่อยู่จัดส่ง" />
+              <input placeholder="หมายเหตุ (ไม่บังคับ)" value={buyer.note} onChange={(e) => setBuyer({ ...buyer, note: e.target.value })} aria-label="หมายเหตุ" />
+              {orderErr && <small className="sf-err">{orderErr}</small>}
+              <button type="submit" className="sf-add" disabled={placing}>
+                {placing ? "กำลังส่งคำสั่งซื้อ..." : "ยืนยันการสั่งซื้อ"}
+              </button>
+              <button type="button" className="sf-link" onClick={() => setCheckout(false)}>
+                กลับไปแก้ตะกร้า
+              </button>
+            </form>
+          )}
         </aside>
       )}
     </div>

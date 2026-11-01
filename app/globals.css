@@ -4171,3 +4171,29 @@ textarea.input {
 .grid-3 > .reveal > .card .card-more {
   margin-top: auto;
 }
+
+/* ขั้นตอนสั่งซื้อและผลลัพธ์ */
+.sf-checkout {
+  display: grid;
+  gap: 8px;
+}
+.sf-checkout input,
+.sf-checkout textarea {
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--shop-text, #111) 25%, transparent);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.sf-err {
+  color: #e5484d;
+}
+.sf-result {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--shop-accent, #c8a165) 16%, transparent);
+  font-size: 14px;
+}

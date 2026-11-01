@@ -62,9 +62,9 @@
       "price": 490,
       "description": "ตัวอย่างสินค้า ผ้า cotton 100% ทรง oversize",
       "sizeGuide": "M: อก 44 นิ้ว ยาว 28 นิ้ว · L: อก 48 นิ้ว ยาว 29 นิ้ว · XL: อก 52 นิ้ว ยาว 32 นิ้ว",
-      "image": "/uploads/test-tee.png",
+      "image": "",
       "views": [],
-      "side": "/uploads/test-tee.png",
+      "side": "",
       "hook": {
         "x": 48,
         "y": 13
@@ -368,5 +368,41 @@
     "note": "© Chubby Man. ร้านเสื้อผ้าไซส์ใหญ่",
     "email": "hello@example.com",
     "lineUrl": ""
+  },
+  "seasons": [
+    {
+      "id": "season-newyear",
+      "name": "ปีใหม่",
+      "start": "12-25",
+      "end": "01-05",
+      "announcement": "ลดสูงสุด 30% ต้อนรับปีใหม่",
+      "theme": {
+        "primary": "#1b1b3a",
+        "accent": "#ffd166",
+        "background": "#fbfaf7",
+        "text": "#14142b"
+      },
+      "active": false
+    },
+    {
+      "id": "season-1111",
+      "name": "11.11",
+      "start": "11-09",
+      "end": "11-11",
+      "announcement": "11.11 ลดทั้งร้าน ใช้คูปอง WELCOME10 ได้",
+      "theme": {
+        "primary": "#e5484d",
+        "accent": "#ffd166",
+        "background": "#fff7f5",
+        "text": "#2b0a0a"
+      },
+      "active": false
+    }
+  ],
+  "payment": {
+    "bankName": "ใส่ชื่อธนาคาร",
+    "accountName": "ใส่ชื่อบัญชี",
+    "accountNo": "ใส่เลขบัญชี",
+    "promptpay": "ใส่เบอร์พร้อมเพย์"
   }
 }

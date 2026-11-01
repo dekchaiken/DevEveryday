@@ -78,13 +78,28 @@ export type Coupon = Schedule & {
   active: boolean;
 };
 
+// ธีมตามเทศกาล: เกิดซ้ำทุกปีตามวันที่ MM-DD ช่วงข้ามปีได้ (เช่น 12-25 ถึง 01-05)
+export type Season = {
+  id: string;
+  name: string;
+  start: string; // MM-DD
+  end: string; // MM-DD
+  announcement: string; // ข้อความประกาศแถบบนสุดตอนเทศกาล
+  theme: Theme;
+  active: boolean;
+};
+
 export type SectionId = "announcement" | "hero" | "popular" | "collections" | "trending" | "branches" | "newsletter";
 
 export type Section = { id: SectionId; enabled: boolean };
 
 export type Branch = { id: string; name: string; address: string; hours: string };
 
+// ข้อมูลรับเงินโอน แสดงให้ลูกค้าหลังสั่งซื้อ
+export type Payment = { bankName: string; accountName: string; accountNo: string; promptpay: string };
+
 export type Shop = {
+  payment: Payment;
   brandName: string;
   tagline: string;
   sizes: string[];
@@ -98,6 +113,7 @@ export type Shop = {
   collections: Collection[];
   coupons: Coupon[];
   sections: Section[];
+  seasons: Season[];
   branches: Branch[];
   footer: { note: string; email: string; lineUrl: string };
 };
@@ -113,12 +129,40 @@ export const SHOP_LIMITS = {
   collections: 12,
   coupons: 50,
   branches: 10,
+  seasons: 12,
 };
 
 export const SECTION_IDS: SectionId[] = ["announcement", "hero", "popular", "collections", "trending", "branches", "newsletter"];
 
 export function getShop(): Shop {
   return raw as unknown as Shop;
+}
+
+// วันที่ปัจจุบันในรูปแบบ MM-DD
+export function mdOf(date: Date) {
+  return `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+// อยู่ในช่วงเทศกาลหรือไม่ รองรับช่วงที่ข้ามปี
+export function inSeason(s: { start: string; end: string }, md: string) {
+  if (!s.start || !s.end) return false;
+  return s.start <= s.end ? md >= s.start && md <= s.end : md >= s.start || md <= s.end;
+}
+
+// จำนวนวันที่เหลือจนถึงวันจบเทศกาล (นับวันนี้เป็นวันที่ 1)
+export function daysLeft(end: string, today: Date) {
+  const [m, d] = end.split("-").map(Number);
+  let target = new Date(today.getFullYear(), m - 1, d);
+  if (target < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+    target = new Date(today.getFullYear() + 1, m - 1, d);
+  }
+  const ms = target.getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  return Math.round(ms / 86400000) + 1;
+}
+
+export function activeSeason(seasons: Season[], today: Date) {
+  const md = mdOf(today);
+  return seasons.find((s) => s.active && inSeason(s, md)) ?? null;
 }
 
 // ช่วงเวลาใช้งาน: ว่างหมายถึงไม่จำกัดด้านนั้น

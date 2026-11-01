@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { SHOP_LIMITS, type Announcement, type Banner, type Branch, type Collection, type Condition, type Coupon, type Option, type Product, type Section, type SectionId, type Shop, type Variant } from "@/lib/shop";
+import { SHOP_LIMITS, type Season, type Announcement, type Banner, type Branch, type Collection, type Condition, type Coupon, type Option, type Product, type Section, type SectionId, type Shop, type Variant } from "@/lib/shop";
 import { processProductImage, type CheckResult, type Processed } from "@/lib/imaging";
 import { Storefront } from "@/components/shop/Storefront";
 
@@ -262,6 +262,42 @@ function CampaignsPanel({ data, edit }: { data: Shop; edit: (fn: (d: Shop) => Sh
 }
 
 // คอลเลกชัน สินค้าจะเลือกอยู่ในคอลเลกชันได้ในแผงสินค้า
+// ธีมตามเทศกาล: ตั้งวันเริ่มและจบแบบ MM-DD เกิดซ้ำทุกปี เมื่ออยู่ในช่วงจะเปลี่ยนสีและประกาศให้อัตโนมัติ
+function SeasonsPanel({ data, edit }: { data: Shop; edit: (fn: (d: Shop) => Shop) => void }) {
+  const list = data.seasons ?? [];
+  const setList = (next: Season[]) => edit((d) => ({ ...d, seasons: next }));
+  const patch = (i: number, p: Partial<Season>) => setList(replaceAt(list, i, { ...list[i], ...p }));
+  const mdOk = (v: string) => /^\d{2}-\d{2}$/.test(v);
+  return (
+    <Card title={`ธีมตามเทศกาล (${list.length}/${SHOP_LIMITS.seasons})`} actions={<span className="admin-hint">เกิดซ้ำทุกปี ช่วงข้ามปีได้ เช่น 12-25 ถึง 01-05</span>}>
+      {list.map((s, i) => (
+        <Item key={s.id} title={s.name} tag={s.active ? "เปิดใช้" : "ปิด"}>
+          <div className="admin-item-head">
+            เทศกาล {i + 1}
+            <Controls index={i} count={list.length} onUp={() => setList(swap(list, i, i - 1))} onDown={() => setList(swap(list, i, i + 1))} onRemove={() => setList(removeAt(list, i))} />
+          </div>
+          <div className="grid-2">
+            <Field label="ชื่อเทศกาล"><input className="input" value={s.name} onChange={(e) => patch(i, { name: e.target.value })} /></Field>
+            <Field label="ข้อความประกาศ"><input className="input" value={s.announcement} onChange={(e) => patch(i, { announcement: e.target.value })} /></Field>
+            <Field label="เริ่ม (MM-DD)" hint={mdOk(s.start) ? "" : "รูปแบบ 01-31"}><input className="input" value={s.start} onChange={(e) => patch(i, { start: e.target.value })} /></Field>
+            <Field label="จบ (MM-DD)" hint={mdOk(s.end) ? "" : "รูปแบบ 01-31"}><input className="input" value={s.end} onChange={(e) => patch(i, { end: e.target.value })} /></Field>
+          </div>
+          <div className="grid-2">
+            <ColorField label="สีหลัก" value={s.theme.primary} onChange={(v) => patch(i, { theme: { ...s.theme, primary: v } })} />
+            <ColorField label="สีรอง" value={s.theme.accent} onChange={(v) => patch(i, { theme: { ...s.theme, accent: v } })} />
+            <ColorField label="สีพื้นหลัง" value={s.theme.background} onChange={(v) => patch(i, { theme: { ...s.theme, background: v } })} />
+            <ColorField label="สีตัวอักษร" value={s.theme.text} onChange={(v) => patch(i, { theme: { ...s.theme, text: v } })} />
+          </div>
+          <label className="row" style={{ fontSize: 14 }}>
+            <input type="checkbox" checked={s.active} onChange={(e) => patch(i, { active: e.target.checked })} /> เปิดใช้เทศกาลนี้
+          </label>
+        </Item>
+      ))}
+      <Add label="เพิ่มเทศกาล" disabled={list.length >= SHOP_LIMITS.seasons} onClick={() => setList([...list, { id: uid("ss"), name: "เทศกาลใหม่", start: "01-01", end: "01-03", announcement: "", theme: { primary: "#0b0b0b", accent: "#c8a165", background: "#f6f4f0", text: "#111111" }, active: false }])} />
+    </Card>
+  );
+}
+
 function CollectionsPanel({ data, edit }: { data: Shop; edit: (fn: (d: Shop) => Shop) => void }) {
   const list = data.collections;
   const setList = (next: Collection[]) => edit((d) => ({ ...d, collections: next }));
@@ -453,6 +489,14 @@ function StorePanel({ data, edit }: { data: Shop; edit: (fn: (d: Shop) => Shop) 
         <OptionList title="ประเภท" items={data.types} onChange={(types) => edit((d) => ({ ...d, types }))} />
       </div>
       <OptionList title="แบรนด์" items={data.brands} onChange={(brands) => edit((d) => ({ ...d, brands }))} />
+      <Card title="ข้อมูลการโอนเงิน (แสดงหลังลูกค้าสั่งซื้อ)">
+        <div className="grid-2">
+          <Field label="ธนาคาร"><input className="input" value={data.payment.bankName} onChange={(e) => edit((d) => ({ ...d, payment: { ...d.payment, bankName: e.target.value } }))} /></Field>
+          <Field label="ชื่อบัญชี"><input className="input" value={data.payment.accountName} onChange={(e) => edit((d) => ({ ...d, payment: { ...d.payment, accountName: e.target.value } }))} /></Field>
+          <Field label="เลขบัญชี"><input className="input" value={data.payment.accountNo} onChange={(e) => edit((d) => ({ ...d, payment: { ...d.payment, accountNo: e.target.value } }))} /></Field>
+          <Field label="พร้อมเพย์"><input className="input" value={data.payment.promptpay} onChange={(e) => edit((d) => ({ ...d, payment: { ...d.payment, promptpay: e.target.value } }))} /></Field>
+        </div>
+      </Card>
       <SectionsPanel data={data} edit={edit} />
       <BranchesPanel data={data} edit={edit} />
     </>
@@ -652,6 +696,9 @@ export function ShopStudio({ initial }: { initial: Shop }) {
           </strong>
           <span className={`admin-status ${dirty ? "dirty" : ""}`}>{dirty ? "มีการแก้ไขที่ยังไม่บันทึก" : "บันทึกล่าสุดแล้ว"}</span>
           <div className="spacer" />
+          <Link href="/admin/orders" className="btn btn-ghost btn-sm">
+            คำสั่งซื้อ
+          </Link>
           <Link href="/shop" target="_blank" className="btn btn-ghost btn-sm">
             ดูหน้าร้านจริง ↗
           </Link>
@@ -678,7 +725,12 @@ export function ShopStudio({ initial }: { initial: Shop }) {
                 <SectionsPanel data={data} edit={edit} />
               </>
             )}
-            {tab === "campaigns" && <CampaignsPanel data={data} edit={edit} />}
+            {tab === "campaigns" && (
+              <>
+                <SeasonsPanel data={data} edit={edit} />
+                <CampaignsPanel data={data} edit={edit} />
+              </>
+            )}
             {tab === "collections" && <CollectionsPanel data={data} edit={edit} />}
             {tab === "products" && <ProductsPanel data={data} edit={edit} />}
             {tab === "coupons" && <CouponsPanel data={data} edit={edit} />}
