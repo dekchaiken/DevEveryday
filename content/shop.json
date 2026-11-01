@@ -380,7 +380,6 @@
       "decor": "halloween"
     },
     {
-      "decor": "none",
       "id": "season-newyear",
       "name": "ปีใหม่",
       "start": "12-25",
@@ -392,10 +391,10 @@
         "background": "#fbfaf7",
         "text": "#14142b"
       },
-      "active": false
+      "active": false,
+      "decor": "none"
     },
     {
-      "decor": "none",
       "id": "season-1111",
       "name": "11.11",
       "start": "11-01",
@@ -407,7 +406,8 @@
         "background": "#fff7f5",
         "text": "#2b0a0a"
       },
-      "active": true
+      "active": false,
+      "decor": "none"
     }
   ],
   "payment": {
