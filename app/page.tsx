@@ -6,6 +6,7 @@ import { Magnetic } from "@/components/Magnetic";
 import { Nav } from "@/components/Nav";
 import { Brands } from "@/components/Brands";
 import { Projects } from "@/components/Projects";
+import { SeasonBanner } from "@/components/SeasonBanner";
 import { ServicesGrid } from "@/components/ServicesGrid";
 import { Reveal } from "@/components/Reveal";
 import { Team } from "@/components/Team";
@@ -23,6 +24,7 @@ export default function Home() {
   return (
     <>
       <Loader name={c.site.name} />
+      <SeasonBanner seasons={c.seasons} />
       <Nav site={c.site} />
 
       <main id="top">
@@ -133,6 +135,26 @@ export default function Home() {
         )}
 
 
+        <section className="section why-section" style={{ paddingTop: 0 }}>
+          <div className="container">
+            <Reveal>
+              <span className="eyebrow">ทำไมต้องเรา</span>
+              <h2 className="section-title">ทีมเดียวที่ดูแลงานจนถึงวันใช้จริง</h2>
+            </Reveal>
+            <div className="grid-3">
+              {c.reasons.map((r, i) => (
+                <Reveal key={r.title} delay={i * 90}>
+                  <div className="card why-card">
+                    <span className="card-index">{String(i + 1).padStart(2, "0")}</span>
+                    <h3>{r.title}</h3>
+                    <p>{r.description}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="process" className="section" style={{ paddingTop: 0 }}>
           <div className="container">
             <Reveal>
@@ -203,6 +225,17 @@ export default function Home() {
             <Reveal delay={120}>
               <Contact types={c.contact.types} email={c.site.email} />
             </Reveal>
+          </div>
+        </section>
+        <section className="cta-band">
+          <div className="container cta-inner">
+            <div>
+              <h2>พร้อมเริ่มโปรเจกต์แล้วใช่ไหม</h2>
+              <p>ส่งรายละเอียดคร่าวๆ มา ทีมจะตอบกลับพร้อมแนวทางภายใน 24 ชั่วโมง</p>
+            </div>
+            <a href="#contact" className="btn btn-primary">
+              เริ่มโปรเจกต์ <span className="arrow">→</span>
+            </a>
           </div>
         </section>
       </main>

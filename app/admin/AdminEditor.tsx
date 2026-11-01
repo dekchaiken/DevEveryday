@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import type { Brand, BrandIcon, Content, HistoryItem, Member, Plan, Project, Service, Step } from "@/lib/types";
+import type { Brand, BrandIcon, Content, HistoryItem, LandingSeason, Member, Plan, Project, Reason, Service, Step } from "@/lib/types";
 
 type TabKey = "site" | "services" | "projects" | "brands" | "process" | "plans" | "team" | "contact";
 const TABS: { key: TabKey; label: string }[] = [
@@ -245,6 +245,71 @@ function SitePanel({ data, edit }: { data: Content; edit: Edit }) {
         <Field label="คั่นด้วยคอมมา" hint="คลิกออกจากช่องเพื่อบันทึกรายการ">
           <ListText value={data.stack} onCommit={(v) => edit((d) => ({ ...d, stack: v }))} />
         </Field>
+      </div>
+      <div className="admin-card">
+        <h3>เทศกาลของหน้าแรก (เกิดซ้ำทุกปี ช่วงข้ามปีได้)</h3>
+        <p className="admin-hint" style={{ margin: 0 }}>ระบบจะเปลี่ยนสีหลักและแสดงแถบประกาศอัตโนมัติ เมื่อวันที่ปัจจุบันอยู่ในช่วงที่ตั้งไว้</p>
+        {data.seasons.map((z, i) => (
+          <div className="admin-item" key={z.id}>
+            <div className="admin-item-head">
+              เทศกาล {i + 1}
+              <ItemControls
+                index={i}
+                count={data.seasons.length}
+                onUp={() => edit((d) => ({ ...d, seasons: moveItem(d.seasons, i, -1) }))}
+                onDown={() => edit((d) => ({ ...d, seasons: moveItem(d.seasons, i, 1) }))}
+                onRemove={() => edit((d) => ({ ...d, seasons: removeAt(d.seasons, i) }))}
+              />
+            </div>
+            <div className="grid-2">
+              <Field label="ชื่อเทศกาล"><Text value={z.name} onChange={(v) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, name: v }) }))} /></Field>
+              <Field label="ป้ายเล็กบนหัวข้อ"><Text value={z.badge} onChange={(v) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, badge: v }) }))} /></Field>
+              <Field label="เริ่ม (MM-DD)"><Text value={z.start} onChange={(v) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, start: v }) }))} /></Field>
+              <Field label="จบ (MM-DD)"><Text value={z.end} onChange={(v) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, end: v }) }))} /></Field>
+            </div>
+            <Field label="แถบประกาศ"><Text value={z.announcement} onChange={(v) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, announcement: v }) }))} /></Field>
+            <div className="grid-2">
+              <Field label="สีหลักของเทศกาล">
+                <div className="row">
+                  <input type="color" value={z.accent} onChange={(e) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, accent: e.target.value }) }))} style={{ width: 44, height: 40, border: 0, background: "none", padding: 0 }} aria-label="เลือกสี" />
+                  <Text value={z.accent} onChange={(v) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, accent: v }) }))} />
+                </div>
+              </Field>
+              <label className="row" style={{ fontSize: 14 }}>
+                <input type="checkbox" checked={z.active} onChange={(e) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, active: e.target.checked }) }))} /> เปิดใช้เทศกาลนี้
+              </label>
+            </div>
+          </div>
+        ))}
+        <AddButton
+          disabled={data.seasons.length >= 8}
+          label="เพิ่มเทศกาล"
+          onClick={() => edit((d) => ({ ...d, seasons: [...d.seasons, { id: uid("ls"), name: "เทศกาลใหม่", start: "01-01", end: "01-03", active: false, accent: "#0070f3", badge: "", announcement: "" }] }))}
+        />
+      </div>
+      <div className="admin-card">
+        <h3>เหตุผลที่ควรเลือกเรา ({data.reasons.length}/6)</h3>
+        {data.reasons.map((r: Reason, i: number) => (
+          <div className="admin-item" key={i}>
+            <div className="admin-item-head">
+              เหตุผล {i + 1}
+              <ItemControls
+                index={i}
+                count={data.reasons.length}
+                onUp={() => edit((d) => ({ ...d, reasons: moveItem(d.reasons, i, -1) }))}
+                onDown={() => edit((d) => ({ ...d, reasons: moveItem(d.reasons, i, 1) }))}
+                onRemove={() => edit((d) => ({ ...d, reasons: removeAt(d.reasons, i) }))}
+              />
+            </div>
+            <Field label="หัวข้อ"><Text value={r.title} onChange={(v) => edit((d) => ({ ...d, reasons: replaceAt(d.reasons, i, { ...r, title: v }) }))} /></Field>
+            <Field label="รายละเอียด"><Text multiline value={r.description} onChange={(v) => edit((d) => ({ ...d, reasons: replaceAt(d.reasons, i, { ...r, description: v }) }))} /></Field>
+          </div>
+        ))}
+        <AddButton
+          disabled={data.reasons.length >= 6}
+          label="เพิ่มเหตุผล"
+          onClick={() => edit((d) => ({ ...d, reasons: [...d.reasons, { title: "เหตุผลใหม่", description: "" } as Reason] }))}
+        />
       </div>
     </>
   );

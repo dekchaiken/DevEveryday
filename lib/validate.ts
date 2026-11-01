@@ -1,4 +1,4 @@
-import { BRAND_ICONS, type Brand, type BrandIcon, type Content, type HistoryItem, type Member, type Plan, type Project, type Service, type Step } from "@/lib/types";
+import { BRAND_ICONS, type Brand, type BrandIcon, type Content, type HistoryItem, type LandingSeason, type Reason, type Member, type Plan, type Project, type Service, type Step } from "@/lib/types";
 
 type Result = { ok: true; value: Content } | { ok: false; error: string };
 
@@ -177,9 +177,43 @@ function build(input: unknown): Content {
     "ทีมงาน",
   );
 
+  const seasons: LandingSeason[] = uniqueIds(
+    arr(root.seasons ?? [], "เทศกาล", 8, (x, i) => {
+      const o = obj(x, `เทศกาล #${i + 1}`);
+      const md = (v: unknown, field: string) => {
+        const s = str(v, field, 5, false);
+        if (!/^\d{2}-\d{2}$/.test(s)) throw new ValidationError(`${field} ต้องเป็นรูปแบบ MM-DD`);
+        return s;
+      };
+      const accent = str(o.accent, "สีเทศกาล", 7, false);
+      if (!/^#[0-9a-fA-F]{6}$/.test(accent)) throw new ValidationError("สีเทศกาลต้องเป็นรูปแบบ #rrggbb");
+      return {
+        id: str(o.id, "id เทศกาล", 40, false),
+        name: str(o.name, "ชื่อเทศกาล", LIMITS.short, false),
+        start: md(o.start, "วันเริ่มเทศกาล"),
+        end: md(o.end, "วันจบเทศกาล"),
+        active: o.active === true,
+        accent,
+        badge: str(o.badge ?? "", "ป้ายเทศกาล", 60),
+        announcement: str(o.announcement ?? "", "แถบประกาศ", 160),
+      };
+    }),
+    "เทศกาล",
+  );
+
+  const reasons = arr(root.reasons ?? [], "เหตุผลที่ควรเลือกเรา", 6, (x, i) => {
+    const o = obj(x, `เหตุผล #${i + 1}`);
+    return {
+      title: str(o.title, "หัวข้อเหตุผล", LIMITS.short, false),
+      description: str(o.description, "รายละเอียดเหตุผล", LIMITS.long),
+    };
+  });
+
   const contact = obj(root.contact, "contact");
   return {
     site,
+    seasons,
+    reasons,
     stack,
     brands,
     projects,

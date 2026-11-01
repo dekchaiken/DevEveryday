@@ -81,7 +81,23 @@ export type Project = {
   frame: "browser" | "phone"; // กรอบที่ใช้แสดง demo
 };
 
+// เทศกาลของหน้าแรก: เกิดซ้ำทุกปีตาม MM-DD เปลี่ยนสีหลักและแสดงแถบประกาศอัตโนมัติ
+export type LandingSeason = {
+  id: string;
+  name: string;
+  start: string; // MM-DD
+  end: string; // MM-DD
+  active: boolean;
+  accent: string; // #rrggbb
+  badge: string; // ข้อความป้ายเล็กบนหัวข้อ
+  announcement: string; // แถบประกาศด้านบนสุด
+};
+
+export type Reason = { title: string; description: string };
+
 export type Content = {
+  seasons: LandingSeason[];
+  reasons: Reason[];
   site: SiteInfo;
   stack: string[];
   brands: Brand[];

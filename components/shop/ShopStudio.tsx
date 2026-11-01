@@ -659,6 +659,8 @@ function VariantEditor({ product, sizes, onChange }: { product: Product; sizes: 
 export function ShopStudio({ initial }: { initial: Shop }) {
   const [data, setData] = useState<Shop>(initial);
   const [tab, setTab] = useState<Tab>("theme");
+  // วันทดลองสำหรับพรีวิว เช่น ดูหน้าตา 11.11 ได้ทั้งที่ยังไม่ถึงวันจริง
+  const [previewDay, setPreviewDay] = useState("");
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
@@ -739,8 +741,17 @@ export function ShopStudio({ initial }: { initial: Shop }) {
         </div>
         <aside className="studio-live" aria-label="พรีวิวหน้าร้าน">
           <div className="studio-live-head">พรีวิวสด (ตามข้อมูลที่กำลังแก้ ยังไม่บันทึก)</div>
+          <div className="row" style={{ flexWrap: "wrap", gap: 8, fontSize: 13 }}>
+            <span className="admin-hint">วันทดลองพรีวิว</span>
+            <input className="input" type="date" style={{ width: 180 }} value={previewDay ? `2000-${previewDay}` : ""} onChange={(e) => setPreviewDay(e.target.value ? e.target.value.slice(5) : "")} />
+            {previewDay && (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPreviewDay("")}>
+                ใช้วันจริง
+              </button>
+            )}
+          </div>
           <div className="studio-live-frame">
-            <Storefront shop={data} preview />
+            <Storefront shop={data} preview previewDate={previewDay} />
           </div>
         </aside>
       </div>

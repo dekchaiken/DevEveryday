@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { activeSeason, daysLeft, isLive, type Product, type Season, type Shop } from "@/lib/shop";
+import { activeSeason, daysLeft, inSeason, isLive, type Product, type Season, type Shop } from "@/lib/shop";
 import { applyCoupon, type CartLine } from "@/lib/pricing";
 import { ShopIntro } from "@/components/shop/ShopIntro";
 
@@ -30,7 +30,7 @@ function ProductArt({ p, className = "" }: { p: Product; className?: string }) {
 const baht = (n: number) => `฿${n.toLocaleString("th-TH")}`;
 const stock = (p: Product) => p.variants.reduce((s, v) => s + v.qty, 0);
 
-export function Storefront({ shop, preview = false }: { shop: Shop; preview?: boolean }) {
+export function Storefront({ shop, preview = false, previewDate = "" }: { shop: Shop; preview?: boolean; previewDate?: string }) {
   const [today, setToday] = useState(today0);
   const [slide, setSlide] = useState(0);
   const [tab, setTab] = useState<Tab>("popular");
@@ -46,8 +46,14 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
   const [couponMsg, setCouponMsg] = useState("");
   const [wish, setWish] = useState<string[]>([]);
   const [cookie, setCookie] = useState(true);
-  // เทศกาลที่ตรงกับวันนี้ คำนวณหลังโหลดฝั่งเบราว์เซอร์เพื่อไม่ให้ค่า server กับ client ไม่ตรงกัน
-  const [season, setSeason] = useState<Season | null>(null);
+  // วันปัจจุบันตั้งหลังโหลดฝั่งเบราว์เซอร์ เพื่อไม่ให้ค่า server กับ client ไม่ตรงกัน
+  const [now, setNow] = useState<Date | null>(null);
+  // เทศกาลที่ใช้งานอยู่: ถ้าส่ง previewDate มาจะใช้วันนั้นแทนวันจริง (ใช้ในหลังบ้านเพื่อดูพรีวิว)
+  const season: Season | null = useMemo(() => {
+    const list = shop.seasons ?? [];
+    if (previewDate) return list.find((s) => s.active && inSeason(s, previewDate)) ?? null;
+    return now ? activeSeason(list, now) : null;
+  }, [shop.seasons, now, previewDate]);
   // ขั้นตอนสั่งซื้อ: กรอกข้อมูลจัดส่ง แล้วได้เลขคำสั่งซื้อพร้อมข้อมูลโอนเงิน
   const [checkout, setCheckout] = useState(false);
   const [buyer, setBuyer] = useState({ name: "", phone: "", email: "", address: "", note: "" });
@@ -58,7 +64,7 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
   useEffect(() => {
     const now = new Date();
     setToday(now.toISOString().slice(0, 10));
-    setSeason(activeSeason(shop.seasons ?? [], now));
+    setNow(now);
     try {
       const saved = JSON.parse(localStorage.getItem("cm-wish") ?? "[]");
       if (Array.isArray(saved)) setWish(saved.filter((x) => typeof x === "string"));
@@ -87,7 +93,7 @@ export function Storefront({ shop, preview = false }: { shop: Shop; preview?: bo
   const liveBanners = shop.banners.filter((b) => b.active && isLive(b, today));
   const liveAnnouncements = [
     ...(season
-      ? [{ id: "season", text: `${season.announcement} · เหลืออีก ${daysLeft(season.end, new Date())} วัน`, active: true, start: "", end: "" }]
+      ? [{ id: "season", text: `${season.announcement} · เหลืออีก ${daysLeft(season.end, now ?? new Date())} วัน`, active: true, start: "", end: "" }]
       : []),
     ...shop.announcements.filter((a) => a.active && isLive(a, today)),
   ];
