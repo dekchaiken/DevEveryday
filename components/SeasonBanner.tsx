@@ -10,8 +10,12 @@ export function SeasonBanner({ seasons }: { seasons: LandingSeason[] }) {
   const [season, setSeason] = useState<LandingSeason | null>(null);
 
   useEffect(() => {
+    // ?season=<id> ใช้พรีวิวเทศกาลจากหลังบ้าน โดยไม่ต้องรอให้ตรงวันที่
+    const preview = new URLSearchParams(window.location.search).get("season");
     const md = mdOf(new Date());
-    const found = seasons.find((s) => s.active && inSeason(s, md)) ?? null;
+    const found = preview
+      ? seasons.find((s) => s.id === preview) ?? null
+      : seasons.find((s) => s.active && inSeason(s, md)) ?? null;
     setSeason(found);
     if (!found) return;
     const root = document.documentElement;

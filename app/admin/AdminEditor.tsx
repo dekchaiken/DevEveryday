@@ -287,6 +287,9 @@ function SitePanel({ data, edit }: { data: Content; edit: Edit }) {
               <label className="row" style={{ fontSize: 14 }}>
                 <input type="checkbox" checked={z.active} onChange={(e) => edit((d) => ({ ...d, seasons: replaceAt(d.seasons, i, { ...z, active: e.target.checked }) }))} /> เปิดใช้เทศกาลนี้
               </label>
+              <a className="btn" href={`/?season=${encodeURIComponent(z.id)}`} target="_blank" rel="noopener" style={{ alignSelf: "flex-start", fontSize: 14 }}>
+                พรีวิวบนหน้าแรก (ต้องบันทึกก่อน)
+              </a>
             </div>
           </div>
         ))}
