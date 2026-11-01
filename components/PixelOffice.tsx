@@ -134,16 +134,17 @@ const DARK: Pal = {
   plant: "#2fd98e", pot: "#3a4158", cup: "#e6e9f2", bubble: "#e6e9f2", shadow: "rgba(0,0,0,0.35)",
 };
 
-type Act = "type" | "listen" | "talk" | "point" | "sip" | "cheer" | "stand";
+type Act = "type" | "listen" | "talk" | "point" | "sip" | "cheer" | "stand" | "walk";
 type Mood = "focus" | "happy" | "surprise";
 type Look = -1 | 0 | 1;
 type Pose = { act: Act; mood?: Mood; icon?: Icon; look?: Look };
-type Beat = { dur: number; poses: Pose[]; start?: () => void };
+type Beat = { dur: number; poses: Pose[]; start?: () => void; sched?: [number, () => void][] };
 
 type Person = {
   x: number; y: number; seated: boolean;
   act: Act; mood: Mood; icon: Icon | null; iconT: number; look: Look;
   shirt: number; hair: number; phase: number;
+  goal: number | null; seatOnArrive: boolean;
 };
 
 type Proj = {
@@ -173,10 +174,12 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
 
   const person = (x: number, y: number, seated: boolean, i: number): Person => ({
     x, y, seated, act: seated ? "type" : "stand", mood: "focus", icon: null, iconT: 0,
-    look: 0, shirt: i === 4 ? 2 : i, hair: i % 2, phase: i,
+    look: 0, shirt: i === 4 ? 2 : i, hair: i % 2, phase: i, goal: null, seatOnArrive: false,
   });
+  // จุดยืนคุยกัน อยู่ห่างจากโต๊ะไปทางหัวหน้าทีมเล็กน้อย
+  const GATHER = SEATS.map((x) => x - 50);
   const P: Person[] = [
-    ...SEATS.map((x, i) => person(x, T - 10, true, i)),
+    ...SEATS.map((_, i) => person(GATHER[i], FLOOR - 14, false, i)),
     person(LEAD_X, FLOOR - 14, false, 4),
   ];
 
@@ -188,6 +191,10 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
   let t = 0;
   let beatIdx = 0;
   let beatT = 0;
+  // data = กำลังรับข้อมูลรหัสฐาน 16, compile = กำลังแปลงเป็นชื่อ, idle/erase = ไม่แสดงรหัส
+  let phase: "idle" | "data" | "compile" | "erase" = "idle";
+  let scheduled: { f: number; fn: () => void }[] = [];
+  let arrived = 0;
 
   const pick = (): Pal => (document.documentElement.dataset.theme === "dark" ? DARK : LIGHT);
 
@@ -219,7 +226,7 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
       dur: 40,
       c: k,
       onLand: () => {
-        pending.push(...cells);
+        arrived++;
         sparkAt(tx, ty);
       },
     });
@@ -244,65 +251,90 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
     }
   }
 
-  // ---------- บทของการประชุม (วนเป็นรอบ) ----------
+  // ---------- บทของการประชุม (วนเป็นรอบ ประมาณ 9 วินาที) ----------
   const beats: Beat[] = [];
+  // 1) ยืนคุยกันรวมกัน
   beats.push({
-    dur: 150,
-    poses: P.map((_, i) => (i === 4 ? { act: "point", mood: "happy", icon: "bang" } : { act: "listen", look: toward(i, 4) })),
-  });
-  beats.push({
-    dur: 100,
+    dur: 90,
+    start: () => {
+      P.forEach((q, i) => {
+        if (i < 4) {
+          q.seated = false;
+          q.x = GATHER[i];
+          q.y = FLOOR - 14;
+        }
+      });
+    },
     poses: P.map((_, i) => (i === 4 ? { act: "talk", icon: "ask" } : { act: "listen", look: toward(i, 4) })),
   });
-
-  const ORDER = [0, 1, 2, 3, 4];
-  ORDER.forEach((c, k) => {
-    const n = (c + 1) % 5;
-    beats.push({
-      dur: 50,
-      poses: P.map((_, i) => {
-        if (i === c) return { act: "point", mood: "happy", icon: "zap" };
-        if (i === 4) return { act: "stand", look: toward(i, c) };
-        return { act: "type" };
-      }),
-      start: () => launch(c, k),
-    });
-    beats.push({
-      dur: 60,
-      poses: P.map((_, i) => {
-        if (i === c) return { act: "type", mood: "happy", icon: "check" };
-        if (i === n) return { act: "talk", icon: "ask" };
-        if (i === 4) return { act: "stand", look: toward(i, n) };
-        return { act: "listen", look: toward(i, n) };
-      }),
-    });
-    if (k === 1) {
-      beats.push({
-        dur: 50,
-        poses: P.map((_, i) => (i === 2 ? { act: "sip", mood: "happy" } : rest(i))),
+  beats.push({
+    dur: 45,
+    poses: P.map((_, i) => (i === 1 ? { act: "talk", icon: "dots" } : { act: "listen", look: toward(i, 1) })),
+  });
+  // 2) แยกย้ายเดินไปที่โต๊ะ
+  beats.push({
+    dur: 80,
+    start: () => {
+      P.forEach((q, i) => {
+        if (i < 4) {
+          q.goal = SEATS[i];
+          q.seatOnArrive = true;
+        }
       });
-    }
+    },
+    poses: P.map((_, i) => (i === 4 ? { act: "stand" } : { act: "walk" })),
   });
-
+  // 3) ทุกคนนั่งทำงาน แล้วส่งข้อมูลเป็นรหัสฐาน 16 ไปที่จอทีละชุด
   beats.push({
-    dur: 170,
+    dur: 140,
+    start: () => {
+      phase = "data";
+      arrived = 0;
+    },
+    sched: [
+      [16, () => launch(0, 0)],
+      [36, () => launch(1, 1)],
+      [56, () => launch(2, 2)],
+      [76, () => launch(3, 3)],
+      [96, () => launch(4, 4)],
+    ],
+    poses: P.map((_, i) => (i === 4 ? { act: "point", mood: "happy", icon: "zap" } : { act: "type", mood: "focus" })),
+  });
+  // 4) compile: หน้าจอแปลงรหัสเป็นชื่อ DevEveryDay
+  beats.push({
+    dur: 80,
+    start: () => {
+      phase = "compile";
+      pending = [...PIX];
+    },
+    poses: P.map((_, i) => (i === 4 ? { act: "point", mood: "happy" } : { act: "type", mood: "happy" })),
+  });
+  // 5) ฉลอง
+  beats.push({
+    dur: 50,
     poses: P.map(() => ({ act: "cheer", mood: "happy", icon: "heart" })),
-    start: startParty,
+    start: () => {
+      phase = "idle";
+      startParty();
+    },
   });
   beats.push({
-    dur: 160,
+    dur: 50,
     poses: P.map((_, i) => (i === 4 ? { act: "talk", mood: "happy", icon: "star" } : { act: "type", mood: "happy" })),
   });
+  // 6) ลบชื่อออกแล้วเริ่มรอบใหม่
   beats.push({
     dur: 60,
     poses: P.map((_, i) => rest(i)),
     start: () => {
       pending = [];
       erasing = true;
+      phase = "erase";
     },
   });
 
   function applyBeat(b: Beat) {
+    scheduled = (b.sched ?? []).map(([f, fn]) => ({ f, fn }));
     b.poses.forEach((ps, i) => {
       const q = P[i];
       q.act = ps.act;
@@ -352,8 +384,30 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
       return q.life > 0;
     });
     for (const q of P) {
+      if (q.goal !== null) {
+        const dx = q.goal - q.x;
+        if (Math.abs(dx) <= 1.3) {
+          q.x = q.goal;
+          q.goal = null;
+          if (q.seatOnArrive) {
+            q.seatOnArrive = false;
+            q.seated = true;
+            q.y = T - 10;
+            q.act = "type";
+          }
+        } else {
+          q.x += Math.sign(dx) * 1.3;
+        }
+      }
       if (q.iconT > 0 && --q.iconT === 0) q.icon = null;
     }
+    scheduled = scheduled.filter((sc) => {
+      if (beatT >= sc.f) {
+        sc.fn();
+        return false;
+      }
+      return true;
+    });
   }
 
   // ---------- การวาด ----------
@@ -379,7 +433,7 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
     rect(SCREEN.x + SCREEN.w / 2 - 14, SCREEN.y + SCREEN.h + 7, 28, 2, p.frame);
 
     // ระหว่าง compile: รหัสฐาน 16 เลื่อนขึ้นบนจอ แล้วค่อยแปลงเป็นชื่อทีละพิกเซล
-    if (pending.length && !erasing && placed.length < PIX.length * 0.6) {
+    if (phase === "data" || (phase === "compile" && placed.length < PIX.length * 0.7)) {
       const adv = 6 * CELL;
       const rowH = 8 * CELL;
       const perRow = Math.max(1, Math.floor(IW / adv));
@@ -489,6 +543,14 @@ function createScene(canvas: HTMLCanvasElement, L: Layout, reduce: boolean): () 
         rect(x + 8, y, 3, 3, p.cup);
         rect(x - 1, y + 8, 2, 2, skin);
         break;
+      case "walk": {
+        const step = Math.floor(t / 5) % 2;
+        rect(x + (step ? 1 : 3), y + 11, 2, 3, p.ink);
+        rect(x + (step ? 5 : 2), y + 11, 2, 3, p.ink);
+        rect(x - 1, y + 8 + step, 2, 3, skin);
+        rect(x + 7, y + 9 - step, 2, 3, skin);
+        break;
+      }
       case "cheer":
         rect(x - 2, y - 2, 2, 4, skin);
         rect(x + 8, y - 2, 2, 4, skin);
