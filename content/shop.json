@@ -363,12 +363,6 @@
       "enabled": true
     }
   ],
-  "branches": [],
-  "footer": {
-    "note": "© Chubby Man. ร้านเสื้อผ้าไซส์ใหญ่",
-    "email": "hello@example.com",
-    "lineUrl": ""
-  },
   "seasons": [
     {
       "id": "season-newyear",
@@ -387,7 +381,7 @@
     {
       "id": "season-1111",
       "name": "11.11",
-      "start": "11-09",
+      "start": "11-01",
       "end": "11-11",
       "announcement": "11.11 ลดทั้งร้าน ใช้คูปอง WELCOME10 ได้",
       "theme": {
@@ -396,7 +390,7 @@
         "background": "#fff7f5",
         "text": "#2b0a0a"
       },
-      "active": false
+      "active": true
     }
   ],
   "payment": {
@@ -404,5 +398,11 @@
     "accountName": "ใส่ชื่อบัญชี",
     "accountNo": "ใส่เลขบัญชี",
     "promptpay": "ใส่เบอร์พร้อมเพย์"
+  },
+  "branches": [],
+  "footer": {
+    "note": "© Chubby Man. ร้านเสื้อผ้าไซส์ใหญ่",
+    "email": "hello@example.com",
+    "lineUrl": ""
   }
 }
