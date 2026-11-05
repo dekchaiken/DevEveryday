@@ -172,6 +172,27 @@
       "serviceId": "s1",
       "demoUrl": "https://fr-flower.vercel.app/fr-flower-dashboard",
       "frame": "browser"
+    },
+    {
+      "id": "wmw30mvabdx2z",
+      "title": "ระบบสรุปยอดหนี้",
+      "client": "",
+      "category": "Web Application",
+      "description": "ระบบสมาชิกและสิทธิ์: next-auth + JWT Refresh Token + Role (USER/ADMIN)\nแดชบอร์ดการเงิน: สรุปยอดหนี้, หมวดหมู่รายจ่าย, ติดตามเป้าหมาย (Goals), การแจ้งเตือน\nฟีเจอร์พรีเมียมขายงาน:\nสร้าง QR Code พร้อมเพย์ตามยอดจริง (promptpay-qr, qrcode.react)\nExport ใบสรุปหนี้และรายงานเป็น PDF (@react-pdf/renderer, jspdf)\nลายเซ็นดิจิทัลสำหรับยืนยันเอกสาร (react-signature-canvas)\nMotion & Visual หรูหรา (framer-motion, ogl)\nเทสครบ (playwright, jest)",
+      "tags": [
+        "Next.js 15",
+        "React 19",
+        "Tailwind",
+        "Prisma",
+        "PostgreSQL"
+      ],
+      "url": "https://deptx.vercel.app",
+      "image": "/uploads/mw30pae7-c034b9.png",
+      "color": "#0070f3",
+      "featured": false,
+      "serviceId": "s3",
+      "demoUrl": "https://deptx.vercel.app",
+      "frame": "browser"
     }
   ],
   "services": [
