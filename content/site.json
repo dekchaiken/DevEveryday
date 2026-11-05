@@ -168,6 +168,40 @@
       "serviceId": "",
       "demoUrl": "",
       "frame": "browser"
+    },
+    {
+      "id": "wmw30cz61h9vw",
+      "title": "ร้านขายดอกไม้นครปฐม",
+      "client": "FR-Flowers",
+      "category": "Landing Page",
+      "description": "เว็บร้านดอกไม้ มี DESIGN.md ดีไซน์พรีเมียม โหลดไว เน้น CTA ปิดการขายผ่าน LINE",
+      "tags": [
+        "Next.js",
+        "Tailwind",
+        "Framer Motion"
+      ],
+      "url": "https://fr-flower.vercel.app/fr-flower-dashboard",
+      "image": "/uploads/mw30dp3t-e7459b.png",
+      "color": "#e891cd",
+      "featured": false,
+      "serviceId": "s1",
+      "demoUrl": "https://fr-flower.vercel.app/fr-flower-dashboard",
+      "frame": "browser"
+    },
+    {
+      "id": "wmw30fh5se30t",
+      "title": "ผลงานใหม่",
+      "client": "",
+      "category": "",
+      "description": "",
+      "tags": [],
+      "url": "",
+      "image": "",
+      "color": "#0070f3",
+      "featured": false,
+      "serviceId": "",
+      "demoUrl": "",
+      "frame": "browser"
     }
   ],
   "services": [
