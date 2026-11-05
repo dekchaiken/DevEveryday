@@ -155,21 +155,6 @@
       "frame": "browser"
     },
     {
-      "id": "wmw0oz007jvyp",
-      "title": "ผลงานใหม่",
-      "client": "",
-      "category": "",
-      "description": "",
-      "tags": [],
-      "url": "",
-      "image": "",
-      "color": "#0070f3",
-      "featured": false,
-      "serviceId": "",
-      "demoUrl": "",
-      "frame": "browser"
-    },
-    {
       "id": "wmw30cz61h9vw",
       "title": "ร้านขายดอกไม้นครปฐม",
       "client": "FR-Flowers",
@@ -186,21 +171,6 @@
       "featured": false,
       "serviceId": "s1",
       "demoUrl": "https://fr-flower.vercel.app/fr-flower-dashboard",
-      "frame": "browser"
-    },
-    {
-      "id": "wmw30fh5se30t",
-      "title": "ผลงานใหม่",
-      "client": "",
-      "category": "",
-      "description": "",
-      "tags": [],
-      "url": "",
-      "image": "",
-      "color": "#0070f3",
-      "featured": false,
-      "serviceId": "",
-      "demoUrl": "",
       "frame": "browser"
     }
   ],
