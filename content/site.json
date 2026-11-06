@@ -217,6 +217,30 @@
       "serviceId": "s5",
       "demoUrl": "https://github.com/FrameHandsomez/jr-dev",
       "frame": "browser"
+    },
+    {
+      "id": "wmw4iy2aqs0ab",
+      "title": "ระบบบริหารจัดการเงินกู้และสินเชื่อส่วนบุคคล",
+      "client": "White-label Lending Business",
+      "category": "Web Application & FinTech Dashboard",
+      "description": "ระบบบริหารจัดการสินเชื่อและสัญญาเงินกู้ขนาดเล็กแบบครบวงจร \n- Admin Underwriting & Approval: พิจารณาคำขอสินเชื่อ, ตรวจสอบเอกสาร KYC, ปรับวงเงินกู้ และอนุมัติสัญญาแบบเรียลไทม์\n- Financial Analytics & Cash Flow: แดชบอร์ดสรุปยอดปล่อยกู้, กระแสเงินสดเข้า-ออก (Inflow/Outflow), อัตราการใช้วงเงิน และสถิติสมาชิก\n- Payment & Repayment Tracking: บันทึกการชำระค่างวด, ชำระบางส่วน, และระบบสร้าง QR Code พร้อมเพย์ตามยอดจริง\n- Digital Contract & KYC: รองรับการแนบเอกสารยืนยันตัวตน และเซ็นสัญญาดิจิทัล (Digital Signature Canvas)",
+      "tags": [
+        "Next.js 14",
+        "TypeScript",
+        "NestJS",
+        "PostgreSQL",
+        "Prisma",
+        "PromptPay QR",
+        "Digital Signature",
+        "Docker"
+      ],
+      "url": "",
+      "image": "/uploads/mw4j0677-e1c36e.png",
+      "color": "#0070f3",
+      "featured": false,
+      "serviceId": "s3",
+      "demoUrl": "",
+      "frame": "browser"
     }
   ],
   "services": [
