@@ -193,6 +193,30 @@
       "serviceId": "s3",
       "demoUrl": "https://deptx.vercel.app",
       "frame": "browser"
+    },
+    {
+      "id": "wmw4ha8ilt7vz",
+      "title": "Devd-Tools",
+      "client": "Open Source Developer Productivity",
+      "category": "Desktop Software & Local Automation System",
+      "description": "ซอฟต์แวร์เดสก์ท็อปสำหรับนักพัฒนา (Developer Macro & Automation Engine) รันเบื้องหลังผ่าน System Tray และคีย์ลัดระดับ Global (F1–F12) ออกแบบเพื่อลดงานซ้ำซ้อนและเร่งความเร็วในการพัฒนาซอฟต์แวร์:\nMulti-Project & Dev Server Runner: สลับรันโปรเจกต์ npm run dev / backend dev server ทันทีผ่านปุ่มลัด\nGit Workflow Automation: สลับ repository, auto-add, commit และ push ด้วยคีย์ลัดเดียว\nDocker & Container Ops: สั่ง Up, Down, Restart คอนเทนเนอร์ และดึง Log แบบ real-time เชื่อมต่อ Docker Desktop บน WSL 2\nAI Prompt Assistant: ผสานคำสั่งช่วย Code Review, Refactor และ Smart Debugging",
+      "tags": [
+        "Python",
+        "Tkinter",
+        "ttkbootstrap",
+        "Docker",
+        "WSL 2",
+        "Git",
+        "Pynput",
+        "Windows API (pywin32)"
+      ],
+      "url": "https://github.com/FrameHandsomez/jr-dev",
+      "image": "/uploads/mw4i51ww-ee9257.png",
+      "color": "#0070f3",
+      "featured": true,
+      "serviceId": "s5",
+      "demoUrl": "https://github.com/FrameHandsomez/jr-dev",
+      "frame": "browser"
     }
   ],
   "services": [
