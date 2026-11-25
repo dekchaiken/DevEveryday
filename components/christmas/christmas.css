@@ -2050,3 +2050,272 @@
     -webkit-line-clamp: 1;
   }
 }
+
+/* ---------- แถบข้อความวิ่งด้านบน ---------- */
+.xmas-ticker {
+  position: absolute;
+  top: 106px;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: 34px;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(5, 16, 18, 0.9), rgba(10, 30, 28, 0.6) 50%, rgba(5, 16, 18, 0.9));
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.xmas-ticker-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  align-items: center;
+  animation: xmas-ticker 38s linear infinite;
+}
+.xmas-ticker-group {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  padding-right: 36px;
+}
+.xmas-tick-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+.xmas-tick-item::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.8;
+}
+.xmas-tick-item.is-exclusive {
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+@keyframes xmas-ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- แท็บในแผงรายการ ---------- */
+.xmas-feed {
+  top: 150px;
+  width: 340px;
+  max-height: calc(100% - 170px);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+.xmas-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  margin-bottom: 10px;
+}
+.xmas-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  min-width: 0;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+.xmas-tab em {
+  font-style: normal;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.xmas-tab.is-on {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ink);
+}
+.xmas-tab.is-on.is-exclusive {
+  background: linear-gradient(135deg, rgba(245, 197, 66, 0.9), rgba(245, 158, 11, 0.9));
+  color: #1d1302;
+}
+.xmas-tab.is-on.is-exclusive em {
+  background: rgba(0, 0, 0, 0.15);
+}
+.xmas-tab-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.xmas-tab-panel ul {
+  margin: 0;
+  padding: 0 4px 0 0;
+  list-style: none;
+}
+.xmas-tab-panel li + li {
+  margin-top: 8px;
+}
+.xmas-entry-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.xmas-tab-panel li.is-exclusive-item .xmas-entry-row {
+  background: rgba(245, 197, 66, 0.08);
+  border: 1px solid rgba(245, 197, 66, 0.25);
+}
+.xmas-entry-row > .xicon {
+  margin-top: 2px;
+  color: var(--gold);
+}
+.xmas-entry b {
+  display: block;
+  font-size: 14px;
+}
+.xmas-entry b small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold-soft);
+  margin-left: 4px;
+}
+.xmas-entry em {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.xmas-tab-panel button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+.xmas-tab-panel li > button {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.xmas-tab-panel li > button:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* ---------- เลือกประเภทการสนับสนุนในป๊อปอัป ---------- */
+.xmas-kind {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.xmas-kind button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.xmas-kind button.is-on {
+  background: linear-gradient(135deg, rgba(245, 197, 66, 0.9), rgba(245, 158, 11, 0.9));
+  color: #1d1302;
+}
+
+/* ---------- ตำแหน่งป้ายและข้อความให้เข้ากับแถบด้านบน ---------- */
+.xmas-banner,
+.xmas-toast {
+  top: 156px;
+}
+
+/* มือถือ: แถบข้อความและแท็บย้ายตามเมนู */
+@media (max-width: 759px) {
+  .xmas-ticker {
+    top: 98px;
+    height: 30px;
+  }
+  .xmas-tick-item {
+    font-size: 13px;
+  }
+  .xmas-feed {
+    top: auto;
+    max-height: none;
+    padding: 10px;
+  }
+  .xmas-tabs {
+    margin-bottom: 8px;
+  }
+  .xmas-tab {
+    min-height: 36px;
+    font-size: 11px;
+  }
+  .xmas-tab-panel ul {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .xmas-tab-panel li {
+    flex: 0 0 230px;
+  }
+  .xmas-tab-panel li + li {
+    margin-top: 0;
+  }
+  .xmas-tab-panel .xmas-empty {
+    flex: 1 0 auto;
+  }
+  .xmas-banner,
+  .xmas-toast {
+    top: 136px;
+  }
+  .xmas-tab-panel {
+    max-height: 160px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-ticker-track {
+    animation: none;
+  }
+}

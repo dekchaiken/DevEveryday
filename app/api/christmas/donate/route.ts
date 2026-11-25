@@ -39,10 +39,12 @@ export async function POST(req: Request) {
   if (!name) return NextResponse.json({ error: "กรุณาใส่ชื่อ" }, { status: 400 });
   if (hasBlocked(name) || hasBlocked(message)) return NextResponse.json({ error: "ข้อความมีคำที่ไม่เหมาะสม" }, { status: 400 });
 
+  const kind = body.kind === "support" ? "support" : "giant";
   const id = crypto.randomUUID();
   const base: Order = {
     id,
     room: room.id,
+    kind,
     amount,
     name,
     message,

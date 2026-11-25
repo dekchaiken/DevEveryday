@@ -3,9 +3,12 @@ import { cmd, storeConfigured } from "@/lib/redis";
 import type { OrderPreview } from "@/lib/christmas/types";
 
 export type OrderStatus = "awaiting_payment" | "paid" | "cancelled";
+// giant = ตุ๊กตาหิมะยักษ์ (Exclusive ประจำห้อง) | support = สนับสนุนทีม DevEveryday
+export type OrderKind = "giant" | "support";
 export type Order = {
   id: string;
   room: string;
+  kind: OrderKind;
   amount: number; // บาท
   name: string;
   message: string;
@@ -58,9 +61,11 @@ export async function markPaid(id: string, providerRef: string, now: number): Pr
   if (!o || o.status === "paid") return o;
   const paid: Order = { ...o, status: "paid", paidAt: now, providerRef: providerRef || o.providerRef };
   await saveOrder(paid);
-  const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now };
-  if (!storeConfigured()) mem.giants.set(paid.room, giant);
-  else await cmd("SET", K.giant(paid.room), JSON.stringify(giant));
+  if (paid.kind !== "support") {
+    const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now };
+    if (!storeConfigured()) mem.giants.set(paid.room, giant);
+    else await cmd("SET", K.giant(paid.room), JSON.stringify(giant));
+  }
   return paid;
 }
 

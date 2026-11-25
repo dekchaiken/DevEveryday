@@ -45,6 +45,7 @@ export async function GET() {
     orders: orders.map((o) => ({
       id: o.id,
       room: o.room,
+      kind: o.kind,
       amount: o.amount,
       name: o.name,
       message: o.message,
