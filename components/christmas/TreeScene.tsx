@@ -232,7 +232,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ---------- ลูกบอลและของตกแต่งที่ผู้ใช้แขวน ----------
     const ornGroup = new THREE.Group();
     scene.add(ornGroup);
-    const ornMeshes = new Map<string, { mesh: THREE.Object3D; born: number; target: THREE.Vector3; landed: boolean; color: number }>();
+    // swing = สถานะตัวแกว่ง (มุม และความเร็วเชิงมุม) จำลองด้วยสปริง-แดมเปอร์
+    const ornMeshes = new Map<string, { mesh: THREE.Object3D; born: number; target: THREE.Vector3; landed: boolean; color: number; swing: { x: number; z: number; vx: number; vz: number } }>();
     const ornaments3D = new Map<string, Ornament>();
     let loadedOnce = false;
 
@@ -282,7 +283,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         pivot.scale.setScalar(0.7);
       }
       ornGroup.add(pivot);
-      ornMeshes.set(o.id, { mesh: pivot, born: animate ? performance.now() : 0, target, landed: !animate, color: (body.userData.color as number) ?? 0xffd76a });
+      ornMeshes.set(o.id, { mesh: pivot, born: animate ? performance.now() : 0, target, landed: !animate, color: (body.userData.color as number) ?? 0xffd76a, swing: { x: 0, z: 0, vx: 0, vz: 0 } });
       ornaments3D.set(o.id, o);
     }
 
@@ -508,15 +509,28 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           entry.mesh.rotation.z = Math.sin(k * 14) * 0.5 * (1 - k);
           if (k >= 1) {
             entry.landed = true;
+            // แรงกระแทกตอนลงถึงจุดแขวน ทำให้ลูกบอลแกว่งออกไปและค่อย ๆ หยุด
+            entry.swing.vx = 0.9 * (Math.random() > 0.5 ? 1 : -1);
+            entry.swing.vz = (Math.random() - 0.5) * 0.9;
             entry.mesh.position.copy(entry.target);
             entry.mesh.scale.setScalar(1);
             const col = entry.color;
             burst(entry.target.clone().add(new THREE.Vector3(0, 0.1, 0)), col, isSmall ? 14 : 24, 0.25);
           }
         } else if (!reduced) {
-          entry.mesh.rotation.z *= 0.92;
-          entry.mesh.rotation.x = Math.sin(t * 1.3 + entry.target.x) * 0.04;
-          entry.mesh.rotation.y = Math.sin(t * 0.8 + entry.target.x) * 0.08;
+          // สปริง-แดมเปอร์: ดึงกลับสู่แนวดิ่ง มีแรงลมเบา ๆ และแรงหน่วงทำให้การแกว่งค่อย ๆ หยุด
+          const sw = entry.swing;
+          const K = 16; // ความแข็งของเชือก
+          const C = 1.6; // แรงหน่วง
+          const wind = Math.sin(t * 0.9 + entry.target.x * 1.7) * 0.6 + Math.sin(t * 2.3 + entry.target.z) * 0.25;
+          const dt = 1 / 60;
+          sw.vx += (-K * sw.x - C * sw.vx + wind * 2.0) * dt;
+          sw.vz += (-K * sw.z - C * sw.vz + wind * 0.8) * dt;
+          sw.x = Math.max(-0.7, Math.min(0.7, sw.x + sw.vx * dt));
+          sw.z = Math.max(-0.7, Math.min(0.7, sw.z + sw.vz * dt));
+          entry.mesh.rotation.x = sw.x;
+          entry.mesh.rotation.z = sw.z;
+          entry.mesh.rotation.y = Math.sin(t * 0.8 + entry.target.x) * 0.05;
         }
       });
 

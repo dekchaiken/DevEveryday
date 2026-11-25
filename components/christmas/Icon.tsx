@@ -15,13 +15,14 @@ export function Icon({ name, size = 20, className }: { name: Name; size?: number
     case "snowman":
       return (
         <svg {...common}>
-          <circle cx="12" cy="17" r="5" fill="#f8fafc" />
-          <circle cx="12" cy="11" r="3.8" fill="#f8fafc" />
-          <rect x="7.8" y="4.2" width="8.4" height="2.4" rx="0.6" fill="#1f2937" />
-          <rect x="9.5" y="1.2" width="5" height="4" rx="0.6" fill="#1f2937" />
-          <circle cx="10.6" cy="10.6" r="0.6" fill="#111" />
-          <circle cx="13.4" cy="10.6" r="0.6" fill="#111" />
-          <path d="M12 11.5 14.5 12.2 12 12.8z" fill="#ff8a1f" />
+          <circle cx="12" cy="17" r="5.2" fill="#ffffff" stroke="#c9d6e2" strokeWidth="0.6" />
+          <circle cx="12" cy="11" r="3.9" fill="#ffffff" stroke="#c9d6e2" strokeWidth="0.6" />
+          <rect x="7.6" y="7.4" width="8.8" height="2.2" rx="1" fill="#f5c542" />
+          <path d="M8.6 7.4 Q8.6 2.4 12 2.4 Q15.4 2.4 15.4 7.4 Z" fill="#dc2643" />
+          <circle cx="12" cy="2.2" r="1.3" fill="#ffffff" />
+          <circle cx="10.5" cy="10.4" r="0.7" fill="#111" />
+          <circle cx="13.5" cy="10.4" r="0.7" fill="#111" />
+          <path d="M12 11.2 15 11.9 12 12.6 Z" fill="#ff8a1f" />
         </svg>
       );
     case "users":
