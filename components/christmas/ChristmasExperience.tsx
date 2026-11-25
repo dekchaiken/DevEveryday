@@ -8,7 +8,7 @@ import type { Preview, TreeSceneHandle } from "./TreeScene";
 import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
 import { RoomSkyline } from "./RoomSkyline";
-import { Crowd } from "./Crowd";
+import { Backdrop } from "./Crowd";
 import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
@@ -345,7 +345,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {/* พื้นหลังท้องฟ้าค่ำและดาว */}
       <div className="xmas-sky" aria-hidden />
       <RoomSkyline kind={room.skyline} />
-      <Crowd count={Math.max(online?.count ?? 0, 14)} names={crowdNames} />
+      <Backdrop />
 
       {webglOk ? (
         <TreeScene
@@ -372,6 +372,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setFocus(null);
           }}
           snowing={snowOn}
+          crowd={{ count: Math.max(online?.count ?? 0, 14), names: crowdNames }}
           key={room.id}
         />
       ) : (

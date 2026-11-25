@@ -31,10 +31,11 @@ type Props = {
   markerSlot: number | null; // ช่องที่กำลังเลือกบนพื้น
   onGroundPick: (slot: number) => void; // แตะพื้นหิมะเพื่อเลือกช่องใกล้ที่สุด
   snowing: boolean; // เปิด/ปิดหิมะตก
+  crowd: { count: number; names: string[] }; // ฝูงชนเงาที่ยืนอยู่รอบลานหิมะ
 };
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giant, decor, onDecorClick, markerSlot, onGroundPick, snowing }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giant, decor, onDecorClick, markerSlot, onGroundPick, snowing, crowd }: Props) {
   const snowingRef = useRef(snowing);
   snowingRef.current = snowing;
   const mountRef = useRef<HTMLDivElement>(null);
@@ -45,6 +46,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setPreview: (p: Preview) => void;
     firework: (color: string) => void;
     setReduced: (v: boolean) => void;
+    setCrowd: (count: number, names: string[]) => void;
     setGiant: (g: { name: string; message: string } | null) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
@@ -349,6 +351,50 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     );
     previewMesh.visible = false;
     scene.add(previewMesh);
+
+    // ---------- ฝูงชนเงาเบื้องหลัง: แผ่นภาพคนในฉาก 3 มิติ ขนาดและมุมมองเดียวกับต้นไม้และพื้น ----------
+    const crowdGroup = new THREE.Group();
+    scene.add(crowdGroup);
+    const silTex = new Map<string, THREE.CanvasTexture>();
+    for (const v of ["adult", "hat", "bag", "child"]) silTex.set(v, makeSilhouetteTexture(v));
+    const labelCache = new Map<string, THREE.CanvasTexture>();
+    const crowdMats: THREE.Material[] = [];
+    function setCrowd(count: number, names: string[]) {
+      crowdGroup.clear();
+      for (const m of crowdMats) m.dispose();
+      crowdMats.length = 0;
+      const total = Math.min(Math.max(Math.round(count), 0), 26);
+      const variants = ["adult", "hat", "adult", "bag", "child", "hat", "adult", "bag"];
+      for (let i = 0; i < total; i++) {
+        // ยืนบนพื้นวงกว้างรอบลาน กระจายตามมุมและระยะที่กำหนดจากลำดับ เพื่อให้ตรงกันทุกเครื่อง
+        const angle = ((i * 0.618034) % 1) * Math.PI * 2;
+        const dist = 15 + ((i * 37) % 10) * 0.45;
+        const variant = variants[i % variants.length];
+        const h = variant === "child" ? 1.25 : 1.75 + (((i * 13) % 5) - 2) * 0.03;
+        const aspect = variant === "child" ? 0.5 : 0.48;
+        const mat = new THREE.SpriteMaterial({ map: silTex.get(variant), color: 0x23496a, transparent: true, opacity: 0.92, depthWrite: false, fog: true });
+        crowdMats.push(mat);
+        const sp = new THREE.Sprite(mat);
+        sp.scale.set(h * aspect, h, 1);
+        sp.position.set(Math.cos(angle) * dist, h / 2, Math.sin(angle) * dist);
+        crowdGroup.add(sp);
+        const name = names.length ? names[i % names.length] : "";
+        if (name) {
+          let tex = labelCache.get(name);
+          if (!tex) {
+            tex = makeLabelTexture(name);
+            labelCache.set(name, tex);
+          }
+          const lmat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: true });
+          crowdMats.push(lmat);
+          const lab = new THREE.Sprite(lmat);
+          lab.scale.set(1.5, 0.38, 1);
+          lab.position.set(sp.position.x, h + 0.22, sp.position.z);
+          crowdGroup.add(lab);
+        }
+      }
+    }
+    setCrowd(crowd.count, crowd.names);
 
     // ---------- หิมะตก ----------
     const SNOW = isSmall ? 500 : 1100;
@@ -1039,6 +1085,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         previewMesh.visible = true;
       },
       firework,
+      setCrowd,
       setReduced: (v) => {
         reduced = v;
         controls.autoRotate = !v;
@@ -1106,6 +1153,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
   useEffect(() => {
     api.current?.setReduced(reducedMotion);
   }, [reducedMotion]);
+
+  // ซิงก์ฝูงชนเงาเมื่อจำนวนคนหรือชื่อเปลี่ยน
+  const crowdKey = `${crowd.count}|${crowd.names.join(",")}`;
+  useEffect(() => {
+    api.current?.setCrowd(crowd.count, crowd.names);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crowdKey]);
 
   return <div ref={mountRef} className="xmas-canvas" aria-label="ฉากต้นคริสต์มาสสามมิติ" role="img" />;
 }
@@ -1240,4 +1294,79 @@ function buildFronds(small: boolean, rScale = 1, inner = false): THREE.BufferGeo
   geo.setIndex(idx);
   geo.computeVertexNormals();
   return geo;
+}
+
+// แผ่นภาพเงาคน (ขาวดำ ย้อมสีทีหลังด้วย SpriteMaterial.color)
+function makeSilhouetteTexture(variant: string) {
+  const c = document.createElement("canvas");
+  c.width = 128;
+  c.height = 256;
+  const g = c.getContext("2d");
+  const tex = new THREE.CanvasTexture(c);
+  if (!g) return tex;
+  g.scale(3.2, 3.05); // วาดในพิกัด 40x84 เหมือนภาพ SVG เดิม
+  g.fillStyle = "#ffffff";
+  g.beginPath();
+  if (variant === "child") {
+    g.arc(20, 22, 8, 0, Math.PI * 2);
+    g.fill();
+    g.beginPath();
+    g.moveTo(9, 84);
+    g.lineTo(9, 58);
+    g.quadraticCurveTo(9, 40, 20, 40);
+    g.quadraticCurveTo(31, 40, 31, 58);
+    g.lineTo(31, 84);
+    g.closePath();
+    g.fill();
+  } else {
+    g.arc(20, 12, 9, 0, Math.PI * 2);
+    g.fill();
+    g.beginPath();
+    g.moveTo(6, 84);
+    g.lineTo(6, 52);
+    g.quadraticCurveTo(6, 30, 20, 30);
+    g.quadraticCurveTo(34, 30, 34, 52);
+    g.lineTo(34, 84);
+    g.closePath();
+    g.fill();
+    if (variant === "hat") {
+      g.beginPath();
+      g.moveTo(10.5, 6);
+      g.quadraticCurveTo(20, -3, 29.5, 6);
+      g.closePath();
+      g.fill();
+    }
+    if (variant === "bag") {
+      g.fillRect(26, 46, 11, 15);
+    }
+  }
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// ป้ายชื่อเป็นเม็ดยาสีโปร่งแสง เรนเดอร์เป็นภาพเพื่อให้ขนาดตรงกับฉาก
+function makeLabelTexture(name: string) {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 64;
+  const g = c.getContext("2d");
+  const tex = new THREE.CanvasTexture(c);
+  if (!g) return tex;
+  const text = name.length > 12 ? `${name.slice(0, 11)}…` : name;
+  g.fillStyle = "rgba(8,24,36,0.72)";
+  g.beginPath();
+  g.roundRect(4, 8, 248, 48, 24);
+  g.fill();
+  g.strokeStyle = "rgba(253,230,138,0.55)";
+  g.lineWidth = 2;
+  g.stroke();
+  g.fillStyle = "#fff6d6";
+  g.font = "600 28px system-ui, -apple-system, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText(text, 128, 33);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
 }
