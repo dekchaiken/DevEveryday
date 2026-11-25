@@ -5,6 +5,14 @@ import QRCode from "qrcode";
 import type { OrderPreview } from "@/lib/christmas/types";
 import "./christmas.css";
 import { Icon } from "./Icon";
+import { SnowmanPreview } from "./SnowmanPreview";
+
+// ชื่อระดับของแต่ละยอดตามลำดับของ presetPrices (ยอดอื่นที่กรอกเองจะไม่มีชื่อระดับ)
+const TIER_NAMES = ["ดาวดวงเล็ก", "ระฆังเงิน", "ดาวประจำห้อง"];
+// ประโยคขอบคุณสำเร็จรูป กดเพื่อเติมข้อความได้เลย
+const THANKS_CHIPS = ["ขอบคุณที่ทำให้คริสต์มาสนี้อบอุ่น", "ขอให้ปีใหม่มีแต่รอยยิ้ม", "สุขสันต์วันคริสต์มาสนะ"];
+// ตุ๊กตาหิมะยักษ์ชุดพิเศษสำหรับหน้าสนับสนุน
+const GIANT_PARTS = { hat: "crown", scarf: "gold", nose: "star", arms: "wings", body: "white", legs: "snow", acc: "bow" };
 
 type Cfg = { enabled: boolean; payMode: "manual" | "gateway"; presetPrices: number[]; customMin: number; customMax: number };
 
@@ -97,12 +105,16 @@ export default function DonateModal({
 
   return (
     <div className="xmas-modal-back" role="presentation" onClick={onClose}>
-      <div className="xmas-modal glass" role="dialog" aria-modal="true" aria-label="สนับสนุนตุ๊กตาหิมะยักษ์" onClick={(e) => e.stopPropagation()}>
+      <div className="xmas-modal xmas-donate glass" role="dialog" aria-modal="true" aria-label="สนับสนุนตุ๊กตาหิมะยักษ์" onClick={(e) => e.stopPropagation()}>
         <button className="xmas-x" onClick={onClose} aria-label="ปิด">
           <Icon name="close" size={18} />
         </button>
+        <div className="xmas-donate-hero" aria-hidden>
+          <div className="xmas-donate-glow" />
+          <SnowmanPreview parts={GIANT_PARTS} className="xmas-donate-snow" />
+        </div>
         <p className="xmas-kicker">{kind === "giant" ? `Exclusive · ${roomName}` : "สนับสนุนทีม DevEveryday"}</p>
-        <h2>{kind === "giant" ? "ตั้งตุ๊กตาหิมะยักษ์ให้ห้องนี้" : "ส่งกำลังใจให้ทีม"}</h2>
+        <h2>{kind === "giant" ? "ตั้งตุ๊กตาหิมะยักษ์ประจำห้อง" : "ส่งกำลังใจให้ทีม"}</h2>
         <p className="xmas-hint">
           {kind === "giant"
             ? "ป้ายของคุณจะแสดงให้ทุกคนในห้องเห็นพร้อมกัน และข้อความจะขึ้นบนท้องฟ้า"
@@ -136,6 +148,7 @@ export default function DonateModal({
                     }}
                   >
                     ฿{p}
+                    {kind === "giant" && TIER_NAMES[cfg.presetPrices.indexOf(p)] && <small>{TIER_NAMES[cfg.presetPrices.indexOf(p)]}</small>}
                   </button>
                 ))}
               </div>
@@ -156,10 +169,25 @@ export default function DonateModal({
               ชื่อที่แสดงบนป้าย
               <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
             </label>
-            <label>
-              ข้อความบนป้าย
-              <textarea value={message} maxLength={80} rows={2} onChange={(e) => setMessage(e.target.value)} placeholder="สุขสันต์วันคริสต์มาส" />
-            </label>
+            <div className="xmas-thanks-input">
+              <label>
+                <span>{kind === "giant" ? "ข้อความขอบคุณจากใจ" : "ข้อความถึงทีม"} <em>{message.length}/80</em></span>
+                <textarea
+                  value={message}
+                  maxLength={80}
+                  rows={2}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={kind === "giant" ? "เขียนสิ่งที่อยากบอกทุกคนในห้อง…" : "ขอบคุณที่ช่วยให้ทุกคนได้ร่วมฉลองกัน"}
+                />
+              </label>
+              <div className="xmas-thanks-chips">
+                {THANKS_CHIPS.map((t) => (
+                  <button type="button" key={t} onClick={() => setMessage(t)}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
             <button className="xmas-submit" disabled={busy}>
               {busy ? "กำลังสร้างรายการ…" : `ชำระ ฿${chosen ?? "—"}`}
             </button>
@@ -181,8 +209,13 @@ export default function DonateModal({
         )}
 
         {order && order.status === "paid" && (
-          <div className="xmas-pay">
-            <p className="xmas-msg ok">ได้รับการสนับสนุนแล้ว ขอบคุณมาก ตุ๊กตาหิมะยักษ์ของคุณขึ้นป้ายแล้ว</p>
+          <div className="xmas-thanks-card">
+            <div className="xmas-donate-glow" aria-hidden />
+            <SnowmanPreview parts={GIANT_PARTS} className="xmas-donate-snow" />
+            <p className="xmas-thanks-kicker">ขอบคุณจากใจจริง</p>
+            <blockquote>{message.trim() || "ขอบคุณที่มาร่วมแขวนแสงให้ห้องนี้"}</blockquote>
+            <p className="xmas-thanks-by">— {name}</p>
+            <p className="xmas-hint">{kind === "giant" ? "ตุ๊กตาหิมะยักษ์ของคุณขึ้นป้ายให้ทุกคนในห้องเห็นแล้ว" : "ขอบคุณที่ช่วยสนับสนุนทีม"}</p>
             <button className="xmas-submit" onClick={onClose}>
               ปิด
             </button>
