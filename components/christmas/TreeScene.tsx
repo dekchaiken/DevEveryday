@@ -232,7 +232,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ---------- ลูกบอลและของตกแต่งที่ผู้ใช้แขวน ----------
     const ornGroup = new THREE.Group();
     scene.add(ornGroup);
-    const ornMeshes = new Map<string, { mesh: THREE.Object3D; born: number; target: THREE.Vector3; landed: boolean }>();
+    const ornMeshes = new Map<string, { mesh: THREE.Object3D; born: number; target: THREE.Vector3; landed: boolean; color: number }>();
     const ornaments3D = new Map<string, Ornament>();
     let loadedOnce = false;
 
@@ -266,15 +266,21 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     function addOrnamentMesh(o: Ornament, animate: boolean) {
       if (ornMeshes.has(o.id)) return;
-      const mesh = makeOrnamentMesh(o);
-      const target = mesh.position.clone();
+      const body = makeOrnamentMesh(o);
+      const target = body.position.clone();
+      // จุดแขวน (ตะขอ) อยู่ที่ pivot: ลูกบอลห้อยลงจากจุดนี้ การแกว่งจึงหมุนรอบตะขอ ไม่ใช่กลางชิ้นงาน
+      // ทำให้ดาวและระฆังห้อยตรงแนวดิ่งเสมอ
+      body.position.set(0, -0.22, 0);
+      const pivot = new THREE.Group();
+      pivot.position.copy(target);
+      pivot.add(body);
       if (animate) {
         // ลูกบอลใหม่ตกลงจากด้านบนแล้วเด้งเบา ๆ ที่ตำแหน่งที่เลือก
-        mesh.position.y += 2.8;
-        mesh.scale.setScalar(0.7);
+        pivot.position.y += 2.8;
+        pivot.scale.setScalar(0.7);
       }
-      ornGroup.add(mesh);
-      ornMeshes.set(o.id, { mesh, born: animate ? performance.now() : 0, target, landed: !animate });
+      ornGroup.add(pivot);
+      ornMeshes.set(o.id, { mesh: pivot, born: animate ? performance.now() : 0, target, landed: !animate, color: (body.userData.color as number) ?? 0xffd76a });
       ornaments3D.set(o.id, o);
     }
 
@@ -502,7 +508,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
             entry.landed = true;
             entry.mesh.position.copy(entry.target);
             entry.mesh.scale.setScalar(1);
-            const col = (entry.mesh.userData.color as number) ?? 0xffd76a;
+            const col = entry.color;
             burst(entry.target.clone().add(new THREE.Vector3(0, 0.1, 0)), col, isSmall ? 14 : 24, 0.25);
           }
         } else if (!reduced) {
