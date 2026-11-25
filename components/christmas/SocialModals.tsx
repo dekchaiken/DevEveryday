@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Decor } from "@/lib/christmas/decor";
 import { ACCESSORIES, HATS, SCARVES, NOSES, ARMS, BODY_COLORS, LEGS, SLOT_COUNT } from "@/lib/christmas/decor";
+import { SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { getClientId } from "./clientId";
 import { Icon } from "./Icon";
@@ -95,16 +96,59 @@ export function InviteModal({ roomId, roomName, online, capacity, onClose }: { r
 }
 
 // ----- ตกแต่งตุ๊กตาหิมะ: เลือกชิ้นส่วน เลือกช่อง แล้ววาง -----
-export function DecorModal({ roomId, roomName, decor, onClose, onPlaced }: { roomId: string; roomName: string; decor: Decor[]; onClose: () => void; onPlaced: (d: Decor) => void }) {
+export function DecorModal({
+  roomId,
+  roomName,
+  decor,
+  initialSlot,
+  onClose,
+  onPlaced,
+}: {
+  roomId: string;
+  roomName: string;
+  decor: Decor[];
+  initialSlot: number | null;
+  onClose: () => void;
+  onPlaced: (d: Decor) => void;
+}) {
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [name, setName] = useState("");
-  const [slot, setSlot] = useState<number | null>(null);
+  const [slot, setSlot] = useState<number | null>(initialSlot);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const taken = new Map(decor.map((d) => [d.slot, d]));
+  const slotTaken = slot !== null && taken.has(slot);
+
+  // ช่องว่างที่ใกล้ตำแหน่งที่เลือกที่สุด
+  function nearestFree(from: number): number | null {
+    const p = SLOT_POSITIONS[from];
+    let best: number | null = null;
+    let bestD = Infinity;
+    for (let i = 0; i < SLOT_POSITIONS.length; i++) {
+      if (taken.has(i)) continue;
+      const q = SLOT_POSITIONS[i];
+      const d = (q.x - p.x) ** 2 + (q.z - p.z) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  // สุ่มช่องว่างหนึ่งช่อง
+  function randomFree() {
+    for (let tries = 0; tries < 5000; tries++) {
+      const i = Math.floor(Math.random() * SLOT_COUNT);
+      if (!taken.has(i)) return setSlot(i);
+    }
+    const free = nearestFree(0);
+    if (free !== null) setSlot(free);
+  }
 
   async function place() {
     if (slot === null) return setError("เลือกช่องที่จะวางก่อน");
+    if (slotTaken) return setError("ช่องนี้มีคนวางแล้ว เลือกช่องว่างอื่น");
     if (!name.trim()) return setError("กรุณาใส่ชื่อ");
     setBusy(true);
     setError("");
@@ -168,33 +212,46 @@ export function DecorModal({ roomId, roomName, decor, onClose, onPlaced }: { roo
           </div>
         </div>
 
-        <fieldset>
-          <legend>เลือกช่องรอบต้นคริสต์มาส</legend>
-          <div className="xmas-slots">
-            {Array.from({ length: SLOT_COUNT }).map((_, i) => {
-              const t = taken.get(i);
-              return (
-                <button
-                  type="button"
-                  key={i}
-                  disabled={Boolean(t)}
-                  className={`xmas-slot ${slot === i ? "is-on" : ""}`}
-                  onClick={() => setSlot(i)}
-                  aria-label={t ? `ช่อง ${i + 1} มี ${t.name} วางแล้ว` : `ช่อง ${i + 1} ว่าง`}
-                >
-                  <span>{i + 1}</span>
-                  <small>{t ? t.name : "ว่าง"}</small>
-                </button>
-              );
-            })}
+        <div className="xmas-slot-picker">
+          <div className="xmas-slot-head">
+            <b>{slot === null ? "ยังไม่ได้เลือกช่อง" : `ช่องที่ ${slot + 1}`}</b>
+            <small>
+              {slot === null
+                ? "กรอกเลขช่องที่ว่าง สุ่มช่อง หรือแตะบนฉากเพื่อเลือก"
+                : slotTaken
+                  ? `ช่องนี้มี ${taken.get(slot)?.name} วางแล้ว`
+                  : "ช่องนี้ว่าง พร้อมวางได้เลย"}
+            </small>
           </div>
-        </fieldset>
+          <div className="xmas-slot-controls">
+            <label className="xmas-slot-input">
+              เลขช่อง (1–{SLOT_COUNT})
+              <input
+                inputMode="numeric"
+                value={slot === null ? "" : String(slot + 1)}
+                onChange={(e) => {
+                  const n = Number(e.target.value.replace(/\D/g, ""));
+                  setSlot(n >= 1 && n <= SLOT_COUNT ? n - 1 : null);
+                }}
+                placeholder="เช่น 128"
+              />
+            </label>
+            <button type="button" className="xmas-chip-btn" onClick={randomFree}>
+              สุ่มช่องว่าง
+            </button>
+          </div>
+          {slotTaken && slot !== null && (
+            <button type="button" className="xmas-link-btn" onClick={() => setSlot(nearestFree(slot))}>
+              ไปที่ช่องว่างที่ใกล้ที่สุด
+            </button>
+          )}
+        </div>
 
         <label className="xmas-field">
           ชื่อที่จะแสดงบนตุ๊กตา
           <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
         </label>
-        <button className="xmas-submit" onClick={place} disabled={busy}>
+        <button className="xmas-submit" onClick={place} disabled={busy || slotTaken || slot === null}>
           {busy ? "กำลังวาง…" : "วางตุ๊กตาหิมะรอบต้น"}
         </button>
         {error && <p className="xmas-msg err">{error}</p>}

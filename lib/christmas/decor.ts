@@ -1,14 +1,15 @@
-// ตุ๊กตาหิมะที่ผู้ใช้ตกแต่งและวางรอบต้นคริสต์มาส (ฟรี) เก็บแยกตามห้อง
+// ตุ๊กตาหิมะที่ผู้ใช้ตกแต่งและวางบนช่องรอบต้นคริสต์มาส (ฟรี) เก็บแยกตามห้อง
 import { cmd, storeConfigured } from "@/lib/redis";
+import { SLOT_COUNT } from "@/lib/christmas/slots";
 
-export const SLOT_COUNT = 8;
+export { SLOT_COUNT };
 export const HATS = ["top", "beanie", "santa", "crown", "pom", "holly"] as const;
 export const SCARVES = ["red", "green", "gold", "blue", "white", "plaid"] as const;
 export const NOSES = ["carrot", "button", "star", "bell"] as const;
 export const ARMS = ["sticks", "wings", "gift", "none"] as const;
-export const ACCESSORIES = ["none", "glasses", "bow", "bell"] as const;
 export const BODY_COLORS = ["white", "mint", "sky", "blush"] as const;
 export const LEGS = ["snow", "boots", "gift", "none"] as const; // ฐาน/ขา
+export const ACCESSORIES = ["none", "glasses", "bow", "bell"] as const;
 
 export type Decor = {
   id: string;
@@ -26,39 +27,55 @@ export type Decor = {
   likes: number;
 };
 
-
-const MAX = 200;
 const K = {
-  list: (r: string) => `xmas:${r}:decos`, // LIST ของ JSON
-  likes: (r: string) => `xmas:${r}:likes`, // HASH id -> จำนวนถูกใจ
+  hash: (r: string) => `xmas:${r}:deco2`, // HASH: ช่อง -> JSON ของตุ๊กตา
+  likes: (r: string) => `xmas:${r}:likes`, // HASH: id -> จำนวนถูกใจ
   voters: (r: string, id: string) => `xmas:${r}:voters:${id}`, // SET ของ clientId
 };
 
-const mem = { list: new Map<string, Decor[]>(), likes: new Map<string, Map<string, number>>(), voters: new Map<string, Set<string>>() };
+const mem = {
+  slots: new Map<string, Map<number, Decor>>(),
+  likes: new Map<string, Map<string, number>>(),
+  voters: new Map<string, Set<string>>(),
+};
 
+function memRoom(room: string) {
+  let m = mem.slots.get(room);
+  if (!m) {
+    m = new Map();
+    mem.slots.set(room, m);
+  }
+  return m;
+}
+
+// รายการตุ๊กตาทั้งหมดของห้อง พร้อมจำนวนถูกใจ
 export async function listDecor(room: string): Promise<Decor[]> {
-  if (!storeConfigured()) return [...(mem.list.get(room) ?? [])];
-  const raws = (await cmd<string[]>("LRANGE", K.list(room), 0, MAX - 1)) ?? [];
-  const items = raws.map((s) => JSON.parse(s) as Decor);
-  if (items.length === 0) return [];
-  const hash = (await cmd<string[]>("HGETALL", K.likes(room))) ?? [];
-  const counts = new Map<string, number>();
-  for (let i = 0; i < hash.length; i += 2) counts.set(hash[i], Number(hash[i + 1]));
+  let items: Decor[];
+  let counts: Map<string, number>;
+  if (!storeConfigured()) {
+    items = [...memRoom(room).values()];
+    counts = mem.likes.get(room) ?? new Map();
+  } else {
+    const raw = (await cmd<string[]>("HGETALL", K.hash(room))) ?? [];
+    items = [];
+    for (let i = 0; i < raw.length; i += 2) items.push(JSON.parse(raw[i + 1]) as Decor);
+    const hash = (await cmd<string[]>("HGETALL", K.likes(room))) ?? [];
+    counts = new Map();
+    for (let i = 0; i < hash.length; i += 2) counts.set(hash[i], Number(hash[i + 1]));
+  }
   return items.map((d) => ({ ...d, likes: counts.get(d.id) ?? 0 }));
 }
 
-export async function addDecor(d: Decor): Promise<boolean> {
-  const existing = await listDecor(d.room);
-  if (existing.some((x) => x.slot === d.slot)) return false; // ช่องนี้มีคนวางแล้ว
+// จองช่องแบบอะตอมิก: ถ้ามีคนวางแล้วจะคืนค่า false ไม่ทับของเดิม
+export async function claimDecor(d: Decor): Promise<boolean> {
   if (!storeConfigured()) {
-    const arr = mem.list.get(d.room) ?? [];
-    arr.unshift(d);
-    mem.list.set(d.room, arr.slice(0, MAX));
+    const m = memRoom(d.room);
+    if (m.has(d.slot)) return false;
+    m.set(d.slot, d);
     return true;
   }
-  await cmd("LPUSH", K.list(d.room), JSON.stringify(d));
-  await cmd("LTRIM", K.list(d.room), 0, MAX - 1);
-  return true;
+  const ok = await cmd<number>("HSETNX", K.hash(d.room), String(d.slot), JSON.stringify(d));
+  return ok === 1;
 }
 
 // กดถูกใจได้หนึ่งครั้งต่อคนต่อชิ้น คืนค่าจำนวนล่าสุด
