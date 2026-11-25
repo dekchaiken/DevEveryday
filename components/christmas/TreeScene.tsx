@@ -14,6 +14,7 @@ export type Preview = { height: number; angle: number; color: string; shape: str
 export type TreeSceneHandle = {
   launchFirework: (color: string) => void;
   skyMessage: (text: string, by: string, color: string, theme: string) => void;
+  highlightDecor: (slot: number) => void;
 };
 
 type Props = {
@@ -47,6 +48,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     firework: (color: string) => void;
     setReduced: (v: boolean) => void;
     setCrowd: (count: number, seed: string) => void;
+    highlightDecor: (slot: number) => void;
     setGiant: (g: { name: string; message: string } | null) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
@@ -720,6 +722,19 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         }
         if (age >= dur) disposeSky();
       }
+      if (highlight) {
+        const age = (now - highlight.start) / 1000;
+        const hl = highlight as { ring: THREE.Mesh; start: number };
+        const mat = hl.ring.material as THREE.MeshBasicMaterial;
+        mat.opacity = Math.max(0, 0.9 * (1 - age / 5)) * (0.7 + 0.3 * Math.sin(age * 8));
+        hl.ring.scale.setScalar(1 + Math.min(age, 1) * 0.6);
+        if (age >= 5) {
+          scene.remove(hl.ring);
+          hl.ring.geometry.dispose();
+          mat.dispose();
+          highlight = null;
+        }
+      }
       storm = Math.max(0, storm - 0.003);
 
       if (previewMesh.visible) {
@@ -1016,6 +1031,27 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     let instDecor: Decor[] = [];
     const HAT_COLOR: Record<string, number> = { top: 0x1f2937, beanie: 0x3b82f6, santa: 0xdc2643, crown: 0xf5c542, pom: 0xf8fafc, holly: 0x16a34a };
 
+    // วงแสงทองบนพื้นและประกายที่ช่องของตุ๊กตาใหม่ อยู่ 5 วินาทีแล้วค่อย ๆ จางหาย
+    let highlight: { ring: THREE.Mesh; start: number } | null = null;
+    function highlightDecor(slot: number) {
+      const p = SLOT_POSITIONS[slot];
+      if (!p) return;
+      burst(new THREE.Vector3(p.x, 0.6, p.z), 0xffd76a, isSmall ? 30 : 46, 0.35);
+      if (highlight) {
+        scene.remove(highlight.ring);
+        highlight.ring.geometry.dispose();
+        (highlight.ring.material as THREE.Material).dispose();
+      }
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.42, 0.5, 64),
+        new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(p.x, 0.03, p.z);
+      scene.add(ring);
+      highlight = { ring, start: performance.now() };
+    }
+
     function setDecor(list: Decor[]) {
       decorById.clear();
       while (decorGroup.children.length) {
@@ -1146,6 +1182,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       },
       firework,
       setCrowd,
+      highlightDecor,
       setReduced: (v) => {
         reduced = v;
       },
@@ -1153,6 +1190,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     readyRef.current({
       launchFirework: (color: string) => api.current?.firework(color),
       skyMessage: (text: string, by: string, color: string, theme: string) => skyMessage(text, by, color, theme),
+      highlightDecor: (slot: number) => highlightDecor(slot),
     });
 
     // เริ่มวนลูปภาพหลังประกาศทุกตัวแปรครบแล้ว

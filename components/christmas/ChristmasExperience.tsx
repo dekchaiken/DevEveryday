@@ -13,6 +13,7 @@ import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
 import { Icon } from "./Icon";
+import { isMusicPlaying, startMusic, stopMusic } from "./music";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { useDecor } from "./useDecor";
 import { markInternalNav } from "./skipIntro";
@@ -100,6 +101,15 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       /* ไม่มีที่เก็บค่า ใช้ค่าเริ่มต้น */
     }
   }, []);
+  // เพลงคลอ: ปิดไว้ก่อน เปิดได้จากปุ่มเท่านั้น (เบราว์เซอร์ไม่ให้เล่นเสียงเองโดยไม่มีการกด)
+  const [musicOn, setMusicOn] = useState(false);
+  useEffect(() => () => stopMusic(), []);
+  function toggleMusic() {
+    const next = !isMusicPlaying();
+    if (next) startMusic();
+    else stopMusic();
+    setMusicOn(next);
+  }
   function toggleSnow() {
     setSnowOn((v) => {
       const next = !v;
@@ -122,7 +132,24 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
   const treeRef = useRef<TreeSceneHandle | null>(null);
   const feed = useFeed(roomId);
-  const { decor, refresh: refreshDecor } = useDecor(roomId);
+  const { decor, refresh: refreshDecor, loaded: decorLoaded } = useDecor(roomId);
+  // ตุ๊กตาหิมะที่เพิ่งมาถึงห้อง (ของคนอื่นหรือของเราเอง) จะมีแสงและแจ้งเตือนให้ทุกคนเห็น
+  const seenDecor = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!decorLoaded) return;
+    if (seenDecor.current === null) {
+      seenDecor.current = new Set(decor.map((d) => d.id));
+      return;
+    }
+    const fresh = decor.filter((d) => !seenDecor.current!.has(d.id));
+    if (fresh.length === 0) return;
+    fresh.forEach((d) => seenDecor.current!.add(d.id));
+    fresh.slice(0, 3).forEach((d) => treeRef.current?.highlightDecor(d.slot));
+    notifyRef.current(
+      "ok",
+      fresh.length === 1 ? `${fresh[0].name} วางตุ๊กตาหิมะที่ช่อง ${fresh[0].slot + 1} แล้ว` : `มีตุ๊กตาหิมะใหม่ ${fresh.length} ตัวในห้องนี้`,
+    );
+  }, [decor, decorLoaded]);
   const [decorSlot, setDecorSlot] = useState<number | null>(null);
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
   const [coach, setCoach] = useState(false); // คำแนะนำครั้งแรกใต้เมนู
@@ -440,6 +467,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
             {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
           </div>
+          <button type="button" className={`xmas-music-toggle ${musicOn ? "is-on" : ""}`} aria-pressed={musicOn} aria-label={musicOn ? "ปิดเพลงคลอ" : "เปิดเพลงคลอ"} onClick={toggleMusic}>
+            <Icon name="music" size={15} />
+            <span className="xmas-music-bars" aria-hidden>
+              <i />
+              <i />
+              <i />
+            </span>
+          </button>
           <button type="button" className={`xmas-snow-toggle ${snowOn ? "is-on" : ""}`} role="switch" aria-checked={snowOn} aria-label="หิมะตก" onClick={toggleSnow}>
             <span className="xmas-snow-track" aria-hidden>
               <span className="xmas-snow-knob">
@@ -480,7 +515,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <Icon name="users" size={18} /> ชวนเพื่อน
         </button>
         <button className="xmas-action is-exclusive" onClick={() => setDonateOpen(true)}>
-          <Icon name="crown" size={18} /> ตุ๊กตาหิมะยักษ์
+          <Icon name="crown" size={18} /> ป้ายประจำห้อง
         </button>
       </nav>
 

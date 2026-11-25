@@ -1,5 +1,5 @@
 // ไอคอนแบบ flat ของธีมคริสต์มาส วาดด้วย SVG ล้วน ไม่ใช้ emoji
-type Name = "bauble" | "crown" | "firework" | "sleigh" | "snow" | "tree" | "snowman" | "users" | "gift" | "sparkle" | "heart" | "star" | "check" | "close" | "copy" | "share" | "cross";
+type Name = "bauble" | "crown" | "music" | "firework" | "sleigh" | "snow" | "tree" | "snowman" | "users" | "gift" | "sparkle" | "heart" | "star" | "check" | "close" | "copy" | "share" | "cross";
 
 export function Icon({ name, size = 20, className }: { name: Name; size?: number; className?: string }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true, className: `xicon ${className ?? ""}` };
@@ -49,6 +49,14 @@ export function Icon({ name, size = 20, className }: { name: Name; size?: number
           <path d="M4 19.5h16" />
           <path d="M9 9.5 7 5M10.5 9.5 11 5" />
           <circle cx="7.4" cy="4" r="0.9" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "music":
+      return (
+        <svg {...common} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18V5l11-2v13" />
+          <circle cx="6.5" cy="18" r="2.5" />
+          <circle cx="17.5" cy="16" r="2.5" />
         </svg>
       );
     case "snow":

@@ -124,7 +124,7 @@ export default function DonateModal({
           <SnowmanPreview parts={GIANT_PARTS} className="xmas-donate-snow" />
         </div>
         <p className="xmas-kicker">{kind === "giant" ? `Exclusive · ${roomName}` : "สนับสนุนทีม DevEveryday"}</p>
-        <h2>{kind === "giant" ? "ตั้งตุ๊กตาหิมะยักษ์ประจำห้อง" : "ส่งกำลังใจให้ทีม"}</h2>
+        <h2>{kind === "giant" ? "ตั้งป้ายประจำห้อง" : "ส่งกำลังใจให้ทีม"}</h2>
         <p className="xmas-hint">
           {kind === "giant"
             ? "ป้ายของคุณจะแสดงให้ทุกคนในห้องเห็นพร้อมกัน และข้อความจะขึ้นบนท้องฟ้า"
