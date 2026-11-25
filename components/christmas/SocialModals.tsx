@@ -241,7 +241,7 @@ export function DecorModal({
               />
             </label>
             <button type="button" className="xmas-chip-btn" onClick={randomFree}>
-              สุ่มช่องว่าง
+              สุ่มช่อง
             </button>
             <button type="button" className="xmas-chip-btn" onClick={() => onPickOnMap?.()}>
               เลือกบนฉาก

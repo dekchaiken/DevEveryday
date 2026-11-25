@@ -2910,11 +2910,13 @@
 }
 
 /* ---------- ตัวสร้างตุ๊กตาหิมะ: ตัวอย่างด้านบน เลือกทีละหมวดด้านล่าง ---------- */
+/* แบ่งเป็น 4 แถวคงที่: หัว / แท็บ / เนื้อหา (เลื่อนได้) / ฟุตเตอร์ ไม่ซ้อนทับกัน */
 .xmas-build {
+  position: relative;
   width: min(100%, 560px);
-  max-height: calc(100dvh - 24px);
-  display: flex;
-  flex-direction: column;
+  height: min(640px, calc(100dvh - 24px));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   padding: 0;
   overflow: hidden;
 }
@@ -3005,6 +3007,22 @@
   font: inherit;
   font-size: 14px;
   cursor: pointer;
+}
+.xmas-part-hint {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.xmas-part-grid button small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+.xmas-part-grid button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .xmas-part-grid button.is-on {
   background: rgba(245, 197, 66, 0.16);
@@ -3261,27 +3279,102 @@
   .xmas-build {
     width: 100%;
     max-width: none;
-    max-height: 90dvh;
+    height: min(90dvh, 720px);
+    max-height: 92dvh;
     border-radius: 26px 26px 0 0;
     border-bottom: 0;
     animation: xmas-sheet-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
+  /* ขีดจับของชีต: วางซ้อนด้านบน ไม่กินพื้นที่แถวของกริด */
   .xmas-build::before {
     content: "";
-    display: block;
+    position: absolute;
+    top: 8px;
+    left: 50%;
     width: 44px;
     height: 5px;
-    margin: 10px auto 0;
+    margin-left: -22px;
     border-radius: 99px;
     background: rgba(255, 255, 255, 0.25);
+    z-index: 2;
+  }
+  .xmas-build-top {
+    padding: 22px 18px 6px;
   }
   .xmas-build-preview {
-    height: 130px;
+    height: clamp(84px, 15dvh, 128px);
+    margin: 0;
   }
+  /* บนมือถือ สถานะช่องแสดงที่ฟุตเตอร์แล้ว จึงซ่อนบรรทัดซ้ำด้านบน เพื่อให้เห็นตัวเลือกมากขึ้น */
+  .xmas-build .xmas-build-slot {
+    display: none;
+  }
+  .xmas-part-tabs {
+    padding: 6px 12px;
+  }
+  .xmas-part-body {
+    padding: 12px 14px;
+  }
+  .xmas-build-foot {
+    padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    gap: 8px;
+  }
+  /* แถวช่องวาง: ช่องกรอก + ปุ่มสองปุ่มในแถวเดียว */
   .xmas-foot-slot {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
   .xmas-foot-slot .xmas-chip-btn {
-    width: 100%;
+    min-height: 42px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .xmas-slot-status {
+    font-size: 12px;
+  }
+}
+
+/* ---------- ฝูงชนเงาเบื้องหลังฉาก ---------- */
+.xmas-crowd {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  color: #e8f7ff;
+}
+.xmas-crowd-fig {
+  position: absolute;
+  transform-origin: 50% 100%;
+  animation: xmas-crowd-bob 4.2s ease-in-out infinite;
+}
+.xmas-crowd-fig svg {
+  display: block;
+  width: 40px;
+  height: 84px;
+}
+.xmas-crowd-name {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: 2px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff6d6;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+@keyframes xmas-crowd-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-crowd-fig {
+    animation: none;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-crowd-name {
+    font-size: 10px;
   }
 }

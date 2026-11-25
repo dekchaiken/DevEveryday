@@ -79,8 +79,8 @@ export default function GiftIntro({ children }: { children: ReactNode }) {
               className="xmas-gift-spark"
               style={
                 {
-                  "--dx": `${Math.cos((i / 36) * Math.PI * 2) * (90 + (i % 5) * 26)}px`,
-                  "--dy": `${Math.sin((i / 36) * Math.PI * 2) * (90 + (i % 5) * 26)}px`,
+                  "--dx": `${(Math.cos((i / 36) * Math.PI * 2) * (90 + (i % 5) * 26)).toFixed(2)}px`,
+                  "--dy": `${(Math.sin((i / 36) * Math.PI * 2) * (90 + (i % 5) * 26)).toFixed(2)}px`,
                   "--d": `${(i % 6) * 40}ms`,
                   "--c": ["#f5c542", "#dc2643", "#7ee7b0", "#ffffff", "#38bdf8"][i % 5],
                 } as React.CSSProperties
