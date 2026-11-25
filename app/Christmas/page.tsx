@@ -10,6 +10,7 @@ import { roomCounts } from "@/lib/christmas/store";
 export const metadata: Metadata = {
   title: "ต้นคริสต์มาสร่วมกัน · DevEveryday",
   description: "แขวนลูกบอลและคำอวยพรบนต้นคริสต์มาสร่วมกับทุกคนแบบเรียลไทม์",
+  icons: { icon: "/christmas-icon.svg" },
 };
 
 export const viewport: Viewport = {

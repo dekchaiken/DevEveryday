@@ -106,6 +106,9 @@ export function isMusicPlaying() {
 // เริ่มเล่น ต้องเรียกจากการกดของผู้ใช้เท่านั้น (เบราว์เซอร์บังคับ)
 export function startMusic() {
   if (engine) return;
+  // สร้างเสียงได้เฉพาะตอนผู้ใช้เพิ่งแตะหรือกดคีย์ ไม่งั้นเบราว์เซอร์จะบล็อกและแจ้งเตือน
+  const ua = (navigator as { userActivation?: { isActive: boolean } }).userActivation;
+  if (ua && !ua.isActive) return;
   const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   const ctx = new Ctor();
   const master = ctx.createGain();
