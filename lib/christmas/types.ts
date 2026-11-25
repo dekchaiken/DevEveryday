@@ -42,6 +42,7 @@ export type ChristmasState = {
   ornaments: Ornament[];
   events: ShowEvent[]; // เฉพาะเหตุการณ์ที่ยังไม่จบ
   giant: GiantSign | null;
+  decor: import("@/lib/christmas/decor").Decor[];
   persistent: boolean; // false = ใช้หน่วยความจำชั่วคราว (ยังไม่ได้ตั้งค่า Redis)
 };
 

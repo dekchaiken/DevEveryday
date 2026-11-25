@@ -9,6 +9,9 @@ import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
 import { RoomSkyline } from "./RoomSkyline";
 import DonateModal from "./DonateModal";
+import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
+import { getClientId } from "./clientId";
+import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
 
 // Three.js โหลดเฉพาะฝั่งเบราว์เซอร์ ไม่ให้กระทบเวลาเปิดหน้าแรก
@@ -68,6 +71,12 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [local, setLocal] = useState<Ornament[]>([]);
   const [donateOpen, setDonateOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [decorOpen, setDecorOpen] = useState(false);
+  const [decorFocus, setDecorFocus] = useState<Decor | null>(null);
+  const [panelPulse, setPanelPulse] = useState(0);
+  const [hintOn, setHintOn] = useState(true);
+  const prevOnline = useRef<number | null>(null);
   const [intro, setIntro] = useState(true); // ป๊อปอัปเชิญก่อนเข้าต้นไม้
   const [toast, setToast] = useState<{ id: number; kind: "ok" | "err"; text: string } | null>(null); // ลูกบอลที่เพิ่งแขวนจากเครื่องนี้ แสดงทันทีก่อนเซิร์ฟเวอร์ตอบ
 
@@ -125,7 +134,15 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           router.replace(`/Christmas?full=${roomId}`);
           return;
         }
-        if (typeof data.count === "number") setOnline({ count: data.count, capacity: data.capacity ?? 150 });
+        if (typeof data.count === "number") {
+          // เพื่อนเข้าห้องเพิ่ม: แจ้งเตือนเมื่อจำนวนคนเพิ่มขึ้น (ไม่แจ้งตอนโหลดครั้งแรก)
+          if (prevOnline.current !== null && data.count > prevOnline.current) {
+            const diff = data.count - prevOnline.current;
+            notifyRef.current("ok", diff === 1 ? "มีเพื่อนเข้าห้องเพิ่ม 👋" : `มีเพื่อนเข้าห้องเพิ่ม ${diff} คน 👋`);
+          }
+          prevOnline.current = data.count;
+          setOnline({ count: data.count, capacity: data.capacity ?? 150 });
+        }
       } catch {
         /* ลองใหม่รอบถัดไป */
       } finally {
@@ -166,6 +183,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       treeRef.current?.launchFirework(ev.color);
       return;
     }
+    treeRef.current?.skyMessage(ev.text, ev.by, ev.color);
     setBanner({ id: ev.id, text: ev.text, by: ev.by, color: ev.color });
     setTimeout(() => setBanner((b) => (b?.id === ev.id ? null : b)), Math.max(ev.duration - 400, 2000));
   }, []);
@@ -232,6 +250,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     setToast({ id, kind, text });
     setTimeout(() => setToast((t) => (t?.id === id ? null : t)), 2800);
   }, []);
+  const notifyRef = useRef(notify);
+  notifyRef.current = notify;
 
   return (
     <div
@@ -255,6 +275,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onError={() => setWebglOk(false)}
           ground={room.ground}
           giant={state?.giant ? { name: state.giant.name, message: state.giant.message } : null}
+          decor={state?.decor ?? []}
+          onDecorClick={(d) => {
+            setDecorFocus(d);
+            setFocus(null);
+          }}
           key={room.id}
         />
       ) : (
@@ -317,14 +342,77 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
             {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
           </div>
-          <button className="xmas-switch" onClick={() => setDonateOpen(true)}>
-            ❄ สนับสนุน
-          </button>
           <a className="xmas-switch" href="/Christmas">
             เปลี่ยนห้อง
           </a>
         </div>
       </header>
+
+      {/* เมนูหลัก: แขวน ตกแต่ง ชวนเพื่อน และสนับสนุน (ตุ๊กตาหิมะยักษ์) */}
+      <nav className="xmas-actions" aria-label="เมนูกิจกรรม">
+        <button
+          className="xmas-action"
+          onClick={() => {
+            setSheetOpen(true);
+            setPanelPulse((n) => n + 1);
+            setHintOn(true);
+          }}
+        >
+          <span aria-hidden>🎄</span> แขวนคำอวยพร
+        </button>
+        <button className="xmas-action" onClick={() => setDecorOpen(true)}>
+          <span aria-hidden>⛄</span> ตกแต่งตุ๊กตาหิมะ
+        </button>
+        <button className="xmas-action" onClick={() => setInviteOpen(true)}>
+          <span aria-hidden>👥</span> ชวนเพื่อน
+        </button>
+        <button className="xmas-action is-exclusive" onClick={() => setDonateOpen(true)}>
+          <span aria-hidden>✨</span> ตุ๊กตาหิมะยักษ์
+        </button>
+      </nav>
+
+      {/* ป้ายบอกให้แตะต้นไม้เพื่อเลือกตำแหน่ง */}
+      {hintOn && !pick && (
+        <div className="xmas-tap-hint" role="status" onClick={() => setHintOn(false)}>
+          <span className="xmas-tap-ring" aria-hidden />
+          แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่ง
+        </div>
+      )}
+
+      {inviteOpen && (
+        <InviteModal
+          roomId={room.id}
+          roomName={room.name}
+          online={online?.count ?? 0}
+          capacity={online?.capacity ?? 150}
+          onClose={() => setInviteOpen(false)}
+        />
+      )}
+
+      {decorOpen && (
+        <DecorModal
+          roomId={room.id}
+          roomName={room.name}
+          decor={state?.decor ?? []}
+          onClose={() => setDecorOpen(false)}
+          onPlaced={(d) => {
+            setDecorOpen(false);
+            setState((st) => (st ? { ...st, decor: [d, ...st.decor] } : st));
+            notify("ok", `วางตุ๊กตาหิมะของ ${d.name} รอบต้นแล้ว ⛄`);
+          }}
+        />
+      )}
+
+      {decorFocus && (
+        <DecorInfoCard
+          d={decorFocus}
+          onClose={() => setDecorFocus(null)}
+          onLiked={(id, likes) => {
+            setState((st) => (st ? { ...st, decor: st.decor.map((x) => (x.id === id ? { ...x, likes } : x)) } : st));
+            setDecorFocus((f) => (f && f.id === id ? { ...f, likes } : f));
+          }}
+        />
+      )}
 
       {/* ข้อความที่ถูกส่งขึ้นจอให้ทุกคนเห็น */}
       {banner && (
@@ -350,7 +438,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
 
       {/* แผงแขวนลูกบอล */}
-      <section className={`xmas-panel glass ${sheetOpen ? "is-open" : ""}`} aria-label="แขวนลูกบอล">
+      <section key={panelPulse} className={`xmas-panel glass ${sheetOpen ? "is-open" : ""} ${panelPulse ? "is-pulse" : ""}`} aria-label="แขวนลูกบอล" onPointerDown={() => setHintOn(true)}>
         <button className="xmas-sheet-toggle" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen}>
           {sheetOpen ? "ปิดแผง" : "แขวนลูกบอลของคุณ"}
         </button>
