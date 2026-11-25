@@ -2319,3 +2319,385 @@
     animation: none;
   }
 }
+
+/* =====================================================================
+   แผงแขวนคำอวยพร: จัดวางใหม่ให้สมส่วนทั้งเดสก์ท็อปและมือถือ
+   ===================================================================== */
+.xmas-panel.xmas-wish {
+  left: 24px;
+  bottom: 24px;
+  width: 360px;
+  max-height: calc(100% - 200px);
+  padding: 22px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 24px;
+}
+.xmas-wish .xmas-sheet-toggle {
+  display: none;
+}
+.xmas-wish .xmas-form {
+  display: grid;
+  gap: 16px;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+.xmas-form-head {
+  display: grid;
+  gap: 14px;
+}
+.xmas-form-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.xmas-form-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(21, 128, 61, 0.15));
+  border: 1px solid rgba(126, 231, 176, 0.35);
+}
+.xmas-form-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.xmas-form-title p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ขั้นตอน 1–3 */
+.xmas-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.xmas-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  min-width: 0;
+}
+.xmas-steps li span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+}
+.xmas-steps li.is-now {
+  color: var(--ink);
+  border-color: rgba(245, 197, 66, 0.5);
+}
+.xmas-steps li.is-now span {
+  background: var(--gold);
+  color: #1d1302;
+}
+.xmas-steps li.is-done {
+  color: var(--mint);
+}
+.xmas-steps li.is-done span {
+  background: rgba(126, 231, 176, 0.25);
+  color: var(--mint);
+}
+
+/* สถานะตำแหน่ง */
+.xmas-place {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px dashed rgba(245, 197, 66, 0.45);
+  transition: border-color 0.3s, background 0.3s;
+}
+.xmas-place.is-set {
+  border-style: solid;
+  border-color: rgba(126, 231, 176, 0.45);
+  background: rgba(34, 197, 94, 0.08);
+}
+.xmas-place-dot {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06), 0 0 14px currentColor;
+}
+.xmas-place-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.xmas-place-text b {
+  font-size: 14px;
+  font-weight: 600;
+}
+.xmas-place-text small {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.xmas-place-clear {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ช่องกรอก */
+.xmas-wish .xmas-field {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+.xmas-field-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.xmas-field-label em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.xmas-wish .xmas-field input,
+.xmas-wish .xmas-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.xmas-wish .xmas-field input {
+  min-height: 46px;
+}
+.xmas-wish .xmas-field textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+.xmas-wish .xmas-field input::placeholder,
+.xmas-wish .xmas-field textarea::placeholder {
+  color: rgba(183, 201, 192, 0.6);
+}
+.xmas-wish .xmas-field input:focus,
+.xmas-wish .xmas-field textarea:focus {
+  border-color: var(--gold);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.2);
+}
+
+/* กลุ่มตัวเลือก */
+.xmas-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.xmas-group legend {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0;
+}
+.xmas-wish .xmas-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.xmas-wish .xmas-swatches button {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 40px;
+  justify-self: center;
+  border-radius: 50%;
+  border: 0;
+  background: var(--sw);
+  box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.25), 0 0 0 2px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.xmas-wish .xmas-swatches button:hover {
+  transform: scale(1.08);
+}
+.xmas-wish .xmas-swatches button.is-on {
+  box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px var(--sw);
+}
+.xmas-shape-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.xmas-shape-grid button {
+  min-height: 42px;
+  padding: 0 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.xmas-shape-grid button.is-on {
+  background: rgba(245, 197, 66, 0.16);
+  border-color: var(--gold);
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+
+/* ปุ่มแขวน */
+.xmas-wish .xmas-submit {
+  min-height: 50px;
+  border-radius: 16px;
+  font-size: 15px;
+}
+.xmas-wish .xmas-submit:disabled {
+  opacity: 0.6;
+}
+.xmas-wish .xmas-msg {
+  text-align: center;
+  font-size: 13px;
+}
+
+/* ป้ายแตะต้นคริสต์มาส: วางใต้ต้นไม้ มีลูกศรชี้ */
+.xmas-tap-hint {
+  top: auto;
+  bottom: 9%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 18px 10px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  background: rgba(8, 22, 24, 0.9);
+  border: 1px solid rgba(245, 197, 66, 0.5);
+  box-shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.8), 0 0 28px -8px rgba(245, 197, 66, 0.45);
+}
+.xmas-tap-hint::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-left: 1px solid rgba(245, 197, 66, 0.5);
+  border-top: 1px solid rgba(245, 197, 66, 0.5);
+  transform: translateX(-50%) rotate(45deg);
+}
+@media (min-width: 760px) {
+  .xmas-tap-hint {
+    left: 58%;
+    bottom: auto;
+    top: 74%;
+  }
+}
+
+/* มือถือ: แผงเป็นชีตด้านล่างที่จัดวางเป็นระเบียบ */
+@media (max-width: 759px) {
+  .xmas-panel.xmas-wish {
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: none;
+    padding: 12px;
+    border-radius: 22px;
+  }
+  .xmas-wish .xmas-sheet-toggle {
+    display: block;
+    margin-bottom: 0;
+  }
+  .xmas-panel.xmas-wish.is-open {
+    padding: 16px;
+    max-height: 74dvh;
+  }
+  .xmas-panel.xmas-wish.is-open .xmas-sheet-toggle {
+    margin-bottom: 14px;
+  }
+  .xmas-wish .xmas-form {
+    gap: 14px;
+  }
+  .xmas-form-title h2 {
+    font-size: 17px;
+  }
+  .xmas-form-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .xmas-wish .xmas-swatches {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .xmas-shape-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .xmas-tap-hint {
+    top: 40%;
+    bottom: auto;
+    transform: translateX(-50%);
+    font-size: 13px;
+    padding: 9px 14px 9px 12px;
+    white-space: normal;
+    width: max-content;
+    max-width: 80vw;
+    text-align: center;
+  }
+  .xmas-tap-hint::before {
+    display: none;
+  }
+}
+@media (max-width: 379px) {
+  .xmas-steps li {
+    padding: 6px;
+    font-size: 11px;
+    gap: 5px;
+  }
+  .xmas-steps li span {
+    width: 18px;
+    height: 18px;
+  }
+}
