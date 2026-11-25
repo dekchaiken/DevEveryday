@@ -2,12 +2,13 @@
 import { cmd, storeConfigured } from "@/lib/redis";
 
 export const SLOT_COUNT = 8;
-export const HATS = ["top", "beanie", "santa", "crown"] as const;
-export const SCARVES = ["red", "green", "gold", "blue"] as const;
-export const NOSES = ["carrot", "button", "star"] as const;
-export const ARMS = ["sticks", "wings", "none"] as const;
+export const HATS = ["top", "beanie", "santa", "crown", "pom", "holly"] as const;
+export const SCARVES = ["red", "green", "gold", "blue", "white", "plaid"] as const;
+export const NOSES = ["carrot", "button", "star", "bell"] as const;
+export const ARMS = ["sticks", "wings", "gift", "none"] as const;
+export const ACCESSORIES = ["none", "glasses", "bow", "bell"] as const;
 export const BODY_COLORS = ["white", "mint", "sky", "blush"] as const;
-export const LEGS = ["snow", "boots", "none"] as const; // ฐาน/ขา
+export const LEGS = ["snow", "boots", "gift", "none"] as const; // ฐาน/ขา
 
 export type Decor = {
   id: string;
@@ -20,6 +21,7 @@ export type Decor = {
   arms: string;
   body: string;
   legs: string;
+  acc: string;
   createdAt: number;
   likes: number;
 };
