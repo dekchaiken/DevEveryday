@@ -1,5 +1,5 @@
 // ไอคอนแบบ flat ของธีมคริสต์มาส วาดด้วย SVG ล้วน ไม่ใช้ emoji
-type Name = "snow" | "tree" | "snowman" | "users" | "gift" | "sparkle" | "heart" | "star" | "check" | "close" | "copy" | "share" | "cross";
+type Name = "bauble" | "crown" | "snow" | "tree" | "snowman" | "users" | "gift" | "sparkle" | "heart" | "star" | "check" | "close" | "copy" | "share" | "cross";
 
 export function Icon({ name, size = 20, className }: { name: Name; size?: number; className?: string }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true, className: `xicon ${className ?? ""}` };
@@ -10,6 +10,28 @@ export function Icon({ name, size = 20, className }: { name: Name; size?: number
           <path d="M12 2.5 17.5 10h-2.8L19 15.5H5L8.3 10H5.5z" fill="#22c55e" />
           <rect x="10.8" y="15.5" width="2.4" height="3.5" rx="0.6" fill="#8b5a2b" />
           <path d="M12 1.2l.8 1.6 1.7.2-1.3 1.1.4 1.7L12 4.9l-1.6.9.4-1.7-1.3-1.1 1.7-.2z" fill="#f5c542" />
+        </svg>
+      );
+    case "bauble":
+      return (
+        <svg {...common} fill="none" strokeLinecap="round">
+          <path d="M12 2.2v2.4" stroke="#dbeafe" strokeWidth="1.5" />
+          <rect x="10.3" y="4" width="3.4" height="2.2" rx="0.8" fill="#e2e8f0" />
+          <circle cx="12" cy="14" r="7.4" fill="#7dd3fc" />
+          <circle cx="12" cy="14" r="7.4" stroke="#e0f2fe" strokeWidth="0.6" />
+          <path d="M8.4 11.4a4.2 4.2 0 0 1 2.8-2.9" stroke="#ffffff" strokeWidth="1.3" opacity="0.85" />
+          <path d="M9 17.4a5 5 0 0 0 3.6 1.3" stroke="#0369a1" strokeWidth="1" opacity="0.35" />
+          <path d="M14.8 12.6v2.8M13.4 14h2.8" stroke="#ffffff" strokeWidth="0.9" opacity="0.7" />
+        </svg>
+      );
+    case "crown":
+      return (
+        <svg {...common} strokeLinejoin="round">
+          <path d="M3.2 8.6 7.6 12.6 12 5.6l4.4 7 4.4-4-2 10.4H5.2z" fill="#fde68a" stroke="#f59e0b" strokeWidth="1" />
+          <circle cx="12" cy="4.6" r="1.4" fill="#e0f2fe" />
+          <circle cx="3.2" cy="8.4" r="1.1" fill="#e0f2fe" />
+          <circle cx="20.8" cy="8.4" r="1.1" fill="#e0f2fe" />
+          <rect x="5.4" y="16.6" width="13.2" height="2.2" rx="0.8" fill="#f59e0b" />
         </svg>
       );
     case "snow":

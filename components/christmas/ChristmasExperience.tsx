@@ -83,6 +83,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [feedOpen, setFeedOpen] = useState(false); // แผงรายการบนมือถือ
   const [local, setLocal] = useState<Ornament[]>([]);
   const [donateOpen, setDonateOpen] = useState(false);
+  // นับถอยหลังถึงวันคริสต์มาส (เวลาท้องถิ่นของผู้ใช้) คำนวณหลังโหลดเพื่อไม่ให้ต่างกันตอน SSR
+  const [xmasDays, setXmasDays] = useState<number | null>(null);
+  useEffect(() => {
+    const now = new Date();
+    const y = now.getMonth() === 11 && now.getDate() > 26 ? now.getFullYear() + 1 : now.getFullYear();
+    const target = new Date(y, 11, 25).getTime();
+    setXmasDays(Math.ceil((target - now.getTime()) / 86400000));
+  }, []);
   // เปิด/ปิดหิมะตก จำค่าไว้ในเบราว์เซอร์ของผู้ใช้ (ถ้าเข้าไม่ได้ก็ใช้ค่าเริ่มต้น)
   const [snowOn, setSnowOn] = useState(true);
   useEffect(() => {
@@ -250,13 +258,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
   }, [state, local]);
 
-  // ชื่อของคนที่ฝากไว้ในห้อง ใช้ติดป้ายให้ฝูงชนเงาเบื้องหลัง
-  const crowdNames = useMemo(() => {
-    const seen = new Set<string>();
-    for (const o of ornaments) if (o.name) seen.add(o.name);
-    for (const d of decor) if (d.name) seen.add(d.name);
-    return Array.from(seen).slice(0, 40);
-  }, [ornaments, decor]);
 
   // ---------- ฟอร์มแขวนลูกบอล ----------
   const [form, setForm] = useState<{ name: string; wish: string; color: OrnamentColor; shape: OrnamentShape }>({
@@ -372,7 +373,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setFocus(null);
           }}
           snowing={snowOn}
-          crowd={{ count: Math.max(online?.count ?? 0, 14), names: crowdNames }}
           key={room.id}
         />
       ) : (
@@ -425,7 +425,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <div>
             <b>ต้นคริสต์มาส{room.name}</b>
             <small>
-              {room.region} ·{" "}
+              {room.region}
+              {xmasDays !== null && (xmasDays > 0 ? ` · อีก ${xmasDays} วันถึงคริสต์มาส` : xmasDays === 0 ? " · สุขสันต์วันคริสต์มาส" : "")} ·{" "}
               <a href="/Christmas?pick=1" className="xmas-switch-link" onClick={() => markInternalNav()}>
                 เปลี่ยนห้อง
               </a>
@@ -463,7 +464,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setHintOn(true);
           }}
         >
-          <Icon name="tree" size={18} /> แขวนคำอวยพร
+          <Icon name="bauble" size={18} /> แขวนคำอวยพร
         </button>
         <button className="xmas-action xmas-action-mobile" onClick={() => {
           setFeedOpen(true);
@@ -478,7 +479,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <Icon name="users" size={18} /> ชวนเพื่อน
         </button>
         <button className="xmas-action is-exclusive" onClick={() => setDonateOpen(true)}>
-          <Icon name="sparkle" size={18} /> ตุ๊กตาหิมะยักษ์
+          <Icon name="crown" size={18} /> ตุ๊กตาหิมะยักษ์
         </button>
       </nav>
 
