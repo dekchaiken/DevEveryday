@@ -5,22 +5,13 @@ import "./christmas.css";
 
 type Phase = "play" | "open" | "done";
 
-const SESSION_KEY = "xmas-gift-seen";
 const AUTO_OPEN_MS = 4200; // เปิดกล่องเองถ้าผู้ใช้ไม่กด
 const REVEAL_MS = 1500; // ระยะเวลาเปลี่ยนจากกล่องเข้าสู่หน้าเว็บ
 
 // เปิดตัวด้วยกล่องของขวัญคริสต์มาสที่ถูกแกะออก ก่อนเข้าสู่หน้าเว็บ
-// เล่นครั้งเดียวต่อการเปิดแท็บ (sessionStorage) และข้ามได้ตลอดเวลา
+// เล่นทุกครั้งที่โหลดหน้าหรือรีเฟรช และข้ามได้ตลอดเวลา
 export default function GiftIntro({ children }: { children: ReactNode }) {
   const [phase, setPhase] = useState<Phase>("play");
-
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem(SESSION_KEY)) setPhase("done");
-    } catch {
-      /* โหมดส่วนตัว: เล่นทุกครั้ง */
-    }
-  }, []);
 
   function open() {
     setPhase((p) => (p === "play" ? "open" : p));
@@ -34,24 +25,12 @@ export default function GiftIntro({ children }: { children: ReactNode }) {
     if (phase === "open") {
       const t = setTimeout(() => {
         setPhase("done");
-        try {
-          sessionStorage.setItem(SESSION_KEY, "1");
-        } catch {
-          /* ไม่เป็นไร */
-        }
       }, REVEAL_MS);
       return () => clearTimeout(t);
     }
   }, [phase]);
 
-  const skip = () => {
-    setPhase("done");
-    try {
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      /* ไม่เป็นไร */
-    }
-  };
+  const skip = () => setPhase("done");
 
   return (
     <>
