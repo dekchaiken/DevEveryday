@@ -1,6 +1,6 @@
 // คำสั่งสนับสนุน (ตุ๊กตาหิมะยักษ์) เก็บใน Redis หรือหน่วยความจำ (พัฒนาในเครื่อง)
 import { cmd, storeConfigured } from "@/lib/redis";
-import type { OrderPreview } from "@/lib/christmas/types";
+import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 
 export type OrderStatus = "awaiting_payment" | "paid" | "cancelled";
 // giant = ตุ๊กตาหิมะยักษ์ (Exclusive ประจำห้อง) | support = สนับสนุนทีม DevEveryday
@@ -12,6 +12,7 @@ export type Order = {
   amount: number; // บาท
   name: string;
   message: string;
+  theme: MessageTheme; // ธีมการแสดงบนท้องฟ้า (เฉพาะ giant)
   mode: "manual" | "gateway";
   status: OrderStatus;
   createdAt: number;

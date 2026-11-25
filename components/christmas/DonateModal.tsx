@@ -6,6 +6,15 @@ import type { OrderPreview } from "@/lib/christmas/types";
 import "./christmas.css";
 import { Icon } from "./Icon";
 import { SnowmanPreview } from "./SnowmanPreview";
+import type { MessageTheme } from "@/lib/christmas/types";
+
+// ธีมการแสดงข้อความบนท้องฟ้า: ทุกคนในห้องจะเห็นพร้อมกัน ทั้งคอมและมือถือ
+const THEMES: { id: MessageTheme; label: string; hint: string; icon: "firework" | "snow" | "sparkle" | "sleigh" }[] = [
+  { id: "fireworks", label: "พลุฉลอง", hint: "พลุสีทองระเบิดเหนือต้น", icon: "firework" },
+  { id: "snow", label: "หิมะโปรยปราย", hint: "หิมะตกหนักพร้อมแสงน้ำแข็ง", icon: "snow" },
+  { id: "sparkle", label: "ประกายระยิบ", hint: "กรอบดาวกระพริบรอบข้อความ", icon: "sparkle" },
+  { id: "sleigh", label: "เลื่อนกวางเรนเดียร์", hint: "เลื่อนของซานตาวิ่งผ่านท้องฟ้า", icon: "sleigh" },
+];
 
 // ชื่อระดับของแต่ละยอดตามลำดับของ presetPrices (ยอดอื่นที่กรอกเองจะไม่มีชื่อระดับ)
 const TIER_NAMES = ["ดาวดวงเล็ก", "ระฆังเงิน", "ดาวประจำห้อง"];
@@ -38,6 +47,7 @@ export default function DonateModal({
   const [error, setError] = useState("");
   const [order, setOrder] = useState<OrderPreview | null>(null);
   const [kind, setKind] = useState<"giant" | "support">("giant");
+  const [theme, setTheme] = useState<MessageTheme>("fireworks");
   const [qrUrl, setQrUrl] = useState("");
 
   useEffect(() => {
@@ -89,7 +99,7 @@ export default function DonateModal({
       const res = await fetch("/api/christmas/donate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind }),
+        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind, theme }),
       });
       const data = (await res.json()) as { order?: OrderPreview; error?: string };
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
@@ -169,6 +179,20 @@ export default function DonateModal({
               ชื่อที่แสดงบนป้าย
               <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
             </label>
+            {kind === "giant" && (
+              <fieldset className="xmas-theme-pick">
+                <legend>ธีมการแสดงบนท้องฟ้า</legend>
+                <div className="xmas-theme-grid">
+                  {THEMES.map((t) => (
+                    <button type="button" key={t.id} className={theme === t.id ? "is-on" : ""} aria-pressed={theme === t.id} onClick={() => setTheme(t.id)}>
+                      <Icon name={t.icon} size={18} />
+                      <b>{t.label}</b>
+                      <small>{t.hint}</small>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
             <div className="xmas-thanks-input">
               <label>
                 <span>{kind === "giant" ? "ข้อความขอบคุณจากใจ" : "ข้อความถึงทีม"} <em>{message.length}/80</em></span>
