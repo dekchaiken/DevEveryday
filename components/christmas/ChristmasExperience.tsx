@@ -452,24 +452,66 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
 
       {/* แผงแขวนลูกบอล */}
-      <section key={panelPulse} className={`xmas-panel glass ${sheetOpen ? "is-open" : ""} ${panelPulse ? "is-pulse" : ""}`} aria-label="แขวนลูกบอล" onPointerDown={() => setHintOn(true)}>
+      <section key={panelPulse} className={`xmas-panel glass xmas-wish ${sheetOpen ? "is-open" : ""} ${panelPulse ? "is-pulse" : ""}`} aria-label="แขวนคำอวยพร" onPointerDown={() => setHintOn(true)}>
         <button className="xmas-sheet-toggle" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen}>
-          {sheetOpen ? "ปิดแผง" : "แขวนลูกบอลของคุณ"}
+          {sheetOpen ? "ปิดแผง" : "แขวนคำอวยพรของคุณ"}
         </button>
         <form onSubmit={hang} className="xmas-form">
-          <h2>แขวนคำอวยพร</h2>
-          <p className="xmas-hint">{pick ? "ตำแหน่งที่เลือกแล้ว เติมข้อความแล้วกดแขวนได้เลย" : "แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่ง"}</p>
+          <header className="xmas-form-head">
+            <div className="xmas-form-title">
+              <span className="xmas-form-icon" aria-hidden>
+                <Icon name="tree" size={22} />
+              </span>
+              <div>
+                <h2>แขวนคำอวยพร</h2>
+                <p>ลูกบอลของคุณจะปรากฏบนต้นให้ทุกคนเห็น</p>
+              </div>
+            </div>
+            <ol className="xmas-steps" aria-label="ขั้นตอน">
+              <li className={pick ? "is-done" : "is-now"}>
+                <span>1</span> ตำแหน่ง
+              </li>
+              <li className={form.name.trim() ? "is-done" : pick ? "is-now" : ""}>
+                <span>2</span> ข้อความ
+              </li>
+              <li className={submitting ? "is-now" : ""}>
+                <span>3</span> แขวน
+              </li>
+            </ol>
+          </header>
 
-          <label>
-            ชื่อเล่น
-            <input value={form.name} maxLength={20} required onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="เช่น ฟ้า" />
+          <div className={`xmas-place ${pick ? "is-set" : ""}`} role="status">
+            <span className="xmas-place-dot" style={{ background: COLOR_CSS[form.color] }} aria-hidden />
+            {pick ? (
+              <span className="xmas-place-text">
+                <b>เลือกตำแหน่งแล้ว</b>
+                <small>ความสูง {Math.round(pick.height * 100)}% · ตามแนวรอบต้น</small>
+              </span>
+            ) : (
+              <span className="xmas-place-text">
+                <b>ยังไม่ได้เลือกตำแหน่ง</b>
+                <small>แตะที่ต้นคริสต์มาสบนฉาก เพื่อเลือกว่าจะแขวนตรงไหน</small>
+              </span>
+            )}
+            {pick && (
+              <button type="button" className="xmas-place-clear" onClick={() => setPick(null)}>
+                เปลี่ยน
+              </button>
+            )}
+          </div>
+
+          <label className="xmas-field">
+            <span className="xmas-field-label">ชื่อเล่น</span>
+            <input value={form.name} maxLength={20} required onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="เช่น ฟ้า" autoComplete="nickname" />
           </label>
-          <label>
-            คำอวยพร
-            <textarea value={form.wish} maxLength={140} rows={2} onChange={(e) => setForm({ ...form, wish: e.target.value })} placeholder="ขอให้…" />
+          <label className="xmas-field">
+            <span className="xmas-field-label">
+              คำอวยพร <em>{form.wish.length}/140</em>
+            </span>
+            <textarea value={form.wish} maxLength={140} rows={3} onChange={(e) => setForm({ ...form, wish: e.target.value })} placeholder="ขอให้ปีนี้…" />
           </label>
 
-          <fieldset>
+          <fieldset className="xmas-group">
             <legend>สีลูกบอล</legend>
             <div className="xmas-swatches">
               {ORNAMENT_COLORS.map((c) => (
@@ -477,7 +519,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
                   type="button"
                   key={c}
                   className={form.color === c ? "is-on" : ""}
-                  style={{ background: COLOR_CSS[c] }}
+                  style={{ "--sw": COLOR_CSS[c] } as CSSProperties}
                   aria-label={COLOR_LABEL[c]}
                   aria-pressed={form.color === c}
                   onClick={() => setForm({ ...form, color: c })}
@@ -486,9 +528,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             </div>
           </fieldset>
 
-          <fieldset>
+          <fieldset className="xmas-group">
             <legend>รูปทรง</legend>
-            <div className="xmas-shapes">
+            <div className="xmas-shape-grid">
               {ORNAMENT_SHAPES.map((s) => (
                 <button type="button" key={s} className={form.shape === s ? "is-on" : ""} aria-pressed={form.shape === s} onClick={() => setForm({ ...form, shape: s })}>
                   {SHAPE_LABEL[s]}
@@ -498,7 +540,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           </fieldset>
 
           <button className="xmas-submit" disabled={submitting}>
-            {submitting ? "กำลังแขวน…" : "แขวนลูกบอล"}
+            {submitting ? "กำลังแขวน…" : pick ? "แขวนลูกบอลบนต้น" : "เลือกตำแหน่งก่อนแขวน"}
           </button>
           {message && <p className={`xmas-msg ${message.kind}`}>{message.text}</p>}
         </form>
