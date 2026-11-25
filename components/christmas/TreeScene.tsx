@@ -22,10 +22,11 @@ type Props = {
   onError: () => void;
   onReady: (handle: TreeSceneHandle) => void; // ส่งตัวควบคุมฉากให้พาเรนต์ เช่น สั่งจุดพลุ
   ground: string; // สีพื้นหิมะตามห้อง
+  giant: { name: string; message: string } | null; // ตุ๊กตาหิมะยักษ์พร้อมป้าย
 };
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giant }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   // ตัวช่วยที่ฉากใช้ร่วมกับ React โดยไม่ต้อง re-render
   const api = useRef<{
@@ -34,6 +35,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setPreview: (p: Preview) => void;
     firework: (color: string) => void;
     setReduced: (v: boolean) => void;
+    setGiant: (g: { name: string; message: string } | null) => void;
   } | null>(null);
   const callbacks = useRef({ onPick, onOrnamentClick });
   callbacks.current = { onPick, onOrnamentClick };
@@ -462,8 +464,88 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
     frame();
 
+    // ---------- ตุ๊กตาหิมะยักษ์ของห้อง พร้อมป้ายห้อย ----------
+    let giantGroup: THREE.Group | null = null;
+    function buildGiant(g: { name: string; message: string }) {
+      const grp = new THREE.Group();
+      const snow = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.55, clearcoat: 0.3 });
+      const addBall = (r: number, y: number) => {
+        const m = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 32), snow);
+        m.position.y = y;
+        grp.add(m);
+      };
+      addBall(0.62, 0.62);
+      addBall(0.46, 1.5);
+      addBall(0.33, 2.2);
+      const hat = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.32, 0.42, 32), new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.4 }));
+      hat.position.y = 2.55;
+      const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.05, 32), hat.material);
+      brim.position.y = 2.33;
+      const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.07, 16, 40), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.6 }));
+      scarf.rotation.x = Math.PI / 2;
+      scarf.position.y = 1.86;
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.32, 16), new THREE.MeshStandardMaterial({ color: 0xff8a1f }));
+      nose.rotation.x = Math.PI / 2;
+      nose.position.set(0, 2.2, 0.34);
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+      [-0.11, 0.11].forEach((x) => {
+        const e = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), eyeMat);
+        e.position.set(x, 2.3, 0.3);
+        grp.add(e);
+      });
+      grp.add(hat, brim, scarf, nose);
+      // ป้ายห้อยจากไม้ที่ข้างตุ๊กตา
+      const signCanvas = document.createElement("canvas");
+      signCanvas.width = 512;
+      signCanvas.height = 300;
+      const c2 = signCanvas.getContext("2d")!;
+      c2.fillStyle = "#0f2a22";
+      c2.fillRect(0, 0, 512, 300);
+      c2.strokeStyle = "#f5c542";
+      c2.lineWidth = 10;
+      c2.strokeRect(12, 12, 488, 276);
+      c2.fillStyle = "#ffe08a";
+      c2.font = "bold 46px sans-serif";
+      c2.textAlign = "center";
+      c2.fillText(g.name.slice(0, 20), 256, 110);
+      c2.fillStyle = "#f8fafc";
+      c2.font = "34px sans-serif";
+      c2.fillText(g.message.slice(0, 40), 256, 175);
+      c2.fillText(g.message.slice(40, 80), 256, 220);
+      const signTex = new THREE.CanvasTexture(signCanvas);
+      signTex.colorSpace = THREE.SRGBColorSpace;
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.88), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
+      sign.position.set(0.95, 1.45, 0.25);
+      sign.rotation.y = -0.25;
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.5, 8), new THREE.MeshStandardMaterial({ color: 0x6b4423 }));
+      post.position.set(0.95, 0.75, 0.25);
+      grp.add(sign, post);
+      grp.position.set(-3.4, 0, 0.9);
+      grp.scale.setScalar(1.05);
+      return grp;
+    }
+    const api_setGiant = (g: { name: string; message: string } | null) => {
+      if (giantGroup) {
+        scene.remove(giantGroup);
+        giantGroup.traverse((o) => {
+          const m = o as THREE.Mesh;
+          m.geometry?.dispose?.();
+          const mat = m.material as THREE.Material | THREE.Material[] | undefined;
+          if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
+          else mat?.dispose?.();
+        });
+        giantGroup = null;
+      }
+      if (g) {
+        giantGroup = buildGiant(g);
+        scene.add(giantGroup);
+      }
+    };
+    api_setGiant(giant);
+
     api.current = {
       addOrnament: (o) => addOrnamentMesh(o, true),
+      setGiant: api_setGiant,
       setOrnaments: (list) => {
         const ids = new Set(list.map((o) => o.id));
         for (const [id, entry] of ornMeshes) {
@@ -519,6 +601,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // สร้างฉากครั้งเดียว ส่วนข้อมูลจะอัปเดตผ่าน api ด้านล่าง
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ซิงก์ตุ๊กตาหิมะยักษ์เมื่อมีการสนับสนุนใหม่
+  const giantKey = giant ? `${giant.name}|${giant.message}` : "";
+  useEffect(() => {
+    api.current?.setGiant(giant);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [giantKey]);
 
   // ซิงก์รายการลูกบอลจากเซิร์ฟเวอร์เข้าฉาก
   useEffect(() => {

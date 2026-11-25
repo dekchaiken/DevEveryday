@@ -1571,3 +1571,55 @@
     font-size: clamp(32px, 3.4vw, 46px);
   }
 }
+
+/* ---------- ป๊อปอัปสนับสนุน ---------- */
+.xmas-modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(3, 10, 14, 0.6);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: xmas-fade 0.3s ease both;
+}
+.xmas-modal {
+  position: relative;
+  width: min(100%, 420px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 26px 22px 22px;
+  animation: xmas-pop 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.1) both;
+}
+.xmas-modal h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+.xmas-modal .xmas-kicker {
+  margin: 0 0 4px;
+}
+.xmas-pay {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.xmas-qr {
+  width: 240px;
+  height: 240px;
+  max-width: 100%;
+  border-radius: 16px;
+  background: #fff;
+  padding: 10px;
+}
+.xmas-modal .xmas-x {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+}
+.xmas-modal .xmas-form input,
+.xmas-modal .xmas-form textarea {
+  width: 100%;
+}
