@@ -12,6 +12,7 @@ import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
 import { Icon } from "./Icon";
+import { useDecor } from "./useDecor";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
@@ -90,6 +91,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
   const treeRef = useRef<TreeSceneHandle | null>(null);
   const feed = useFeed(roomId);
+  const { decor, refresh: refreshDecor } = useDecor(roomId);
+  const [decorSlot, setDecorSlot] = useState<number | null>(null);
+  const [markerSlot, setMarkerSlot] = useState<number | null>(null);
   const played = useRef(new Set<string>());
 
   // ---------- โหลดสถานะกลางเป็นระยะ ----------
@@ -284,7 +288,13 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onError={() => setWebglOk(false)}
           ground={room.ground}
           giant={state?.giant ? { name: state.giant.name, message: state.giant.message } : null}
-          decor={state?.decor ?? []}
+          decor={decor}
+          markerSlot={markerSlot}
+          onGroundPick={(slot) => {
+            setMarkerSlot(slot);
+            setDecorSlot(slot);
+            setDecorOpen(true);
+          }}
           onDecorClick={(d) => {
             setDecorFocus(d);
             setFocus(null);
@@ -420,11 +430,16 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <DecorModal
           roomId={room.id}
           roomName={room.name}
-          decor={state?.decor ?? []}
-          onClose={() => setDecorOpen(false)}
+          decor={decor}
+          initialSlot={decorSlot}
+          onClose={() => {
+            setDecorOpen(false);
+            setMarkerSlot(null);
+          }}
           onPlaced={(d) => {
             setDecorOpen(false);
-            setState((st) => (st ? { ...st, decor: [d, ...st.decor] } : st));
+            setMarkerSlot(null);
+            refreshDecor();
             notify("ok", `วางตุ๊กตาหิมะของ ${d.name} รอบต้นแล้ว`);
           }}
         />
@@ -435,8 +450,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           d={decorFocus}
           onClose={() => setDecorFocus(null)}
           onLiked={(id, likes) => {
-            setState((st) => (st ? { ...st, decor: st.decor.map((x) => (x.id === id ? { ...x, likes } : x)) } : st));
             setDecorFocus((f) => (f && f.id === id ? { ...f, likes } : f));
+            refreshDecor();
           }}
         />
       )}

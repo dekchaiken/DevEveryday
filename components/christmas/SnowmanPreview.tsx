@@ -86,11 +86,12 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
 
       {/* แขน */}
       {parts.arms === "sticks" && (
-        <>
-          <path d="M60 118 L24 98" stroke="#7a4a24" strokeWidth="6" strokeLinecap="round" />
-          <path d="M140 118 L176 98" stroke="#7a4a24" strokeWidth="6" strokeLinecap="round" />
-          <path d="M24 98 l-6 -4 M24 98 l-2 -7 M176 98 l6 -4 M176 98 l2 -7" stroke="#7a4a24" strokeWidth="3" strokeLinecap="round" />
-        </>
+        <g fill="none" stroke="#7a4a24" strokeLinecap="round">
+          <path d="M67 118 Q46 110 30 92" strokeWidth="5" />
+          <path d="M133 118 Q154 110 170 92" strokeWidth="5" />
+          <path d="M30 92 L21 85 M30 92 L26 80 M30 92 L38 84" strokeWidth="3" />
+          <path d="M170 92 L179 85 M170 92 L174 80 M170 92 L162 84" strokeWidth="3" />
+        </g>
       )}
       {parts.arms === "wings" && (
         <>
@@ -100,9 +101,12 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
       )}
       {parts.arms === "gift" && (
         <>
-          <rect x="150" y="124" width="26" height="22" rx="2" fill={`url(#r${uid})`} />
-          <rect x="161" y="124" width="4" height="22" fill="#f5c542" />
-          <path d="M58 128 L150 134" stroke="#7a4a24" strokeWidth="5" strokeLinecap="round" />
+          <path d="M67 118 Q46 110 30 92" fill="none" stroke="#7a4a24" strokeWidth="5" strokeLinecap="round" />
+          <path d="M30 92 L21 85 M30 92 L26 80" fill="none" stroke="#7a4a24" strokeWidth="3" strokeLinecap="round" />
+          <path d="M133 118 Q152 108 166 96" fill="none" stroke="#7a4a24" strokeWidth="5" strokeLinecap="round" />
+          <rect x="156" y="74" width="24" height="22" rx="2.5" fill={`url(#r${uid})`} />
+          <rect x="166" y="74" width="4" height="22" fill="#f5c542" />
+          <rect x="156" y="82" width="24" height="3" fill="#f5c542" opacity="0.9" />
         </>
       )}
 

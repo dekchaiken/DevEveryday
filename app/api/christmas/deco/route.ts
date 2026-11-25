@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRoom } from "@/lib/christmas/rooms";
-import { ACCESSORIES, addDecor, ARMS, BODY_COLORS, HATS, LEGS, NOSES, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
+import { ACCESSORIES, ARMS, BODY_COLORS, claimDecor, HATS, LEGS, NOSES, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
 
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   if (!room) return NextResponse.json({ error: "ไม่พบห้องนี้" }, { status: 400 });
 
   const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
-  if (!(await rateOk(ip, "deco", 8, Date.now()))) {
+  if (!(await rateOk(ip, "deco", 20, Date.now()))) {
     return NextResponse.json({ error: "วางบ่อยเกินไป รอสักครู่" }, { status: 429 });
   }
   const name = clean(body.name, 20);
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   const bodyColor = pick(body.body, BODY_COLORS);
   const legs = pick(body.legs, LEGS);
   const acc = pick(body.acc, ACCESSORIES);
-  if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) return NextResponse.json({ error: "ช่องไม่ถูกต้อง" }, { status: 400 });
+  if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) return NextResponse.json({ error: `เลือกช่องระหว่าง 1–${SLOT_COUNT}` }, { status: 400 });
   if (!hat || !scarf || !nose || !arms || !bodyColor || !legs || !acc) return NextResponse.json({ error: "ชิ้นส่วนไม่ถูกต้อง" }, { status: 400 });
 
   const decor: Decor = {
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     createdAt: Date.now(),
     likes: 0,
   };
-  const ok = await addDecor(decor);
+  const ok = await claimDecor(decor);
   if (!ok) return NextResponse.json({ error: "ช่องนี้มีคนวางแล้ว เลือกช่องอื่น" }, { status: 409 });
   return NextResponse.json({ ok: true, decor });
 }

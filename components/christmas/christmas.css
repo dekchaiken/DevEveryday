@@ -2855,3 +2855,56 @@
     animation: none;
   }
 }
+
+/* ---------- เลือกช่องวางตุ๊กตาหิมะ ---------- */
+.xmas-slot-picker {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  margin: 4px 0 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.xmas-slot-head b {
+  display: block;
+  font-size: 15px;
+}
+.xmas-slot-head small {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.xmas-slot-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+.xmas-slot-input {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.xmas-slot-input input {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+.xmas-link-btn {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: var(--gold-soft);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
