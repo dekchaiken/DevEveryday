@@ -3706,3 +3706,18 @@
     display: none;
   }
 }
+/* มือถือ: แถบบนให้พอดีจอ ปุ่มสนับสนุนไม่ถูกตัด */
+@media (max-width: 759px) {
+  .xmas-top-right {
+    gap: 6px;
+  }
+  .xmas-live {
+    min-height: 32px;
+    padding: 0 9px;
+    font-size: 12px;
+  }
+  .xmas-switch.is-donate {
+    min-height: 32px;
+    padding: 0 11px;
+  }
+}
