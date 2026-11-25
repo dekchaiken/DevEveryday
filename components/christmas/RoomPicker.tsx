@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { RoomTheme } from "@/lib/christmas/rooms";
 import { RoomSkyline } from "./RoomSkyline";
+import { markInternalNav } from "./skipIntro";
 import "./christmas.css";
 
 type RoomInfo = RoomTheme & { online: number; capacity: number };
@@ -61,6 +62,7 @@ export default function RoomPicker({ fullRoom }: { fullRoom: string | null }) {
               <a
                 key={r.id}
                 href={full ? undefined : `/Christmas?room=${r.id}`}
+                onClick={() => markInternalNav()}
                 aria-disabled={full}
                 className={`xmas-room-card ${full ? "is-full" : ""}`}
                 style={{ "--sky-top": r.skyTop, "--sky-bottom": r.skyBottom, "--room-accent": r.accent } as React.CSSProperties}

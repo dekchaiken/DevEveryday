@@ -13,6 +13,7 @@ import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
 import { Icon } from "./Icon";
 import { useDecor } from "./useDecor";
+import { markInternalNav } from "./skipIntro";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
@@ -144,6 +145,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         const data = (await res.json()) as { full?: boolean; count?: number; capacity?: number };
         if (data.full) {
           // ห้องเต็ม ส่งไปเลือกห้องอื่น
+          markInternalNav();
           router.replace(`/Christmas?full=${roomId}`);
           return;
         }
@@ -361,7 +363,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
             {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
           </div>
-          <a className="xmas-switch" href="/Christmas?pick=1">
+          <a className="xmas-switch" href="/Christmas?pick=1" onClick={() => markInternalNav()}>
             เปลี่ยนห้อง
           </a>
         </div>
