@@ -96,6 +96,22 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const { decor, refresh: refreshDecor } = useDecor(roomId);
   const [decorSlot, setDecorSlot] = useState<number | null>(null);
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
+  const [coach, setCoach] = useState(false); // คำแนะนำครั้งแรกใต้เมนู
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("xmas-coach-v1")) setCoach(true);
+    } catch {
+      /* ไม่เป็นไร */
+    }
+  }, []);
+  const dismissCoach = () => {
+    setCoach(false);
+    try {
+      localStorage.setItem("xmas-coach-v1", "1");
+    } catch {
+      /* ไม่เป็นไร */
+    }
+  };
   const played = useRef(new Set<string>());
 
   // ---------- โหลดสถานะกลางเป็นระยะ ----------
@@ -395,7 +411,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         }}>
           <Icon name="heart" size={18} /> รายการ
         </button>
-        <button className="xmas-action" onClick={() => setDecorOpen(true)}>
+        <button className="xmas-action" data-tip="สร้างตุ๊กตาหิมะแล้ววางรอบต้น" onClick={() => setDecorOpen(true)}>
           <Icon name="snowman" size={18} /> ตกแต่งตุ๊กตาหิมะ
         </button>
         <button className="xmas-action" onClick={() => setInviteOpen(true)}>
@@ -416,6 +432,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             : []),
         ]}
       />
+
+      {coach && (
+        <div className="xmas-coach" role="note">
+          <b>ตกแต่งตุ๊กตาหิมะได้แล้ว</b>
+          <span>กดปุ่ม "ตกแต่งตุ๊กตาหิมะ" เลือกหน้าตาตุ๊กตา แล้ววางบนช่องรอบต้น ทุกคนจะเห็นและกดถูกใจได้</span>
+          <button type="button" onClick={dismissCoach}>เข้าใจแล้ว</button>
+        </div>
+      )}
 
       {/* ป้ายบอกให้แตะต้นไม้เพื่อเลือกตำแหน่ง */}
       {hintOn && !pick && (
@@ -441,6 +465,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           roomName={room.name}
           decor={decor}
           initialSlot={decorSlot}
+          onPickOnMap={() => {
+            setDecorOpen(false);
+            notify("ok", "แตะพื้นหิมะบนฉากเพื่อเลือกช่อง");
+          }}
           onClose={() => {
             setDecorOpen(false);
             setMarkerSlot(null);
