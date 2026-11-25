@@ -21,10 +21,11 @@ type Props = {
   onOrnamentClick: (o: Ornament) => void;
   onError: () => void;
   onReady: (handle: TreeSceneHandle) => void; // ส่งตัวควบคุมฉากให้พาเรนต์ เช่น สั่งจุดพลุ
+  ground: string; // สีพื้นหิมะตามห้อง
 };
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   // ตัวช่วยที่ฉากใช้ร่วมกับ React โดยไม่ต้อง re-render
   const api = useRef<{
@@ -94,7 +95,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ---------- พื้นหิมะ ----------
     const ground = new THREE.Mesh(
       new THREE.CircleGeometry(7, 96),
-      new THREE.MeshStandardMaterial({ color: 0xe9f1f7, roughness: 0.95, metalness: 0 }),
+      new THREE.MeshStandardMaterial({ color: groundColor, roughness: 0.95, metalness: 0 }),
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.02;

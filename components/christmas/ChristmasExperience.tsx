@@ -5,6 +5,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import type { ChristmasState, Ornament, OrnamentColor, OrnamentShape, ShowEvent } from "@/lib/christmas/types";
 import { ORNAMENT_COLORS, ORNAMENT_SHAPES } from "@/lib/christmas/types";
 import type { Preview, TreeSceneHandle } from "./TreeScene";
+import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
+import { useRouter } from "next/navigation";
+import { RoomSkyline } from "./RoomSkyline";
 import "./christmas.css";
 
 // Three.js โหลดเฉพาะฝั่งเบราว์เซอร์ ไม่ให้กระทบเวลาเปิดหน้าแรก
@@ -49,7 +52,10 @@ function useServerClock() {
   return useCallback(() => Date.now() + offset.current, []);
 }
 
-export default function ChristmasExperience() {
+export default function ChristmasExperience({ roomId }: { roomId: string }) {
+  const room = getRoom(roomId) as RoomTheme;
+  const router = useRouter();
+  const [online, setOnline] = useState<{ count: number; capacity: number } | null>(null);
   const serverNow = useServerClock();
   const [state, setState] = useState<ChristmasState | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -73,7 +79,7 @@ export default function ChristmasExperience() {
     let stopped = false;
     async function poll() {
       try {
-        const res = await fetch("/api/christmas/state", { cache: "no-store" });
+        const res = await fetch(`/api/christmas/state?room=${roomId}`, { cache: "no-store" });
         if (!res.ok) throw new Error(String(res.status));
         setState((await res.json()) as ChristmasState);
         setLoadError(false);
@@ -89,6 +95,47 @@ export default function ChristmasExperience() {
       clearTimeout(timer);
     };
   }, []);
+
+  // ---------- แจ้งว่ายังอยู่ในห้อง และรับจำนวนคนออนไลน์ ----------
+  useEffect(() => {
+    let clientId = "";
+    try {
+      clientId = localStorage.getItem("xmas-client") ?? "";
+      if (!clientId) {
+        clientId = crypto.randomUUID();
+        localStorage.setItem("xmas-client", clientId);
+      }
+    } catch {
+      clientId = crypto.randomUUID();
+    }
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function beat() {
+      try {
+        const res = await fetch("/api/christmas/presence", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ room: roomId, clientId }),
+        });
+        const data = (await res.json()) as { full?: boolean; count?: number; capacity?: number };
+        if (data.full) {
+          // ห้องเต็ม ส่งไปเลือกห้องอื่น
+          router.replace(`/Christmas?full=${roomId}`);
+          return;
+        }
+        if (typeof data.count === "number") setOnline({ count: data.count, capacity: data.capacity ?? 150 });
+      } catch {
+        /* ลองใหม่รอบถัดไป */
+      } finally {
+        if (!stopped) timer = setTimeout(beat, 20000);
+      }
+    }
+    beat();
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [roomId, router]);
 
   // ---------- เล่นคิวพลุและข้อความให้ทุกคนพร้อมกัน ----------
   useEffect(() => {
@@ -154,7 +201,7 @@ export default function ChristmasExperience() {
       const res = await fetch("/api/christmas/ornament", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, ...pick }),
+        body: JSON.stringify({ ...form, ...pick, room: roomId }),
       });
       const data = (await res.json()) as { error?: string; ornament?: Ornament };
       if (!res.ok || !data.ornament) throw new Error(data.error ?? "แขวนไม่สำเร็จ");
@@ -185,9 +232,13 @@ export default function ChristmasExperience() {
   }, []);
 
   return (
-    <div className={`xmas-stage ${intro ? "" : "is-ready"}`}>
+    <div
+      className={`xmas-stage ${intro ? "" : "is-ready"}`}
+      style={{ "--sky-top": room.skyTop, "--sky-bottom": room.skyBottom, "--room-accent": room.accent } as CSSProperties}
+    >
       {/* พื้นหลังท้องฟ้าค่ำและดาว */}
       <div className="xmas-sky" aria-hidden />
+      <RoomSkyline kind={room.skyline} />
 
       {webglOk ? (
         <TreeScene
@@ -200,6 +251,8 @@ export default function ChristmasExperience() {
           onPick={onPick}
           onOrnamentClick={(o) => setFocus(o)}
           onError={() => setWebglOk(false)}
+          ground={room.ground}
+          key={room.id}
         />
       ) : (
         <div className="xmas-fallback" role="note">
@@ -240,13 +293,21 @@ export default function ChristmasExperience() {
             ★
           </span>
           <div>
-            <b>ต้นคริสต์มาสร่วมกัน</b>
-            <small>DevEveryday</small>
+            <b>ต้นคริสต์มาส{room.name}</b>
+            <small>
+              {room.region} · ห้องคริสต์มาส
+            </small>
           </div>
         </div>
-        <div className={`xmas-live ${loadError ? "is-off" : ""}`} aria-live="polite">
-          <span className="xmas-live-dot" />
-          {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
+        <div className="xmas-top-right">
+          <div className={`xmas-live ${loadError ? "is-off" : ""}`} aria-live="polite">
+            <span className="xmas-live-dot" />
+            {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
+            {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
+          </div>
+          <a className="xmas-switch" href="/Christmas">
+            เปลี่ยนห้อง
+          </a>
         </div>
       </header>
 

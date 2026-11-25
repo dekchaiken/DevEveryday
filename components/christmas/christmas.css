@@ -29,7 +29,7 @@
     radial-gradient(900px 500px at 50% 0%, rgba(245, 197, 66, 0.18), transparent 60%),
     radial-gradient(800px 600px at 0% 100%, rgba(22, 101, 52, 0.45), transparent 60%),
     radial-gradient(700px 500px at 100% 80%, rgba(220, 38, 67, 0.16), transparent 60%),
-    linear-gradient(180deg, #050d16 0%, #071c1d 55%, #0a2a25 100%);
+    linear-gradient(180deg, var(--sky-top, #050d16) 0%, var(--sky-bottom, #0a2a25) 100%);
 }
 .xmas-sky::before {
   content: "";
@@ -872,4 +872,278 @@
   .xmas-feed {
     transition: none;
   }
+}
+
+/* ---------- ฉากเบื้องหลังตามห้อง ---------- */
+.xmas-skyline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 34%;
+  width: 100%;
+  height: 30%;
+  z-index: 0;
+  pointer-events: none;
+  color: color-mix(in srgb, var(--sky-bottom, #0a2a25) 70%, #000);
+  opacity: 0.9;
+}
+.xmas-skyline-city {
+  color: #0d1b2e;
+}
+.xmas-skyline-hills {
+  color: #0d2a33;
+}
+.xmas-skyline-rice {
+  color: #2d2a14;
+}
+.xmas-skyline-sea {
+  color: #0c3345;
+}
+
+/* ---------- แถบบนและจำนวนคนออนไลน์ ---------- */
+.xmas-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+.xmas-online {
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--ink);
+  font-weight: 500;
+}
+.xmas-switch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+.xmas-switch:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.xmas-switch:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- หน้าเลือกห้อง ---------- */
+.xmas-picker {
+  --sky-top: #06141c;
+  --sky-bottom: #0a2a25;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 48px 0 56px;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 500px at 50% -10%, rgba(245, 197, 66, 0.18), transparent 60%),
+    linear-gradient(180deg, #050d16 0%, #0a2a25 100%);
+  font-family: var(--font-thai), system-ui, sans-serif;
+}
+.xmas-picker-inner {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 max(18px, env(safe-area-inset-left)) 0 max(18px, env(safe-area-inset-right));
+}
+.xmas-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+.xmas-picker h1 {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 5vw, 40px);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.xmas-picker-lead {
+  margin: 0 0 24px;
+  max-width: 62ch;
+  color: var(--muted);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+.xmas-picker-note {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(245, 197, 66, 0.1);
+  border: 1px solid rgba(245, 197, 66, 0.3);
+  color: var(--gold-soft);
+  font-size: 14px;
+}
+.xmas-room-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.xmas-room-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  overflow: hidden;
+  border-radius: 22px;
+  text-decoration: none;
+  color: inherit;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sky-top) 90%, #fff 4%), var(--sky-bottom));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.8);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s, box-shadow 0.25s;
+  min-height: 150px;
+}
+.xmas-room-card:hover,
+.xmas-room-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--room-accent) 60%, transparent);
+  box-shadow: 0 26px 60px -24px color-mix(in srgb, var(--room-accent) 45%, transparent);
+  outline: none;
+}
+.xmas-room-card.is-full {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+  cursor: not-allowed;
+}
+.xmas-room-art {
+  position: relative;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--room-accent) 40%, transparent), transparent 65%);
+}
+.xmas-room-glow {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #fff8d6, var(--room-accent) 45%, transparent 70%);
+  animation: xmas-glow 2.4s ease-in-out infinite;
+}
+.xmas-room-body {
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.xmas-room-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.xmas-room-head b {
+  font-size: 19px;
+}
+.xmas-room-head span {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.xmas-room-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #d9e6df;
+  text-wrap: pretty;
+}
+.xmas-room-meter {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.xmas-room-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--room-accent), #fff);
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.xmas-room-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.xmas-room-foot small {
+  color: var(--muted);
+}
+.xmas-room-foot em {
+  font-style: normal;
+  color: var(--muted);
+}
+.xmas-room-foot em.is-hot {
+  color: var(--mint);
+}
+.xmas-enter {
+  color: var(--room-accent);
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .xmas-room-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1000px) {
+  .xmas-room-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .xmas-room-card {
+    grid-template-columns: 1fr;
+  }
+  .xmas-room-art {
+    height: 120px;
+  }
+}
+@media (max-width: 379px) {
+  .xmas-room-card {
+    grid-template-columns: 96px 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-room-glow {
+    animation: none;
+  }
+  .xmas-room-card,
+  .xmas-room-meter span {
+    transition: none;
+  }
+}
+
+/* สีตัวอักษรหน้าเลือกห้อง ให้ชนะสไตล์พื้นฐานของเว็บ */
+.xmas-picker h1,
+.xmas-picker h2,
+.xmas-room-card,
+.xmas-room-card b,
+.xmas-room-card span,
+.xmas-room-card small,
+.xmas-room-card em {
+  color: var(--ink);
+}
+.xmas-room-card p,
+.xmas-room-card small,
+.xmas-room-head span {
+  color: var(--muted);
+}
+.xmas-room-card .xmas-room-body p {
+  color: #d9e6df;
+}
+.xmas-room-card .xmas-room-foot em.is-hot {
+  color: var(--mint);
+}
+.xmas-room-card .xmas-enter {
+  color: var(--room-accent);
 }

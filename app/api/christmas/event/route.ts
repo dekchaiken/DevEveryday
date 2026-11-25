@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getRoom, ROOMS } from "@/lib/christmas/rooms";
 import { enqueueEvent, rateOk } from "@/lib/christmas/store";
 import { parseEvent } from "@/lib/christmas/validate";
 import { SESSION_COOKIE, isValidSession } from "@/lib/session";
@@ -7,7 +8,7 @@ import { SESSION_COOKIE, isValidSession } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// จัดคิวพลุหรือข้อความให้ทุกคนเห็นพร้อมกัน
+// จัดคิวพลุหรือข้อความให้ทุกคนในห้องเห็นพร้อมกัน (room = "all" คือทุกห้อง)
 // ตอนนี้จำกัดเฉพาะแอดมิน การชำระเงินจากผู้ใช้จะเพิ่มในขั้นถัดไป
 export async function POST(req: Request) {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
@@ -27,6 +28,11 @@ export async function POST(req: Request) {
   const parsed = parseEvent(body);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
-  const event = await enqueueEvent(parsed.value, Date.now());
-  return NextResponse.json({ ok: true, event });
+  // room = "all" ส่งให้ทุกห้อง เพื่อให้ทุกคนเห็นพลุหรือข้อความเดียวกัน
+  const target = body.room === "all" ? ROOMS.map((r) => r.id) : [getRoom(typeof body.room === "string" ? body.room : null)?.id];
+  if (target.some((id) => !id)) return NextResponse.json({ error: "ไม่พบห้องนี้" }, { status: 400 });
+  const now = Date.now();
+  const events = [];
+  for (const id of target) events.push(await enqueueEvent(id as string, parsed.value, now));
+  return NextResponse.json({ ok: true, events });
 }
