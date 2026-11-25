@@ -2914,7 +2914,7 @@
 .xmas-build {
   position: relative;
   width: min(100%, 560px);
-  height: min(640px, calc(100dvh - 24px));
+  height: min(780px, calc(100dvh - 24px));
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   padding: 0;
@@ -2922,8 +2922,12 @@
 }
 .xmas-build-top {
   position: relative;
-  padding: 18px 20px 12px;
+  padding: 16px 20px 10px;
   text-align: center;
+}
+/* สถานะช่องอยู่ที่ฟุตเตอร์แล้ว จึงไม่ต้องมีบรรทัดซ้ำด้านบน */
+.xmas-build .xmas-build-slot {
+  display: none;
 }
 .xmas-build-top .xmas-x {
   position: absolute;
@@ -2933,8 +2937,8 @@
 .xmas-build-preview {
   display: grid;
   place-items: center;
-  height: 190px;
-  margin: 6px 0 4px;
+  height: 150px;
+  margin: 4px 0 2px;
   border-radius: 20px;
   background: radial-gradient(circle at 50% 40%, rgba(245, 197, 66, 0.22), rgba(0, 0, 0, 0.25) 70%);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -3032,8 +3036,8 @@
 }
 .xmas-build-foot {
   display: grid;
-  gap: 10px;
-  padding: 14px 16px 16px;
+  gap: 8px;
+  padding: 12px 16px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.18);
 }
@@ -3378,3 +3382,178 @@
     font-size: 10px;
   }
 }
+
+/* ---------- ปุ่มพรีเมียม: ตุ๊กตาหิมะยักษ์ และสนับสนุน ---------- */
+.xmas-action.is-exclusive,
+.xmas-switch.is-donate {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.xmas-action.is-exclusive {
+  animation: xmas-premium-glow 2.8s ease-in-out infinite;
+}
+/* แสงวิ่งผ่านปุ่มเป็นระยะ */
+.xmas-action.is-exclusive::after,
+.xmas-switch.is-donate::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-18deg);
+  animation: xmas-shine 3.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+@keyframes xmas-shine {
+  0%, 55% { left: -60%; }
+  100% { left: 130%; }
+}
+@keyframes xmas-premium-glow {
+  0%, 100% { box-shadow: 0 12px 30px -10px rgba(245, 158, 11, 0.7); }
+  50% { box-shadow: 0 14px 40px -6px rgba(255, 214, 102, 0.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-action.is-exclusive,
+  .xmas-action.is-exclusive::after,
+  .xmas-switch.is-donate::after {
+    animation: none;
+  }
+}
+
+/* หน้าต่างสนับสนุนแบบพรีเมียม */
+.xmas-donate {
+  text-align: center;
+  border: 1px solid rgba(245, 197, 66, 0.35);
+  box-shadow: 0 30px 80px -20px rgba(245, 158, 11, 0.45);
+}
+.xmas-donate .xmas-x {
+  top: 10px;
+  right: 10px;
+}
+.xmas-donate-hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 150px;
+  margin: 0 0 4px;
+}
+.xmas-donate-glow {
+  position: absolute;
+  inset: -10px 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 102, 0.55), rgba(245, 158, 11, 0.12) 55%, transparent 70%);
+  filter: blur(4px);
+  animation: xmas-premium-glow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+.xmas-donate-snow {
+  position: relative;
+  height: 150px;
+  width: auto;
+  max-width: 100%;
+  animation: xmas-float 4s ease-in-out infinite;
+}
+@keyframes xmas-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.xmas-donate .xmas-kicker {
+  color: var(--gold-soft);
+  letter-spacing: 0.08em;
+}
+.xmas-donate h2 {
+  font-size: 22px;
+}
+.xmas-donate .xmas-hint {
+  text-align: center;
+}
+.xmas-donate .xmas-shapes button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  line-height: 1.2;
+}
+.xmas-donate .xmas-shapes button small {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+.xmas-donate .xmas-form {
+  text-align: left;
+}
+.xmas-thanks-input label {
+  display: grid;
+  gap: 6px;
+}
+.xmas-thanks-input label > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+}
+.xmas-thanks-input label > span em {
+  font-style: normal;
+  color: var(--muted);
+  font-weight: 500;
+}
+.xmas-thanks-input textarea {
+  width: 100%;
+}
+.xmas-thanks-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.xmas-thanks-chips button {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 197, 66, 0.35);
+  background: rgba(245, 197, 66, 0.08);
+  color: var(--gold-soft);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+/* การ์ดขอบคุณหลังชำระเงิน */
+.xmas-thanks-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 6px 0 2px;
+  text-align: center;
+}
+.xmas-thanks-card .xmas-donate-hero,
+.xmas-thanks-card > .xmas-donate-snow {
+  margin: 0;
+}
+.xmas-thanks-kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+.xmas-thanks-card blockquote {
+  margin: 0;
+  padding: 14px 16px;
+  max-width: 340px;
+  border-radius: 16px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: rgba(245, 197, 66, 0.08);
+  border: 1px solid rgba(245, 197, 66, 0.3);
+}
+.xmas-thanks-by {
+  margin: 0;
+  font-weight: 600;
+  color: var(--gold-soft);
+}
+
