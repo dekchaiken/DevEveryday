@@ -6,6 +6,7 @@ import { createPromptPayCharge } from "@/lib/christmas/omise";
 import { promptPayPayload } from "@/lib/christmas/promptpay";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
+import { MESSAGE_THEMES, type MessageTheme } from "@/lib/christmas/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
     amount,
     name,
     message,
+    theme: MESSAGE_THEMES.includes(body.theme as MessageTheme) ? (body.theme as MessageTheme) : "fireworks",
     mode: config.payMode,
     status: "awaiting_payment",
     createdAt: Date.now(),

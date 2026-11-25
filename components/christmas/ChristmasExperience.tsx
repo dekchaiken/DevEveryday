@@ -245,7 +245,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       treeRef.current?.launchFirework(ev.color);
       return;
     }
-    treeRef.current?.skyMessage(ev.text, ev.by, ev.color);
+    treeRef.current?.skyMessage(ev.text, ev.by, ev.color, ev.theme ?? "fireworks");
     setBanner({ id: ev.id, text: ev.text, by: ev.by, color: ev.color });
     setTimeout(() => setBanner((b) => (b?.id === ev.id ? null : b)), Math.max(ev.duration - 400, 2000));
   }, []);
@@ -373,6 +373,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setFocus(null);
           }}
           snowing={snowOn}
+          crowd={{ count: online?.count ?? 0, seed: room.id }}
           key={room.id}
         />
       ) : (

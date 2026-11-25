@@ -11,7 +11,14 @@ export async function confirmPayment(orderId: string, providerRef: string) {
   if (paid && paid.kind !== "support") {
     await enqueueEvent(
       paid.room,
-      { kind: "message", text: `ตุ๊กตาหิมะยักษ์จาก ${paid.name} ขึ้นแล้ว`, by: paid.name, color: "gold", duration: 6000 },
+      {
+        kind: "message",
+        text: paid.message.trim() || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส",
+        by: paid.name,
+        color: "gold",
+        theme: paid.theme ?? "fireworks",
+        duration: paid.theme === "sleigh" ? 9000 : 7000,
+      },
       now,
     );
   }

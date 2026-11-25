@@ -3828,3 +3828,51 @@
 .xmas-action:not(.is-exclusive):hover {
   border-color: rgba(224, 242, 254, 0.7);
 }
+
+/* ---------- เลือกธีมการแสดงของข้อความ Exclusive ---------- */
+.xmas-theme-pick {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.xmas-theme-pick legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.xmas-theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.xmas-theme-grid button {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(186, 230, 253, 0.25);
+  background: rgba(8, 28, 44, 0.5);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.xmas-theme-grid button .xicon {
+  color: #bae6fd;
+  margin-bottom: 2px;
+}
+.xmas-theme-grid button b {
+  font-size: 13px;
+}
+.xmas-theme-grid button small {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.xmas-theme-grid button.is-on {
+  border-color: var(--gold);
+  background: rgba(245, 197, 66, 0.14);
+  box-shadow: 0 0 18px -6px rgba(245, 197, 66, 0.7);
+}

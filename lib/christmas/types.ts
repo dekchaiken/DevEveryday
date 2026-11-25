@@ -24,12 +24,17 @@ export type Ornament = {
 export const EVENT_KINDS = ["firework", "message"] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
+// ธีมการแสดงข้อความขอบคุณบนท้องฟ้า เห็นพร้อมกันทุกจอในห้อง
+export const MESSAGE_THEMES = ["fireworks", "snow", "sparkle", "sleigh"] as const;
+export type MessageTheme = (typeof MESSAGE_THEMES)[number];
+
 export type ShowEvent = {
   id: string;
   kind: EventKind;
   text: string; // ข้อความ (ว่างได้สำหรับพลุ)
   by: string; // ชื่อผู้ส่ง
   color: OrnamentColor;
+  theme: MessageTheme; // ธีมการแสดงของข้อความ
   startAt: number; // เวลาเซิร์ฟเวอร์ (ms) ที่ทุกหน้าจอเริ่มเล่นพร้อมกัน
   duration: number; // ms
 };
