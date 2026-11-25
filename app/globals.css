@@ -4392,3 +4392,138 @@ html.season-dark {
     animation: none;
   }
 }
+
+/* ---------- การ์ดชวนเข้ากิจกรรมคริสต์มาส (หน้าแรก) ---------- */
+.xpromo {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  border-radius: 24px;
+  color: #f8fafc;
+  text-decoration: none;
+  background: linear-gradient(160deg, #0b2a3a 0%, #0a1f2a 55%, #0f3a2e 100%);
+  border: 1px solid rgba(245, 197, 66, 0.25);
+  box-shadow: 0 30px 60px -36px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s;
+}
+.xpromo:hover,
+.xpromo:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 40px 70px -34px rgba(245, 197, 66, 0.3);
+  outline: none;
+}
+.xpromo-art {
+  position: relative;
+  min-height: 170px;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 40%, rgba(245, 197, 66, 0.25), transparent 65%);
+  overflow: hidden;
+}
+.xpromo-tree {
+  position: relative;
+  z-index: 1;
+  width: 110px;
+  height: auto;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.4));
+  animation: xpromo-sway 5s ease-in-out infinite;
+}
+.xpromo-snow {
+  position: absolute;
+  inset: -20% 0 0;
+  background-image:
+    radial-gradient(2px 2px at 10% 20%, #fff, transparent),
+    radial-gradient(2.5px 2.5px at 35% 60%, #fff, transparent),
+    radial-gradient(2px 2px at 60% 30%, #fff, transparent),
+    radial-gradient(3px 3px at 82% 70%, #fff, transparent),
+    radial-gradient(2px 2px at 90% 15%, #fff, transparent);
+  animation: xpromo-fall 9s linear infinite;
+  opacity: 0.8;
+}
+.xpromo-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 22px 24px;
+}
+.xpromo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(126, 231, 176, 0.35);
+  color: #7ee7b0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.xpromo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7ee7b0;
+  animation: xpromo-ping 1.8s ease-out infinite;
+}
+.xpromo-body h3 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.xpromo-body p {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+.xpromo-cta {
+  margin-top: 6px;
+  font-weight: 600;
+  color: #f5c542;
+}
+@media (min-width: 760px) {
+  .xpromo {
+    grid-template-columns: 260px 1fr;
+  }
+  .xpromo-art {
+    min-height: 100%;
+  }
+  .xpromo-body {
+    padding: 30px 32px;
+    justify-content: center;
+  }
+}
+@keyframes xpromo-sway {
+  0%,
+  100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+@keyframes xpromo-fall {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(40%);
+  }
+}
+@keyframes xpromo-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(126, 231, 176, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 9px rgba(126, 231, 176, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xpromo-tree,
+  .xpromo-snow,
+  .xpromo-dot {
+    animation: none;
+  }
+}

@@ -5,6 +5,7 @@ import { PixelOffice } from "@/components/PixelOffice";
 import { Magnetic } from "@/components/Magnetic";
 import { Nav } from "@/components/Nav";
 import { Brands } from "@/components/Brands";
+import { ChristmasPromoCard } from "@/components/ChristmasPromoCard";
 import { Projects } from "@/components/Projects";
 import { SeasonBanner } from "@/components/SeasonBanner";
 import { ServicesGrid } from "@/components/ServicesGrid";
@@ -106,6 +107,9 @@ export default function Home() {
                 <p className="lead">ทีมเดียวกันดูแลธุรกิจหลายประเภท กดเข้าไปดูเว็บไซต์ของแต่ละธุรกิจได้เลย</p>
               </Reveal>
               <Brands items={c.brands} />
+              <div style={{ marginTop: 28 }}>
+                <ChristmasPromoCard />
+              </div>
             </div>
           </section>
         )}
