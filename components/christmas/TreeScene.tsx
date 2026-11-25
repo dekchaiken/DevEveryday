@@ -6,7 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { nearestSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
+import { GIANT_SPOT_DEFS, GIANT_SPOT_RADIUS, nearestSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 
 export type Preview = { height: number; angle: number; color: string; shape: string } | null;
@@ -26,7 +26,7 @@ type Props = {
   onError: () => void;
   onReady: (handle: TreeSceneHandle) => void; // ส่งตัวควบคุมฉากให้พาเรนต์ เช่น สั่งจุดพลุ
   ground: string; // สีพื้นหิมะตามห้อง
-  giant: { name: string; message: string } | null; // ตุ๊กตาหิมะยักษ์พร้อมป้าย
+  giant: { name: string; message: string; spot: number } | null; // ป้ายประจำห้องพร้อมตำแหน่ง
   decor: Decor[]; // ตุ๊กตาหิมะที่ผู้ใช้ตกแต่งรอบต้น
   onDecorClick: (d: Decor) => void;
   markerSlot: number | null; // ช่องที่กำลังเลือกบนพื้น
@@ -49,7 +49,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setReduced: (v: boolean) => void;
     setCrowd: (count: number, seed: string) => void;
     highlightDecor: (slot: number) => void;
-    setGiant: (g: { name: string; message: string } | null) => void;
+    setGiant: (g: { name: string; message: string; spot: number } | null) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
   } | null>(null);
@@ -135,7 +135,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const z = gp.getZ(i);
       const d = Math.hypot(x, z);
       const drift = (Math.sin(x * 0.55 + Math.cos(z * 0.7)) * Math.cos(z * 0.45 - x * 0.3) * 0.6 + Math.sin(x * 1.7 + z * 1.3) * 0.25) * 0.11;
-      const edge = Math.min(Math.max((d - 3.2) / 8, 0), 1);
+      const edge = Math.min(Math.max((d - 10) / 10, 0), 1); // ลานด้านในเรียบ ให้ของประดับวางได้พอดี
       gp.setY(i, drift * edge * edge);
     }
     groundGeo.computeVertexNormals();
@@ -377,6 +377,79 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     );
     previewMesh.visible = false;
     scene.add(previewMesh);
+
+    // ---------- ของประดับรอบลาน: เส้นทางหิมะ โคมไฟ ต้นสนเล็ก กล่องของขวัญ และกองหิมะ ----------
+    const dressing = new THREE.Group();
+    scene.add(dressing);
+    const pathMesh = new THREE.Mesh(
+      new THREE.RingGeometry(8.6, 9.4, 160),
+      new THREE.MeshStandardMaterial({ color: 0xcfdbe7, roughness: 0.95, metalness: 0 }),
+    );
+    pathMesh.rotation.x = -Math.PI / 2;
+    pathMesh.position.y = 0.012;
+    pathMesh.receiveShadow = true;
+    dressing.add(pathMesh);
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x3b2a1a, roughness: 0.7 });
+    const lampMat = new THREE.MeshBasicMaterial({ color: 0xffd38a });
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2 + 0.1;
+      const x = Math.cos(a) * 8.99;
+      const z = Math.sin(a) * 8.99;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 1.7, 8), poleMat);
+      pole.position.set(x, 0.85, z);
+      pole.castShadow = true;
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.24, 0.2), lampMat);
+      lamp.position.set(x, 1.8, z);
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.12, 4), poleMat);
+      cap.position.set(x, 1.98, z);
+      cap.rotation.y = Math.PI / 4;
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffd38a, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
+      halo.scale.set(0.9, 0.9, 1);
+      halo.position.set(x, 1.8, z);
+      dressing.add(pole, lamp, cap, halo);
+    }
+    const pineMat = new THREE.MeshStandardMaterial({ color: 0x0f3d24, roughness: 0.85 });
+    const pineCap = new THREE.MeshStandardMaterial({ color: 0xeef5fb, roughness: 0.7 });
+    for (let k = 0; k < 30; k++) {
+      const a = (k / 30) * Math.PI * 2 + (k % 3) * 0.05;
+      const r = 12 + (k % 4) * 0.9 + ((k * 7) % 3) * 0.4;
+      const h = 1.6 + ((k * 13) % 5) * 0.35;
+      const tree = new THREE.Group();
+      for (let t = 0; t < 3; t++) {
+        const rad = 0.75 - t * 0.2;
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(rad, h * 0.6, 12), pineMat);
+        cone.position.y = h * 0.3 + t * h * 0.22;
+        cone.castShadow = true;
+        const cap = new THREE.Mesh(new THREE.ConeGeometry(rad * 0.5, h * 0.18, 12), pineCap);
+        cap.position.y = cone.position.y + h * 0.27;
+        tree.add(cone, cap);
+      }
+      tree.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      dressing.add(tree);
+    }
+    const giftCols = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e, 0xf472b6];
+    for (let k = 0; k < 14; k++) {
+      const a = (k / 14) * Math.PI * 2 + 0.37;
+      const r = 9.9 + ((k * 5) % 3) * 0.5;
+      const g = makeGiftBox(0.22 + ((k * 3) % 4) * 0.07, giftCols[k % giftCols.length]);
+      g.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      g.rotation.y = k;
+      g.traverse((o) => {
+        o.castShadow = true;
+        o.receiveShadow = true;
+      });
+      dressing.add(g);
+    }
+    const moundMat = new THREE.MeshStandardMaterial({ color: 0xf4f8fc, roughness: 0.9 });
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * Math.PI * 2 + 0.2;
+      const r = 11 + ((k * 3) % 4) * 0.8;
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.5 + ((k * 7) % 4) * 0.12, 16, 10), moundMat);
+      m.scale.set(1, 0.42, 1);
+      m.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      m.receiveShadow = true;
+      dressing.add(m);
+    }
 
     // ---------- ฝูงชนเงาในโซนนี้: จำนวนตามคนออนไลน์ ตำแหน่งต่างกันในแต่ละโซน ----------
     const crowdGroup = new THREE.Group();
@@ -786,7 +859,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     // ---------- ตุ๊กตาหิมะยักษ์ของห้อง พร้อมป้ายห้อย ----------
     let giantGroup: THREE.Group | null = null;
-    function buildGiant(g: { name: string; message: string }) {
+    function buildGiant(g: { name: string; message: string; spot: number }) {
       const grp = new THREE.Group();
       const snow = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.55, clearcoat: 0.3 });
       const addBall = (r: number, y: number) => {
@@ -840,11 +913,16 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.5, 8), new THREE.MeshStandardMaterial({ color: 0x6b4423 }));
       post.position.set(0.95, 0.75, 0.25);
       grp.add(sign, post);
-      grp.position.set(-3.4, 0, 0.9);
-      grp.scale.setScalar(1.05);
+      const def = GIANT_SPOT_DEFS[g.spot] ?? GIANT_SPOT_DEFS[0];
+      const gx = Math.cos(def.angle) * GIANT_SPOT_RADIUS;
+      const gz = Math.sin(def.angle) * GIANT_SPOT_RADIUS;
+      grp.position.set(gx, 0, gz);
+      // หันหน้าเข้าหาต้นคริสต์มาส
+      grp.rotation.y = Math.atan2(-gx, -gz);
+      grp.scale.setScalar(1.15);
       return grp;
     }
-    const api_setGiant = (g: { name: string; message: string } | null) => {
+    const api_setGiant = (g: { name: string; message: string; spot: number } | null) => {
       if (giantGroup) {
         scene.remove(giantGroup);
         giantGroup.traverse((o) => {
@@ -1239,7 +1317,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
   }, [markerSlot]);
 
   // ซิงก์ตุ๊กตาหิมะยักษ์เมื่อมีการสนับสนุนใหม่
-  const giantKey = giant ? `${giant.name}|${giant.message}` : "";
+  const giantKey = giant ? `${giant.name}|${giant.message}|${giant.spot}` : "";
   useEffect(() => {
     api.current?.setGiant(giant);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1615,4 +1693,20 @@ function makeSleighTexture() {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.needsUpdate = true;
   return tex;
+}
+
+// กล่องของขวัญ มีริบบิ้นไขว้ และโบว์ด้านบน
+function makeGiftBox(size: number, color: number) {
+  const box = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, metalness: 0.1, clearcoat: 0.6 }));
+  body.position.y = size / 2;
+  const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xfff7e0, roughness: 0.3, metalness: 0.4 });
+  const rib1 = new THREE.Mesh(new THREE.BoxGeometry(size * 1.02, size * 1.02, size * 0.14), ribbonMat);
+  rib1.position.y = size / 2;
+  const rib2 = new THREE.Mesh(new THREE.BoxGeometry(size * 0.14, size * 1.02, size * 1.02), ribbonMat);
+  rib2.position.y = size / 2;
+  const bow = new THREE.Mesh(new THREE.SphereGeometry(size * 0.2, 12, 12), ribbonMat);
+  bow.position.y = size * 1.02;
+  box.add(body, rib1, rib2, bow);
+  return box;
 }

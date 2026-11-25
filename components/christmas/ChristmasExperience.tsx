@@ -387,7 +387,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onOrnamentClick={(o) => setFocus(o)}
           onError={() => setWebglOk(false)}
           ground={room.ground}
-          giant={state?.giant ? { name: state.giant.name, message: state.giant.message } : null}
+          giant={state?.giant ? { name: state.giant.name, message: state.giant.message, spot: state.giant.spot ?? 0 } : null}
           decor={decor}
           markerSlot={markerSlot}
           onGroundPick={(slot) => {
@@ -515,7 +515,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <Icon name="users" size={18} /> ชวนเพื่อน
         </button>
         <button className="xmas-action is-exclusive" onClick={() => setDonateOpen(true)}>
-          <Icon name="crown" size={18} /> ป้ายประจำห้อง
+          <Icon name="crown" size={18} /> Exclusive
         </button>
       </nav>
 

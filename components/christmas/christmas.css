@@ -4012,3 +4012,38 @@
     animation: none;
   }
 }
+
+/* ---------- เลือกตำแหน่งป้ายประจำห้อง ---------- */
+.xmas-spot-pick {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.xmas-spot-pick legend {
+  padding: 0;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.xmas-spot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.xmas-spot-grid button {
+  min-height: 40px;
+  padding: 0 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(186, 230, 253, 0.25);
+  background: rgba(8, 28, 44, 0.5);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.xmas-spot-grid button.is-on {
+  border-color: var(--gold);
+  background: rgba(245, 197, 66, 0.14);
+  color: var(--gold-soft);
+  font-weight: 600;
+}

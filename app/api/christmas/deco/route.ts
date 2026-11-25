@@ -3,6 +3,7 @@ import { getRoom } from "@/lib/christmas/rooms";
 import { ACCESSORIES, ARMS, BODY_COLORS, claimDecor, HATS, LEGS, NOSES, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
+import { isReservedSlot } from "@/lib/christmas/slots";
 import { getConfig } from "@/lib/christmas/config";
 import { maskIp, writeLog } from "@/lib/christmas/log";
 
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
   const legs = pick(body.legs, LEGS);
   const acc = pick(body.acc, ACCESSORIES);
   if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) return NextResponse.json({ error: `เลือกช่องระหว่าง 1–${SLOT_COUNT}` }, { status: 400 });
+  if (isReservedSlot(slot)) return NextResponse.json({ error: "ช่องนี้สงวนไว้สำหรับป้ายประจำห้อง เลือกช่องอื่น" }, { status: 409 });
   if (!hat || !scarf || !nose || !arms || !bodyColor || !legs || !acc) return NextResponse.json({ error: "ชิ้นส่วนไม่ถูกต้อง" }, { status: 400 });
 
   const decor: Decor = {

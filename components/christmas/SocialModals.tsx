@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Decor } from "@/lib/christmas/decor";
 import { ACCESSORIES, HATS, SCARVES, NOSES, ARMS, BODY_COLORS, LEGS, SLOT_COUNT } from "@/lib/christmas/decor";
-import { SLOT_POSITIONS } from "@/lib/christmas/slots";
+import { isReservedSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { getClientId } from "./clientId";
 import { Icon } from "./Icon";
@@ -154,7 +154,7 @@ export function DecorModal({
   function randomFree() {
     for (let tries = 0; tries < 5000; tries++) {
       const i = Math.floor(Math.random() * SLOT_COUNT);
-      if (!taken.has(i)) return setSlot(i);
+      if (!taken.has(i) && !isReservedSlot(i)) return setSlot(i);
     }
     const free = nearestFree(0);
     if (free !== null) setSlot(free);

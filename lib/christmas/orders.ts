@@ -13,6 +13,7 @@ export type Order = {
   name: string;
   message: string;
   theme: MessageTheme; // ธีมการแสดงบนท้องฟ้า (เฉพาะ giant)
+  spot: number; // ตำแหน่งป้ายประจำห้อง 0–3 (เฉพาะ giant)
   mode: "manual" | "gateway";
   status: OrderStatus;
   createdAt: number;
@@ -22,7 +23,7 @@ export type Order = {
   qrImage: string; // ลิงก์รูป QR จาก Omise (โหมด gateway)
 };
 
-export type Giant = { orderId: string; name: string; message: string; amount: number; paidAt: number };
+export type Giant = { orderId: string; name: string; message: string; amount: number; paidAt: number; spot: number };
 
 const mem = { orders: new Map<string, Order>(), giants: new Map<string, Giant>() };
 const K = {
@@ -63,7 +64,7 @@ export async function markPaid(id: string, providerRef: string, now: number): Pr
   const paid: Order = { ...o, status: "paid", paidAt: now, providerRef: providerRef || o.providerRef };
   await saveOrder(paid);
   if (paid.kind !== "support") {
-    const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now };
+    const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, spot: paid.spot ?? 0 };
     if (!storeConfigured()) mem.giants.set(paid.room, giant);
     else await cmd("SET", K.giant(paid.room), JSON.stringify(giant));
   }
