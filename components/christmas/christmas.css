@@ -3213,3 +3213,75 @@
 .xmas-slot-status .xmas-link-btn {
   margin-left: 6px;
 }
+
+/* ---------- ปุ่มสนับสนุนมุมขวาบน และคำแนะนำ 2 ขั้น ---------- */
+.xmas-switch.is-donate {
+  border-color: rgba(245, 197, 66, 0.6);
+  background: linear-gradient(135deg, rgba(245, 197, 66, 0.9), rgba(245, 158, 11, 0.9));
+  color: #1d1302;
+  font-weight: 700;
+  cursor: pointer;
+}
+.xmas-switch-link {
+  color: var(--gold-soft);
+  text-decoration: underline;
+}
+.xmas-coach-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+.xmas-coach-x {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px;
+}
+.xmas-coach-next {
+  justify-self: end;
+}
+.xmas-coach .xmas-coach-x {
+  justify-self: auto;
+  min-height: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* ตัวสร้างตุ๊กตาหิมะบนมือถือ: เปิดเป็นชีตด้านล่างแบบเดียวกับแผงแขวนคำอวยพร */
+@media (max-width: 759px) {
+  .xmas-modal-back:has(.xmas-build) {
+    place-items: end center;
+    padding: 0;
+  }
+  .xmas-build {
+    width: 100%;
+    max-width: none;
+    max-height: 90dvh;
+    border-radius: 26px 26px 0 0;
+    border-bottom: 0;
+    animation: xmas-sheet-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .xmas-build::before {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: 10px auto 0;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+  .xmas-build-preview {
+    height: 130px;
+  }
+  .xmas-foot-slot {
+    grid-template-columns: 1fr;
+  }
+  .xmas-foot-slot .xmas-chip-btn {
+    width: 100%;
+  }
+}

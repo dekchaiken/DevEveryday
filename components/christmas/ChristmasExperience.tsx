@@ -97,6 +97,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [decorSlot, setDecorSlot] = useState<number | null>(null);
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
   const [coach, setCoach] = useState(false); // คำแนะนำครั้งแรกใต้เมนู
+  const [coachStep, setCoachStep] = useState(0);
   useEffect(() => {
     try {
       if (!localStorage.getItem("xmas-coach-v1")) setCoach(true);
@@ -376,7 +377,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <div>
             <b>ต้นคริสต์มาส{room.name}</b>
             <small>
-              {room.region} · ห้องคริสต์มาส
+              {room.region} ·{" "}
+              <a href="/Christmas?pick=1" className="xmas-switch-link" onClick={() => markInternalNav()}>
+                เปลี่ยนห้อง
+              </a>
             </small>
           </div>
         </div>
@@ -386,9 +390,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
             {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
           </div>
-          <a className="xmas-switch" href="/Christmas?pick=1" onClick={() => markInternalNav()}>
-            เปลี่ยนห้อง
-          </a>
+          <button type="button" className="xmas-switch is-donate" onClick={() => setDonateOpen(true)}>
+            สนับสนุน
+          </button>
         </div>
       </header>
 
@@ -435,9 +439,26 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {coach && (
         <div className="xmas-coach" role="note">
-          <b>ตกแต่งตุ๊กตาหิมะได้แล้ว</b>
-          <span>กดปุ่ม "ตกแต่งตุ๊กตาหิมะ" เลือกหน้าตาตุ๊กตา แล้ววางบนช่องรอบต้น ทุกคนจะเห็นและกดถูกใจได้</span>
-          <button type="button" onClick={dismissCoach}>เข้าใจแล้ว</button>
+          <div className="xmas-coach-step">
+            <span>{coachStep + 1}/2</span>
+            <button type="button" className="xmas-coach-x" onClick={dismissCoach} aria-label="ปิดคำแนะนำ">
+              <Icon name="close" size={14} />
+            </button>
+          </div>
+          {coachStep === 0 ? (
+            <>
+              <b>เริ่มจาก "แขวนคำอวยพร"</b>
+              <span>เลือกสีและรูปทรงลูกบอล เขียนคำอวยพร แล้วแตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่งแขวน</span>
+            </>
+          ) : (
+            <>
+              <b>ตกแต่งตุ๊กตาหิมะ และกดถูกใจ</b>
+              <span>สร้างตุ๊กตาหิมะของคุณแล้ววางรอบต้น แตะตุ๊กตาของคนอื่นเพื่อดูว่าใครวาง และกดถูกใจได้</span>
+            </>
+          )}
+          <button type="button" className="xmas-coach-next" onClick={() => (coachStep === 0 ? setCoachStep(1) : dismissCoach())}>
+            {coachStep === 0 ? "ถัดไป" : "เข้าใจแล้ว"}
+          </button>
         </div>
       )}
 
