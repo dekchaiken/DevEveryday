@@ -79,6 +79,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [reduced, setReduced] = useState(false);
   const [banner, setBanner] = useState<{ id: string; text: string; by: string; color: OrnamentColor } | null>(null);
   const [focus, setFocus] = useState<Ornament | null>(null);
+  // เมื่อเลือกคำอวยพร กล้องจะเคลื่อนไปที่ลูกบอลนั้นแบบมุมมองบุคคลที่หนึ่ง
+  useEffect(() => {
+    treeRef.current?.focusOrnament(focus?.id ?? null);
+  }, [focus]);
   const [pick, setPick] = useState<{ height: number; angle: number } | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [feedOpen, setFeedOpen] = useState(false); // แผงรายการบนมือถือ
@@ -101,14 +105,38 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       /* ไม่มีที่เก็บค่า ใช้ค่าเริ่มต้น */
     }
   }, []);
-  // เพลงคลอ: ปิดไว้ก่อน เปิดได้จากปุ่มเท่านั้น (เบราว์เซอร์ไม่ให้เล่นเสียงเองโดยไม่มีการกด)
+  // เพลงคลอ: เปิดไว้เป็นค่าเริ่มต้น แต่เบราว์เซอร์จะเล่นเสียงได้เมื่อผู้ใช้แตะหน้าจอครั้งแรก
   const [musicOn, setMusicOn] = useState(false);
-  useEffect(() => () => stopMusic(), []);
+  useEffect(() => {
+    let wantMusic = true;
+    try {
+      wantMusic = localStorage.getItem("xmas-music") !== "off";
+    } catch {
+      /* ไม่มีที่เก็บค่า ใช้ค่าเริ่มต้น */
+    }
+    if (!wantMusic) return;
+    const start = () => {
+      if (isMusicPlaying()) return;
+      startMusic();
+      setMusicOn(true);
+    };
+    window.addEventListener("pointerdown", start, { once: true });
+    window.addEventListener("keydown", start, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", start);
+      window.removeEventListener("keydown", start);
+    };
+  }, []);
   function toggleMusic() {
     const next = !isMusicPlaying();
     if (next) startMusic();
     else stopMusic();
     setMusicOn(next);
+    try {
+      localStorage.setItem("xmas-music", next ? "on" : "off");
+    } catch {
+      /* ไม่มีที่เก็บค่า */
+    }
   }
   function toggleSnow() {
     setSnowOn((v) => {
@@ -615,18 +643,24 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </div>
       )}
 
-      {/* การ์ดคำอวยพรของลูกบอลที่คลิก */}
+      {/* การ์ดคำอวยพรของลูกบอลที่คลิก กล้องจะเลื่อนไปดูลูกบอลนั้นใกล้ ๆ */}
       {focus && (
         <div className="xmas-focus glass" role="dialog" aria-label="คำอวยพร">
           <button className="xmas-x" onClick={() => setFocus(null)} aria-label="ปิด">
             <Icon name="close" size={18} />
           </button>
-          <span className="xmas-chip" style={{ background: COLOR_CSS[focus.color] }} />
-          <b>{focus.name}</b>
-          <p>{focus.wish || "ขอให้มีความสุขในวันคริสต์มาส"}</p>
-          <small>
+          <span className="xmas-focus-tag">
+            <span className="xmas-chip" style={{ background: COLOR_CSS[focus.color] }} />
             {SHAPE_LABEL[focus.shape]} · {COLOR_LABEL[focus.color]}
-          </small>
+          </span>
+          <b>{focus.name}</b>
+          <blockquote className="xmas-focus-wish">{focus.wish || "ขอให้มีความสุขในวันคริสต์มาส"}</blockquote>
+          <div className="xmas-focus-foot">
+            <small>แขวนเมื่อ {new Date(focus.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</small>
+            <button type="button" className="xmas-chip-btn" onClick={() => setFocus(null)}>
+              กลับมุมมองเดิม
+            </button>
+          </div>
         </div>
       )}
 

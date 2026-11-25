@@ -15,6 +15,7 @@ export type TreeSceneHandle = {
   launchFirework: (color: string) => void;
   skyMessage: (text: string, by: string, color: string, theme: string) => void;
   highlightDecor: (slot: number) => void;
+  focusOrnament: (id: string | null) => void;
 };
 
 type Props = {
@@ -714,6 +715,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const t = clock.getElapsedTime();
       const now = performance.now();
 
+      if (camAnim) {
+        const k = Math.min((now - camAnim.start) / 900, 1);
+        const e = 1 - Math.pow(1 - k, 3);
+        camera.position.lerpVectors(camAnim.fromPos, camAnim.toPos, e);
+        controls.target.lerpVectors(camAnim.fromTgt, camAnim.toTgt, e);
+        if (k >= 1) camAnim = null;
+      }
       controls.autoRotate = false;
       controls.update();
 
@@ -1109,7 +1117,37 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     let instDecor: Decor[] = [];
     const HAT_COLOR: Record<string, number> = { top: 0x1f2937, beanie: 0x3b82f6, santa: 0xdc2643, crown: 0xf5c542, pom: 0xf8fafc, holly: 0x16a34a };
 
-    // วงแสงทองบนพื้นและประกายที่ช่องของตุ๊กตาใหม่ อยู่ 5 วินาทีแล้วค่อย ๆ จางหาย
+    // มุมมองบุคคลที่หนึ่ง: เลื่อนกล้องไปใกล้ลูกบอลที่เลือก และกลับมาที่เดิมเมื่อปิด
+    type CamAnim = { fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number };
+    let camAnim: CamAnim | null = null;
+    let savedView: { pos: THREE.Vector3; tgt: THREE.Vector3; min: number } | null = null;
+    function animateCam(toPos: THREE.Vector3, toTgt: THREE.Vector3) {
+      camAnim = { fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt, start: performance.now() };
+    }
+    function focusOrnament(id: string | null) {
+      if (!id) {
+        if (savedView) {
+          animateCam(savedView.pos, savedView.tgt);
+          controls.minDistance = savedView.min;
+          savedView = null;
+        }
+        return;
+      }
+      const entry = ornMeshes.get(id);
+      const o = ornaments3D.get(id);
+      if (!entry || !o) return;
+      if (!savedView) savedView = { pos: camera.position.clone(), tgt: controls.target.clone(), min: controls.minDistance };
+      const p = new THREE.Vector3();
+      entry.mesh.getWorldPosition(p);
+      // กล้องอยู่นอกผิวต้นตรงจุดที่แขวน มองลงมาที่ลูกบอลระดับสายตา
+      const n = surfaceNormal(o.angle);
+      const toPos = new THREE.Vector3(p.x + n.x * 1.7, p.y + 0.25, p.z + n.z * 1.7);
+      const toTgt = new THREE.Vector3(p.x, p.y - 0.12, p.z);
+      controls.minDistance = 0.5;
+      animateCam(toPos, toTgt);
+    }
+
+    // ---------- วงแสงทองบนพื้นและประกายที่ช่องของตุ๊กตาใหม่ อยู่ 5 วินาทีแล้วค่อย ๆ จางหาย
     let highlight: { ring: THREE.Mesh; start: number } | null = null;
     function highlightDecor(slot: number) {
       const p = SLOT_POSITIONS[slot];
@@ -1269,6 +1307,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       launchFirework: (color: string) => api.current?.firework(color),
       skyMessage: (text: string, by: string, color: string, theme: string) => skyMessage(text, by, color, theme),
       highlightDecor: (slot: number) => highlightDecor(slot),
+      focusOrnament: (id: string | null) => focusOrnament(id),
     });
 
     // เริ่มวนลูปภาพหลังประกาศทุกตัวแปรครบแล้ว
