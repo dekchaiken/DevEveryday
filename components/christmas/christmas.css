@@ -1,0 +1,1149 @@
+/* ต้นคริสต์มาสร่วมกัน: ธีมท้องฟ้าค่ำ ทอง และแดง
+   จุดพัก: มือถือ < 760px, แท็บเล็ต 760–1099px, เดสก์ท็อป ≥ 1100px */
+
+.xmas-stage {
+  --gold: #f5c542;
+  --gold-soft: #ffe08a;
+  --red: #dc2643;
+  --mint: #7ee7b0;
+  --ink: #f8fafc;
+  --muted: #b7c9c0;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 560px;
+  overflow: hidden;
+  color: var(--ink);
+  background: #06141c;
+  font-family: var(--font-thai), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ท้องฟ้าค่ำไล่สีและดาวกระพริบ (CSS ล้วน) */
+.xmas-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(900px 500px at 50% 0%, rgba(245, 197, 66, 0.18), transparent 60%),
+    radial-gradient(800px 600px at 0% 100%, rgba(22, 101, 52, 0.45), transparent 60%),
+    radial-gradient(700px 500px at 100% 80%, rgba(220, 38, 67, 0.16), transparent 60%),
+    linear-gradient(180deg, var(--sky-top, #050d16) 0%, var(--sky-bottom, #0a2a25) 100%);
+}
+.xmas-sky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 28% 62%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 44% 12%, #ffe9b0, transparent),
+    radial-gradient(1px 1px at 63% 40%, #fff, transparent),
+    radial-gradient(2px 2px at 78% 22%, #fff, transparent),
+    radial-gradient(1px 1px at 90% 70%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 35% 85%, #fff, transparent),
+    radial-gradient(1px 1px at 55% 75%, #cfe7ff, transparent);
+  opacity: 0.6;
+  animation: xmas-twinkle 5s ease-in-out infinite;
+}
+@keyframes xmas-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.xmas-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.xmas-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  cursor: grab;
+}
+.xmas-canvas canvas:active {
+  cursor: grabbing;
+}
+
+.xmas-loading,
+.xmas-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---------- การ์ดกระจกฝ้า ---------- */
+.glass {
+  background: linear-gradient(160deg, rgba(14, 34, 30, 0.72), rgba(8, 20, 22, 0.62));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- แถบบน ---------- */
+.xmas-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+.xmas-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+.xmas-brand b {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, #fff, var(--gold-soft));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.xmas-brand small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.xmas-brand-star {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold), #f59e0b);
+  color: #3b2a05;
+  font-size: 18px;
+  box-shadow: 0 10px 30px -10px rgba(245, 197, 66, 0.8);
+}
+.xmas-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(126, 231, 176, 0.35);
+  color: var(--mint);
+}
+.xmas-live.is-off {
+  color: var(--gold-soft);
+  border-color: rgba(245, 197, 66, 0.35);
+}
+.xmas-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 0 0 rgba(126, 231, 176, 0.7);
+  animation: xmas-ping 1.8s ease-out infinite;
+}
+@keyframes xmas-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(126, 231, 176, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(126, 231, 176, 0);
+  }
+}
+
+/* ---------- ข้อความที่แสดงให้ทุกคนเห็น ---------- */
+.xmas-banner {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  z-index: 6;
+  width: min(92vw, 580px);
+  padding: 18px 22px;
+  border-radius: 20px;
+  text-align: center;
+  transform: translateX(-50%);
+  background: linear-gradient(160deg, rgba(12, 28, 26, 0.85), rgba(8, 18, 20, 0.8));
+  border: 1px solid color-mix(in srgb, var(--c) 60%, transparent);
+  box-shadow: 0 0 40px -6px color-mix(in srgb, var(--c) 55%, transparent), 0 24px 60px -24px rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  animation: xmas-banner-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  pointer-events: none;
+}
+.xmas-banner-by {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--gold-soft);
+}
+.xmas-banner p {
+  margin: 0;
+  font-size: clamp(18px, 3.4vw, 24px);
+  font-weight: 600;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+@keyframes xmas-banner-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* ---------- การ์ดคำอวยพรของลูกบอล ---------- */
+.xmas-focus {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  z-index: 7;
+  width: min(92vw, 360px);
+  padding: 20px 22px 18px;
+  transform: translateX(-50%);
+  animation: xmas-rise 0.35s ease both;
+}
+.xmas-focus b {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 18px;
+}
+.xmas-focus p {
+  margin: 0 0 8px;
+  line-height: 1.6;
+  color: #eef6f1;
+  text-wrap: pretty;
+}
+.xmas-focus small {
+  color: var(--muted);
+}
+.xmas-x {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  cursor: pointer;
+}
+.xmas-x:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+@keyframes xmas-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.xmas-chip {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: 0 0 12px currentColor, inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  flex: 0 0 auto;
+}
+
+/* ---------- แผงแขวนลูกบอล ---------- */
+.xmas-panel {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 5;
+  width: 340px;
+  max-height: calc(100% - 150px);
+  overflow: auto;
+  padding: 22px;
+  scrollbar-width: thin;
+}
+.xmas-panel h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+.xmas-hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.xmas-form {
+  display: grid;
+  gap: 12px;
+}
+.xmas-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.xmas-form input,
+.xmas-form textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px; /* ไม่ให้ iOS ซูมตอนโฟกัส */
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: none;
+}
+.xmas-form input:focus,
+.xmas-form textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245, 197, 66, 0.22);
+}
+.xmas-form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.xmas-form legend {
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.xmas-swatches,
+.xmas-shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.xmas-swatches button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s;
+}
+.xmas-swatches button:hover {
+  transform: scale(1.08);
+}
+.xmas-swatches button.is-on {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+.xmas-shapes button {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.xmas-shapes button.is-on {
+  background: rgba(245, 197, 66, 0.18);
+  border-color: var(--gold);
+  color: var(--gold-soft);
+}
+.xmas-submit {
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), #f59e0b 55%, var(--red));
+  color: #1d1302;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 14px 30px -12px rgba(245, 158, 11, 0.7);
+  transition: transform 0.2s, opacity 0.2s;
+}
+.xmas-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.xmas-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.xmas-msg {
+  margin: 0;
+  font-size: 14px;
+}
+.xmas-msg.ok {
+  color: var(--mint);
+}
+.xmas-msg.err {
+  color: #fca5a5;
+}
+.xmas-sheet-toggle {
+  display: none;
+}
+
+/* ---------- ฟีดคำอวยพรล่าสุด ---------- */
+.xmas-feed {
+  position: absolute;
+  top: 78px;
+  right: 20px;
+  max-height: calc(100% - 98px);
+  z-index: 5;
+  width: 310px;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+}
+.xmas-feed h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--gold-soft);
+}
+.xmas-feed ul {
+  flex: 1;
+  margin: 0;
+  padding: 0 4px 0 0;
+  list-style: none;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.xmas-feed li + li {
+  margin-top: 8px;
+}
+.xmas-feed li button {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.xmas-feed li button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(245, 197, 66, 0.3);
+}
+.xmas-feed li b {
+  display: block;
+  font-size: 14px;
+}
+.xmas-feed li em {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.xmas-empty {
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---------- มือถือ (< 760px): แผงเป็นชีตด้านล่าง ฟีดเป็นแถบเลื่อนแนวนอน ---------- */
+@media (max-width: 759px) {
+  .xmas-panel {
+    left: 8px;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+  }
+  .xmas-sheet-toggle {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    border: 0;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--gold), #f59e0b 55%, var(--red));
+    color: #1d1302;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .xmas-panel .xmas-form {
+    display: none;
+  }
+  .xmas-panel.is-open {
+    padding: 18px;
+    max-height: 68dvh;
+    overflow: auto;
+  }
+  .xmas-panel.is-open .xmas-form {
+    display: grid;
+    margin-top: 14px;
+  }
+  .xmas-panel.is-open .xmas-sheet-toggle {
+    margin-bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--ink);
+    box-shadow: none;
+  }
+
+  .xmas-feed {
+    top: auto;
+    right: 8px;
+    left: 8px;
+    bottom: 70px;
+    width: auto;
+    padding: 12px;
+    border-radius: 18px;
+  }
+  .xmas-feed h2 {
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .xmas-feed ul {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+  }
+  .xmas-feed li {
+    flex: 0 0 210px;
+  }
+  .xmas-feed li + li {
+    margin-top: 0;
+  }
+  .xmas-feed li button {
+    height: 100%;
+  }
+  .xmas-feed li em {
+    -webkit-line-clamp: 1;
+  }
+  .xmas-banner {
+    top: 70px;
+  }
+  .xmas-focus {
+    bottom: 230px;
+  }
+  .xmas-panel.is-open ~ .xmas-focus {
+    display: none;
+  }
+}
+
+/* ---------- แท็บเล็ต (760–1099px): ฟีดเล็กลง ---------- */
+@media (min-width: 760px) and (max-width: 1099px) {
+  .xmas-feed {
+    width: 260px;
+  }
+  .xmas-panel {
+    width: 300px;
+  }
+}
+
+@media (max-width: 379px) {
+  .xmas-top {
+    padding-top: 10px;
+  }
+  .xmas-brand b {
+    font-size: 15px;
+  }
+  .xmas-live {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xmas-sky::before,
+  .xmas-live-dot,
+  .xmas-banner,
+  .xmas-focus {
+    animation: none;
+  }
+}
+
+/* ---------- ป๊อปอัปเชิญเข้าร่วม ---------- */
+.xmas-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(3, 10, 14, 0.55);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  animation: xmas-fade 0.5s ease both;
+}
+.xmas-intro-card {
+  position: relative;
+  width: min(92vw, 400px);
+  padding: 32px 26px 26px;
+  border-radius: 28px;
+  text-align: center;
+  background: linear-gradient(165deg, rgba(20, 52, 44, 0.92), rgba(7, 22, 26, 0.94));
+  border: 1px solid rgba(245, 197, 66, 0.35);
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9), 0 0 60px -12px rgba(245, 197, 66, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: xmas-pop 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+  overflow: hidden;
+}
+.xmas-intro-card::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: conic-gradient(from 0deg, transparent 0 70%, rgba(255, 224, 138, 0.12) 80%, transparent 90%);
+  animation: xmas-spin 9s linear infinite;
+  pointer-events: none;
+}
+.xmas-intro-orb {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 14px;
+}
+.xmas-intro-orb span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 197, 66, 0.55);
+  animation: xmas-ring 2.6s ease-out infinite;
+}
+.xmas-intro-orb span:nth-child(2) {
+  animation-delay: 0.85s;
+}
+.xmas-intro-orb span:nth-child(3) {
+  animation-delay: 1.7s;
+  background: radial-gradient(circle, #fff8d6, #f5c542 45%, transparent 70%);
+  border-color: transparent;
+  inset: 26px;
+  animation: xmas-glow 2s ease-in-out infinite;
+}
+.xmas-intro-kicker {
+  position: relative;
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+.xmas-intro h1 {
+  position: relative;
+  margin: 0 0 10px;
+  font-size: clamp(22px, 5vw, 28px);
+  line-height: 1.3;
+  font-weight: 700;
+  text-wrap: balance;
+}
+.xmas-intro-text {
+  position: relative;
+  margin: 0 0 22px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 15px;
+  text-wrap: pretty;
+}
+.xmas-intro-btn {
+  position: relative;
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--gold), #f59e0b 55%, var(--red));
+  color: #1d1302;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 16px 34px -12px rgba(245, 158, 11, 0.8);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.xmas-intro-btn::after,
+.xmas-submit::after,
+.xmas-sheet-toggle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: xmas-shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.xmas-intro-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 20px 40px -12px rgba(245, 158, 11, 0.9);
+}
+.xmas-intro-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.xmas-intro-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- ข้อความแจ้งเตือนชั่วคราว ---------- */
+.xmas-toast {
+  position: absolute;
+  top: 78px;
+  left: 50%;
+  z-index: 30;
+  max-width: min(90vw, 420px);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  background: rgba(8, 24, 20, 0.92);
+  border: 1px solid rgba(126, 231, 176, 0.45);
+  color: var(--mint);
+  box-shadow: 0 16px 40px -14px rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transform: translateX(-50%);
+  animation: xmas-toast 2.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  pointer-events: none;
+}
+.xmas-toast.err {
+  border-color: rgba(252, 165, 165, 0.5);
+  color: #fecaca;
+}
+@keyframes xmas-toast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -12px) scale(0.92);
+  }
+  12%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -8px) scale(0.98);
+  }
+}
+
+/* ---------- การเปิดฉาก: ทุกชิ้นค่อย ๆ ปรากฏ ---------- */
+.xmas-top,
+.xmas-panel,
+.xmas-feed {
+  transition: opacity 0.7s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.xmas-stage:not(.is-ready) .xmas-top,
+.xmas-stage:not(.is-ready) .xmas-panel,
+.xmas-stage:not(.is-ready) .xmas-feed {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.xmas-stage.is-ready .xmas-feed {
+  transition-delay: 0.12s;
+}
+.xmas-stage.is-ready .xmas-panel {
+  transition-delay: 0.22s;
+}
+
+/* ---------- ปุ่มพร้อมแสงวิบวับ ---------- */
+.xmas-submit,
+.xmas-sheet-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---------- ลูกบอลเพิ่งแขวน: เรืองแสงให้เห็นชัด ---------- */
+.xmas-feed li:first-child button {
+  border-color: rgba(245, 197, 66, 0.35);
+  animation: xmas-new-glow 2.4s ease-out 1;
+}
+
+@keyframes xmas-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes xmas-pop {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes xmas-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes xmas-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+@keyframes xmas-glow {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+@keyframes xmas-shine {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes xmas-new-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 197, 66, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(245, 197, 66, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xmas-intro,
+  .xmas-intro-card,
+  .xmas-intro-card::before,
+  .xmas-intro-orb span,
+  .xmas-intro-btn::after,
+  .xmas-submit::after,
+  .xmas-sheet-toggle::after,
+  .xmas-toast,
+  .xmas-feed li:first-child button {
+    animation: none;
+  }
+  .xmas-top,
+  .xmas-panel,
+  .xmas-feed {
+    transition: none;
+  }
+}
+
+/* ---------- ฉากเบื้องหลังตามห้อง ---------- */
+.xmas-skyline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 34%;
+  width: 100%;
+  height: 30%;
+  z-index: 0;
+  pointer-events: none;
+  color: color-mix(in srgb, var(--sky-bottom, #0a2a25) 70%, #000);
+  opacity: 0.9;
+}
+.xmas-skyline-city {
+  color: #0d1b2e;
+}
+.xmas-skyline-hills {
+  color: #0d2a33;
+}
+.xmas-skyline-rice {
+  color: #2d2a14;
+}
+.xmas-skyline-sea {
+  color: #0c3345;
+}
+
+/* ---------- แถบบนและจำนวนคนออนไลน์ ---------- */
+.xmas-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+.xmas-online {
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--ink);
+  font-weight: 500;
+}
+.xmas-switch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+.xmas-switch:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.xmas-switch:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- หน้าเลือกห้อง ---------- */
+.xmas-picker {
+  --sky-top: #06141c;
+  --sky-bottom: #0a2a25;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 48px 0 56px;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 500px at 50% -10%, rgba(245, 197, 66, 0.18), transparent 60%),
+    linear-gradient(180deg, #050d16 0%, #0a2a25 100%);
+  font-family: var(--font-thai), system-ui, sans-serif;
+}
+.xmas-picker-inner {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 max(18px, env(safe-area-inset-left)) 0 max(18px, env(safe-area-inset-right));
+}
+.xmas-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+.xmas-picker h1 {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 5vw, 40px);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.xmas-picker-lead {
+  margin: 0 0 24px;
+  max-width: 62ch;
+  color: var(--muted);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+.xmas-picker-note {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(245, 197, 66, 0.1);
+  border: 1px solid rgba(245, 197, 66, 0.3);
+  color: var(--gold-soft);
+  font-size: 14px;
+}
+.xmas-room-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.xmas-room-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  overflow: hidden;
+  border-radius: 22px;
+  text-decoration: none;
+  color: inherit;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sky-top) 90%, #fff 4%), var(--sky-bottom));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.8);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s, box-shadow 0.25s;
+  min-height: 150px;
+}
+.xmas-room-card:hover,
+.xmas-room-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--room-accent) 60%, transparent);
+  box-shadow: 0 26px 60px -24px color-mix(in srgb, var(--room-accent) 45%, transparent);
+  outline: none;
+}
+.xmas-room-card.is-full {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+  cursor: not-allowed;
+}
+.xmas-room-art {
+  position: relative;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--room-accent) 40%, transparent), transparent 65%);
+}
+.xmas-room-glow {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #fff8d6, var(--room-accent) 45%, transparent 70%);
+  animation: xmas-glow 2.4s ease-in-out infinite;
+}
+.xmas-room-body {
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.xmas-room-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.xmas-room-head b {
+  font-size: 19px;
+}
+.xmas-room-head span {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.xmas-room-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #d9e6df;
+  text-wrap: pretty;
+}
+.xmas-room-meter {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.xmas-room-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--room-accent), #fff);
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.xmas-room-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.xmas-room-foot small {
+  color: var(--muted);
+}
+.xmas-room-foot em {
+  font-style: normal;
+  color: var(--muted);
+}
+.xmas-room-foot em.is-hot {
+  color: var(--mint);
+}
+.xmas-enter {
+  color: var(--room-accent);
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .xmas-room-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1000px) {
+  .xmas-room-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .xmas-room-card {
+    grid-template-columns: 1fr;
+  }
+  .xmas-room-art {
+    height: 120px;
+  }
+}
+@media (max-width: 379px) {
+  .xmas-room-card {
+    grid-template-columns: 96px 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-room-glow {
+    animation: none;
+  }
+  .xmas-room-card,
+  .xmas-room-meter span {
+    transition: none;
+  }
+}
+
+/* สีตัวอักษรหน้าเลือกห้อง ให้ชนะสไตล์พื้นฐานของเว็บ */
+.xmas-picker h1,
+.xmas-picker h2,
+.xmas-room-card,
+.xmas-room-card b,
+.xmas-room-card span,
+.xmas-room-card small,
+.xmas-room-card em {
+  color: var(--ink);
+}
+.xmas-room-card p,
+.xmas-room-card small,
+.xmas-room-head span {
+  color: var(--muted);
+}
+.xmas-room-card .xmas-room-body p {
+  color: #d9e6df;
+}
+.xmas-room-card .xmas-room-foot em.is-hot {
+  color: var(--mint);
+}
+.xmas-room-card .xmas-enter {
+  color: var(--room-accent);
+}
