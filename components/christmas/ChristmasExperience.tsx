@@ -63,6 +63,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const router = useRouter();
   const [online, setOnline] = useState<{ count: number; capacity: number } | null>(null);
   const serverNow = useServerClock();
+
+  // จำห้องที่เข้าไว้ เพื่อพากลับมาห้องเดิมเมื่อเปิดหน้าใหม่
+  useEffect(() => {
+    document.cookie = `xmas_room=${roomId}; path=/; max-age=31536000; SameSite=Lax`;
+  }, [roomId]);
   const [state, setState] = useState<ChristmasState | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [webglOk, setWebglOk] = useState(true);
@@ -345,7 +350,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
             {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
           </div>
-          <a className="xmas-switch" href="/Christmas">
+          <a className="xmas-switch" href="/Christmas?pick=1">
             เปลี่ยนห้อง
           </a>
         </div>
