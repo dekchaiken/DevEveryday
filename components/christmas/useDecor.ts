@@ -6,12 +6,14 @@ import type { Decor } from "@/lib/christmas/decor";
 // ตุ๊กตาหิมะทั้งหมดของห้อง โหลดเป็นระยะ และโหลดใหม่ได้ทันทีหลังวางหรือถูกใจ
 export function useDecor(roomId: string) {
   const [decor, setDecor] = useState<Decor[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
       const res = await fetch(`/api/christmas/decor?room=${roomId}`, { cache: "no-store" });
       const data = (await res.json()) as { decor?: Decor[] };
       if (data.decor) setDecor(data.decor);
+      setLoaded(true);
     } catch {
       /* ลองใหม่รอบถัดไป */
     }
@@ -23,5 +25,5 @@ export function useDecor(roomId: string) {
     return () => clearInterval(id);
   }, [refresh]);
 
-  return { decor, refresh };
+  return { decor, refresh, loaded };
 }

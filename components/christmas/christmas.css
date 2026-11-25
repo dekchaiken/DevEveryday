@@ -3953,3 +3953,62 @@
 .xmas-build-main {
   display: contents;
 }
+
+/* ---------- ปุ่มเพลงคลอ: ไอคอนโน้ตและแถบเสียงเต้นเบา ๆ เมื่อเปิด ---------- */
+.xmas-music-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 40px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(186, 230, 253, 0.28);
+  background: rgba(8, 28, 44, 0.55);
+  color: #d9f0ff;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.xmas-music-toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.xmas-music-toggle.is-on {
+  border-color: rgba(245, 197, 66, 0.7);
+  color: var(--gold-soft);
+  background: linear-gradient(135deg, rgba(245, 197, 66, 0.22), rgba(8, 28, 44, 0.55));
+}
+.xmas-music-bars {
+  display: none;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.xmas-music-bars i {
+  width: 3px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gold-soft);
+}
+.xmas-music-toggle.is-on .xmas-music-bars {
+  display: inline-flex;
+}
+.xmas-music-toggle.is-on .xmas-music-bars i {
+  animation: xmas-eq 0.9s ease-in-out infinite alternate;
+}
+.xmas-music-toggle.is-on .xmas-music-bars i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.xmas-music-toggle.is-on .xmas-music-bars i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes xmas-eq {
+  from { height: 3px; }
+  to { height: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-music-toggle.is-on .xmas-music-bars i {
+    animation: none;
+  }
+}
