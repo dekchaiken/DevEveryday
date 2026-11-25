@@ -458,6 +458,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {donateOpen && (
         <DonateModal
+          onPreview={(p) => {
+            setDonateOpen(false);
+            treeRef.current?.previewGiant(p.spot, p.name, p.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส");
+            treeRef.current?.skyMessage(p.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส", p.name, "gold", p.theme);
+          }}
           roomId={room.id}
           roomName={room.name}
           onClose={() => setDonateOpen(false)}
@@ -653,6 +658,19 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </div>
       )}
 
+      {/* ปุ่มซูมบนฉาก: ซูมเข้า ออก และกลับมุมมองเริ่มต้น (มือถือกดหรือบีบนิ้วได้ คอมใช้ลูกล้อเมาส์) */}
+      <div className="xmas-zoom" role="group" aria-label="ซูมภาพ">
+        <button type="button" onClick={() => treeRef.current?.zoomBy(0.8)} aria-label="ซูมเข้า">
+          <Icon name="plus" size={18} />
+        </button>
+        <button type="button" onClick={() => treeRef.current?.zoomBy(1.25)} aria-label="ซูมออก">
+          <Icon name="minus" size={18} />
+        </button>
+        <button type="button" onClick={() => treeRef.current?.resetView()} aria-label="กลับมุมมองเริ่มต้น">
+          <Icon name="reset" size={17} />
+        </button>
+      </div>
+
       {/* การ์ดคำอวยพรของลูกบอลที่คลิก กล้องจะเลื่อนไปดูลูกบอลนั้นใกล้ ๆ */}
       {focus && (
         <div className="xmas-focus glass" role="dialog" aria-label="คำอวยพร">
@@ -766,6 +784,15 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
                   </span>
                   <textarea value={form.wish} maxLength={140} rows={4} onChange={(e) => setForm({ ...form, wish: e.target.value })} placeholder="ขอให้ปีนี้…" />
                 </label>
+                <button
+                  type="button"
+                  className="xmas-preview-btn"
+                  onClick={() =>
+                    setFocus({ id: "preview", name: form.name.trim() || "ชื่อของคุณ", wish: form.wish.trim(), color: form.color, shape: form.shape, height: 0.5, angle: 0, createdAt: Date.now() })
+                  }
+                >
+                  ดูตัวอย่างการ์ดคำอวยพร
+                </button>
               </div>
             )}
           </div>

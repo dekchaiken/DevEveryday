@@ -1,5 +1,5 @@
 // ไอคอนแบบ flat ของธีมคริสต์มาส วาดด้วย SVG ล้วน ไม่ใช้ emoji
-type Name = "bauble" | "crown" | "music" | "firework" | "sleigh" | "snow" | "tree" | "snowman" | "users" | "gift" | "sparkle" | "heart" | "star" | "check" | "close" | "copy" | "share" | "cross";
+type Name = "bauble" | "crown" | "music" | "plus" | "minus" | "reset" | "firework" | "sleigh" | "snow" | "tree" | "snowman" | "users" | "gift" | "sparkle" | "heart" | "star" | "check" | "close" | "copy" | "share" | "cross";
 
 export function Icon({ name, size = 20, className }: { name: Name; size?: number; className?: string }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true, className: `xicon ${className ?? ""}` };
@@ -57,6 +57,25 @@ export function Icon({ name, size = 20, className }: { name: Name; size?: number
           <path d="M9 18V5l11-2v13" />
           <circle cx="6.5" cy="18" r="2.5" />
           <circle cx="17.5" cy="16" r="2.5" />
+        </svg>
+      );
+    case "plus":
+      return (
+        <svg {...common} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      );
+    case "minus":
+      return (
+        <svg {...common} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M5 12h14" />
+        </svg>
+      );
+    case "reset":
+      return (
+        <svg {...common} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 12a8 8 0 1 0 2.4-5.7" />
+          <path d="M4 4v4.5h4.5" />
         </svg>
       );
     case "snow":
