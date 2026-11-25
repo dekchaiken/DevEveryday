@@ -81,6 +81,14 @@ function Bat({ className }: { className: string }) {
 
 // ชุดตกแต่งตามชนิดเทศกาล
 export function SeasonDecor({ kind }: { kind: string }) {
+  if (kind === "christmas") {
+    // หิมะตกเบา ๆ ทั้งหน้าจอ ซ่อนการเคลื่อนไหวเมื่อผู้ใช้ตั้งค่า reduce motion ไว้
+    return (
+      <div className="sd sd-snow" aria-hidden="true">
+        <div className="sd-snow-layer" />
+      </div>
+    );
+  }
   if (kind !== "halloween") return null;
   return (
     <div className="sd" aria-hidden="true">

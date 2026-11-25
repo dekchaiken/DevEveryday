@@ -38,13 +38,13 @@
     {
       "id": "land-xmas",
       "name": "คริสต์มาส",
-      "start": "12-15",
-      "end": "12-26",
+      "start": "12-01",
+      "end": "01-05",
       "active": false,
       "accent": "#16a34a",
       "badge": "Merry Christmas",
       "announcement": "คริสต์มาสนี้ ปิดงานก่อนสิ้นปีรับส่วนลดพิเศษ",
-      "decor": "none",
+      "decor": "christmas",
       "dark": false
     }
   ],
