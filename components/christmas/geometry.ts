@@ -10,10 +10,19 @@ export function radiusAt(h: number) {
 }
 
 // พิกัดของลูกบอลที่ติดอยู่บนผิวใบ (วางลอยเล็กน้อยให้เห็นชัด)
+// จุดแขวน: ฝังอยู่ในชั้นใบเล็กน้อย เพื่อให้ลูกบอลแนบผิวต้นเป็นระนาบเดียวกัน
 export function ornamentPosition(height: number, angle: number) {
   const y = height * TREE_H + 0.1;
-  const r = radiusAt(height) * 1.04;
+  const r = radiusAt(height) * 0.98;
   return { x: Math.cos(angle) * r, y, z: Math.sin(angle) * r };
+}
+
+// เวกเตอร์ปกติของผิวกรวยต้นไม้ ณ มุมนั้น (ชี้ออกจากต้นและขึ้นเล็กน้อย)
+export function surfaceNormal(angle: number) {
+  const len = Math.hypot(TREE_H, TREE_R0);
+  const nr = TREE_H / len;
+  const ny = TREE_R0 / len;
+  return { x: Math.cos(angle) * nr, y: ny, z: Math.sin(angle) * nr };
 }
 
 // แปลงจุดที่คลิกบนผิวต้นเป็น (height, angle)
