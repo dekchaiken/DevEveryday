@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRoom } from "@/lib/christmas/rooms";
-import { addDecor, ARMS, BODY_COLORS, HATS, LEGS, NOSES, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
+import { ACCESSORIES, addDecor, ARMS, BODY_COLORS, HATS, LEGS, NOSES, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
 
@@ -34,8 +34,9 @@ export async function POST(req: Request) {
   const arms = pick(body.arms, ARMS);
   const bodyColor = pick(body.body, BODY_COLORS);
   const legs = pick(body.legs, LEGS);
+  const acc = pick(body.acc, ACCESSORIES);
   if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) return NextResponse.json({ error: "ช่องไม่ถูกต้อง" }, { status: 400 });
-  if (!hat || !scarf || !nose || !arms || !bodyColor || !legs) return NextResponse.json({ error: "ชิ้นส่วนไม่ถูกต้อง" }, { status: 400 });
+  if (!hat || !scarf || !nose || !arms || !bodyColor || !legs || !acc) return NextResponse.json({ error: "ชิ้นส่วนไม่ถูกต้อง" }, { status: 400 });
 
   const decor: Decor = {
     id: crypto.randomUUID(),
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
     arms,
     body: bodyColor,
     legs,
+    acc,
     createdAt: Date.now(),
     likes: 0,
   };

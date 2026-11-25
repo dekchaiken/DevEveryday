@@ -652,7 +652,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const SLOT_R = 2.7;
     const slotAngle = (i: number) => (i / SLOT_COUNT) * Math.PI * 2 + 0.4;
     const BODY_HEX: Record<string, number> = { white: 0xffffff, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3 };
-    const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6 };
+    const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c };
     const HAT_HEX = 0x1f2937;
 
     function buildDecorSnowman(d: Decor) {
@@ -671,6 +671,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         base.scale.set(1, 0.28, 1);
         base.position.y = 0.04;
         add(base);
+      } else if (d.legs === "gift") {
+        const gift = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.3, 0.62), new THREE.MeshPhysicalMaterial({ color: 0xdc2643, roughness: 0.4, clearcoat: 0.5 }));
+        gift.position.y = 0.15;
+        const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.32, 0.64), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.5, roughness: 0.3 }));
+        ribbon.position.y = 0.15;
+        add(gift, ribbon);
       } else if (d.legs === "boots") {
         const bootMat = new THREE.MeshStandardMaterial({ color: 0x3f2a1a, roughness: 0.6 });
         [-0.13, 0.13].forEach((x) => {
@@ -691,9 +697,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         add(e);
       });
       // จมูก
-      const noseMat = d.nose === "star" ? new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.6, roughness: 0.3 }) : d.nose === "button" ? new THREE.MeshStandardMaterial({ color: 0xdc2643 }) : new THREE.MeshStandardMaterial({ color: 0xff8a1f });
-      const nose = new THREE.Mesh(d.nose === "button" ? new THREE.SphereGeometry(0.04, 12, 12) : new THREE.ConeGeometry(0.035, 0.2, 12), noseMat);
-      if (d.nose !== "button") nose.rotation.x = Math.PI / 2;
+      const noseMat = d.nose === "bell" ? new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.7, roughness: 0.25 }) : d.nose === "star" ? new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.6, roughness: 0.3 }) : d.nose === "button" ? new THREE.MeshStandardMaterial({ color: 0xdc2643 }) : new THREE.MeshStandardMaterial({ color: 0xff8a1f });
+      const nose = new THREE.Mesh(d.nose === "button" || d.nose === "bell" ? new THREE.SphereGeometry(0.04, 12, 12) : new THREE.ConeGeometry(0.035, 0.2, 12), noseMat);
+      if (d.nose === "carrot") nose.rotation.x = Math.PI / 2;
       nose.position.set(0, 1.4, 0.22);
       add(nose);
       // ผ้าพันคอ
@@ -713,13 +719,50 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const cap = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: SCARF_HEX[d.scarf] ?? 0x3b82f6 }));
         cap.position.y = 1.5;
         add(cap);
-      } else {
+      } else if (d.hat === "crown") {
         const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 6), hatMat);
         crown.position.y = 1.55;
         add(crown);
       }
+      // เครื่องประดับ
+      if (d.acc === "glasses") {
+        const gm = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3, metalness: 0.4 });
+        [-0.07, 0.07].forEach((x) => {
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.008, 8, 20), gm);
+          ring.position.set(x, 1.46, 0.19);
+          add(ring);
+        });
+      } else if (d.acc === "bow") {
+        const bm = new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.5 });
+        const l = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.1, 12), bm);
+        l.rotation.z = Math.PI / 2;
+        l.position.set(-0.05, 1.2, 0.2);
+        const r = l.clone();
+        r.position.x = 0.05;
+        r.rotation.z = -Math.PI / 2;
+        add(l, r);
+      } else if (d.acc === "bell") {
+        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.7, roughness: 0.25 }));
+        bell.position.set(0.14, 1.12, 0.2);
+        add(bell);
+      }
+      // ของตกแต่งหัวเพิ่มเติม
+      if (d.hat === "pom") {
+        const pom = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }));
+        pom.position.y = 1.72;
+        add(pom);
+      } else if (d.hat === "holly") {
+        const wreath = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.04, 10, 28), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.6 }));
+        wreath.rotation.x = Math.PI / 2;
+        wreath.position.y = 1.5;
+        add(wreath);
+      }
       // แขน
-      if (d.arms === "sticks") {
+      if (d.arms === "gift") {
+        const box = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 0.14), new THREE.MeshPhysicalMaterial({ color: 0xdc2643, roughness: 0.4 }));
+        box.position.set(0.42, 0.95, 0.1);
+        add(box);
+      } else if (d.arms === "sticks") {
         const stickMat = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.8 });
         [-1, 1].forEach((side) => {
           const st = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8), stickMat);
@@ -752,7 +795,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const a = slotAngle(d.slot);
         grp.position.set(Math.cos(a) * SLOT_R, 0, Math.sin(a) * SLOT_R);
         grp.rotation.y = -a + Math.PI / 2;
-        grp.scale.setScalar(0.62);
+        grp.scale.setScalar(0.46);
         decorGroup.add(grp);
       }
     }
