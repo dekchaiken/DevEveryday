@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import type { OrderPreview } from "@/lib/christmas/types";
 import "./christmas.css";
+import { Icon } from "./Icon";
 
 type Cfg = { enabled: boolean; payMode: "manual" | "gateway"; presetPrices: number[]; customMin: number; customMax: number };
 
@@ -97,7 +98,7 @@ export default function DonateModal({
     <div className="xmas-modal-back" role="presentation" onClick={onClose}>
       <div className="xmas-modal glass" role="dialog" aria-modal="true" aria-label="สนับสนุนตุ๊กตาหิมะยักษ์" onClick={(e) => e.stopPropagation()}>
         <button className="xmas-x" onClick={onClose} aria-label="ปิด">
-          ×
+          <Icon name="close" size={18} />
         </button>
         <p className="xmas-kicker">ตุ๊กตาหิมะยักษ์ · {roomName}</p>
         <h2>ตั้งตุ๊กตาหิมะยักษ์ให้ห้องนี้</h2>
@@ -168,7 +169,7 @@ export default function DonateModal({
 
         {order && order.status === "paid" && (
           <div className="xmas-pay">
-            <p className="xmas-msg ok">ได้รับการสนับสนุนแล้ว ขอบคุณค่ะ ✨ ตุ๊กตาหิมะยักษ์ของคุณขึ้นป้ายแล้ว</p>
+            <p className="xmas-msg ok">ได้รับการสนับสนุนแล้ว ขอบคุณมาก ตุ๊กตาหิมะยักษ์ของคุณขึ้นป้ายแล้ว</p>
             <button className="xmas-submit" onClick={onClose}>
               ปิด
             </button>

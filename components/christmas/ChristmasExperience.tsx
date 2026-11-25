@@ -11,6 +11,7 @@ import { RoomSkyline } from "./RoomSkyline";
 import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
+import { Icon } from "./Icon";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
 
@@ -138,7 +139,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           // เพื่อนเข้าห้องเพิ่ม: แจ้งเตือนเมื่อจำนวนคนเพิ่มขึ้น (ไม่แจ้งตอนโหลดครั้งแรก)
           if (prevOnline.current !== null && data.count > prevOnline.current) {
             const diff = data.count - prevOnline.current;
-            notifyRef.current("ok", diff === 1 ? "มีเพื่อนเข้าห้องเพิ่ม 👋" : `มีเพื่อนเข้าห้องเพิ่ม ${diff} คน 👋`);
+            notifyRef.current("ok", diff === 1 ? "มีเพื่อนเข้าห้องเพิ่ม 1 คน" : `มีเพื่อนเข้าห้องเพิ่ม ${diff} คน`);
           }
           prevOnline.current = data.count;
           setOnline({ count: data.count, capacity: data.capacity ?? 150 });
@@ -226,7 +227,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       const data = (await res.json()) as { error?: string; ornament?: Ornament };
       if (!res.ok || !data.ornament) throw new Error(data.error ?? "แขวนไม่สำเร็จ");
       setLocal((l) => [data.ornament!, ...l].slice(0, 20));
-      notify("ok", "แขวนคำอวยพรของคุณบนต้นแล้ว ✨");
+      notify("ok", "แขวนคำอวยพรของคุณบนต้นแล้ว");
       setPick(null);
       setForm((f) => ({ ...f, wish: "" }));
       setMessage({ kind: "ok", text: "แขวนลูกบอลของคุณแล้ว" });
@@ -312,7 +313,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           roomId={room.id}
           roomName={room.name}
           onClose={() => setDonateOpen(false)}
-          onPaid={(name) => notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว ✨`)}
+          onPaid={(name) => notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว`)}
         />
       )}
 
@@ -327,7 +328,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       <header className="xmas-top">
         <div className="xmas-brand">
           <span className="xmas-brand-star" aria-hidden>
-            ★
+            <Icon name="star" size={20} />
           </span>
           <div>
             <b>ต้นคริสต์มาส{room.name}</b>
@@ -358,16 +359,16 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setHintOn(true);
           }}
         >
-          <span aria-hidden>🎄</span> แขวนคำอวยพร
+          <Icon name="tree" size={18} /> แขวนคำอวยพร
         </button>
         <button className="xmas-action" onClick={() => setDecorOpen(true)}>
-          <span aria-hidden>⛄</span> ตกแต่งตุ๊กตาหิมะ
+          <Icon name="snowman" size={18} /> ตกแต่งตุ๊กตาหิมะ
         </button>
         <button className="xmas-action" onClick={() => setInviteOpen(true)}>
-          <span aria-hidden>👥</span> ชวนเพื่อน
+          <Icon name="users" size={18} /> ชวนเพื่อน
         </button>
         <button className="xmas-action is-exclusive" onClick={() => setDonateOpen(true)}>
-          <span aria-hidden>✨</span> ตุ๊กตาหิมะยักษ์
+          <Icon name="sparkle" size={18} /> ตุ๊กตาหิมะยักษ์
         </button>
       </nav>
 
@@ -398,7 +399,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onPlaced={(d) => {
             setDecorOpen(false);
             setState((st) => (st ? { ...st, decor: [d, ...st.decor] } : st));
-            notify("ok", `วางตุ๊กตาหิมะของ ${d.name} รอบต้นแล้ว ⛄`);
+            notify("ok", `วางตุ๊กตาหิมะของ ${d.name} รอบต้นแล้ว`);
           }}
         />
       )}
@@ -426,7 +427,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {focus && (
         <div className="xmas-focus glass" role="dialog" aria-label="คำอวยพร">
           <button className="xmas-x" onClick={() => setFocus(null)} aria-label="ปิด">
-            ×
+            <Icon name="close" size={18} />
           </button>
           <span className="xmas-chip" style={{ background: COLOR_CSS[focus.color] }} />
           <b>{focus.name}</b>

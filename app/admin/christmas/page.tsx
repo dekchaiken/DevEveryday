@@ -231,7 +231,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 function Pill({ ok, text }: { ok: boolean; text: string }) {
   return (
     <span style={{ padding: "6px 12px", borderRadius: 999, fontSize: 13, background: ok ? "#dcfce7" : "#fee2e2", color: ok ? "#166534" : "#991b1b" }}>
-      {ok ? "✓" : "✗"} {text}
+      {text}
     </span>
   );
 }
