@@ -7,7 +7,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { nearestSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
-import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, TREE_H, TREE_R0 } from "./geometry";
+import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 
 export type Preview = { height: number; angle: number; color: string; shape: string } | null;
 
@@ -268,9 +268,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       if (ornMeshes.has(o.id)) return;
       const body = makeOrnamentMesh(o);
       const target = body.position.clone();
-      // จุดแขวน (ตะขอ) อยู่ที่ pivot: ลูกบอลห้อยลงจากจุดนี้ การแกว่งจึงหมุนรอบตะขอ ไม่ใช่กลางชิ้นงาน
-      // ทำให้ดาวและระฆังห้อยตรงแนวดิ่งเสมอ
-      body.position.set(0, -0.22, 0);
+      // ตัวชิ้นงานวางออกจากผิวต้นตามแนวปกติ เพื่อให้แนบผิวเป็นระนาบเดียวกัน
+      // ดาวและระฆังหันระนาบตามผิวต้นด้วย การแกว่งหมุนรอบจุดแนบ
+      const nrm = surfaceNormal(o.angle);
+      body.position.set(nrm.x * 0.12, nrm.y * 0.12, nrm.z * 0.12);
+      body.rotation.set(0, -o.angle + Math.PI / 2, 0);
       const pivot = new THREE.Group();
       pivot.position.copy(target);
       pivot.add(body);
