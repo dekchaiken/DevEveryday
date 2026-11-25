@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import ChristmasExperience from "@/components/christmas/ChristmasExperience";
 import RoomPicker from "@/components/christmas/RoomPicker";
+import GiftIntro from "@/components/christmas/GiftIntro";
 import { getRoom } from "@/lib/christmas/rooms";
 
 export const metadata: Metadata = {
@@ -20,6 +21,11 @@ export default async function ChristmasPage({
 }) {
   const { room, full } = await searchParams;
   const valid = getRoom(room);
-  if (valid) return <ChristmasExperience key={valid.id} roomId={valid.id} />;
-  return <RoomPicker fullRoom={getRoom(full)?.name ?? null} />;
+  // เปิดด้วยกล่องของขวัญก่อนเข้าหน้าเว็บ
+  const content = valid ? (
+    <ChristmasExperience key={valid.id} roomId={valid.id} />
+  ) : (
+    <RoomPicker fullRoom={getRoom(full)?.name ?? null} />
+  );
+  return <GiftIntro>{content}</GiftIntro>;
 }
