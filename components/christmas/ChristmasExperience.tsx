@@ -8,6 +8,7 @@ import type { Preview, TreeSceneHandle } from "./TreeScene";
 import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
 import { RoomSkyline } from "./RoomSkyline";
+import { Crowd } from "./Crowd";
 import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
@@ -229,6 +230,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
   }, [state, local]);
 
+  // ชื่อของคนที่ฝากไว้ในห้อง ใช้ติดป้ายให้ฝูงชนเงาเบื้องหลัง
+  const crowdNames = useMemo(() => {
+    const seen = new Set<string>();
+    for (const o of ornaments) if (o.name) seen.add(o.name);
+    for (const d of decor) if (d.name) seen.add(d.name);
+    return Array.from(seen).slice(0, 40);
+  }, [ornaments, decor]);
+
   // ---------- ฟอร์มแขวนลูกบอล ----------
   const [form, setForm] = useState<{ name: string; wish: string; color: OrnamentColor; shape: OrnamentShape }>({
     name: "",
@@ -239,11 +248,24 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [wishTab, setWishTab] = useState<"color" | "shape" | "text">("color");
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  // รูปทรงที่แขวนไปแล้วในรอบนี้ (รีเฟรชหน้าเพื่อเริ่มรอบใหม่) รูปทรงละ 1 ครั้ง
+  const [usedShapes, setUsedShapes] = useState<OrnamentShape[]>([]);
+  const shapesLeft = ORNAMENT_SHAPES.filter((s) => !usedShapes.includes(s));
+  const allShapesUsed = shapesLeft.length === 0;
 
   const previewData: Preview = pick ? { ...pick, color: form.color, shape: form.shape } : null;
 
   async function hang(e: FormEvent) {
     e.preventDefault();
+    if (allShapesUsed) {
+      setMessage({ kind: "err", text: "แขวนครบทุกรูปทรงในรอบนี้แล้ว รีเฟรชหน้าเพื่อเริ่มรอบใหม่" });
+      return;
+    }
+    if (usedShapes.includes(form.shape)) {
+      setWishTab("shape");
+      setMessage({ kind: "err", text: `รูปทรง${SHAPE_LABEL[form.shape]}ใช้ไปแล้ว เลือกรูปทรงอื่น` });
+      return;
+    }
     if (!form.name.trim()) {
       setWishTab("text");
       setMessage({ kind: "err", text: "กรุณาใส่ชื่อที่จะแสดงบนลูกบอล" });
@@ -266,8 +288,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       if (!res.ok || !data.ornament) throw new Error(data.error ?? "แขวนไม่สำเร็จ");
       setLocal((l) => [data.ornament!, ...l].slice(0, 20));
       notify("ok", "แขวนคำอวยพรของคุณบนต้นแล้ว");
+      const nextUsed = [...usedShapes, form.shape];
+      setUsedShapes(nextUsed);
       setPick(null);
-      setForm((f) => ({ ...f, wish: "" }));
+      // เลื่อนไปรูปทรงที่ยังเหลือ เพื่อให้แขวนรอบถัดไปได้ทันที
+      setForm((f) => ({ ...f, wish: "", shape: ORNAMENT_SHAPES.find((s) => !nextUsed.includes(s)) ?? f.shape }));
       setMessage({ kind: "ok", text: "แขวนลูกบอลของคุณแล้ว" });
       setSheetOpen(false);
     } catch (err) {
@@ -300,6 +325,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {/* พื้นหลังท้องฟ้าค่ำและดาว */}
       <div className="xmas-sky" aria-hidden />
       <RoomSkyline kind={room.skyline} />
+      <Crowd count={Math.max(online?.count ?? 0, 6)} names={crowdNames} />
 
       {webglOk ? (
         <TreeScene
@@ -593,13 +619,26 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
             {wishTab === "shape" && (
               <>
-                <p className="xmas-part-title">รูปทรง</p>
+                <p className="xmas-part-title">
+                  รูปทรง <em className="xmas-part-hint">เหลือ {shapesLeft.length}/{ORNAMENT_SHAPES.length} รูปทรง</em>
+                </p>
                 <div className="xmas-part-grid">
-                  {ORNAMENT_SHAPES.map((sh) => (
-                    <button type="button" key={sh} className={form.shape === sh ? "is-on" : ""} aria-pressed={form.shape === sh} onClick={() => setForm({ ...form, shape: sh })}>
-                      {SHAPE_LABEL[sh]}
-                    </button>
-                  ))}
+                  {ORNAMENT_SHAPES.map((sh) => {
+                    const used = usedShapes.includes(sh);
+                    return (
+                      <button
+                        type="button"
+                        key={sh}
+                        disabled={used}
+                        className={`${form.shape === sh && !used ? "is-on" : ""} ${used ? "is-used" : ""}`}
+                        aria-pressed={form.shape === sh}
+                        onClick={() => setForm({ ...form, shape: sh })}
+                      >
+                        {SHAPE_LABEL[sh]}
+                        {used && <small>ใช้แล้ว</small>}
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -622,8 +661,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
           <div className="xmas-build-foot">
             {message && <p className={`xmas-msg ${message.kind}`}>{message.text}</p>}
-            <button className="xmas-submit" disabled={submitting}>
-              {submitting ? "กำลังแขวน…" : pick ? "แขวนลูกบอลบนต้น" : "เลือกตำแหน่งก่อนแขวน"}
+            <button className="xmas-submit" disabled={submitting || allShapesUsed}>
+              {submitting ? "กำลังแขวน…" : allShapesUsed ? "แขวนครบทุกรูปทรงแล้ว" : pick ? "แขวนลูกบอลบนต้น" : "เลือกตำแหน่งก่อนแขวน"}
             </button>
           </div>
         </form>
