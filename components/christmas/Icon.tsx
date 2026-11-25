@@ -1,0 +1,94 @@
+// ไอคอนแบบ flat ของธีมคริสต์มาส วาดด้วย SVG ล้วน ไม่ใช้ emoji
+type Name = "tree" | "snowman" | "users" | "gift" | "sparkle" | "heart" | "star" | "check" | "close" | "copy" | "share" | "cross";
+
+export function Icon({ name, size = 20, className }: { name: Name; size?: number; className?: string }) {
+  const common = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true, className: `xicon ${className ?? ""}` };
+  switch (name) {
+    case "tree":
+      return (
+        <svg {...common}>
+          <path d="M12 2.5 17.5 10h-2.8L19 15.5H5L8.3 10H5.5z" fill="#22c55e" />
+          <rect x="10.8" y="15.5" width="2.4" height="3.5" rx="0.6" fill="#8b5a2b" />
+          <path d="M12 1.2l.8 1.6 1.7.2-1.3 1.1.4 1.7L12 4.9l-1.6.9.4-1.7-1.3-1.1 1.7-.2z" fill="#f5c542" />
+        </svg>
+      );
+    case "snowman":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="17" r="5" fill="#f8fafc" />
+          <circle cx="12" cy="11" r="3.8" fill="#f8fafc" />
+          <rect x="7.8" y="4.2" width="8.4" height="2.4" rx="0.6" fill="#1f2937" />
+          <rect x="9.5" y="1.2" width="5" height="4" rx="0.6" fill="#1f2937" />
+          <circle cx="10.6" cy="10.6" r="0.6" fill="#111" />
+          <circle cx="13.4" cy="10.6" r="0.6" fill="#111" />
+          <path d="M12 11.5 14.5 12.2 12 12.8z" fill="#ff8a1f" />
+        </svg>
+      );
+    case "users":
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="8" r="3.2" fill="#7ee7b0" />
+          <path d="M3 19.5c.6-3.4 3-5.3 6-5.3s5.4 1.9 6 5.3z" fill="#7ee7b0" />
+          <circle cx="16.5" cy="8.5" r="2.7" fill="#f5c542" />
+          <path d="M14.5 19.5c.4-2.6 2-4.2 4.2-4.2 1.4 0 2.6.7 3.3 1.9l-.5 2.3z" fill="#f5c542" />
+        </svg>
+      );
+    case "gift":
+      return (
+        <svg {...common}>
+          <rect x="3.5" y="9" width="17" height="11" rx="1.5" fill="#dc2643" />
+          <rect x="2.5" y="6.5" width="19" height="3.5" rx="1" fill="#e8415f" />
+          <rect x="10.8" y="6.5" width="2.4" height="13.5" fill="#f5c542" />
+          <path d="M12 6.5c-1.6-3.2-4.8-3.4-4.8-1.2 0 1.2 2.4 1.2 4.8 1.2zm0 0c1.6-3.2 4.8-3.4 4.8-1.2 0 1.2-2.4 1.2-4.8 1.2z" fill="#f5c542" />
+        </svg>
+      );
+    case "sparkle":
+      return (
+        <svg {...common}>
+          <path d="M12 2.5c.7 4.6 2.9 6.8 7.5 7.5-4.6.7-6.8 2.9-7.5 7.5-.7-4.6-2.9-6.8-7.5-7.5 4.6-.7 6.8-2.9 7.5-7.5z" fill="#f5c542" />
+          <path d="M19 15.5c.3 1.9 1.2 2.8 3 3-1.8.3-2.7 1.2-3 3-.3-1.8-1.2-2.7-3-3 1.8-.2 2.7-1.1 3-3z" fill="#ffe08a" />
+        </svg>
+      );
+    case "star":
+      return (
+        <svg {...common}>
+          <path d="M12 2.8l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.1l-5.6 2.9 1.1-6.2-4.5-4.4 6.2-.9z" fill="#f5c542" />
+        </svg>
+      );
+    case "heart":
+      return (
+        <svg {...common}>
+          <path d="M12 20.5 4.6 13.2a4.6 4.6 0 0 1 6.5-6.5L12 7.6l.9-.9a4.6 4.6 0 0 1 6.5 6.5z" fill="currentColor" />
+        </svg>
+      );
+    case "check":
+      return (
+        <svg {...common}>
+          <path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "close":
+    case "cross":
+      return (
+        <svg {...common}>
+          <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+        </svg>
+      );
+    case "copy":
+      return (
+        <svg {...common}>
+          <rect x="8" y="8" width="12" height="12" rx="2.5" fill="currentColor" opacity="0.35" />
+          <rect x="4" y="4" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" strokeWidth="2" />
+        </svg>
+      );
+    case "share":
+      return (
+        <svg {...common}>
+          <circle cx="18" cy="5.5" r="2.6" fill="currentColor" />
+          <circle cx="6" cy="12" r="2.6" fill="currentColor" />
+          <circle cx="18" cy="18.5" r="2.6" fill="currentColor" />
+          <path d="M8.3 10.8l7.4-4M8.3 13.2l7.4 4" stroke="currentColor" strokeWidth="1.8" />
+        </svg>
+      );
+  }
+}

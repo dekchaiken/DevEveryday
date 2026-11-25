@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Decor } from "@/lib/christmas/decor";
 import { HATS, SCARVES, NOSES, ARMS, BODY_COLORS, LEGS, SLOT_COUNT } from "@/lib/christmas/decor";
 import { getClientId } from "./clientId";
+import { Icon } from "./Icon";
 import "./christmas.css";
 
 const LABEL: Record<string, string> = {
@@ -120,7 +121,7 @@ export function InviteModal({ roomId, roomName, online, capacity, onClose }: { r
     <div className="xmas-modal-back" role="presentation" onClick={onClose}>
       <div className="xmas-modal glass" role="dialog" aria-modal="true" aria-label="ชวนเพื่อน" onClick={(e) => e.stopPropagation()}>
         <button className="xmas-x" onClick={onClose} aria-label="ปิด">
-          ×
+          <Icon name="close" size={18} />
         </button>
         <p className="xmas-kicker">ชวนเพื่อนเข้าห้อง{roomName}</p>
         <h2>มาแขวนคำอวยพรด้วยกัน</h2>
@@ -131,7 +132,7 @@ export function InviteModal({ roomId, roomName, online, capacity, onClose }: { r
         <div className="xmas-copy-row">
           <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label="ลิงก์ชวนเพื่อน" />
           <button className="xmas-chip-btn" onClick={copy}>
-            {copied ? "คัดลอกแล้ว ✓" : "คัดลอก"}
+            {copied ? <><Icon name="check" size={16} /> คัดลอกแล้ว</> : <><Icon name="copy" size={16} /> คัดลอก</>}
           </button>
         </div>
         <button className="xmas-submit" onClick={share}>
@@ -185,7 +186,7 @@ export function DecorModal({ roomId, roomName, decor, onClose, onPlaced }: { roo
     <div className="xmas-modal-back" role="presentation" onClick={onClose}>
       <div className="xmas-modal xmas-modal-wide glass" role="dialog" aria-modal="true" aria-label="ตกแต่งตุ๊กตาหิมะ" onClick={(e) => e.stopPropagation()}>
         <button className="xmas-x" onClick={onClose} aria-label="ปิด">
-          ×
+          <Icon name="close" size={18} />
         </button>
         <p className="xmas-kicker">ตกแต่งตุ๊กตาหิมะ · {roomName}</p>
         <h2>สร้างตุ๊กตาหิมะของคุณ</h2>
@@ -277,7 +278,7 @@ export function DecorInfoCard({ d, onClose, onLiked }: { d: Decor; onClose: () =
   return (
     <div className="xmas-focus glass xmas-decor-info" role="dialog" aria-label="ตุ๊กตาหิมะ">
       <button className="xmas-x" onClick={onClose} aria-label="ปิด">
-        ×
+        <Icon name="close" size={18} />
       </button>
       <div className="xmas-decor-info-row">
         <div className="xmas-decor-thumb">
@@ -294,7 +295,7 @@ export function DecorInfoCard({ d, onClose, onLiked }: { d: Decor; onClose: () =
         </div>
       </div>
       <button className={`xmas-like ${liked ? "is-liked" : ""}`} onClick={like} disabled={busy || liked}>
-        ♥ ถูกใจ <span>{d.likes}</span>
+        <Icon name="heart" size={18} /> ถูกใจ <span>{d.likes}</span>
       </button>
     </div>
   );

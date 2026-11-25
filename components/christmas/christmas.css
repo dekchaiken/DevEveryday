@@ -2029,3 +2029,24 @@
     left: 60%;
   }
 }
+
+/* มือถือ: เมื่อเปิดแผงแขวนคำอวยพร ซ่อนแถบคำอวยพรล่าสุดไม่ให้ทับฟอร์ม */
+.xicon {
+  display: inline-block;
+  vertical-align: -0.2em;
+  flex: 0 0 auto;
+}
+@media (max-width: 759px) {
+  .xmas-panel.is-open ~ .xmas-feed {
+    display: none;
+  }
+  .xmas-feed li {
+    flex: 0 0 240px;
+  }
+  .xmas-feed li button {
+    min-height: 64px;
+  }
+  .xmas-feed li em {
+    -webkit-line-clamp: 1;
+  }
+}
