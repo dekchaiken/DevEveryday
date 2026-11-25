@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { consumeSkipIntro } from "./skipIntro";
 import "./christmas.css";
 
 type Phase = "play" | "open" | "done";
@@ -12,6 +13,11 @@ const REVEAL_MS = 1500; // ระยะเวลาเปลี่ยนจา�
 // เล่นทุกครั้งที่โหลดหน้าหรือรีเฟรช และข้ามได้ตลอดเวลา
 export default function GiftIntro({ children }: { children: ReactNode }) {
   const [phase, setPhase] = useState<Phase>("play");
+
+  // ก่อนวาดหน้าจอ: ถ้าเป็นการเปลี่ยนห้องภายในเว็บ ข้ามกล่องไปเลย
+  useLayoutEffect(() => {
+    if (consumeSkipIntro()) setPhase("done");
+  }, []);
 
   function open() {
     setPhase((p) => (p === "play" ? "open" : p));
