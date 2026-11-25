@@ -492,8 +492,12 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <div className="xmas-top-right">
           <div className={`xmas-live ${loadError ? "is-off" : ""}`} aria-live="polite">
             <span className="xmas-live-dot" />
-            {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
-            {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
+            {loadError ? "กำลังเชื่อมต่อใหม่…" : null}
+            {online && (
+              <span className="xmas-online">
+                {online.count}/{online.capacity} คน
+              </span>
+            )}
           </div>
           <button type="button" className={`xmas-music-toggle ${musicOn ? "is-on" : ""}`} aria-pressed={musicOn} aria-label={musicOn ? "ปิดเพลงคลอ" : "เปิดเพลงคลอ"} onClick={toggleMusic}>
             <Icon name="music" size={15} />
@@ -530,12 +534,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         >
           <Icon name="bauble" size={18} /> แขวนคำอวยพร
         </button>
-        <button className="xmas-action xmas-action-mobile" onClick={() => {
-          setFeedOpen(true);
-          setSheetOpen(false);
-        }}>
-          <Icon name="heart" size={18} /> รายการ
-        </button>
         <button className="xmas-action" data-tip="สร้างตุ๊กตาหิมะแล้ววางรอบต้น" onClick={() => setDecorOpen(true)}>
           <Icon name="snowman" size={18} /> ตกแต่งตุ๊กตาหิมะ
         </button>
@@ -544,6 +542,15 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </button>
         <button className="xmas-action is-exclusive" onClick={() => setDonateOpen(true)}>
           <Icon name="crown" size={18} /> Exclusive
+        </button>
+        <button className="xmas-action is-donate-phone xmas-action-phone" onClick={() => setDonateOpen(true)}>
+          <Icon name="sparkle" size={18} /> สนับสนุน
+        </button>
+        <button className="xmas-action xmas-action-mobile" onClick={() => {
+          setFeedOpen(true);
+          setSheetOpen(false);
+        }}>
+          <Icon name="heart" size={18} /> ประวัติล่าสุด
         </button>
       </nav>
 
