@@ -40,7 +40,7 @@ export type ShowEvent = {
 };
 
 // ตุ๊กตาหิมะยักษ์ของห้อง (ป้ายจากการสนับสนุนที่จ่ายแล้วล่าสุด)
-export type GiantSign = { name: string; message: string; amount: number; paidAt: number };
+export type GiantSign = { name: string; message: string; amount: number; paidAt: number; spot: number };
 
 export type ChristmasState = {
   version: number;

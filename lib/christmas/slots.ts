@@ -39,3 +39,28 @@ export function nearestSlot(x: number, z: number): number {
   }
   return best;
 }
+
+// ตำแหน่งป้ายประจำห้อง 4 จุดรอบลาน (มุมจากแกน +x, หน้าต้นคือ +z ซึ่งหันเข้าหากล้องตอนเริ่ม)
+// ตุ๊กตาหิมะทั่วไปวางบนช่องที่อยู่ใกล้จุดเหล่านี้ไม่ได้ เพื่อเว้นที่ให้ป้ายขนาดใหญ่
+export const GIANT_SPOT_DEFS = [
+  { label: "หน้าขวา", angle: Math.PI / 4 },
+  { label: "หน้าซ้าย", angle: (3 * Math.PI) / 4 },
+  { label: "หลังซ้าย", angle: (5 * Math.PI) / 4 },
+  { label: "หลังขวา", angle: (7 * Math.PI) / 4 },
+] as const;
+export const GIANT_SPOT_RADIUS = 5;
+
+const RESERVED = new Set<number>();
+for (const d of GIANT_SPOT_DEFS) {
+  const cx = Math.cos(d.angle) * GIANT_SPOT_RADIUS;
+  const cz = Math.sin(d.angle) * GIANT_SPOT_RADIUS;
+  SLOT_POSITIONS.forEach((p, i) => {
+    if ((p.x - cx) ** 2 + (p.z - cz) ** 2 < 1.5 ** 2) RESERVED.add(i);
+  });
+}
+
+// ช่องที่สงวนไว้สำหรับป้ายประจำห้อง
+export function isReservedSlot(slot: number) {
+  return RESERVED.has(slot);
+}
+

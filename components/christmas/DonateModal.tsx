@@ -7,6 +7,7 @@ import "./christmas.css";
 import { Icon } from "./Icon";
 import { SnowmanPreview } from "./SnowmanPreview";
 import type { MessageTheme } from "@/lib/christmas/types";
+import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
 
 // ธีมการแสดงข้อความบนท้องฟ้า: ทุกคนในห้องจะเห็นพร้อมกัน ทั้งคอมและมือถือ
 const THEMES: { id: MessageTheme; label: string; hint: string; icon: "firework" | "snow" | "sparkle" | "sleigh" }[] = [
@@ -48,6 +49,7 @@ export default function DonateModal({
   const [order, setOrder] = useState<OrderPreview | null>(null);
   const [kind, setKind] = useState<"giant" | "support">("giant");
   const [theme, setTheme] = useState<MessageTheme>("fireworks");
+  const [spot, setSpot] = useState(0);
   const [qrUrl, setQrUrl] = useState("");
 
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function DonateModal({
       const res = await fetch("/api/christmas/donate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind, theme }),
+        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind, theme, spot }),
       });
       const data = (await res.json()) as { order?: OrderPreview; error?: string };
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
@@ -179,6 +181,19 @@ export default function DonateModal({
               ชื่อที่แสดงบนป้าย
               <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
             </label>
+            {kind === "giant" && (
+              <fieldset className="xmas-spot-pick">
+                <legend>ตำแหน่งป้ายบนลาน</legend>
+                <div className="xmas-spot-grid">
+                  {GIANT_SPOT_DEFS.map((d, i) => (
+                    <button type="button" key={d.label} className={spot === i ? "is-on" : ""} aria-pressed={spot === i} onClick={() => setSpot(i)}>
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+                <small className="xmas-hint">ป้ายจะตั้งอยู่ตำแหน่งที่เลือก และหันหน้าเข้าหาต้นคริสต์มาส</small>
+              </fieldset>
+            )}
             {kind === "giant" && (
               <fieldset className="xmas-theme-pick">
                 <legend>ธีมการแสดงบนท้องฟ้า</legend>
