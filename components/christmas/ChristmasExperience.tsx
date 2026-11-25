@@ -481,8 +481,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <div>
             <b>ต้นคริสต์มาส{room.name}</b>
             <small>
-              {room.region}
-              {xmasDays !== null && (xmasDays > 0 ? ` · อีก ${xmasDays} วันถึงคริสต์มาส` : xmasDays === 0 ? " · สุขสันต์วันคริสต์มาส" : "")} ·{" "}
+              <span className="xmas-region">{room.region}</span>
+              {xmasDays !== null && (
+                <span className="xmas-countdown">{xmasDays > 0 ? ` · อีก ${xmasDays} วันถึงคริสต์มาส` : xmasDays === 0 ? " · สุขสันต์วันคริสต์มาส" : ""}</span>
+              )}{" "}
+              ·{" "}
               <a href="/Christmas?pick=1" className="xmas-switch-link" onClick={() => markInternalNav()}>
                 เปลี่ยนห้อง
               </a>
