@@ -3033,3 +3033,91 @@
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   }
 }
+
+/* ---------- แขวนคำอวยพร: ใช้โครงเดียวกับตัวสร้างตุ๊กตาหิมะ ---------- */
+.xmas-wish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.xmas-wish-form .xmas-build-top {
+  position: relative;
+  padding: 16px 18px 10px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+.xmas-wish-form .xmas-build-preview {
+  height: 150px;
+}
+.xmas-ornament-preview {
+  padding: 6px 0;
+}
+.xmas-ornament-art {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
+}
+.xmas-build-slot.is-set {
+  color: var(--mint);
+}
+.xmas-wish-form .xmas-part-tabs {
+  flex: 0 0 auto;
+}
+.xmas-wish-form .xmas-part-body {
+  min-height: 150px;
+}
+.xmas-wish-form .xmas-build-foot {
+  flex: 0 0 auto;
+}
+.xmas-wish-form .xmas-msg {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+}
+.xmas-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  border-radius: 50%;
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+.xmas-wish-text {
+  display: grid;
+  gap: 12px;
+}
+.xmas-wish-text .xmas-field input,
+.xmas-wish-text .xmas-field textarea {
+  width: 100%;
+}
+.xmas-wish-text .xmas-field textarea {
+  min-height: 96px;
+}
+/* ในแผงแขวนบนเดสก์ท็อป: ให้ตัวอย่างไม่สูงเกินไป */
+@media (min-width: 760px) {
+  .xmas-panel.xmas-wish .xmas-wish-form .xmas-build-preview {
+    height: 112px;
+  }
+  .xmas-panel.xmas-wish .xmas-wish-form .xmas-form-close {
+    display: none;
+  }
+}
+/* ทับสไตล์ฟอร์มเดิม: ให้เนื้อหาเลื่อนเฉพาะส่วนตัวเลือก ไม่ใช่ทั้งฟอร์ม */
+.xmas-wish .xmas-wish-form,
+.xmas-panel.xmas-wish.is-open .xmas-wish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+.xmas-wish .xmas-wish-form .xmas-part-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
