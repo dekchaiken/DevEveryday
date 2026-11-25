@@ -8,6 +8,7 @@ import type { Preview, TreeSceneHandle } from "./TreeScene";
 import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
 import { RoomSkyline } from "./RoomSkyline";
+import DonateModal from "./DonateModal";
 import "./christmas.css";
 
 // Three.js โหลดเฉพาะฝั่งเบราว์เซอร์ ไม่ให้กระทบเวลาเปิดหน้าแรก
@@ -66,6 +67,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [pick, setPick] = useState<{ height: number; angle: number } | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [local, setLocal] = useState<Ornament[]>([]);
+  const [donateOpen, setDonateOpen] = useState(false);
   const [intro, setIntro] = useState(true); // ป๊อปอัปเชิญก่อนเข้าต้นไม้
   const [toast, setToast] = useState<{ id: number; kind: "ok" | "err"; text: string } | null>(null); // ลูกบอลที่เพิ่งแขวนจากเครื่องนี้ แสดงทันทีก่อนเซิร์ฟเวอร์ตอบ
 
@@ -252,6 +254,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onOrnamentClick={(o) => setFocus(o)}
           onError={() => setWebglOk(false)}
           ground={room.ground}
+          giant={state?.giant ? { name: state.giant.name, message: state.giant.message } : null}
           key={room.id}
         />
       ) : (
@@ -277,6 +280,15 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             </button>
           </div>
         </div>
+      )}
+
+      {donateOpen && (
+        <DonateModal
+          roomId={room.id}
+          roomName={room.name}
+          onClose={() => setDonateOpen(false)}
+          onPaid={(name) => notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว ✨`)}
+        />
       )}
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
@@ -305,6 +317,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
             {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
           </div>
+          <button className="xmas-switch" onClick={() => setDonateOpen(true)}>
+            ❄ สนับสนุน
+          </button>
           <a className="xmas-switch" href="/Christmas">
             เปลี่ยนห้อง
           </a>
