@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { RoomTheme } from "@/lib/christmas/rooms";
+import { RoomSkyline } from "./RoomSkyline";
 import "./christmas.css";
 
 type RoomInfo = RoomTheme & { online: number; capacity: number };
@@ -66,6 +67,7 @@ export default function RoomPicker({ fullRoom }: { fullRoom: string | null }) {
               >
                 <div className="xmas-room-art" aria-hidden>
                   <span className="xmas-room-glow" />
+                  <RoomSkyline kind={r.skyline} />
                 </div>
                 <div className="xmas-room-body">
                   <div className="xmas-room-head">

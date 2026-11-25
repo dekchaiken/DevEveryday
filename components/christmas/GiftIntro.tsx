@@ -1,0 +1,114 @@
+"use client";
+
+import { useEffect, useState, type ReactNode } from "react";
+import "./christmas.css";
+
+type Phase = "play" | "open" | "done";
+
+const SESSION_KEY = "xmas-gift-seen";
+const AUTO_OPEN_MS = 4200; // เปิดกล่องเองถ้าผู้ใช้ไม่กด
+const REVEAL_MS = 1500; // ระยะเวลาเปลี่ยนจากกล่องเข้าสู่หน้าเว็บ
+
+// เปิดตัวด้วยกล่องของขวัญคริสต์มาสที่ถูกแกะออก ก่อนเข้าสู่หน้าเว็บ
+// เล่นครั้งเดียวต่อการเปิดแท็บ (sessionStorage) และข้ามได้ตลอดเวลา
+export default function GiftIntro({ children }: { children: ReactNode }) {
+  const [phase, setPhase] = useState<Phase>("play");
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(SESSION_KEY)) setPhase("done");
+    } catch {
+      /* โหมดส่วนตัว: เล่นทุกครั้ง */
+    }
+  }, []);
+
+  function open() {
+    setPhase((p) => (p === "play" ? "open" : p));
+  }
+
+  useEffect(() => {
+    if (phase === "play") {
+      const t = setTimeout(open, AUTO_OPEN_MS);
+      return () => clearTimeout(t);
+    }
+    if (phase === "open") {
+      const t = setTimeout(() => {
+        setPhase("done");
+        try {
+          sessionStorage.setItem(SESSION_KEY, "1");
+        } catch {
+          /* ไม่เป็นไร */
+        }
+      }, REVEAL_MS);
+      return () => clearTimeout(t);
+    }
+  }, [phase]);
+
+  const skip = () => {
+    setPhase("done");
+    try {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {
+      /* ไม่เป็นไร */
+    }
+  };
+
+  return (
+    <>
+      <div className={`xmas-gift-under ${phase === "done" ? "is-shown" : ""}`}>{children}</div>
+
+      {phase !== "done" && (
+        <div className={`xmas-gift ${phase === "open" ? "is-opening" : ""}`} role="dialog" aria-modal="true" aria-label="เปิดของขวัญคริสต์มาส">
+          <div className="xmas-gift-stars" aria-hidden />
+          <div className="xmas-gift-burst" aria-hidden />
+
+          <div className="xmas-gift-title">
+            <p className="xmas-gift-thai">สุขสันต์วันคริสต์มาส</p>
+            <h1>
+              {"Merry Christmas".split("").map((ch, i) => (
+                <span key={i} style={{ animationDelay: `${0.25 + i * 0.045}s` }}>
+                  {ch === " " ? " " : ch}
+                </span>
+              ))}
+            </h1>
+          </div>
+
+          <button className="xmas-gift-box" onClick={open} aria-label="แตะเพื่อแกะของขวัญ">
+            <span className="xmas-gift-lid">
+              <span className="xmas-gift-bow" />
+              <span className="xmas-gift-bow-l" />
+              <span className="xmas-gift-bow-r" />
+            </span>
+            <span className="xmas-gift-body">
+              <span className="xmas-gift-ribbon-v" />
+              <span className="xmas-gift-ribbon-h" />
+            </span>
+            <span className="xmas-gift-inner" />
+          </button>
+
+          <p className="xmas-gift-hint">{phase === "play" ? "แตะกล่องเพื่อแกะของขวัญ" : "ของขวัญของคุณ…"}</p>
+
+          {Array.from({ length: 36 }).map((_, i) => (
+            <span
+              key={i}
+              className="xmas-gift-spark"
+              style={
+                {
+                  "--dx": `${Math.cos((i / 36) * Math.PI * 2) * (90 + (i % 5) * 26)}px`,
+                  "--dy": `${Math.sin((i / 36) * Math.PI * 2) * (90 + (i % 5) * 26)}px`,
+                  "--d": `${(i % 6) * 40}ms`,
+                  "--c": ["#f5c542", "#dc2643", "#7ee7b0", "#ffffff", "#38bdf8"][i % 5],
+                } as React.CSSProperties
+              }
+              aria-hidden
+            />
+          ))}
+
+          <button className="xmas-gift-skip" onClick={skip}>
+            ข้าม
+          </button>
+        </div>
+      )}
+    </>
+  );
+}

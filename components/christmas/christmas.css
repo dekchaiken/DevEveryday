@@ -1,6 +1,18 @@
 /* ต้นคริสต์มาสร่วมกัน: ธีมท้องฟ้าค่ำ ทอง และแดง
    จุดพัก: มือถือ < 760px, แท็บเล็ต 760–1099px, เดสก์ท็อป ≥ 1100px */
 
+/* โทเคนสีของธีมคริสต์มาส ใช้ร่วมกันทุกหน้าในโฟลเดอร์นี้ */
+.xmas-stage,
+.xmas-picker,
+.xmas-gift {
+  --gold: #f5c542;
+  --gold-soft: #ffe08a;
+  --red: #dc2643;
+  --mint: #7ee7b0;
+  --ink: #f8fafc;
+  --muted: #b7c9c0;
+}
+
 .xmas-stage {
   --gold: #f5c542;
   --gold-soft: #ffe08a;
@@ -1146,4 +1158,416 @@
 }
 .xmas-room-card .xmas-enter {
   color: var(--room-accent);
+}
+
+/* ---------- เปิดตัวด้วยกล่องของขวัญคริสต์มาส ---------- */
+.xmas-gift {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 28px;
+  overflow: hidden;
+  background: radial-gradient(900px 600px at 50% 40%, #12302a 0%, #06141c 60%, #03090f 100%);
+  color: var(--ink);
+  font-family: var(--font-thai), system-ui, sans-serif;
+  animation: xmas-gift-in 0.6s ease both;
+}
+.xmas-gift.is-opening {
+  animation: xmas-gift-out 0.9s ease 0.7s both;
+  pointer-events: none;
+}
+@keyframes xmas-gift-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes xmas-gift-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.xmas-gift-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 10% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 30% 70%, #fff, transparent),
+    radial-gradient(2px 2px at 55% 15%, #ffe9b0, transparent),
+    radial-gradient(1px 1px at 70% 50%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 88% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 92% 25%, #cfe7ff, transparent);
+  animation: xmas-gift-in 1.5s ease both;
+}
+
+.xmas-gift-title {
+  text-align: center;
+}
+.xmas-gift-thai {
+  margin: 0 0 6px;
+  font-size: clamp(14px, 3vw, 18px);
+  color: var(--gold-soft);
+  animation: xmas-gift-rise 0.8s ease 0.1s both;
+}
+.xmas-gift h1 {
+  margin: 0;
+  font-size: clamp(30px, 8vw, 58px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  color: #fff8e0;
+  text-shadow: 0 0 24px rgba(245, 197, 66, 0.55), 0 2px 0 rgba(0, 0, 0, 0.25);
+  font-family: var(--font-thai), system-ui, sans-serif;
+}
+.xmas-gift h1 span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.5em);
+  animation: xmas-gift-letter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes xmas-gift-letter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes xmas-gift-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* กล่อง: ตัวกล่อง ฝา และโบว์ */
+.xmas-gift-box {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  animation: xmas-gift-appear 0.9s cubic-bezier(0.2, 0.9, 0.25, 1.2) 0.5s both, xmas-gift-shake 2.6s ease-in-out 1.5s infinite;
+}
+.xmas-gift-box:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 8px;
+  border-radius: 12px;
+}
+@keyframes xmas-gift-appear {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.6) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+@keyframes xmas-gift-shake {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  74% {
+    transform: rotate(-4deg);
+  }
+  78% {
+    transform: rotate(4deg);
+  }
+  82% {
+    transform: rotate(-3deg);
+  }
+  86% {
+    transform: rotate(2deg);
+  }
+  90% {
+    transform: rotate(0);
+  }
+}
+.xmas-gift-body {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 120px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #a51c35, var(--red) 40%, #a51c35);
+  box-shadow: inset 0 -12px 24px rgba(0, 0, 0, 0.3), 0 30px 50px -20px rgba(0, 0, 0, 0.8);
+  transform-origin: bottom center;
+  transition: transform 0.7s ease 0.3s, opacity 0.7s ease 0.5s;
+}
+.xmas-gift-lid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40px;
+  height: 46px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #b82440, #e8415f 45%, #b82440);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.18);
+  transform-origin: left center;
+  transition: transform 0.9s cubic-bezier(0.3, 0.8, 0.3, 1), opacity 0.6s ease 0.4s;
+  z-index: 2;
+}
+.xmas-gift-ribbon-v,
+.xmas-gift-ribbon-h {
+  position: absolute;
+  background: linear-gradient(90deg, #f5c542, #ffe08a 50%, #f5c542);
+  box-shadow: 0 0 10px rgba(245, 197, 66, 0.5);
+}
+.xmas-gift-ribbon-v {
+  left: calc(50% - 9px);
+  top: 0;
+  bottom: 0;
+  width: 18px;
+}
+.xmas-gift-lid .xmas-gift-bow,
+.xmas-gift-lid .xmas-gift-bow-l,
+.xmas-gift-lid .xmas-gift-bow-r {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff3c4, var(--gold) 55%, #b8860b);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+.xmas-gift-lid .xmas-gift-bow {
+  left: calc(50% - 14px);
+  top: -22px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+.xmas-gift-lid .xmas-gift-bow-l,
+.xmas-gift-lid .xmas-gift-bow-r {
+  top: -26px;
+  width: 36px;
+  height: 26px;
+  border-radius: 60% 40%;
+}
+.xmas-gift-lid .xmas-gift-bow-l {
+  left: calc(50% - 40px);
+  transform: rotate(-18deg);
+}
+.xmas-gift-lid .xmas-gift-bow-r {
+  left: calc(50% + 4px);
+  transform: rotate(18deg);
+}
+.xmas-gift-ribbon-h {
+  left: 0;
+  right: 0;
+  top: calc(50% - 9px);
+  height: 18px;
+  width: auto;
+}
+.xmas-gift-inner {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 40px;
+  height: 18px;
+  border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 0%, #fff8d6, #f5c542 60%, transparent 90%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+/* เมื่อแกะแล้ว: ฝาเปิดขึ้นและหมุนออก กล่องยุบลง แสงพุ่งออกมา */
+.xmas-gift.is-opening .xmas-gift-lid {
+  transform: translate(-6px, -170px) rotate(-38deg);
+  opacity: 0;
+}
+.xmas-gift.is-opening .xmas-gift-body {
+  transform: scaleY(0.12);
+  opacity: 0;
+}
+.xmas-gift.is-opening .xmas-gift-inner {
+  opacity: 1;
+  animation: xmas-gift-core 1.2s ease both;
+}
+.xmas-gift.is-opening .xmas-gift-box {
+  animation: none;
+}
+.xmas-gift.is-opening .xmas-gift-hint,
+.xmas-gift.is-opening .xmas-gift-skip {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+@keyframes xmas-gift-core {
+  0% {
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.6);
+  }
+  100% {
+    transform: scale(1.2);
+  }
+}
+
+.xmas-gift-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160vmax;
+  height: 160vmax;
+  margin: -80vmax 0 0 -80vmax;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(245, 197, 66, 0.0) 0deg, rgba(255, 224, 138, 0.35) 12deg, rgba(245, 197, 66, 0.0) 24deg, rgba(255, 224, 138, 0.3) 40deg, rgba(245, 197, 66, 0) 52deg, rgba(255, 224, 138, 0.35) 70deg, rgba(245, 197, 66, 0) 84deg);
+  mask: radial-gradient(circle, transparent 8%, #000 30%, transparent 60%);
+  -webkit-mask: radial-gradient(circle, transparent 8%, #000 30%, transparent 60%);
+  opacity: 0;
+  pointer-events: none;
+}
+.xmas-gift.is-opening .xmas-gift-burst {
+  animation: xmas-gift-rays 1.6s ease 0.5s both;
+}
+@keyframes xmas-gift-rays {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1) rotate(60deg);
+  }
+}
+
+.xmas-gift-spark {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 12px var(--c);
+  opacity: 0;
+  pointer-events: none;
+}
+.xmas-gift.is-opening .xmas-gift-spark {
+  animation: xmas-gift-fly 1.4s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d) both;
+}
+@keyframes xmas-gift-fly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.3);
+  }
+}
+
+.xmas-gift-hint {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  animation: xmas-gift-rise 0.8s ease 1s both;
+  transition: opacity 0.3s ease;
+}
+.xmas-gift-skip {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+/* เนื้อหาหลังจากแกะกล่องเสร็จ: ซูมเข้าและเบลอหายไป */
+.xmas-gift-under {
+  opacity: 0;
+  transform: scale(1.04);
+  filter: blur(8px);
+  transition: opacity 0.9s ease, transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.9s ease;
+}
+.xmas-gift-under.is-shown {
+  opacity: 1;
+  transform: scale(1);
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xmas-gift,
+  .xmas-gift-stars,
+  .xmas-gift-thai,
+  .xmas-gift h1 span,
+  .xmas-gift-box,
+  .xmas-gift-hint,
+  .xmas-gift-spark,
+  .xmas-gift-burst,
+  .xmas-gift-inner,
+  .xmas-gift.is-opening .xmas-gift-spark,
+  .xmas-gift.is-opening .xmas-gift-burst,
+  .xmas-gift.is-opening .xmas-gift-inner {
+    animation: none !important;
+  }
+  .xmas-gift-lid,
+  .xmas-gift-body,
+  .xmas-gift-under {
+    transition: none;
+  }
+  .xmas-gift h1 span {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ฉากตัวอย่างในการ์ดห้อง และการจัดหน้าเลือกห้องให้เต็มจอ */
+.xmas-room-art {
+  overflow: hidden;
+  min-height: 110px;
+}
+.xmas-room-art .xmas-skyline {
+  top: auto;
+  bottom: 0;
+  height: 62%;
+  opacity: 0.95;
+}
+.xmas-room-art .xmas-skyline-city,
+.xmas-room-art .xmas-skyline-hills,
+.xmas-room-art .xmas-skyline-rice,
+.xmas-room-art .xmas-skyline-sea {
+  color: color-mix(in srgb, var(--room-accent) 22%, #0a1a1c);
+}
+@media (min-width: 1000px) {
+  .xmas-picker {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .xmas-room-art {
+    height: 200px;
+  }
+  .xmas-room-body p {
+    min-height: 3.2em;
+  }
+  .xmas-picker h1 {
+    font-size: clamp(32px, 3.4vw, 46px);
+  }
 }
