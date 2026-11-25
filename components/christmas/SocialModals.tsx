@@ -196,6 +196,7 @@ export function DecorModal({
           <p className="xmas-build-slot">{slot === null ? "ยังไม่ได้เลือกช่อง" : `ช่องที่ ${slot + 1}${slotTaken ? " (มีคนวางแล้ว)" : ""}`}</p>
         </div>
 
+        <div className="xmas-build-main">
         <div className="xmas-part-tabs" role="tablist" aria-label="หมวดชิ้นส่วน">
           {PART_TABS.map((t) => (
             <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} onClick={() => setTab(t.key)}>
@@ -224,6 +225,7 @@ export function DecorModal({
             </>
           )}
 
+        </div>
         </div>
 
         <div className="xmas-build-foot">

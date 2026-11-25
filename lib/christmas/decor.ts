@@ -96,3 +96,21 @@ export async function like(room: string, id: string, clientId: string): Promise<
   if (added === 1) await cmd("HINCRBY", K.likes(room), id, 1);
   return Number((await cmd<string | null>("HGET", K.likes(room), id)) ?? 0);
 }
+
+// ลบตุ๊กตาหนึ่งตัวออกจากช่อง (ผู้ดูแล)
+export async function removeDecor(room: string, slot: number): Promise<boolean> {
+  if (!storeConfigured()) return memRoom(room).delete(slot);
+  const n = await cmd<number>("HDEL", K.hash(room), String(slot));
+  return n === 1;
+}
+
+// ล้างตุ๊กตาและจำนวนถูกใจทั้งห้อง (ผู้ดูแล)
+export async function clearDecor(room: string) {
+  if (!storeConfigured()) {
+    mem.slots.delete(room);
+    mem.likes.delete(room);
+    return;
+  }
+  await cmd("DEL", K.hash(room), K.likes(room));
+}
+

@@ -2,12 +2,14 @@
 // เรียกได้หลายครั้งโดยไม่เกิดผลซ้ำ (จะส่งข้อความเฉพาะการยืนยันแรก)
 import { enqueueEvent } from "@/lib/christmas/store";
 import { getOrder, markPaid } from "@/lib/christmas/orders";
+import { writeLog } from "@/lib/christmas/log";
 
 export async function confirmPayment(orderId: string, providerRef: string) {
   const before = await getOrder(orderId);
   if (!before || before.status === "paid") return before;
   const now = Date.now();
   const paid = await markPaid(orderId, providerRef, now);
+  if (paid) await writeLog({ type: "paid", room: paid.room, actor: paid.mode, text: `ชำระแล้ว ฿${paid.amount} · ${paid.name} (${paid.kind})` });
   if (paid && paid.kind !== "support") {
     await enqueueEvent(
       paid.room,

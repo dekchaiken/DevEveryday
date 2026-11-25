@@ -7,6 +7,7 @@ import { promptPayPayload } from "@/lib/christmas/promptpay";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { MESSAGE_THEMES, type MessageTheme } from "@/lib/christmas/types";
+import { maskIp, writeLog } from "@/lib/christmas/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +39,10 @@ export async function POST(req: Request) {
   const name = clean(body.name, 20);
   const message = clean(body.message, 80);
   if (!name) return NextResponse.json({ error: "กรุณาใส่ชื่อ" }, { status: 400 });
-  if (hasBlocked(name) || hasBlocked(message)) return NextResponse.json({ error: "ข้อความมีคำที่ไม่เหมาะสม" }, { status: 400 });
+  if (hasBlocked(name, config.blockedWords) || hasBlocked(message, config.blockedWords)) {
+    await writeLog({ type: "blocked", room: room.id, actor: maskIp(ip), text: `สนับสนุน: ${name} / ${message}` });
+    return NextResponse.json({ error: "ข้อความมีคำที่ไม่เหมาะสม" }, { status: 400 });
+  }
 
   const kind = body.kind === "support" ? "support" : "giant";
   const id = crypto.randomUUID();
@@ -74,5 +78,6 @@ export async function POST(req: Request) {
   }
 
   await saveOrder(base);
+  await writeLog({ type: "order", room: room.id, actor: maskIp(ip), text: `${kind === "giant" ? "Exclusive" : "สนับสนุนทีม"} ฿${amount} · ${name} · ${config.payMode} · รอชำระ` });
   return NextResponse.json({ order: toPreview(base) });
 }

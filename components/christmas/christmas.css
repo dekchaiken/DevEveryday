@@ -3876,3 +3876,80 @@
   background: rgba(245, 197, 66, 0.14);
   box-shadow: 0 0 18px -6px rgba(245, 197, 66, 0.7);
 }
+
+/* ---------- ตกแต่งตุ๊กตาหิมะบนเดสก์ท็อป: สองคอลัมน์ ซ้ายเป็นตัวอย่าง ขวาเป็นตัวเลือก ---------- */
+@media (min-width: 760px) {
+  .xmas-build {
+    width: min(100%, 900px);
+    height: min(700px, calc(100dvh - 24px));
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "top main"
+      "foot main";
+  }
+  .xmas-build .xmas-build-top {
+    grid-area: top;
+    padding: 20px 20px 14px;
+    background: linear-gradient(180deg, rgba(245, 197, 66, 0.08), rgba(0, 0, 0, 0.1));
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .xmas-build .xmas-build-top {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .xmas-build .xmas-build-preview {
+    flex: 1 1 0;
+    min-height: 120px;
+    height: auto;
+    margin: 4px 0 0;
+  }
+  .xmas-build .xmas-build-main {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .xmas-build .xmas-part-tabs {
+    flex: 0 0 auto;
+    border-top: 0;
+    padding: 14px 16px 10px;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .xmas-build .xmas-part-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 16px 20px 20px;
+  }
+  .xmas-build .xmas-part-grid {
+    grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+    gap: 10px;
+  }
+  .xmas-build .xmas-build-foot {
+    grid-area: foot;
+    align-content: end;
+    padding: 16px 20px 20px;
+    border-top: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.14);
+  }
+  .xmas-build .xmas-foot-slot {
+    grid-template-columns: 1fr 1fr;
+  }
+  .xmas-build .xmas-foot-slot .xmas-slot-input {
+    grid-column: 1 / -1;
+  }
+  .xmas-build .xmas-foot-slot .xmas-chip-btn {
+    width: 100%;
+  }
+  .xmas-build .xmas-part-title {
+    font-size: 15px;
+  }
+}
+
+/* กลุ่มแท็บและเนื้อหา: บนมือถือไม่ใช่กล่องครอบ (ให้ลูกเรียงในกริด 4 แถวเหมือนเดิม) */
+.xmas-build-main {
+  display: contents;
+}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getConfig, setConfig, validateConfig } from "@/lib/christmas/config";
+import { writeLog } from "@/lib/christmas/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,5 +20,6 @@ export async function POST(req: Request) {
   const parsed = validateConfig(body);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
   await setConfig(parsed.value);
+  await writeLog({ type: "config", room: "all", actor: "admin", text: `บันทึกการตั้งค่า: ${parsed.value.payMode}, ${parsed.value.enabled ? "เปิดรับ" : "ปิดรับ"}, คำต้องห้าม ${parsed.value.blockedWords.length} คำ` });
   return NextResponse.json({ ok: true, config: parsed.value });
 }
