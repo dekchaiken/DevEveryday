@@ -3557,3 +3557,152 @@
   color: var(--gold-soft);
 }
 
+
+/* ---------- ปุ่มเปิด/ปิดหิมะ: สวิตช์รูปเกล็ดหิมะ ---------- */
+.xmas-snow-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px 0 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(186, 230, 253, 0.28);
+  background: rgba(8, 28, 44, 0.55);
+  color: #d9f0ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.xmas-snow-toggle:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.xmas-snow-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: background 0.3s ease;
+}
+.xmas-snow-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f8fbff;
+  color: #5b7d99;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2), color 0.3s ease;
+}
+.xmas-snow-toggle.is-on {
+  border-color: rgba(125, 211, 252, 0.7);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.28), rgba(186, 230, 253, 0.12));
+}
+.xmas-snow-toggle.is-on .xmas-snow-track {
+  background: linear-gradient(135deg, #38bdf8, #7dd3fc);
+}
+.xmas-snow-toggle.is-on .xmas-snow-knob {
+  transform: translateX(18px) rotate(180deg);
+  color: #0369a1;
+}
+.xmas-snow-toggle.is-on .xmas-snow-knob .xicon {
+  animation: xmas-spin-snow 6s linear infinite;
+}
+@keyframes xmas-spin-snow {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-snow-toggle.is-on .xmas-snow-knob .xicon {
+    animation: none;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-snow-label {
+    display: none;
+  }
+  .xmas-snow-toggle {
+    padding: 0 6px;
+    min-height: 32px;
+  }
+}
+
+/* ---------- ฉากเบื้องหลัง: พระจันทร์ เนินเขาไกล และป้ายชื่อคนเงา ---------- */
+.xmas-moon {
+  position: absolute;
+  top: 22%;
+  right: 5%;
+  width: clamp(54px, 6vw, 88px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fffbea 0%, #f8e7b0 45%, #d9b86a 70%, rgba(217, 184, 106, 0) 72%);
+  box-shadow: 0 0 60px 18px rgba(253, 230, 138, 0.25), 0 0 160px 60px rgba(125, 211, 252, 0.12);
+  opacity: 0.9;
+}
+.xmas-hills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 46%;
+  pointer-events: none;
+}
+.xmas-hills-far {
+  fill: #0f2c3d;
+  opacity: 0.85;
+}
+.xmas-hills-near {
+  fill: #12364a;
+}
+.xmas-crowd {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  color: #4f86a8;
+}
+.xmas-crowd-fig {
+  position: absolute;
+  transform-origin: 50% 100%;
+  animation: xmas-crowd-bob 4.2s ease-in-out infinite;
+}
+.xmas-crowd-fig svg {
+  display: block;
+  width: 40px;
+  height: 84px;
+  color: inherit;
+}
+.xmas-crowd-name {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-bottom: 4px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff6d6;
+  background: rgba(8, 24, 36, 0.55);
+  border: 1px solid rgba(253, 230, 138, 0.25);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+/* มือถือ: ซ่อนตัวเลขออนไลน์บนแถบบน เพื่อให้มีที่ให้ปุ่มหิมะและสนับสนุน */
+@media (max-width: 759px) {
+  .xmas-live .xmas-online {
+    display: none;
+  }
+}

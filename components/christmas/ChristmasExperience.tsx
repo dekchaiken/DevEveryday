@@ -83,6 +83,26 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [feedOpen, setFeedOpen] = useState(false); // แผงรายการบนมือถือ
   const [local, setLocal] = useState<Ornament[]>([]);
   const [donateOpen, setDonateOpen] = useState(false);
+  // เปิด/ปิดหิมะตก จำค่าไว้ในเบราว์เซอร์ของผู้ใช้ (ถ้าเข้าไม่ได้ก็ใช้ค่าเริ่มต้น)
+  const [snowOn, setSnowOn] = useState(true);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("xmas-snow") === "off") setSnowOn(false);
+    } catch {
+      /* ไม่มีที่เก็บค่า ใช้ค่าเริ่มต้น */
+    }
+  }, []);
+  function toggleSnow() {
+    setSnowOn((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem("xmas-snow", next ? "on" : "off");
+      } catch {
+        /* ไม่มีที่เก็บค่า */
+      }
+      return next;
+    });
+  }
   const [inviteOpen, setInviteOpen] = useState(false);
   const [decorOpen, setDecorOpen] = useState(false);
   const [decorFocus, setDecorFocus] = useState<Decor | null>(null);
@@ -325,7 +345,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {/* พื้นหลังท้องฟ้าค่ำและดาว */}
       <div className="xmas-sky" aria-hidden />
       <RoomSkyline kind={room.skyline} />
-      <Crowd count={Math.max(online?.count ?? 0, 6)} names={crowdNames} />
+      <Crowd count={Math.max(online?.count ?? 0, 14)} names={crowdNames} />
 
       {webglOk ? (
         <TreeScene
@@ -351,6 +371,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setDecorFocus(d);
             setFocus(null);
           }}
+          snowing={snowOn}
           key={room.id}
         />
       ) : (
@@ -416,6 +437,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {loadError ? "กำลังเชื่อมต่อใหม่…" : "สด"}
             {online && <span className="xmas-online">{online.count}/{online.capacity} คน</span>}
           </div>
+          <button type="button" className={`xmas-snow-toggle ${snowOn ? "is-on" : ""}`} role="switch" aria-checked={snowOn} aria-label="หิมะตก" onClick={toggleSnow}>
+            <span className="xmas-snow-track" aria-hidden>
+              <span className="xmas-snow-knob">
+                <Icon name="snow" size={13} />
+              </span>
+            </span>
+            <span className="xmas-snow-label">หิมะ</span>
+          </button>
           <button type="button" className="xmas-switch is-donate" onClick={() => setDonateOpen(true)}>
             สนับสนุน
           </button>
