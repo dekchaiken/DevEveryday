@@ -76,6 +76,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [focus, setFocus] = useState<Ornament | null>(null);
   const [pick, setPick] = useState<{ height: number; angle: number } | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [feedOpen, setFeedOpen] = useState(false); // แผงรายการบนมือถือ
   const [local, setLocal] = useState<Ornament[]>([]);
   const [donateOpen, setDonateOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -362,11 +363,18 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           className="xmas-action"
           onClick={() => {
             setSheetOpen(true);
+            setFeedOpen(false);
             setPanelPulse((n) => n + 1);
             setHintOn(true);
           }}
         >
           <Icon name="tree" size={18} /> แขวนคำอวยพร
+        </button>
+        <button className="xmas-action xmas-action-mobile" onClick={() => {
+          setFeedOpen(true);
+          setSheetOpen(false);
+        }}>
+          <Icon name="heart" size={18} /> รายการ
         </button>
         <button className="xmas-action" onClick={() => setDecorOpen(true)}>
           <Icon name="snowman" size={18} /> ตกแต่งตุ๊กตาหิมะ
@@ -463,6 +471,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </button>
         <form onSubmit={hang} className="xmas-form">
           <header className="xmas-form-head">
+            <button type="button" className="xmas-form-close" onClick={() => setSheetOpen(false)} aria-label="ปิดแผงแขวนคำอวยพร">
+              <Icon name="close" size={18} />
+            </button>
             <div className="xmas-form-title">
               <span className="xmas-form-icon" aria-hidden>
                 <Icon name="tree" size={22} />
@@ -552,7 +563,13 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       </section>
 
       {/* แผงแท็บ: คำอวยพร / Exclusive / สนับสนุนทีม */}
-      <FeedPanel wishes={ornaments} feed={feed} onWishClick={(o) => setFocus(o)} />
+      <FeedPanel
+        wishes={ornaments}
+        feed={feed}
+        onWishClick={(o) => setFocus(o)}
+        mobileOpen={feedOpen}
+        onMobileClose={() => setFeedOpen(false)}
+      />
     </div>
   );
 }
