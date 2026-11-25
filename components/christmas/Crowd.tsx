@@ -1,14 +1,25 @@
 "use client";
 
-// ฉากหลังที่อยู่นอกฉาก 3 มิติ: พระจันทร์และเนินเขาไกล (ผู้คนเป็นวัตถุในฉาก 3 มิติแล้ว)
+// บรรยากาศรอบฉาก (อยู่นอกฉาก 3 มิติ): พระจันทร์ แสงเหนือ ไฟประดับสาย และขอบกระจกเกล็ดน้ำแข็ง
 export function Backdrop() {
+  // ไฟสายที่ห้อยเป็นเส้นโค้งข้ามด้านบน ตำแหน่งกำหนดจากลำดับ
+  const bulbs = Array.from({ length: 22 }, (_, i) => {
+    const t = i / 21;
+    return { left: 2 + t * 96, top: 8 + Math.sin(Math.PI * t) * 26 + (i % 2) * 2, color: ["#fde68a", "#fca5a5", "#93c5fd", "#fef3c7", "#86efac"][i % 5], delay: (i * 0.37) % 3 };
+  });
   return (
-    <div className="xmas-crowd" aria-hidden>
+    <div className="xmas-atmos" aria-hidden>
+      <div className="xmas-aurora" />
       <div className="xmas-moon" />
-      <svg className="xmas-hills" viewBox="0 0 1600 300" preserveAspectRatio="none">
-        <path className="xmas-hills-far" d="M0 180 C160 120 260 150 380 118 C520 80 620 150 760 128 C900 104 1010 160 1160 122 C1300 88 1420 140 1600 110 V300 H0 Z" />
-        <path className="xmas-hills-near" d="M0 230 C200 190 320 220 480 200 C640 178 760 230 940 208 C1120 186 1240 232 1420 206 C1500 196 1560 210 1600 204 V300 H0 Z" />
-      </svg>
+      <div className="xmas-fairy">
+        <svg className="xmas-fairy-wire" viewBox="0 0 100 40" preserveAspectRatio="none">
+          <path d="M0 4 Q50 40 100 4" />
+        </svg>
+        {bulbs.map((b, i) => (
+          <i key={i} style={{ left: `${b.left}%`, top: `${b.top}%`, background: b.color, color: b.color, animationDelay: `${b.delay}s` }} />
+        ))}
+      </div>
+      <div className="xmas-frost" />
     </div>
   );
 }

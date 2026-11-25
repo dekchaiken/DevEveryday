@@ -31,11 +31,10 @@ type Props = {
   markerSlot: number | null; // ช่องที่กำลังเลือกบนพื้น
   onGroundPick: (slot: number) => void; // แตะพื้นหิมะเพื่อเลือกช่องใกล้ที่สุด
   snowing: boolean; // เปิด/ปิดหิมะตก
-  crowd: { count: number; names: string[] }; // ฝูงชนเงาที่ยืนอยู่รอบลานหิมะ
 };
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giant, decor, onDecorClick, markerSlot, onGroundPick, snowing, crowd }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giant, decor, onDecorClick, markerSlot, onGroundPick, snowing }: Props) {
   const snowingRef = useRef(snowing);
   snowingRef.current = snowing;
   const mountRef = useRef<HTMLDivElement>(null);
@@ -46,7 +45,6 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setPreview: (p: Preview) => void;
     firework: (color: string) => void;
     setReduced: (v: boolean) => void;
-    setCrowd: (count: number, names: string[]) => void;
     setGiant: (g: { name: string; message: string } | null) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
@@ -84,7 +82,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environmentIntensity = 0.55;
     // หมอกบาง ๆ ทำให้พื้นหิมะไกลค่อย ๆ กลมกลืนกับท้องฟ้าค่ำ
-    scene.fog = new THREE.Fog(0x0b1d2a, 13, 34);
+    scene.fog = new THREE.Fog(0x0b1d2a, 14, 40);
 
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(0, 2.6, 9.2);
@@ -126,7 +124,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     // ---------- พื้นหิมะ ----------
     // พื้นหิมะ: ผิวเป็นลอนกองหิมะเบา ๆ รอบนอก โคนต้นเรียบ และมีเม็ดหิมะจากเท็กซ์เจอร์
-    const groundGeo = new THREE.PlaneGeometry(44, 44, 180, 180);
+    const groundGeo = new THREE.PlaneGeometry(96, 96, 220, 220);
     groundGeo.rotateX(-Math.PI / 2);
     const gp = groundGeo.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < gp.count; i++) {
@@ -134,11 +132,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const z = gp.getZ(i);
       const d = Math.hypot(x, z);
       const drift = (Math.sin(x * 0.55 + Math.cos(z * 0.7)) * Math.cos(z * 0.45 - x * 0.3) * 0.6 + Math.sin(x * 1.7 + z * 1.3) * 0.25) * 0.11;
-      const edge = Math.min(Math.max((d - 3.2) / 6, 0), 1);
+      const edge = Math.min(Math.max((d - 3.2) / 8, 0), 1);
       gp.setY(i, drift * edge * edge);
     }
     groundGeo.computeVertexNormals();
     const snowTex = makeSnowTexture();
+    // ลานหิมะกว้างกว่าเดิม ขอบด้านไกลถูกเนินเขาบังไว้
     const ground = new THREE.Mesh(
       groundGeo,
       new THREE.MeshStandardMaterial({ color: groundColor, map: snowTex, bumpMap: snowTex, bumpScale: 0.03, roughness: 0.82, metalness: 0 }),
@@ -311,6 +310,15 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         geo = new THREE.SphereGeometry(0.11, 28, 28);
       }
       const mesh = new THREE.Mesh(geo, mat);
+      mesh.castShadow = true;
+      // ห่วงแขวนเล็ก ๆ ที่ยอดของชิ้นงาน ทำให้ดูเป็นของที่แขวนอยู่จริง
+      const hookY = o.shape === "star" ? 0.2 : o.shape === "gift" ? 0.13 : 0.135;
+      const hook = new THREE.Mesh(
+        new THREE.TorusGeometry(0.03, 0.008, 8, 18),
+        new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.25 }),
+      );
+      hook.position.y = hookY;
+      mesh.add(hook);
       if (o.shape === "gift") {
         const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.205, 0.205, 0.04), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.2, roughness: 0.4 }));
         mesh.add(ribbon);
@@ -352,49 +360,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     previewMesh.visible = false;
     scene.add(previewMesh);
 
-    // ---------- ฝูงชนเงาเบื้องหลัง: แผ่นภาพคนในฉาก 3 มิติ ขนาดและมุมมองเดียวกับต้นไม้และพื้น ----------
-    const crowdGroup = new THREE.Group();
-    scene.add(crowdGroup);
-    const silTex = new Map<string, THREE.CanvasTexture>();
-    for (const v of ["adult", "hat", "bag", "child"]) silTex.set(v, makeSilhouetteTexture(v));
-    const labelCache = new Map<string, THREE.CanvasTexture>();
-    const crowdMats: THREE.Material[] = [];
-    function setCrowd(count: number, names: string[]) {
-      crowdGroup.clear();
-      for (const m of crowdMats) m.dispose();
-      crowdMats.length = 0;
-      const total = Math.min(Math.max(Math.round(count), 0), 26);
-      const variants = ["adult", "hat", "adult", "bag", "child", "hat", "adult", "bag"];
-      for (let i = 0; i < total; i++) {
-        // ยืนบนพื้นวงกว้างรอบลาน กระจายตามมุมและระยะที่กำหนดจากลำดับ เพื่อให้ตรงกันทุกเครื่อง
-        const angle = ((i * 0.618034) % 1) * Math.PI * 2;
-        const dist = 15 + ((i * 37) % 10) * 0.45;
-        const variant = variants[i % variants.length];
-        const h = variant === "child" ? 1.25 : 1.75 + (((i * 13) % 5) - 2) * 0.03;
-        const aspect = variant === "child" ? 0.5 : 0.48;
-        const mat = new THREE.SpriteMaterial({ map: silTex.get(variant), color: 0x23496a, transparent: true, opacity: 0.92, depthWrite: false, fog: true });
-        crowdMats.push(mat);
-        const sp = new THREE.Sprite(mat);
-        sp.scale.set(h * aspect, h, 1);
-        sp.position.set(Math.cos(angle) * dist, h / 2, Math.sin(angle) * dist);
-        crowdGroup.add(sp);
-        const name = names.length ? names[i % names.length] : "";
-        if (name) {
-          let tex = labelCache.get(name);
-          if (!tex) {
-            tex = makeLabelTexture(name);
-            labelCache.set(name, tex);
-          }
-          const lmat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: true });
-          crowdMats.push(lmat);
-          const lab = new THREE.Sprite(lmat);
-          lab.scale.set(1.5, 0.38, 1);
-          lab.position.set(sp.position.x, h + 0.22, sp.position.z);
-          crowdGroup.add(lab);
-        }
-      }
-    }
-    setCrowd(crowd.count, crowd.names);
+    // ---------- เนินเขาเป็นวงรอบฉากในโลก 3 มิติ จึงหมุนไปพร้อมกับพื้นหิมะและต้นไม้ ----------
+    scene.add(buildHills());
 
     // ---------- หิมะตก ----------
     const SNOW = isSmall ? 500 : 1100;
@@ -1085,7 +1052,6 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         previewMesh.visible = true;
       },
       firework,
-      setCrowd,
       setReduced: (v) => {
         reduced = v;
         controls.autoRotate = !v;
@@ -1153,13 +1119,6 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
   useEffect(() => {
     api.current?.setReduced(reducedMotion);
   }, [reducedMotion]);
-
-  // ซิงก์ฝูงชนเงาเมื่อจำนวนคนหรือชื่อเปลี่ยน
-  const crowdKey = `${crowd.count}|${crowd.names.join(",")}`;
-  useEffect(() => {
-    api.current?.setCrowd(crowd.count, crowd.names);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [crowdKey]);
 
   return <div ref={mountRef} className="xmas-canvas" aria-label="ฉากต้นคริสต์มาสสามมิติ" role="img" />;
 }
@@ -1296,77 +1255,41 @@ function buildFronds(small: boolean, rScale = 1, inner = false): THREE.BufferGeo
   return geo;
 }
 
-// แผ่นภาพเงาคน (ขาวดำ ย้อมสีทีหลังด้วย SpriteMaterial.color)
-function makeSilhouetteTexture(variant: string) {
-  const c = document.createElement("canvas");
-  c.width = 128;
-  c.height = 256;
-  const g = c.getContext("2d");
-  const tex = new THREE.CanvasTexture(c);
-  if (!g) return tex;
-  g.scale(3.2, 3.05); // วาดในพิกัด 40x84 เหมือนภาพ SVG เดิม
-  g.fillStyle = "#ffffff";
-  g.beginPath();
-  if (variant === "child") {
-    g.arc(20, 22, 8, 0, Math.PI * 2);
-    g.fill();
-    g.beginPath();
-    g.moveTo(9, 84);
-    g.lineTo(9, 58);
-    g.quadraticCurveTo(9, 40, 20, 40);
-    g.quadraticCurveTo(31, 40, 31, 58);
-    g.lineTo(31, 84);
-    g.closePath();
-    g.fill();
-  } else {
-    g.arc(20, 12, 9, 0, Math.PI * 2);
-    g.fill();
-    g.beginPath();
-    g.moveTo(6, 84);
-    g.lineTo(6, 52);
-    g.quadraticCurveTo(6, 30, 20, 30);
-    g.quadraticCurveTo(34, 30, 34, 52);
-    g.lineTo(34, 84);
-    g.closePath();
-    g.fill();
-    if (variant === "hat") {
-      g.beginPath();
-      g.moveTo(10.5, 6);
-      g.quadraticCurveTo(20, -3, 29.5, 6);
-      g.closePath();
-      g.fill();
-    }
-    if (variant === "bag") {
-      g.fillRect(26, 46, 11, 15);
-    }
-  }
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
-}
 
-// ป้ายชื่อเป็นเม็ดยาสีโปร่งแสง เรนเดอร์เป็นภาพเพื่อให้ขนาดตรงกับฉาก
-function makeLabelTexture(name: string) {
-  const c = document.createElement("canvas");
-  c.width = 256;
-  c.height = 64;
-  const g = c.getContext("2d");
-  const tex = new THREE.CanvasTexture(c);
-  if (!g) return tex;
-  const text = name.length > 12 ? `${name.slice(0, 11)}…` : name;
-  g.fillStyle = "rgba(8,24,36,0.72)";
-  g.beginPath();
-  g.roundRect(4, 8, 248, 48, 24);
-  g.fill();
-  g.strokeStyle = "rgba(253,230,138,0.55)";
-  g.lineWidth = 2;
-  g.stroke();
-  g.fillStyle = "#fff6d6";
-  g.font = "600 28px system-ui, -apple-system, sans-serif";
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.fillText(text, 128, 33);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
+// เนินเขาหิมะรอบฉาก: ผิวเป็นลอนแบบธรรมชาติ ยอดมีหิมะ ฐานมืดกลมกลืนกับท้องฟ้าค่ำ
+function buildHills(): THREE.Mesh {
+  const R = 42;
+  const H = 10;
+  const geo = new THREE.CylinderGeometry(R, R, H, 200, 1, true);
+  geo.translate(0, -4.6, 0);
+  const p = geo.getAttribute("position") as THREE.BufferAttribute;
+  const colors = new Float32Array(p.count * 3);
+  const cBase = new THREE.Color(0x071820);
+  const cSlope = new THREE.Color(0x163a4f);
+  const cSnow = new THREE.Color(0xdfeaf4);
+  const c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i);
+    const y = p.getY(i);
+    const z = p.getZ(i);
+    const th = Math.atan2(z, x);
+    const h =
+      (Math.sin(th * 3 + 0.8) * 0.5 + 0.5) * 3.4 +
+      (Math.sin(th * 7 + 2.1) * 0.5 + 0.5) * 1.5 +
+      (Math.sin(th * 15 + 0.3) * 0.5 + 0.5) * 0.4;
+    const top = y > 0;
+    if (top) p.setY(i, y + h);
+    const height = top ? h : 0;
+    c.copy(cBase).lerp(cSlope, top ? Math.min(height / 3.5, 1) : 0);
+    c.lerp(cSnow, top ? Math.min(Math.max((height - 3.6) / 1.2, 0), 1) * 0.9 : 0);
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+  }
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.95, metalness: 0, fog: false });
+  const hills = new THREE.Mesh(geo, mat);
+  hills.receiveShadow = false;
+  return hills;
 }
