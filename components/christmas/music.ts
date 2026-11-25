@@ -120,6 +120,7 @@ export function startMusic() {
   wet.connect(master);
   reverbNode = ctx.createGain();
   reverbNode.connect(conv);
+  void ctx.resume();
   engine = { ctx, master, timer: 0, next: ctx.currentTime + 0.2, step: 0 };
   const e = engine;
   e.timer = window.setInterval(() => schedule(e), 120);
