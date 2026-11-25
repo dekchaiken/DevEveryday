@@ -2701,3 +2701,157 @@
     height: 18px;
   }
 }
+
+/* =====================================================================
+   มือถือ: ฉากต้นไม้เป็นหลัก แผงแขวนคำอวยพรและรายการเปิดเป็นชีตด้านล่างเมื่อกดเท่านั้น
+   ===================================================================== */
+.xmas-form-close,
+.xmas-sheet-head {
+  display: none;
+}
+.xmas-action-mobile {
+  display: none;
+}
+@media (max-width: 759px) {
+  .xmas-action-mobile {
+    display: inline-flex;
+  }
+  .xmas-sheet-toggle {
+    display: none !important;
+  }
+
+  /* ค่าเริ่มต้น: เห็นแค่ต้นไม้ ไม่มีแผงซ้อน */
+  .xmas-panel.xmas-wish,
+  .xmas-feed {
+    display: none !important;
+  }
+
+  /* ชีตแขวนคำอวยพร */
+  .xmas-panel.xmas-wish.is-open {
+    display: flex !important;
+    flex-direction: column;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 74dvh;
+    padding: 10px 16px max(16px, env(safe-area-inset-bottom));
+    border-radius: 26px 26px 0 0;
+    border-bottom: 0;
+    z-index: 12;
+    overflow: hidden;
+    animation: xmas-sheet-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .xmas-panel.xmas-wish.is-open::before {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: 2px auto 10px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+  .xmas-panel.xmas-wish.is-open .xmas-form {
+    overflow-y: auto;
+    padding-bottom: 6px;
+  }
+  .xmas-panel.xmas-wish.is-open .xmas-form-close {
+    display: inline-grid;
+    place-items: center;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .xmas-panel.xmas-wish.is-open .xmas-form-head {
+    padding-right: 48px;
+  }
+
+  /* ป้ายแตะต้นไม้ แสดงเฉพาะตอนเปิดชีตแขวน */
+  .xmas-tap-hint {
+    display: none;
+  }
+  .xmas-stage:has(.xmas-panel.is-open) .xmas-tap-hint {
+    display: inline-flex;
+    top: 17%;
+    z-index: 13;
+  }
+
+  /* ชีตรายการ */
+  .xmas-feed.is-open {
+    display: flex !important;
+    flex-direction: column;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 62dvh;
+    padding: 10px 16px max(16px, env(safe-area-inset-bottom));
+    border-radius: 26px 26px 0 0;
+    border-bottom: 0;
+    z-index: 12;
+    animation: xmas-sheet-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  .xmas-feed.is-open .xmas-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .xmas-sheet-head b {
+    font-size: 16px;
+  }
+  .xmas-feed.is-open .xmas-sheet-head .xmas-form-close {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .xmas-feed.is-open .xmas-tab-panel {
+    max-height: none;
+  }
+  .xmas-feed.is-open .xmas-tab-panel ul {
+    display: block;
+    overflow: visible;
+  }
+  .xmas-feed.is-open .xmas-tab-panel li {
+    flex: none;
+  }
+  .xmas-feed.is-open .xmas-tab-panel li + li {
+    margin-top: 8px;
+  }
+
+  /* ฉาก: ไม่ต้องมีช่องว่างเผื่อแผงด้านล่าง */
+  .xmas-banner,
+  .xmas-toast {
+    top: 140px;
+  }
+}
+@keyframes xmas-sheet-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-panel.xmas-wish.is-open,
+  .xmas-feed.is-open {
+    animation: none;
+  }
+}

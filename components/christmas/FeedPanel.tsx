@@ -40,10 +40,14 @@ export function FeedPanel({
   wishes,
   feed,
   onWishClick,
+  mobileOpen,
+  onMobileClose,
 }: {
   wishes: Ornament[];
   feed: FeedData;
   onWishClick: (o: Ornament) => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("wishes");
   const tabs: { id: Tab; label: string; icon: "heart" | "star" | "gift"; count: number }[] = [
@@ -53,7 +57,13 @@ export function FeedPanel({
   ];
 
   return (
-    <aside className="xmas-feed glass" aria-label="รายการในห้อง">
+    <aside className={`xmas-feed glass ${mobileOpen ? "is-open" : ""}`} aria-label="รายการในห้อง">
+      <div className="xmas-sheet-head">
+        <b>รายการในห้อง</b>
+        <button type="button" className="xmas-form-close" onClick={onMobileClose} aria-label="ปิดรายการ">
+          <Icon name="close" size={18} />
+        </button>
+      </div>
       <div className="xmas-tabs" role="tablist" aria-label="หมวดรายการ">
         {tabs.map((t) => (
           <button
