@@ -8,7 +8,7 @@ type Dash = {
   env: { storage: boolean; omise: boolean; promptpay: boolean };
   totals: { online: number; ornaments: number; revenue: number; paidCount: number; awaitingCount: number };
   rooms: { id: string; name: string; online: number; capacity: number; ornaments: number; giant: { name: string; message: string; amount: number } | null }[];
-  orders: { id: string; room: string; amount: number; name: string; message: string; mode: string; status: string; createdAt: number; paidAt: number | null; providerRef: string }[];
+  orders: { id: string; room: string; kind: string; amount: number; name: string; message: string; mode: string; status: string; createdAt: number; paidAt: number | null; providerRef: string }[];
 };
 
 const STATUS_TH: Record<string, string> = { awaiting_payment: "รอชำระ", paid: "จ่ายแล้ว", cancelled: "ยกเลิก" };
@@ -175,6 +175,7 @@ export default function ChristmasAdmin() {
               <tr>
                 <th style={th}>เวลา</th>
                 <th style={th}>ห้อง</th>
+                <th style={th}>ประเภท</th>
                 <th style={th}>ชื่อ / ข้อความ</th>
                 <th style={th}>ยอด</th>
                 <th style={th}>โหมด</th>
@@ -185,7 +186,7 @@ export default function ChristmasAdmin() {
             <tbody>
               {data.orders.length === 0 && (
                 <tr>
-                  <td style={td} colSpan={7}>
+                  <td style={td} colSpan={8}>
                     ยังไม่มีคำสั่ง
                   </td>
                 </tr>
@@ -194,6 +195,7 @@ export default function ChristmasAdmin() {
                 <tr key={o.id}>
                   <td style={td}>{new Date(o.createdAt).toLocaleString("th-TH")}</td>
                   <td style={td}>{o.room}</td>
+                  <td style={td}>{o.kind === "support" ? "สนับสนุนทีม" : "Exclusive"}</td>
                   <td style={td}>
                     <b>{o.name}</b>
                     <br />

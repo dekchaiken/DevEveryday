@@ -8,7 +8,7 @@ export async function confirmPayment(orderId: string, providerRef: string) {
   if (!before || before.status === "paid") return before;
   const now = Date.now();
   const paid = await markPaid(orderId, providerRef, now);
-  if (paid) {
+  if (paid && paid.kind !== "support") {
     await enqueueEvent(
       paid.room,
       { kind: "message", text: `ตุ๊กตาหิมะยักษ์จาก ${paid.name} ขึ้นแล้ว`, by: paid.name, color: "gold", duration: 6000 },

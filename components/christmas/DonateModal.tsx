@@ -29,6 +29,7 @@ export default function DonateModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [order, setOrder] = useState<OrderPreview | null>(null);
+  const [kind, setKind] = useState<"giant" | "support">("giant");
   const [qrUrl, setQrUrl] = useState("");
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export default function DonateModal({
       const res = await fetch("/api/christmas/donate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: roomId, amount: chosen, name, message }),
+        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind }),
       });
       const data = (await res.json()) as { order?: OrderPreview; error?: string };
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
@@ -100,14 +101,26 @@ export default function DonateModal({
         <button className="xmas-x" onClick={onClose} aria-label="ปิด">
           <Icon name="close" size={18} />
         </button>
-        <p className="xmas-kicker">ตุ๊กตาหิมะยักษ์ · {roomName}</p>
-        <h2>ตั้งตุ๊กตาหิมะยักษ์ให้ห้องนี้</h2>
-        <p className="xmas-hint">ป้ายของคุณจะแสดงให้ทุกคนในห้องเห็นพร้อมกัน และข้อความจะขึ้นบนท้องฟ้า</p>
+        <p className="xmas-kicker">{kind === "giant" ? `Exclusive · ${roomName}` : "สนับสนุนทีม DevEveryday"}</p>
+        <h2>{kind === "giant" ? "ตั้งตุ๊กตาหิมะยักษ์ให้ห้องนี้" : "ส่งกำลังใจให้ทีม"}</h2>
+        <p className="xmas-hint">
+          {kind === "giant"
+            ? "ป้ายของคุณจะแสดงให้ทุกคนในห้องเห็นพร้อมกัน และข้อความจะขึ้นบนท้องฟ้า"
+            : "ยอดสนับสนุนช่วยให้ทีม DevEveryday พัฒนาและดูแลกิจกรรมนี้ต่อไป ชื่อของคุณจะแสดงในรายการผู้สนับสนุน"}
+        </p>
 
         {disabled && <p className="xmas-msg err">ตอนนี้ปิดรับการสนับสนุนชั่วคราว</p>}
 
         {!order && cfg && !disabled && (
           <form onSubmit={submit} className="xmas-form">
+            <div className="xmas-kind" role="tablist" aria-label="ประเภทการสนับสนุน">
+              <button type="button" role="tab" aria-selected={kind === "giant"} className={kind === "giant" ? "is-on" : ""} onClick={() => setKind("giant")}>
+                <Icon name="star" size={15} /> Exclusive
+              </button>
+              <button type="button" role="tab" aria-selected={kind === "support"} className={kind === "support" ? "is-on" : ""} onClick={() => setKind("support")}>
+                <Icon name="gift" size={15} /> สนับสนุนทีม
+              </button>
+            </div>
             <fieldset>
               <legend>เลือกยอด</legend>
               <div className="xmas-shapes">

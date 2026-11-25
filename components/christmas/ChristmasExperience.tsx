@@ -12,6 +12,7 @@ import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
 import { Icon } from "./Icon";
+import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
 
@@ -82,6 +83,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [toast, setToast] = useState<{ id: number; kind: "ok" | "err"; text: string } | null>(null); // ลูกบอลที่เพิ่งแขวนจากเครื่องนี้ แสดงทันทีก่อนเซิร์ฟเวอร์ตอบ
 
   const treeRef = useRef<TreeSceneHandle | null>(null);
+  const feed = useFeed(roomId);
   const played = useRef(new Set<string>());
 
   // ---------- โหลดสถานะกลางเป็นระยะ ----------
@@ -372,6 +374,17 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </button>
       </nav>
 
+      {/* แถบข้อความวิ่งด้านบน */}
+      <Ticker
+        items={[
+          ...ornaments.slice(0, 10).map((o) => ({ key: `w-${o.id}`, text: `${o.name}: ${o.wish || "ขอให้มีความสุขในวันคริสต์มาส"}` })),
+          ...feed.exclusive.slice(0, 6).map((e) => ({ key: `e-${e.id}`, text: `Exclusive ${e.name}: ${e.message || "ตุ๊กตาหิมะยักษ์"}`, exclusive: true })),
+          ...(ornaments.length === 0 && feed.exclusive.length === 0
+            ? [{ key: "welcome", text: "ยินดีต้อนรับสู่ต้นคริสต์มาส แขวนคำอวยพรของคุณเป็นคนแรกได้เลย" }]
+            : []),
+        ]}
+      />
+
       {/* ป้ายบอกให้แตะต้นไม้เพื่อเลือกตำแหน่ง */}
       {hintOn && !pick && (
         <div className="xmas-tap-hint" role="status" onClick={() => setHintOn(false)}>
@@ -491,24 +504,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </form>
       </section>
 
-      {/* ฟีดคำอวยพรล่าสุด */}
-      <aside className="xmas-feed glass" aria-label="คำอวยพรล่าสุด">
-        <h2>คำอวยพรล่าสุด</h2>
-        <ul>
-          {ornaments.slice(0, 40).map((o) => (
-            <li key={o.id}>
-              <button onClick={() => setFocus(o)}>
-                <span className="xmas-chip" style={{ background: COLOR_CSS[o.color] }} />
-                <span>
-                  <b>{o.name}</b>
-                  <em>{o.wish || "ขอให้มีความสุขในวันคริสต์มาส"}</em>
-                </span>
-              </button>
-            </li>
-          ))}
-          {ornaments.length === 0 && <li className="xmas-empty">ยังไม่มีลูกบอลบนต้น เป็นคนแรกที่แขวนได้เลย</li>}
-        </ul>
-      </aside>
+      {/* แผงแท็บ: คำอวยพร / Exclusive / สนับสนุนทีม */}
+      <FeedPanel wishes={ornaments} feed={feed} onWishClick={(o) => setFocus(o)} />
     </div>
   );
 }
