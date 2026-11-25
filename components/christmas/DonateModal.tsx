@@ -33,11 +33,13 @@ export default function DonateModal({
   roomName,
   onClose,
   onPaid,
+  onPreview,
 }: {
   roomId: string;
   roomName: string;
   onClose: () => void;
   onPaid: (name: string) => void;
+  onPreview?: (p: { spot: number; name: string; message: string; theme: MessageTheme }) => void;
 }) {
   const [cfg, setCfg] = useState<Cfg | null>(null);
   const [amount, setAmount] = useState<number | null>(null);
@@ -227,6 +229,15 @@ export default function DonateModal({
                 ))}
               </div>
             </div>
+            {kind === "giant" && onPreview && (
+              <button
+                type="button"
+                className="xmas-preview-btn"
+                onClick={() => onPreview({ spot, name: name.trim() || "ตัวอย่าง", message: message.trim(), theme })}
+              >
+                ดูตัวอย่างบนฉากก่อนชำระ
+              </button>
+            )}
             <button className="xmas-submit" disabled={busy}>
               {busy ? "กำลังสร้างรายการ…" : `ชำระ ฿${chosen ?? "—"}`}
             </button>

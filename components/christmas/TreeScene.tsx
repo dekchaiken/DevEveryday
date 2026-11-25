@@ -16,6 +16,9 @@ export type TreeSceneHandle = {
   skyMessage: (text: string, by: string, color: string, theme: string) => void;
   highlightDecor: (slot: number) => void;
   focusOrnament: (id: string | null) => void;
+  zoomBy: (factor: number) => void;
+  resetView: () => void;
+  previewGiant: (spot: number, name: string, message: string) => void;
 };
 
 type Props = {
@@ -379,23 +382,50 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     previewMesh.visible = false;
     scene.add(previewMesh);
 
-    // ---------- ของประดับรอบลาน: เส้นทางหิมะ โคมไฟ ต้นสนเล็ก กล่องของขวัญ และกองหิมะ ----------
+    // ---------- ของประดับรอบลาน: ทางเดินโค้งไม่เป็นวงกลม โคมไฟเรียงตามทาง กลุ่มต้นสน กล่องของขวัญกองกัน และกองหิมะ ----------
+    // ตั้งค่าสุ่มคงที่ เพื่อให้ทุกเครื่องเห็นการจัดวางเดียวกัน
+    const dressRnd = seededRandom("dressing-v2");
     const dressing = new THREE.Group();
     scene.add(dressing);
-    const pathMesh = new THREE.Mesh(
-      new THREE.RingGeometry(8.6, 9.4, 160),
-      new THREE.MeshStandardMaterial({ color: 0xcfdbe7, roughness: 0.95, metalness: 0 }),
-    );
-    pathMesh.rotation.x = -Math.PI / 2;
-    pathMesh.position.y = 0.012;
+    // ทางเดินหิมะ: เส้นโค้งปิดที่ไม่สม่ำเสมอ สร้างเป็นริบบิ้นแบนบนพื้น
+    const pathPts: THREE.Vector3[] = [];
+    for (let k = 0; k < 9; k++) {
+      const th = (k / 9) * Math.PI * 2;
+      const rr = 9.1 + 0.8 * Math.sin(3 * th + 0.5) + 0.45 * Math.cos(5 * th) + (dressRnd() - 0.5) * 0.4;
+      pathPts.push(new THREE.Vector3(Math.cos(th) * rr, 0.012, Math.sin(th) * rr));
+    }
+    const pathCurve = new THREE.CatmullRomCurve3(pathPts, true, "catmullrom", 0.5);
+    const PATH_SEG = 260;
+    const ppos: number[] = [];
+    const pidx: number[] = [];
+    for (let i = 0; i <= PATH_SEG; i++) {
+      const u = i / PATH_SEG;
+      const pt = pathCurve.getPointAt(u);
+      const tg = pathCurve.getTangentAt(u);
+      const side = new THREE.Vector3(-tg.z, 0, tg.x).normalize();
+      const w = 0.28 + 0.06 * Math.sin(u * 40);
+      ppos.push(pt.x + side.x * w, 0.012, pt.z + side.z * w, pt.x - side.x * w, 0.012, pt.z - side.z * w);
+      if (i < PATH_SEG) {
+        const v = i * 2;
+        pidx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
+      }
+    }
+    const pathGeo = new THREE.BufferGeometry();
+    pathGeo.setAttribute("position", new THREE.Float32BufferAttribute(ppos, 3));
+    pathGeo.setIndex(pidx);
+    pathGeo.computeVertexNormals();
+    const pathMesh = new THREE.Mesh(pathGeo, new THREE.MeshStandardMaterial({ color: 0xcfdbe7, roughness: 0.95, metalness: 0, side: THREE.DoubleSide }));
     pathMesh.receiveShadow = true;
     dressing.add(pathMesh);
+    // โคมไฟเรียงตามทาง ระยะไม่เท่ากัน
     const poleMat = new THREE.MeshStandardMaterial({ color: 0x3b2a1a, roughness: 0.7 });
     const lampMat = new THREE.MeshBasicMaterial({ color: 0xffd38a });
-    for (let k = 0; k < 10; k++) {
-      const a = (k / 10) * Math.PI * 2 + 0.1;
-      const x = Math.cos(a) * 8.99;
-      const z = Math.sin(a) * 8.99;
+    let lu = dressRnd() * 0.05;
+    while (lu < 1) {
+      const pt = pathCurve.getPointAt(lu);
+      const out = new THREE.Vector3(pt.x, 0, pt.z).normalize();
+      const x = pt.x + out.x * 0.5;
+      const z = pt.z + out.z * 0.5;
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 1.7, 8), poleMat);
       pole.position.set(x, 0.85, z);
       pole.castShadow = true;
@@ -408,46 +438,77 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       halo.scale.set(0.9, 0.9, 1);
       halo.position.set(x, 1.8, z);
       dressing.add(pole, lamp, cap, halo);
+      lu += 0.07 + dressRnd() * 0.09;
     }
+    // กลุ่มต้นสนขนาดต่าง ๆ เป็นป่าเล็ก ๆ ที่ไม่สม่ำเสมอ
     const pineMat = new THREE.MeshStandardMaterial({ color: 0x0f3d24, roughness: 0.85 });
     const pineCap = new THREE.MeshStandardMaterial({ color: 0xeef5fb, roughness: 0.7 });
-    for (let k = 0; k < 30; k++) {
-      const a = (k / 30) * Math.PI * 2 + (k % 3) * 0.05;
-      const r = 12 + (k % 4) * 0.9 + ((k * 7) % 3) * 0.4;
-      const h = 1.6 + ((k * 13) % 5) * 0.35;
-      const tree = new THREE.Group();
-      for (let t = 0; t < 3; t++) {
-        const rad = 0.75 - t * 0.2;
-        const cone = new THREE.Mesh(new THREE.ConeGeometry(rad, h * 0.6, 12), pineMat);
-        cone.position.y = h * 0.3 + t * h * 0.22;
-        cone.castShadow = true;
-        const cap = new THREE.Mesh(new THREE.ConeGeometry(rad * 0.5, h * 0.18, 12), pineCap);
-        cap.position.y = cone.position.y + h * 0.27;
-        tree.add(cone, cap);
+    const groves = [
+      { a: 0.4, r: 14.5, n: 7 },
+      { a: 1.9, r: 13.2, n: 5 },
+      { a: 3.3, r: 15.5, n: 6 },
+      { a: 4.6, r: 13.8, n: 4 },
+      { a: 5.9, r: 14.8, n: 6 },
+    ];
+    for (const g of groves) {
+      const cx = Math.cos(g.a) * g.r;
+      const cz = Math.sin(g.a) * g.r;
+      for (let k = 0; k < g.n; k++) {
+        const h = 1.3 + dressRnd() * 1.6;
+        const sc = 0.8 + dressRnd() * 0.5;
+        const tree = new THREE.Group();
+        for (let t = 0; t < 3; t++) {
+          const rad = (0.7 - t * 0.18) * sc;
+          const cone = new THREE.Mesh(new THREE.ConeGeometry(rad, h * 0.6, 12), pineMat);
+          cone.position.y = h * 0.3 + t * h * 0.22;
+          cone.castShadow = true;
+          const cap = new THREE.Mesh(new THREE.ConeGeometry(rad * 0.5, h * 0.18, 12), pineCap);
+          cap.position.y = cone.position.y + h * 0.27;
+          tree.add(cone, cap);
+        }
+        tree.position.set(cx + (dressRnd() - 0.5) * 3.2, 0, cz + (dressRnd() - 0.5) * 3.2);
+        tree.rotation.y = dressRnd() * Math.PI;
+        dressing.add(tree);
       }
-      tree.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-      dressing.add(tree);
     }
+    // กล่องของขวัญกองกันเป็นกลุ่ม 2–3 กล่อง บางกองมีกล่องซ้อนด้านบน
     const giftCols = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e, 0xf472b6];
-    for (let k = 0; k < 14; k++) {
-      const a = (k / 14) * Math.PI * 2 + 0.37;
-      const r = 9.9 + ((k * 5) % 3) * 0.5;
-      const g = makeGiftBox(0.22 + ((k * 3) % 4) * 0.07, giftCols[k % giftCols.length]);
-      g.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-      g.rotation.y = k;
-      g.traverse((o) => {
-        o.castShadow = true;
-        o.receiveShadow = true;
-      });
-      dressing.add(g);
+    for (let c = 0; c < 6; c++) {
+      const a = dressRnd() * Math.PI * 2;
+      const r = 10.6 + dressRnd() * 1.4;
+      const cx = Math.cos(a) * r;
+      const cz = Math.sin(a) * r;
+      const n = 2 + Math.floor(dressRnd() * 2);
+      for (let k = 0; k < n; k++) {
+        const size = 0.2 + dressRnd() * 0.2;
+        const g = makeGiftBox(size, giftCols[Math.floor(dressRnd() * giftCols.length)]);
+        g.position.set(cx + (dressRnd() - 0.5) * 0.7, 0, cz + (dressRnd() - 0.5) * 0.7);
+        g.rotation.y = dressRnd() * Math.PI;
+        g.traverse((o) => {
+          o.castShadow = true;
+          o.receiveShadow = true;
+        });
+        dressing.add(g);
+        if (k === 0 && dressRnd() < 0.6) {
+          const top = makeGiftBox(size * 0.7, giftCols[Math.floor(dressRnd() * giftCols.length)]);
+          top.position.set(g.position.x + 0.02, size, g.position.z - 0.01);
+          top.rotation.y = dressRnd();
+          top.traverse((o) => {
+            o.castShadow = true;
+          });
+          dressing.add(top);
+        }
+      }
     }
+    // กองหิมะที่ไม่สม่ำเสมอ
     const moundMat = new THREE.MeshStandardMaterial({ color: 0xf4f8fc, roughness: 0.9 });
-    for (let k = 0; k < 16; k++) {
-      const a = (k / 16) * Math.PI * 2 + 0.2;
-      const r = 11 + ((k * 3) % 4) * 0.8;
-      const m = new THREE.Mesh(new THREE.SphereGeometry(0.5 + ((k * 7) % 4) * 0.12, 16, 10), moundMat);
-      m.scale.set(1, 0.42, 1);
+    for (let k = 0; k < 22; k++) {
+      const a = dressRnd() * Math.PI * 2;
+      const r = 9.6 + dressRnd() * 6;
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.4 + dressRnd() * 0.6, 16, 10), moundMat);
+      m.scale.set(1 + dressRnd() * 0.8, 0.35 + dressRnd() * 0.2, 1 + dressRnd() * 0.6);
       m.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+      m.rotation.y = dressRnd() * Math.PI;
       m.receiveShadow = true;
       dressing.add(m);
     }
@@ -1124,6 +1185,46 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     function animateCam(toPos: THREE.Vector3, toTgt: THREE.Vector3) {
       camAnim = { fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt, start: performance.now() };
     }
+    const HOME_POS = new THREE.Vector3(0, 2.6, 9.2);
+    const HOME_TGT = new THREE.Vector3(0, 1.85, 0);
+    // ซูมเข้า/ออกทีละขั้นแบบนุ่ม (ปุ่มบนจอ) ระยะถูกจำกัดตามค่าที่ตั้งไว้
+    function zoomBy(factor: number) {
+      const dir = camera.position.clone().sub(controls.target);
+      const len = Math.min(Math.max(dir.length() * factor, controls.minDistance), controls.maxDistance);
+      const toPos = controls.target.clone().add(dir.normalize().multiplyScalar(len));
+      animateCam(toPos, controls.target.clone());
+      savedView = null;
+    }
+    // ดูตัวอย่างป้ายประจำห้องที่ตำแหน่งที่เลือก (แสดงเฉพาะในเครื่องนี้ 9 วินาที ไม่บันทึก)
+    let previewGroup: THREE.Group | null = null;
+    let previewTimer = 0;
+    function previewGiant(spot: number, name: string, message: string) {
+      if (previewGroup) {
+        scene.remove(previewGroup);
+        previewGroup = null;
+      }
+      if (giantGroup) giantGroup.visible = false;
+      previewGroup = buildGiant({ name, message, spot });
+      scene.add(previewGroup);
+      window.clearTimeout(previewTimer);
+      previewTimer = window.setTimeout(() => {
+        if (previewGroup) {
+          scene.remove(previewGroup);
+          previewGroup.traverse((o) => {
+            const m = o as THREE.Mesh;
+            m.geometry?.dispose?.();
+            (m.material as THREE.Material | undefined)?.dispose?.();
+          });
+          previewGroup = null;
+        }
+        if (giantGroup) giantGroup.visible = true;
+      }, 9000);
+    }
+    function resetView() {
+      animateCam(HOME_POS.clone(), HOME_TGT.clone());
+      controls.minDistance = 4.5;
+      savedView = null;
+    }
     function focusOrnament(id: string | null) {
       if (!id) {
         if (savedView) {
@@ -1308,6 +1409,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       skyMessage: (text: string, by: string, color: string, theme: string) => skyMessage(text, by, color, theme),
       highlightDecor: (slot: number) => highlightDecor(slot),
       focusOrnament: (id: string | null) => focusOrnament(id),
+      zoomBy: (factor: number) => zoomBy(factor),
+      resetView: () => resetView(),
+      previewGiant: (spot: number, name: string, message: string) => previewGiant(spot, name, message),
     });
 
     // เริ่มวนลูปภาพหลังประกาศทุกตัวแปรครบแล้ว
