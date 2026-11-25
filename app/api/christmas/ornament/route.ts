@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getRoom } from "@/lib/christmas/rooms";
 import { addOrnament, rateOk } from "@/lib/christmas/store";
 import { parseOrnament } from "@/lib/christmas/validate";
+import { getConfig } from "@/lib/christmas/config";
+import { maskIp, writeLog } from "@/lib/christmas/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,10 +23,15 @@ export async function POST(req: Request) {
   if (!(await rateOk(ip, "ornament", 6, Date.now()))) {
     return NextResponse.json({ error: "แขวนบ่อยเกินไป รอสักครู่แล้วลองใหม่" }, { status: 429 });
   }
-  const parsed = parseOrnament(body);
-  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const cfg = await getConfig();
+  const parsed = parseOrnament(body, cfg.blockedWords);
+  if ("error" in parsed) {
+    await writeLog({ type: "blocked", room: room.id, actor: maskIp(ip), text: `แขวนคำอวยพร: ${String(body.name ?? "")} / ${String(body.wish ?? "")}` });
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
 
   const ornament = { ...parsed.value, id: crypto.randomUUID(), createdAt: Date.now() };
   await addOrnament(room.id, ornament);
+  await writeLog({ type: "ornament", room: room.id, actor: maskIp(ip), text: `${ornament.name} · ${ornament.shape}/${ornament.color}: ${ornament.wish || "-"}` });
   return NextResponse.json({ ok: true, ornament });
 }

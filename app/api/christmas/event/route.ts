@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { getRoom, ROOMS } from "@/lib/christmas/rooms";
 import { enqueueEvent, rateOk } from "@/lib/christmas/store";
 import { parseEvent } from "@/lib/christmas/validate";
+import { getConfig } from "@/lib/christmas/config";
+import { writeLog } from "@/lib/christmas/log";
 import { SESSION_COOKIE, isValidSession } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -25,7 +27,8 @@ export async function POST(req: Request) {
   if (!(await rateOk(ip, "event", 30, Date.now()))) {
     return NextResponse.json({ error: "ส่งบ่อยเกินไป" }, { status: 429 });
   }
-  const parsed = parseEvent(body);
+  const cfg = await getConfig();
+  const parsed = parseEvent(body, cfg.blockedWords);
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
   // room = "all" ส่งให้ทุกห้อง เพื่อให้ทุกคนเห็นพลุหรือข้อความเดียวกัน
@@ -34,5 +37,6 @@ export async function POST(req: Request) {
   const now = Date.now();
   const events = [];
   for (const id of target) events.push(await enqueueEvent(id as string, parsed.value, now));
+  await writeLog({ type: "event", room: typeof body.room === "string" ? body.room : "all", actor: "admin", text: `${parsed.value.kind} · ${parsed.value.theme} · ${parsed.value.text || "(พลุ)"}` });
   return NextResponse.json({ ok: true, events });
 }

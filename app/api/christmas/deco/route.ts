@@ -3,6 +3,8 @@ import { getRoom } from "@/lib/christmas/rooms";
 import { ACCESSORIES, ARMS, BODY_COLORS, claimDecor, HATS, LEGS, NOSES, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
+import { getConfig } from "@/lib/christmas/config";
+import { maskIp, writeLog } from "@/lib/christmas/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +26,11 @@ export async function POST(req: Request) {
   }
   const name = clean(body.name, 20);
   if (!name) return NextResponse.json({ error: "กรุณาใส่ชื่อ" }, { status: 400 });
-  if (hasBlocked(name)) return NextResponse.json({ error: "ชื่อมีคำที่ไม่เหมาะสม" }, { status: 400 });
+  const cfg = await getConfig();
+  if (hasBlocked(name, cfg.blockedWords)) {
+    await writeLog({ type: "blocked", room: room.id, actor: maskIp(ip), text: `ตกแต่งตุ๊กตา: ${name}` });
+    return NextResponse.json({ error: "ชื่อมีคำที่ไม่เหมาะสม" }, { status: 400 });
+  }
 
   const slot = Number(body.slot);
   const pick = <T extends string>(v: unknown, list: readonly T[]) => (list as readonly string[]).includes(String(v)) ? String(v) : null;
@@ -55,5 +61,6 @@ export async function POST(req: Request) {
   };
   const ok = await claimDecor(decor);
   if (!ok) return NextResponse.json({ error: "ช่องนี้มีคนวางแล้ว เลือกช่องอื่น" }, { status: 409 });
+  await writeLog({ type: "decor", room: room.id, actor: maskIp(ip), text: `${name} วางตุ๊กตาช่อง ${slot + 1} (${hat}/${scarf}/${bodyColor})` });
   return NextResponse.json({ ok: true, decor });
 }

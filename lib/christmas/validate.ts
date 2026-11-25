@@ -9,16 +9,19 @@ export function clean(v: unknown, max: number): string {
   return v.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, max);
 }
 
-export function hasBlocked(s: string): boolean {
+// รายการพื้นฐาน + คำที่แอดมินเพิ่มในหน้า admin (เก็บในการตั้งค่า)
+export const DEFAULT_BLOCKED = BLOCKED;
+
+export function hasBlocked(s: string, extra: readonly string[] = []): boolean {
   const lower = s.toLowerCase();
-  return BLOCKED.some((w) => lower.includes(w));
+  return BLOCKED.some((w) => lower.includes(w)) || extra.some((w) => w && lower.includes(w.toLowerCase()));
 }
 
 function pick<T extends string>(v: unknown, allowed: readonly T[], fallback: T): T {
   return typeof v === "string" && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
 }
 
-export function parseOrnament(body: Record<string, unknown>) {
+export function parseOrnament(body: Record<string, unknown>, extra: readonly string[] = []) {
   const name = clean(body.name, 20);
   const wish = clean(body.wish, 140);
   const color = pick<OrnamentColor>(body.color, ORNAMENT_COLORS, "gold");
@@ -26,7 +29,7 @@ export function parseOrnament(body: Record<string, unknown>) {
   const height = Number(body.height);
   const angle = Number(body.angle);
   if (!name) return { error: "กรุณาใส่ชื่อเล่น" } as const;
-  if (hasBlocked(name) || hasBlocked(wish)) return { error: "ข้อความมีคำที่ไม่เหมาะสม" } as const;
+  if (hasBlocked(name, extra) || hasBlocked(wish, extra)) return { error: "ข้อความมีคำที่ไม่เหมาะสม" } as const;
   if (!Number.isFinite(height) || height < 0.12 || height > 0.96) return { error: "ตำแหน่งบนต้นไม่ถูกต้อง" } as const;
   if (!Number.isFinite(angle)) return { error: "ตำแหน่งบนต้นไม่ถูกต้อง" } as const;
   return {
@@ -41,13 +44,13 @@ export function parseOrnament(body: Record<string, unknown>) {
   } as const;
 }
 
-export function parseEvent(body: Record<string, unknown>) {
+export function parseEvent(body: Record<string, unknown>, extra: readonly string[] = []) {
   const kind = pick<EventKind>(body.kind, EVENT_KINDS, "firework");
   const text = clean(body.text, 80);
   const by = clean(body.by, 20) || "ทีมงาน";
   const color = pick<OrnamentColor>(body.color, ORNAMENT_COLORS, "gold");
   const theme = pick<MessageTheme>(body.theme, MESSAGE_THEMES, "fireworks");
-  if (hasBlocked(text) || hasBlocked(by)) return { error: "ข้อความมีคำที่ไม่เหมาะสม" } as const;
+  if (hasBlocked(text, extra) || hasBlocked(by, extra)) return { error: "ข้อความมีคำที่ไม่เหมาะสม" } as const;
   if (kind === "message" && !text) return { error: "กรุณาใส่ข้อความ" } as const;
   const duration = kind === "firework" ? 3200 : Math.min(Math.max(Number(body.duration) || 6000, 3000), 12000);
   return { value: { kind, text, by, color, theme, duration } } as const;

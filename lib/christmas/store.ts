@@ -159,3 +159,62 @@ export async function rateOk(ip: string, action: string, limit: number, now: num
   if (n === 1) await cmd("EXPIRE", key, 70);
   return n <= limit;
 }
+
+// ---------- ผู้ดูแล: อ่านและลบข้อมูลของห้อง ----------
+export async function adminOrnaments(room: string): Promise<Ornament[]> {
+  if (!persistent()) return [...memRoom(room).ornaments];
+  const raw = (await cmd<string[]>("LRANGE", K.orn(room), 0, MAX_ORNAMENTS - 1)) ?? [];
+  return raw.map((r) => JSON.parse(r) as Ornament);
+}
+
+export async function adminEvents(room: string): Promise<ShowEvent[]> {
+  if (!persistent()) return [...memRoom(room).events];
+  const raw = (await cmd<string[]>("ZRANGE", K.evt(room), 0, -1)) ?? [];
+  return raw.map((r) => JSON.parse(r) as ShowEvent);
+}
+
+export async function removeOrnament(room: string, id: string): Promise<boolean> {
+  if (!persistent()) {
+    const m = memRoom(room);
+    const before = m.ornaments.length;
+    m.ornaments = m.ornaments.filter((o) => o.id !== id);
+    if (m.ornaments.length === before) return false;
+    m.version++;
+    return true;
+  }
+  const raw = (await cmd<string[]>("LRANGE", K.orn(room), 0, MAX_ORNAMENTS - 1)) ?? [];
+  const keep = raw.filter((r) => (JSON.parse(r) as Ornament).id !== id);
+  if (keep.length === raw.length) return false;
+  await cmd("DEL", K.orn(room));
+  if (keep.length) await cmd("RPUSH", K.orn(room), ...keep);
+  await cmd("INCR", K.ver(room));
+  return true;
+}
+
+export async function removeEvent(room: string, id: string): Promise<boolean> {
+  if (!persistent()) {
+    const m = memRoom(room);
+    const before = m.events.length;
+    m.events = m.events.filter((e) => e.id !== id);
+    if (m.events.length === before) return false;
+    m.version++;
+    return true;
+  }
+  const raw = (await cmd<string[]>("ZRANGE", K.evt(room), 0, -1)) ?? [];
+  const hit = raw.find((r) => (JSON.parse(r) as ShowEvent).id === id);
+  if (!hit) return false;
+  await cmd("ZREM", K.evt(room), hit);
+  await cmd("INCR", K.ver(room));
+  return true;
+}
+
+// ล้างลูกบอลและคิวเหตุการณ์ของห้อง (ตุ๊กตาหิมะจัดการแยกในไฟล์ decor)
+export async function clearRoomStore(room: string) {
+  if (!persistent()) {
+    mem.delete(room);
+    return;
+  }
+  await cmd("DEL", K.orn(room), K.evt(room));
+  await cmd("INCR", K.ver(room));
+}
+
