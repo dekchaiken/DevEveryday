@@ -115,6 +115,7 @@ export function DecorModal({
   initialSlot,
   onClose,
   onPlaced,
+  onPickOnMap,
 }: {
   roomId: string;
   roomName: string;
@@ -122,6 +123,7 @@ export function DecorModal({
   initialSlot: number | null;
   onClose: () => void;
   onPlaced: (d: Decor) => void;
+  onPickOnMap?: () => void;
 }) {
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [tab, setTab] = useState<PartKey | "slot">("hat");
@@ -200,9 +202,6 @@ export function DecorModal({
               {t.label}
             </button>
           ))}
-          <button role="tab" aria-selected={tab === "slot"} className={tab === "slot" ? "is-on" : ""} onClick={() => setTab("slot")}>
-            ช่องวาง
-          </button>
         </div>
 
         <div className="xmas-part-body" role="tabpanel">
@@ -225,51 +224,47 @@ export function DecorModal({
             </>
           )}
 
-          {tab === "slot" && (
-            <div className="xmas-slot-picker">
-              <div className="xmas-slot-head">
-                <b>{slot === null ? "ยังไม่ได้เลือกช่อง" : `ช่องที่ ${slot + 1}`}</b>
-                <small>
-                  {slot === null
-                    ? "กรอกเลขช่องที่ว่าง สุ่มช่อง หรือแตะบนฉากเพื่อเลือก"
-                    : slotTaken
-                      ? `ช่องนี้มี ${taken.get(slot)?.name} วางแล้ว`
-                      : "ช่องนี้ว่าง พร้อมวางได้เลย"}
-                </small>
-              </div>
-              <div className="xmas-slot-controls">
-                <label className="xmas-slot-input">
-                  เลขช่อง (1–{SLOT_COUNT})
-                  <input
-                    inputMode="numeric"
-                    value={slot === null ? "" : String(slot + 1)}
-                    onChange={(e) => {
-                      const n = Number(e.target.value.replace(/\D/g, ""));
-                      setSlot(n >= 1 && n <= SLOT_COUNT ? n - 1 : null);
-                    }}
-                    placeholder="เช่น 128"
-                  />
-                </label>
-                <button type="button" className="xmas-chip-btn" onClick={randomFree}>
-                  สุ่มช่องว่าง
-                </button>
-              </div>
-              {slotTaken && slot !== null && (
-                <button type="button" className="xmas-link-btn" onClick={() => setSlot(nearestFree(slot))}>
-                  ไปที่ช่องว่างที่ใกล้ที่สุด
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="xmas-build-foot">
+          <div className="xmas-foot-slot">
+            <label className="xmas-slot-input">
+              <span>ช่องวาง (1–{SLOT_COUNT})</span>
+              <input
+                inputMode="numeric"
+                value={slot === null ? "" : String(slot + 1)}
+                onChange={(e) => {
+                  const n = Number(e.target.value.replace(/\D/g, ""));
+                  setSlot(n >= 1 && n <= SLOT_COUNT ? n - 1 : null);
+                }}
+                placeholder="เลขช่อง"
+              />
+            </label>
+            <button type="button" className="xmas-chip-btn" onClick={randomFree}>
+              สุ่มช่องว่าง
+            </button>
+            <button type="button" className="xmas-chip-btn" onClick={() => onPickOnMap?.()}>
+              เลือกบนฉาก
+            </button>
+          </div>
+          <p className={`xmas-slot-status ${slotTaken || slot === null ? "is-warn" : "is-ok"}`}>
+            {slot === null
+              ? "เลือกช่องก่อนวาง: กรอกเลข สุ่ม หรือแตะพื้นหิมะบนฉาก"
+              : slotTaken
+                ? `ช่อง ${slot + 1} มี ${taken.get(slot)?.name} วางแล้ว`
+                : `ช่อง ${slot + 1} ว่าง พร้อมวาง`}
+            {slotTaken && slot !== null && (
+              <button type="button" className="xmas-link-btn" onClick={() => setSlot(nearestFree(slot))}>
+                ไปช่องว่างใกล้ที่สุด
+              </button>
+            )}
+          </p>
           <label className="xmas-field">
             <span className="xmas-field-label">ชื่อที่จะแสดงบนตุ๊กตา</span>
             <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
           </label>
           <button className="xmas-submit" onClick={place} disabled={busy || slotTaken || slot === null}>
-            {busy ? "กำลังวาง…" : "วางตุ๊กตาหิมะรอบต้น"}
+            {busy ? "กำลังวาง…" : slot === null ? "เลือกช่องก่อนวาง" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาหิมะรอบต้น"}
           </button>
           {error && <p className="xmas-msg err">{error}</p>}
         </div>

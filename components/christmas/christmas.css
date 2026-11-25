@@ -3121,3 +3121,95 @@
   overflow-y: auto;
   scrollbar-width: thin;
 }
+
+/* ---------- คำอธิบายปุ่มและคำแนะนำครั้งแรก ---------- */
+.xmas-action[data-tip] {
+  position: relative;
+}
+.xmas-action[data-tip]:hover::after,
+.xmas-action[data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(8, 22, 24, 0.95);
+  border: 1px solid rgba(245, 197, 66, 0.4);
+  color: var(--gold-soft);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 20;
+  pointer-events: none;
+}
+.xmas-coach {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  z-index: 9;
+  width: min(92vw, 360px);
+  transform: translateX(-50%);
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(8, 22, 24, 0.94);
+  border: 1px solid rgba(245, 197, 66, 0.5);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
+  box-shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.8);
+  animation: xmas-hint-in 0.5s ease both;
+}
+.xmas-coach b {
+  color: var(--gold-soft);
+  font-size: 14px;
+}
+.xmas-coach button {
+  justify-self: end;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--gold);
+  background: rgba(245, 197, 66, 0.15);
+  color: var(--gold-soft);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+@media (max-width: 759px) {
+  .xmas-coach {
+    top: 150px;
+  }
+  .xmas-action[data-tip]:hover::after {
+    display: none;
+  }
+}
+
+/* ---------- ช่องวางในฟุตเตอร์ของตัวสร้างตุ๊กตาหิมะ ---------- */
+.xmas-foot-slot {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: end;
+}
+.xmas-foot-slot .xmas-slot-input span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.xmas-slot-status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.xmas-slot-status.is-warn {
+  color: #fbbf24;
+}
+.xmas-slot-status.is-ok {
+  color: var(--mint);
+}
+.xmas-slot-status .xmas-link-btn {
+  margin-left: 6px;
+}
