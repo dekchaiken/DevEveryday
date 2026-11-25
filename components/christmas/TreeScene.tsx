@@ -81,7 +81,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.touchAction = "none";
 
@@ -771,9 +771,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ---------- วนลูปภาพ ----------
     let reduced = reducedMotion;
     let raf = 0;
-    const clock = new THREE.Clock();
+    const startedAt = performance.now();
     function frame() {
-      const t = clock.getElapsedTime();
+      const t = (performance.now() - startedAt) / 1000;
       const now = performance.now();
 
       if (camAnim) {
