@@ -4172,3 +4172,39 @@
     top: 236px;
   }
 }
+
+/* มือถือ: เมนูสองแถวแบบแนวนอนกะทัดรัด และย้ายแถบข้อความ/คำแนะนำลงมาใต้เมนู */
+@media (max-width: 759px) {
+  .xmas-countdown {
+    display: none;
+  }
+  .xmas-brand small .xmas-switch-link {
+    font-weight: 600;
+    color: var(--gold-soft);
+  }
+  .xmas-actions {
+    top: 72px;
+    gap: 6px;
+  }
+  .xmas-actions .xmas-action {
+    flex-direction: row;
+    min-height: 44px;
+    padding: 6px 8px;
+    gap: 6px;
+    border-radius: 14px;
+    font-size: 12px;
+  }
+  .xmas-ticker {
+    top: 174px;
+  }
+  .xmas-coach {
+    top: 190px;
+  }
+}
+
+/* มือถือ: ซ่อนชื่อภาค เพื่อให้ลิงก์เปลี่ยนห้องแสดงครบ */
+@media (max-width: 759px) {
+  .xmas-region {
+    display: none;
+  }
+}
