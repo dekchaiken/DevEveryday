@@ -21,7 +21,8 @@ import { useDecor } from "./useDecor";
 import { markInternalNav } from "./skipIntro";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import { ProfileCard, SocialLinks } from "./ProfileCard";
-import { loadProfile, saveProfile, EMPTY_PROFILE, type Profile } from "./profile";
+import { loadProfile, saveProfile, type Profile } from "./profile";
+import { isReservedSlot } from "@/lib/christmas/slots";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
 
@@ -457,6 +458,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           decor={decor}
           markerSlot={markerSlot}
           onGroundPick={(slot) => {
+            if (isReservedSlot(slot)) {
+              notify("err", "ช่องนี้สงวนไว้สำหรับป้ายประจำห้อง แตะตำแหน่งอื่นบนพื้นหิมะ");
+              return;
+            }
             setMarkerSlot(slot);
             setDecorSlot(slot);
             setDecorOpen(true);
@@ -477,7 +482,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {/* โปรไฟล์: ถามครั้งแรกหลังเปิดของขวัญ และเปิดแก้ไขได้จากฟอร์ม */}
       {intro && profile === null && (
-        <ProfileCard initial={null} editing={false} onSave={saveProfileAndClose} onCancel={() => setProfile(EMPTY_PROFILE)} />
+        <ProfileCard initial={null} editing={false} onSave={saveProfileAndClose} />
       )}
       {profileEdit && profile && (
         <ProfileCard initial={profile} editing onSave={saveProfileAndClose} onCancel={() => setProfileEdit(false)} />
@@ -492,11 +497,12 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
               <span />
               <span />
             </div>
-            <p className="xmas-intro-kicker">คุณได้รับเชิญ</p>
-            <h1 id="xmas-intro-title">มาแขวนคำอวยพรบนต้นคริสต์มาสด้วยกัน</h1>
-            <p className="xmas-intro-text">เลือกลูกบอล เขียนความปรารถนา แล้วแขวนขึ้นต้น ทุกคนจะได้เห็นพร้อมกัน</p>
+            <p className="xmas-intro-kicker">ยินดีต้อนรับ</p>
+            <h1 id="xmas-intro-title">สวัสดี {profile?.name}</h1>
+            <p className="xmas-intro-text">ขอให้คริสต์มาสนี้อบอุ่นและมีความสุข มาแขวนคำอวยพรบนต้นให้ทุกคนได้เห็นพร้อมกัน</p>
+            <p className="xmas-intro-tip">แนะนำ: เลือกลูกบอล เขียนคำอวยพรสั้นๆ ให้คนที่คุณรัก แล้วแตะต้นเพื่อแขวน</p>
             <button className="xmas-intro-btn" onClick={() => setIntro(false)} autoFocus>
-              <span>เข้าสู่ต้นคริสต์มาส</span>
+              <span>เริ่มแขวนคำอวยพร</span>
             </button>
           </div>
         </div>

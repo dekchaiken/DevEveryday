@@ -4381,3 +4381,9 @@ a.xmas-social-chip:hover {
 .xmas-social-chip.is-text {
   border-style: dashed;
 }
+.xmas-intro-tip {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+  text-align: center;
+}
