@@ -157,12 +157,7 @@
   color: var(--paper);
   z-index: 1;
 }
-.xmas-stage.is-ready .xmas-top,
-.xmas-stage.is-ready .xmas-actions,
-.xmas-stage.is-ready .xmas-panel,
-.xmas-stage.is-ready .xmas-feed {
-  animation: xmas-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
+/* หน้าหลักไม่มีแอนิเมชันเข้าของตัวเอง: ฉากทั้งหมดจางเข้าพร้อมกันผ่าน .xmas-gift-under ตอนวาบ */
 /* ใช้คุณสมบัติ translate แยกจาก transform เพื่อไม่ทับการจัดกึ่งกลางหรือการเลื่อนชีต */
 @keyframes xmas-rise {
   from { opacity: 0; translate: 0 8px; }
@@ -2017,9 +2012,10 @@
   cursor: pointer;
   z-index: 3;
 }
+/* หน้าหลักค่อยๆ ปรากฏใต้ฉากของขวัญตอนเริ่มวาบ ให้สองฉากซ้อนกันแล้วเปลี่ยนต่อเนื่องกัน */
 .xmas-gift-under {
   opacity: 0;
-  transition: opacity 0.8s ease;
+  transition: opacity 0.9s cubic-bezier(0.3, 0.6, 0.3, 1);
 }
 .xmas-gift-under.is-shown {
   opacity: 1;
@@ -2600,10 +2596,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .xmas-stage.is-ready .xmas-top,
-  .xmas-stage.is-ready .xmas-actions,
-  .xmas-stage.is-ready .xmas-panel,
-  .xmas-stage.is-ready .xmas-feed,
   .xmas-modal,
   .xmas-focus,
   .xmas-tap-hint,
@@ -4304,7 +4296,7 @@
   animation: none;
 }
 .xmas-gift.is-leaving {
-  animation: xmas-out 0.7s ease 0s both;
+  animation: xmas-out 0.9s cubic-bezier(0.3, 0.6, 0.3, 1) 0s both;
 }
 @keyframes xmas-whiteup {
   to { opacity: 1; }
