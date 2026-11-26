@@ -110,6 +110,23 @@ const PART_TABS: { key: PartKey; label: string; list: readonly string[] }[] = [
 ];
 
 // ตัวสร้างตุ๊กตาหิมะ: ตัวอย่างอยู่ด้านบนแบบเรียลไทม์ ส่วนด้านล่างเลือกทีละหมวด
+// จำไว้ในเบราว์เซอร์ว่าวางตุ๊กตาฟรีของห้องนี้แล้ว (เซิร์ฟเวอร์เป็นตัวตัดสินจริง)
+const FREE_KEY = (room: string) => `xmas-free-decor:${room}`;
+function markFreePlaced(room: string) {
+  try {
+    window.localStorage.setItem(FREE_KEY(room), "1");
+  } catch {
+    /* ไม่เป็นไร */
+  }
+}
+function hasFreePlaced(room: string): boolean {
+  try {
+    return window.localStorage.getItem(FREE_KEY(room)) === "1";
+  } catch {
+    return false;
+  }
+}
+
 // ช่องว่างที่ไม่สงวน แบบสุ่ม (ใช้ตอนเปิดฟอร์มโดยยังไม่ได้เลือกช่อง)
 function randomFreeSlot(decor: Decor[]): number | null {
   const taken = new Set(decor.map((d) => d.slot));
@@ -144,6 +161,7 @@ export function DecorModal({
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [tab, setTab] = useState<PartKey | "slot">("hat");
   const [name, setName] = useState(defaultName);
+  const [alreadyFree] = useState(() => hasFreePlaced(roomId));
   const [slot, setSlot] = useState<number | null>(() => initialSlot ?? randomFreeSlot(decor));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -179,6 +197,7 @@ export function DecorModal({
   }
 
   async function place() {
+    if (alreadyFree) return setError("คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว ให้โอกาสคนอื่นได้วางบ้าง");
     if (slot === null) return setError("เลือกช่องที่จะวางก่อน");
     if (slotReserved) return setError("ช่องนี้สงวนไว้สำหรับป้ายประจำห้อง เลือกช่องอื่น");
     if (slotTaken) return setError("ช่องนี้มีคนวางแล้ว เลือกช่องว่างอื่น");
@@ -189,10 +208,14 @@ export function DecorModal({
       const res = await fetch("/api/christmas/deco", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: roomId, slot, name, ...parts, social: social ?? {} }),
+        body: JSON.stringify({ room: roomId, slot, name, ...parts, social: social ?? {}, clientId: getClientId() }),
       });
       const data = (await res.json()) as { decor?: Decor; error?: string };
-      if (!res.ok || !data.decor) throw new Error(data.error ?? "วางไม่สำเร็จ");
+      if (!res.ok || !data.decor) {
+        if (res.status === 409 && data.error?.includes("ตุ๊กตาฟรี")) markFreePlaced(roomId);
+        throw new Error(data.error ?? "วางไม่สำเร็จ");
+      }
+      markFreePlaced(roomId);
       onPlaced(data.decor);
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
@@ -282,13 +305,13 @@ export function DecorModal({
               </button>
             )}
           </p>
-          <p className="xmas-build-note">วางได้หลายตัว แต่ละช่องวางได้ 1 ตัว</p>
+          <p className="xmas-build-note">{alreadyFree ? "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว" : "ตุ๊กตาฟรีวางได้คนละ 1 ตัวต่อห้อง"}</p>
           <label className="xmas-field">
             <span className="xmas-field-label">ชื่อที่จะแสดงบนตุ๊กตา</span>
             <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
           </label>
-          <button className="xmas-submit" onClick={place} disabled={busy || slotBlocked || slot === null}>
-            {busy ? "กำลังวาง…" : slot === null ? "เลือกช่องก่อนวาง" : slotReserved ? "ช่องนี้สงวนไว้" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาหิมะรอบต้น"}
+          <button className="xmas-submit" onClick={place} disabled={busy || slotBlocked || slot === null || alreadyFree}>
+            {busy ? "กำลังวาง…" : alreadyFree ? "วางตุ๊กตาฟรีไปแล้ว" : slot === null ? "เลือกช่องก่อนวาง" : slotReserved ? "ช่องนี้สงวนไว้" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาหิมะรอบต้น"}
           </button>
           {error && <p className="xmas-msg err">{error}</p>}
         </div>

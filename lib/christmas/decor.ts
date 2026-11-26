@@ -33,12 +33,14 @@ const K = {
   hash: (r: string) => `xmas:${r}:deco2`, // HASH: ช่อง -> JSON ของตุ๊กตา
   likes: (r: string) => `xmas:${r}:likes`, // HASH: id -> จำนวนถูกใจ
   voters: (r: string, id: string) => `xmas:${r}:voters:${id}`, // SET ของ clientId
+  free: (r: string) => `xmas:${r}:decofree`, // HASH: clientId -> id ของตุ๊กตาฟรีที่วางแล้ว (ได้คนละ 1 ตัวต่อห้อง)
 };
 
 const mem = {
   slots: new Map<string, Map<number, Decor>>(),
   likes: new Map<string, Map<string, number>>(),
   voters: new Map<string, Set<string>>(),
+  free: new Map<string, Map<string, string>>(),
 };
 
 function memRoom(room: string) {
@@ -99,6 +101,27 @@ export async function like(room: string, id: string, clientId: string): Promise<
   return Number((await cmd<string | null>("HGET", K.likes(room), id)) ?? 0);
 }
 
+// จองสิทธิ์วางตุ๊กตาฟรีของคนนี้ในห้องนี้ (ได้ 1 ตัวต่อคนต่อห้อง) คืน false ถ้าเคยวางแล้ว
+export async function claimFreeDecor(room: string, clientId: string, decorId: string): Promise<boolean> {
+  if (!storeConfigured()) {
+    const m = mem.free.get(room) ?? new Map<string, string>();
+    mem.free.set(room, m);
+    if (m.has(clientId)) return false;
+    m.set(clientId, decorId);
+    return true;
+  }
+  return (await cmd<number>("HSETNX", K.free(room), clientId, decorId)) === 1;
+}
+
+// คืนสิทธิ์ตุ๊กตาฟรี (ใช้เมื่อวางไม่สำเร็จเพราะช่องถูกแย่งไปก่อน)
+export async function releaseFreeDecor(room: string, clientId: string) {
+  if (!storeConfigured()) {
+    mem.free.get(room)?.delete(clientId);
+    return;
+  }
+  await cmd("HDEL", K.free(room), clientId);
+}
+
 // ลบตุ๊กตาหนึ่งตัวออกจากช่อง (ผู้ดูแล)
 export async function removeDecor(room: string, slot: number): Promise<boolean> {
   if (!storeConfigured()) return memRoom(room).delete(slot);
@@ -111,8 +134,9 @@ export async function clearDecor(room: string) {
   if (!storeConfigured()) {
     mem.slots.delete(room);
     mem.likes.delete(room);
+    mem.free.delete(room);
     return;
   }
-  await cmd("DEL", K.hash(room), K.likes(room));
+  await cmd("DEL", K.hash(room), K.likes(room), K.free(room));
 }
 
