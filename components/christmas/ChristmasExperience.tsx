@@ -12,6 +12,7 @@ import { Backdrop } from "./Crowd";
 import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
+import { useBoard } from "./useBoard";
 import { Icon } from "./Icon";
 import { isMusicPlaying, startMusic, stopMusic } from "./music";
 import { OrnamentPreview } from "./OrnamentPreview";
@@ -161,6 +162,22 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const treeRef = useRef<TreeSceneHandle | null>(null);
   const feed = useFeed(roomId);
   const { decor, refresh: refreshDecor, loaded: decorLoaded } = useDecor(roomId);
+  // อันดับถูกใจของห้อง และการกดถูกใจคำอวยพร (กดได้ครั้งเดียวต่อคนต่อชิ้น)
+  const { board, refresh: refreshBoard } = useBoard(roomId);
+  const [likedWishes, setLikedWishes] = useState<Set<string>>(new Set());
+  async function likeWish(id: string) {
+    setLikedWishes((s) => new Set(s).add(id));
+    try {
+      await fetch("/api/christmas/ornament/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ room: roomId, id, clientId: getClientId() }),
+      });
+    } catch {
+      /* ลองใหม่ภายหลัง */
+    }
+    refreshBoard();
+  }
   // ตุ๊กตาหิมะที่เพิ่งมาถึงห้อง (ของคนอื่นหรือของเราเอง) จะมีแสงและแจ้งเตือนให้ทุกคนเห็น
   const seenDecor = useRef<Set<string> | null>(null);
   useEffect(() => {
@@ -687,6 +704,17 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           </span>
           <b>{focus.name}</b>
           <blockquote className="xmas-focus-wish">{focus.wish || "ขอให้มีความสุขในวันคริสต์มาส"}</blockquote>
+          <button
+            type="button"
+            className={`xmas-like-wish ${likedWishes.has(focus.id) ? "is-on" : ""}`}
+            aria-pressed={likedWishes.has(focus.id)}
+            onClick={() => likeWish(focus.id)}
+            disabled={likedWishes.has(focus.id)}
+          >
+            <Icon name="heart" size={15} />
+            {likedWishes.has(focus.id) ? "ถูกใจแล้ว" : "ถูกใจคำอวยพรนี้"}
+            <span>{(board.counts[focus.id] ?? 0) + (likedWishes.has(focus.id) && !board.counts[focus.id] ? 1 : 0)}</span>
+          </button>
           <div className="xmas-focus-foot">
             <small>แขวนเมื่อ {new Date(focus.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</small>
             <button type="button" className="xmas-chip-btn" onClick={() => setFocus(null)}>
@@ -815,6 +843,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         wishes={ornaments}
         decor={decor}
         feed={feed}
+        board={board}
         onWishClick={(o) => setFocus(o)}
         mobileOpen={feedOpen}
         onMobileClose={() => setFeedOpen(false)}
