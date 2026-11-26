@@ -4,8 +4,8 @@ import { rateOk } from "@/lib/christmas/store";
 import { getConfig } from "@/lib/christmas/config";
 import { hasBlocked } from "@/lib/christmas/validate";
 import { parseCard, CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
-import { addCard, findCard, listCards, releaseCardSlot, reserveCardSlot, toPublic, usedCardSlots } from "@/lib/christmas/cards";
-import { ornamentLikeCounts } from "@/lib/christmas/likes";
+import { addCard, findCard, pageCards, releaseCardSlot, reserveCardSlot, toPublic, usedCardSlots } from "@/lib/christmas/cards";
+import { likesFor } from "@/lib/christmas/likes";
 import { maskIp, writeLog } from "@/lib/christmas/log";
 import { sanitizeSocial } from "@/lib/christmas/social";
 
@@ -23,18 +23,18 @@ export async function GET(req: Request) {
   if (oneId) {
     const card = await findCard(room.id, oneId);
     if (!card) return NextResponse.json({ error: "ไม่พบการ์ดนี้" }, { status: 404 });
-    const likes = await ornamentLikeCounts(room.id);
+    const likes = await likesFor(room.id, [card.id]);
     return NextResponse.json({ card: toPublic(card, likes[card.id] ?? 0) }, { headers: { "Cache-Control": "no-store" } });
   }
-  // แบ่งเป็นหน้า: หน้าละไม่เกิน 200 ใบ เพื่อรองรับการ์ดจำนวนมากในโซนเดียว
-  const size = Math.min(200, Math.max(1, Number(url.searchParams.get("size")) || 60));
+  // แบ่งเป็นหน้า: หน้าละไม่เกิน 300 ใบ อ่านเฉพาะหน้าที่ขอจากดัชนีเวลา (ไม่ดึงทั้งห้อง)
+  const size = Math.min(300, Math.max(1, Number(url.searchParams.get("size")) || 60));
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
-  const [all, likes, used] = await Promise.all([listCards(room.id), ornamentLikeCounts(room.id), clientId ? usedCardSlots(room.id, clientId) : Promise.resolve(0)]);
-  const slice = all.slice((page - 1) * size, page * size);
+  const [{ items, total }, used] = await Promise.all([pageCards(room.id, page, size), clientId ? usedCardSlots(room.id, clientId) : Promise.resolve(0)]);
+  const likes = await likesFor(room.id, items.map((c) => c.id));
   return NextResponse.json(
     {
-      cards: slice.map((c) => toPublic(c, likes[c.id] ?? 0)),
-      total: all.length,
+      cards: items.map((c) => toPublic(c, likes[c.id] ?? 0)),
+      total,
       page,
       size,
       left: clientId ? Math.max(0, CARDS_PER_PERSON - used) : CARDS_PER_PERSON,

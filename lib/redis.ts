@@ -27,3 +27,20 @@ export async function cmd<T = unknown>(...args: (string | number)[]): Promise<T>
   if (json.error) throw new Error(json.error);
   return json.result as T;
 }
+
+// หลายคำสั่งในธุรกรรมเดียว (MULTI/EXEC) ให้บันทึกการ์ดกับดัชนีพร้อมกันหรือไม่เลย
+export async function txn(commands: (string | number)[][]): Promise<void> {
+  const { url, token } = redisEnv();
+  if (!url || !token) throw new Error("ยังไม่ได้ตั้งค่าฐานข้อมูล");
+  const res = await fetch(`${url}/multi-exec`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(commands),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`ฐานข้อมูลตอบกลับผิดพลาด (${res.status})`);
+  const json = (await res.json()) as { error?: string }[] | { error?: string };
+  const items = Array.isArray(json) ? json : [json];
+  const failed = items.find((r) => r && r.error);
+  if (failed?.error) throw new Error(failed.error);
+}

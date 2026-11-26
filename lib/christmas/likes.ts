@@ -46,3 +46,23 @@ export async function ornamentLikeCounts(room: string): Promise<Record<string, n
   }
   return out;
 }
+
+// จำนวนถูกใจเฉพาะลูกบอล/การ์ดที่ระบุ (ใช้ตอนแบ่งหน้า ไม่ต้องดึงทั้งห้อง)
+export async function likesFor(room: string, ids: string[]): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  if (ids.length === 0) return out;
+  if (!storeConfigured()) {
+    const counts = mem.counts.get(room);
+    for (const id of ids) {
+      const n = counts?.get(id) ?? 0;
+      if (n > 0) out[id] = n;
+    }
+    return out;
+  }
+  const raw = (await cmd<(string | null)[]>("HMGET", K.counts(room), ...ids)) ?? [];
+  ids.forEach((id, i) => {
+    const n = Number(raw[i] ?? 0);
+    if (n > 0) out[id] = n;
+  });
+  return out;
+}
