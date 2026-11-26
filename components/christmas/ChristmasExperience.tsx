@@ -203,6 +203,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   }
   // ตุ๊กตาหิมะที่เพิ่งมาถึงห้อง (ของคนอื่นหรือของเราเอง) จะมีแสงและแจ้งเตือนให้ทุกคนเห็น
   const seenDecor = useRef<Set<string> | null>(null);
+  // ตุ๊กตาที่ผู้ใช้เพิ่งชำระเงิน: เมื่อขึ้นบนฉากจะพากล้องไปหาและชี้ให้เห็น
+  const pendingLocate = useRef<{ kind: "decor" | "giant"; name: string; at: number } | null>(null);
+  const seenGiants = useRef<Set<string> | null>(null);
   useEffect(() => {
     if (!decorLoaded) return;
     if (seenDecor.current === null) {
@@ -210,14 +213,45 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       return;
     }
     const fresh = decor.filter((d) => !seenDecor.current!.has(d.id));
-    if (fresh.length === 0) return;
     fresh.forEach((d) => seenDecor.current!.add(d.id));
+    const want = pendingLocate.current;
+    if (want?.kind === "decor") {
+      const mine = decor
+        .filter((d) => d.name === want.name && d.createdAt >= want.at - 120000)
+        .sort((a, b) => b.createdAt - a.createdAt)[0];
+      if (mine) {
+        treeRef.current?.locate({ kind: "decor", slot: mine.slot });
+        pendingLocate.current = null;
+      }
+    }
+    if (fresh.length === 0) return;
     fresh.slice(0, 3).forEach((d) => treeRef.current?.highlightDecor(d.slot));
     notifyRef.current(
       "ok",
       fresh.length === 1 ? `${fresh[0].name} วางตุ๊กตาหิมะที่ช่อง ${fresh[0].slot + 1} แล้ว` : `มีตุ๊กตาหิมะใหม่ ${fresh.length} ตัวในห้องนี้`,
     );
   }, [decor, decorLoaded]);
+  // ตุ๊กตายักษ์ที่เพิ่งขึ้นป้ายในห้อง: ถ้าเป็นของผู้ใช้ที่เพิ่งชำระ พากล้องไปหา
+  useEffect(() => {
+    if (!state) return;
+    const keyOf = (g: { spot: number; paidAt: number }) => `${g.spot}:${g.paidAt}`;
+    if (seenGiants.current === null) {
+      seenGiants.current = new Set(state.giants.map(keyOf));
+      return;
+    }
+    const fresh = state.giants.filter((g) => !seenGiants.current!.has(keyOf(g)));
+    fresh.forEach((g) => seenGiants.current!.add(keyOf(g)));
+    const want = pendingLocate.current;
+    if (want?.kind === "giant") {
+      const mine = state.giants
+        .filter((g) => g.name === want.name && g.paidAt >= want.at - 120000)
+        .sort((a, b) => b.paidAt - a.paidAt)[0];
+      if (mine) {
+        treeRef.current?.locate({ kind: "giant", spot: mine.spot });
+        pendingLocate.current = null;
+      }
+    }
+  }, [state]);
   const [decorSlot, setDecorSlot] = useState<number | null>(null);
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
   const [coach, setCoach] = useState(false); // คำแนะนำครั้งแรกใต้เมนู
@@ -542,7 +576,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           social={profile?.social}
           onPaid={(kind, name) => {
             setExclusiveOpen(false);
-            if (kind === "giant") notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว`);
+            if (kind === "giant") {
+              pendingLocate.current = { kind: "giant", name, at: Date.now() };
+              notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว`);
+            }
             if (kind === "message") notify("ok", `ขอบคุณ ${name} ข้อความของคุณกำลังขึ้นบนท้องฟ้า`);
           }}
         />
@@ -766,6 +803,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setMarkerSlot(null);
             setDecorSlot(null);
             refreshDecor();
+            treeRef.current?.locate({ kind: "decor", slot: d.slot });
             notify("ok", `วางตุ๊กตาหิมะของ ${d.name} รอบต้นแล้ว`);
           }}
         />
@@ -780,6 +818,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onPaid={(kind, name) => {
             setExclusiveDraft(null);
             if (kind === "decor") {
+              pendingLocate.current = { kind: "decor", name, at: Date.now() };
               refreshDecor();
               notify("ok", `${name} วางตุ๊กตาหิมะ Exclusive บนต้นแล้ว`);
             }
