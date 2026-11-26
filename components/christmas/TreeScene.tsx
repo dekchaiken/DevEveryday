@@ -6,7 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE } from "@/lib/christmas/slots";
+import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
@@ -104,7 +104,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environmentIntensity = 0.55;
     // หมอกบาง ๆ ทำให้พื้นหิมะไกลค่อย ๆ กลมกลืนกับท้องฟ้าค่ำ
-    scene.fog = new THREE.Fog(0x0c251d, 14, 40);
+    scene.fog = new THREE.Fog(0x0c251d, 14, 56);
 
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 220);
     camera.position.set(0, 2.6, 9.2);
@@ -784,6 +784,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
       zoneCardGroup.children.forEach((g) => {
         g.rotation.z = reduced ? 0 : Math.sin(t * 1.5 + (g.userData.phase as number)) * 0.06;
+        const h = g.userData.halo as THREE.Mesh | undefined;
+        if (h) (h.material as THREE.MeshBasicMaterial).opacity = reduced ? 0.4 : 0.3 + 0.2 * Math.sin(t * 2 + (g.userData.phase as number));
       });
       zoneLights.forEach((m, i) => {
         (m.material as THREE.MeshBasicMaterial).opacity = reduced ? 1 : 0.6 + 0.4 * Math.sin(t * 3 + i);
@@ -1019,7 +1021,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c, purple: 0xa855f7 };
     const HAT_HEX = 0x1f2937;
 
-    // ---------- โซนคำอวยพรบนแผนที่: รั้วสี่เหลี่ยม ของตกแต่ง และการ์ดที่แขวนบนรั้ว ----------
+    // ---------- โซนคำอวยพรบนแผนที่: รั้วใหญ่มีประตู ทางเดินจากต้นไม้ ของตกแต่ง และซองอวยพรที่แขวนบนรั้ว ----------
     const zoneGroup = new THREE.Group();
     scene.add(zoneGroup);
     const zoneCardGroup = new THREE.Group();
@@ -1027,112 +1029,144 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const zoneLights: THREE.Mesh[] = [];
     const zWood = new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 });
     const zRail = new THREE.MeshStandardMaterial({ color: 0x9a6a3a, roughness: 0.8 });
+    const zStone = new THREE.MeshStandardMaterial({ color: 0xeef6fb, roughness: 0.7 });
     const zx = ZONE.x;
     const zz = ZONE.z;
     const zh = ZONE.half;
-    const zBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number, ry = 0) => {
+    const gx = ZONE_GATE.x;
+    const gz = ZONE_GATE.z;
+    const zBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
       m.position.set(x, y, z);
-      m.rotation.y = ry;
       zoneGroup.add(m);
       return m;
     };
-    // ลานหิมะของโซนและรั้วไม้ 4 ด้าน
-    zBox(zh * 2 + 0.7, 0.05, zh * 2 + 0.7, new THREE.MeshStandardMaterial({ color: 0xf6fbff, roughness: 0.6 }), zx, 0.03, zz);
-    const sides: { x: number; z: number; along: "x" | "z" }[] = [
-      { x: zx, z: zz + zh, along: "x" },
-      { x: zx, z: zz - zh, along: "x" },
-      { x: zx - zh, z: zz, along: "z" },
-      { x: zx + zh, z: zz, along: "z" },
-    ];
-    for (const side of sides) {
-      const len = zh * 2;
-      if (side.along === "x") {
-        zBox(len, 0.08, 0.09, zRail, side.x, 1.2, side.z);
-        zBox(len, 0.08, 0.09, zRail, side.x, 0.62, side.z);
-      } else {
-        zBox(0.09, 0.08, len, zRail, side.x, 1.2, side.z);
-        zBox(0.09, 0.08, len, zRail, side.x, 0.62, side.z);
+    const zPost = (x: number, z: number, h: number) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, h, 8), zWood);
+      post.position.set(x, h / 2, z);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }));
+      cap.position.set(x, h + 0.08, z);
+      zoneGroup.add(post, cap);
+    };
+    // ลานหิมะของโซน
+    zBox(zh * 2 + 1, 0.05, zh * 2 + 1, zStone, zx, 0.03, zz);
+    // รั้ว 2 ชั้น: ด้านหน้ามีประตูกว้าง 2.4 หน่วยตรงกลาง ด้านหลังและสองข้างปิดทั้งหมด
+    const rails = (x0: number, x1: number, z0: number, z1: number) => {
+      const len = Math.hypot(x1 - x0, z1 - z0);
+      const horizontal = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+      for (const y of [1.2, 0.62]) {
+        const w = horizontal ? len : 0.1;
+        const d = horizontal ? 0.1 : len;
+        zBox(w, 0.1, d, zRail, (x0 + x1) / 2, y, (z0 + z1) / 2);
       }
-      for (let k = 0; k <= 4; k++) {
-        const t = -zh + (k / 4) * len;
-        const px = side.along === "x" ? side.x + t : side.x;
-        const pz = side.along === "x" ? side.z : side.z + t;
-        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 1.4, 8), zWood);
-        post.position.set(px, 0.7, pz);
-        zoneGroup.add(post);
-      }
-    }
-    // ป้ายชื่อโซนเหนือรั้วด้านหน้า
+    };
+    rails(zx - zh, gx - 1.2, gz, gz); // หน้า ซ้ายของประตู
+    rails(gx + 1.2, zx + zh, gz, gz); // หน้า ขวาของประตู
+    rails(zx - zh, zx + zh, zz - zh, zz - zh); // หลัง
+    rails(zx - zh, zx - zh, zz - zh, zz + zh); // ซ้าย
+    rails(zx + zh, zx + zh, zz - zh, zz + zh); // ขวา
+    const postSpacing = [-zh, -zh / 2, zh / 2, zh];
+    postSpacing.forEach((t) => {
+      if (Math.abs(t) > 0.01) zPost(zx + t, gz, 1.6); // หน้า
+      zPost(zx + t, zz - zh, 1.6); // หลัง
+      zPost(zx - zh, zz + t, 1.6); // ซ้าย
+      zPost(zx + zh, zz + t, 1.6); // ขวา
+    });
+    zPost(gx - 1.2, gz, 1.6);
+    zPost(gx + 1.2, gz, 1.6);
+    // ซุ้มประตูโค้ง พร้อมริบบิ้นแดง
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.06, 10, 28, Math.PI), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.5 }));
+    arch.position.set(gx, 1.6, gz);
+    zoneGroup.add(arch);
+    // ป้ายชื่อโซนเหนือซุ้ม
     const signCv = document.createElement("canvas");
-    signCv.width = 640;
-    signCv.height = 150;
+    signCv.width = 720;
+    signCv.height = 170;
     const sg = signCv.getContext("2d");
     if (sg) {
       sg.fillStyle = "#0f3d2e";
-      sg.fillRect(0, 0, 640, 150);
+      sg.fillRect(0, 0, 720, 170);
       sg.strokeStyle = "#e8d19a";
-      sg.lineWidth = 8;
-      sg.strokeRect(14, 14, 612, 122);
+      sg.lineWidth = 9;
+      sg.strokeRect(14, 14, 692, 142);
       sg.fillStyle = "#f6e7bf";
-      sg.font = "700 64px 'IBM Plex Sans Thai', sans-serif";
+      sg.font = "700 70px 'IBM Plex Sans Thai', sans-serif";
       sg.textAlign = "center";
       sg.textBaseline = "middle";
-      sg.fillText("โซนคำอวยพร", 320, 80);
+      sg.fillText("โซนคำอวยพร", 360, 88);
     }
     const signTex = new THREE.CanvasTexture(signCv);
     signTex.colorSpace = THREE.SRGBColorSpace;
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.75), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
-    sign.position.set(zx, 2.05, zz + zh + 0.06);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.85), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
+    sign.position.set(gx, 3.2, gz + 0.06);
     zoneGroup.add(sign);
     // ไฟประดับตามขอบรั้วด้านบน กระพริบเบา ๆ
     const bulbColors = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
-    for (let k = 0; k < 16; k++) {
-      const t = -zh + (k / 15) * zh * 2;
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), new THREE.MeshBasicMaterial({ color: bulbColors[k % 4], transparent: true, opacity: 1 }));
-      bulb.position.set(zx + t, 1.3, zz + zh);
+    for (let k = 0; k < 22; k++) {
+      const t = -zh + (k / 21) * zh * 2;
+      if (Math.abs(t - (gx - zx)) < 1.5) continue;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), new THREE.MeshBasicMaterial({ color: bulbColors[k % 4], transparent: true, opacity: 1 }));
+      bulb.position.set(zx + t, 1.32, gz);
       zoneGroup.add(bulb);
       zoneLights.push(bulb);
     }
-    // ของขวัญ โคมไฟ และต้นสนรอบโซน
+    // ทางเดินหินจากประตูโซนไปยังต้นไม้ พร้อมโคมไฟสองข้าง
+    const pathLen = Math.hypot(gx, gz);
+    const dirX = -gx / pathLen;
+    const dirZ = -gz / pathLen;
+    for (let k = 0; k < 11; k++) {
+      const d = 1.6 + k * 1.15;
+      const px = gx + dirX * d;
+      const pz = gz + dirZ * d;
+      if (Math.hypot(px, pz) < 3.6) break;
+      const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.48, 0.06, 14), zStone);
+      stone.position.set(px, 0.04, pz);
+      zoneGroup.add(stone);
+    }
+    [0.35, 0.7].forEach((f) => {
+      const d = 1.6 + f * 10.5 * 1.15;
+      const ox = -dirZ;
+      const oz = dirX;
+      [-1, 1].forEach((side) => {
+        const px = gx + dirX * d + ox * side * 1.1;
+        const pz = gz + dirZ * d + oz * side * 1.1;
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.6, 8), zWood);
+        pole.position.set(px, 0.8, pz);
+        const glow = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 12), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.9 }));
+        glow.position.set(px, 1.7, pz);
+        zoneGroup.add(pole, glow);
+        zoneLights.push(glow);
+      });
+    });
+    // ของขวัญและต้นสนรอบโซน (ห่างจากพื้นที่ตุ๊กตา)
     const presentColors = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e];
     [
-      [zx - zh - 1.5, zz + zh + 1.2],
-      [zx + zh + 1.4, zz + zh + 0.9],
-      [zx + zh + 1.6, zz - zh - 0.7],
-      [zx - zh - 1.1, zz - zh - 1.2],
+      [zx - zh - 1.6, zz + zh + 1.4],
+      [zx + zh + 1.6, zz + zh + 1.2],
+      [zx + zh + 1.8, zz - zh - 0.8],
+      [zx - zh - 1.3, zz - zh - 1.4],
     ].forEach(([px, pz], i) => {
-      const box = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.6), new THREE.MeshStandardMaterial({ color: presentColors[i], roughness: 0.4 }));
-      box.position.set(px, 0.25, pz);
-      const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.52, 0.1), new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.5, roughness: 0.3 }));
-      ribbon.position.set(px, 0.25, pz);
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.55, 0.7), new THREE.MeshStandardMaterial({ color: presentColors[i], roughness: 0.4 }));
+      box.position.set(px, 0.28, pz);
+      const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.57, 0.12), new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.5, roughness: 0.3 }));
+      ribbon.position.set(px, 0.28, pz);
       zoneGroup.add(box, ribbon);
     });
     [
-      [zx - zh - 0.9, zz - zh - 0.9],
-      [zx + zh + 0.9, zz - zh - 0.2],
-    ].forEach(([px, pz]) => {
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.1, 8), zWood);
-      pole.position.set(px, 1.05, pz);
-      const glow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 12), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.9 }));
-      glow.position.set(px, 2.25, pz);
-      zoneGroup.add(pole, glow);
-      zoneLights.push(glow);
-    });
-    [
-      [zx + zh + 2.2, zz + 1.2, 1],
-      [zx - zh - 2.4, zz + 0.5, 0.8],
-      [zx + 1.8, zz - zh - 2.2, 1.1],
+      [zx + zh + 2.6, zz + 1.2, 1.2],
+      [zx - zh - 2.8, zz + 0.5, 1],
+      [zx + 2.2, zz - zh - 2.6, 1.3],
+      [zx - 3.4, zz - zh - 2.8, 0.9],
     ].forEach(([px, pz, sc]) => {
       const leaf = new THREE.MeshStandardMaterial({ color: 0x1f7a4d, roughness: 0.8 });
-      const low = new THREE.Mesh(new THREE.ConeGeometry(0.9 * sc, 1.6 * sc, 12), leaf);
-      low.position.set(px, 0.8 * sc, pz);
-      const top = new THREE.Mesh(new THREE.ConeGeometry(0.6 * sc, 1.2 * sc, 12), leaf);
-      top.position.set(px, 1.9 * sc, pz);
+      const low = new THREE.Mesh(new THREE.ConeGeometry(0.95 * sc, 1.7 * sc, 12), leaf);
+      low.position.set(px, 0.85 * sc, pz);
+      const top = new THREE.Mesh(new THREE.ConeGeometry(0.62 * sc, 1.3 * sc, 12), leaf);
+      top.position.set(px, 2 * sc, pz);
       zoneGroup.add(low, top);
     });
 
-    // การ์ดแขวนบนรั้ว 3 ด้าน (หน้า ซ้าย ขวา) และด้านหลัง: ต้องไม่เกิน 36 ใบบนฉาก
+    // ซองอวยพร: ขนาดเล็กลง มีแสงฟุ้งบาง ๆ และคำว่า "อวยพร" ให้รู้ว่าเป็นซองอวยพร
     const ENV_HEX: Record<string, [string, string, string]> = {
       red: ["#b91c3c", "#9b1630", "#ffffff"],
       gold: ["#d9a93a", "#b98a2a", "#ffffff"],
@@ -1169,26 +1203,44 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         g.arc(128, 92, 13, 0, Math.PI * 2);
         g.fill();
         g.fillStyle = ink;
-        g.font = "600 22px 'IBM Plex Sans Thai', sans-serif";
+        g.font = "700 18px 'IBM Plex Sans Thai', sans-serif";
         g.textAlign = "center";
         g.textBaseline = "middle";
+        g.fillText("✦ อวยพร ✦", 128, 26);
+        g.font = "600 22px 'IBM Plex Sans Thai', sans-serif";
         g.fillText(name.slice(0, 14), 128, 140);
       }
       const tex = new THREE.CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;
       return tex;
     }
-    // ตำแหน่งการ์ด: ไล่ตามด้านของรั้วแล้วกำหนดทิศให้หันออกนอกโซน
-    const ZONE_SLOTS: { x: number; z: number; ry: number }[] = [];
-    const span = zh * 2 - 0.9;
-    const cardsPer = 8;
-    for (let k = 0; k < cardsPer; k++) {
-      const t = -span / 2 + (k / (cardsPer - 1)) * span;
-      ZONE_SLOTS.push({ x: zx + t, z: zz + zh + 0.07, ry: 0 }); // หน้า
-      ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.07, ry: Math.PI }); // หลัง
-      ZONE_SLOTS.push({ x: zx - zh - 0.07, z: zz + t, ry: -Math.PI / 2 }); // ซ้าย
-      ZONE_SLOTS.push({ x: zx + zh + 0.07, z: zz + t, ry: Math.PI / 2 }); // ขวา
+    // แสงฟุ้งสีทองหลังซอง
+    const haloCv = document.createElement("canvas");
+    haloCv.width = 128;
+    haloCv.height = 128;
+    const hg = haloCv.getContext("2d");
+    if (hg) {
+      const grad = hg.createRadialGradient(64, 64, 4, 64, 64, 64);
+      grad.addColorStop(0, "rgba(255,230,140,0.9)");
+      grad.addColorStop(1, "rgba(255,230,140,0)");
+      hg.fillStyle = grad;
+      hg.fillRect(0, 0, 128, 128);
     }
+    const haloTex = new THREE.CanvasTexture(haloCv);
+    // ตำแหน่งซอง: หน้า หลัง ซ้าย ขวา ยกเว้นช่องที่ประตู หันออกนอกโซน
+    const ZONE_SLOTS: { x: number; z: number; ry: number }[] = [];
+    // ด้านหน้าที่กล้องมองเห็นก่อน แล้วค่อยด้านข้างและด้านหลัง
+    const ts = [-4.5, -3, -1.5, 0, 1.5, 3, 4.5];
+    ts.forEach((t) => {
+      if (Math.abs(t) > 1.6) ZONE_SLOTS.push({ x: zx + t, z: gz + 0.07, ry: 0 });
+    });
+    ts.forEach((t) => {
+      ZONE_SLOTS.push({ x: zx - zh - 0.07, z: zz + t, ry: -Math.PI / 2 });
+      ZONE_SLOTS.push({ x: zx + zh + 0.07, z: zz + t, ry: Math.PI / 2 });
+    });
+    ts.forEach((t) => {
+      ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.07, ry: Math.PI });
+    });
     function api_setZoneCards(list: CardRecord[]) {
       while (zoneCardGroup.children.length) {
         const c = zoneCardGroup.children.pop()!;
@@ -1206,16 +1258,19 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const pivot = new THREE.Group();
         pivot.position.set(slot.x, 1.2, slot.z);
         pivot.rotation.y = slot.ry;
-        const string = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.24, 6), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
-        string.position.set(0, -0.12, 0);
+        const string = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.22, 6), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
+        string.position.set(0, -0.11, 0);
+        const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.68), new THREE.MeshBasicMaterial({ map: haloTex, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
+        halo.position.set(0, -0.42, -0.02);
         const card = new THREE.Mesh(
-          new THREE.PlaneGeometry(0.84, 0.53),
+          new THREE.PlaneGeometry(0.62, 0.4),
           new THREE.MeshStandardMaterial({ map: envelopeTexture(c.envelope, c.name), roughness: 0.6, side: THREE.DoubleSide }),
         );
-        card.position.set(0, -0.5, 0.01);
+        card.position.set(0, -0.42, 0.01);
         card.userData.cardId = c.id;
         pivot.userData.phase = i * 0.7;
-        pivot.add(string, card);
+        pivot.userData.halo = halo;
+        pivot.add(string, halo, card);
         zoneCardGroup.add(pivot);
       });
     }
@@ -1577,7 +1632,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
 
     // ---------- มุมมองโซนคำอวยพร: ซูมออกเป็นแผนที่ แล้วเลื่อนไปที่โซน และกลับมุมเดิมได้
-    const FOG_FAR = 40;
+    const FOG_FAR = 56;
     let zoneTimers: number[] = [];
     let zoneAway = false;
     function rememberView() {
@@ -1595,12 +1650,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       controls.minDistance = 0.5;
       const cx = ZONE.x;
       const cz = ZONE.z;
+      // จอแคบต้องถอยห่างกว่าเดิม ให้เห็นทั้งรั้วและป้าย
+      const far = isSmall ? 1.8 : 1;
       // 1) ซูมออกขึ้นไปมองจากด้านบนเหมือนแผนที่
       animateCam(new THREE.Vector3(cx * 0.4, 50, cz * 0.4 + 8), new THREE.Vector3(cx * 0.5, 0, cz * 0.5), 1100);
       // 2) เลื่อนไปเหนือโซน
       zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx, 34, cz + 6), new THREE.Vector3(cx, 0, cz), 1000), 1150));
       // 3) ลงมาดูรั้วและการ์ดระดับสายตา
-      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx + 2.6, 3.4, cz + 10.5), new THREE.Vector3(cx, 1.3, cz), 1100), 2200));
+      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx + 3.5 * far, 5.4 * far, cz + 15.5 * far), new THREE.Vector3(cx, 1.4, cz), 1100), 2200));
     }
     function returnView() {
       zoneTimers.forEach((t) => clearTimeout(t));

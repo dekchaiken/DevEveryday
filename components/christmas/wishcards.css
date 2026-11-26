@@ -1945,3 +1945,13 @@
   bottom: 50%;
   transform: translate(-50%, 50%) rotateX(0deg);
 }
+
+/* ซองยังไม่ถูกเปิด (สั่น/เปิดฝา) ซ่อนการ์ดไว้ในซองทั้งหมด จะโผล่ออกมาตอนเลื่อนออกเท่านั้น */
+.xz-open.is-shake .xz-card-slot,
+.xz-open.is-open .xz-card-slot {
+  opacity: 0;
+}
+.xz-open.is-out .xz-card-slot,
+.xz-open.is-show .xz-card-slot {
+  opacity: 1;
+}
