@@ -40,9 +40,9 @@ export function CardReveal({
   useEffect(() => {
     if (!autoStart) return;
     setPhase("shake");
-    const t1 = setTimeout(() => setPhase("open"), 520);
-    const t2 = setTimeout(() => setPhase("out"), 1150);
-    const t3 = setTimeout(() => setPhase("show"), 1900);
+    const t1 = setTimeout(() => setPhase("open"), 480);
+    const t2 = setTimeout(() => setPhase("out"), 1080);
+    const t3 = setTimeout(() => setPhase("show"), 1850);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -86,8 +86,11 @@ export function CardReveal({
     >
       <div className="xz-letter">
         <div className="xz-envelope-wrap">
-          <div className="xz-card-slot">
-            <CardView spec={card} tilt={phase === "show"} />
+          {/* การ์ดถูกตัดไว้ที่ขอบล่างของซอง จึงโผล่ได้จากปากซองด้านบนเท่านั้น */}
+          <div className="xz-card-clip">
+            <div className="xz-card-slot">
+              <CardView spec={card} tilt={phase === "show"} />
+            </div>
           </div>
           <EnvelopeArt envelope={card.envelope} props={card.envProps} className="xz-env-reveal" />
         </div>
@@ -118,17 +121,23 @@ export function CardReveal({
 // โซนคำอวยพร: รั้วที่มีกระดิ่งและไฟกระพริบ ซองการ์ดแขวนอยู่บนรั้ว แตะเพื่อแกะซองอ่าน
 export function WishZone({
   cards,
+  total,
+  hasMore,
   liked,
   loading,
   room,
   onLike,
+  onLoadMore,
   onClose,
 }: {
   cards: CardRecord[];
+  total: number;
+  hasMore: boolean;
   liked: Set<string>;
   loading: boolean;
   room: string;
   onLike: (id: string) => void;
+  onLoadMore: () => void;
   onClose: () => void;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -161,7 +170,7 @@ export function WishZone({
         <div>
           <p className="xz-kicker">โซนคำอวยพร</p>
           <h2>การ์ดจากทุกคนในห้อง</h2>
-          <span className="xz-count">{loading && cards.length === 0 ? "กำลังโหลด…" : `${cards.length} ใบ`}</span>
+          <span className="xz-count">{loading && cards.length === 0 ? "กำลังโหลด…" : `${total} ใบทั้งหมด · แสดง ${cards.length}`}</span>
         </div>
         <button type="button" className="xz-close" onClick={onClose} aria-label="ปิดโซนคำอวยพร">
           <Icon name="close" size={18} />
@@ -197,6 +206,11 @@ export function WishZone({
         </ul>
 
         {!loading && cards.length === 0 && <p className="xz-empty">ยังไม่มีการ์ดในโซนนี้ เป็นคนแรกที่ส่งการ์ดอวยพรเลย</p>}
+        {hasMore && (
+          <button type="button" className="xz-more" onClick={onLoadMore} disabled={loading}>
+            {loading ? "กำลังโหลด…" : `โหลดเพิ่ม (${total - cards.length} ใบ)`}
+          </button>
+        )}
       </div>
 
       {open && (

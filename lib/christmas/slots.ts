@@ -43,7 +43,9 @@ export function nearestSlot(x: number, z: number): number {
 // ตำแหน่งตุ๊กตาหิมะยักษ์: วงกว้างรอบลานที่ขยายออกเรื่อย ๆ ตามจำนวนที่ซื้อ
 // ระบบจัดให้อัตโนมัติ ตัวที่ซื้อแล้วจะไม่ถูกแทนที่หรือหายไป
 // โซนคำอวยพรแบบมีรั้วบนแผนที่: สงวนพื้นที่นี้ไม่ให้วางตุ๊กตายักษ์
-export const ZONE = { x: -6.5, z: -19, half: 5.5 };
+export const ZONE = { x: -5, z: -19, half: 8 };
+// จำนวนการ์ดที่แขวนบนรั้วในฉาก (การ์ดที่เหลือดูได้จากรายการในโซน)
+export const ZONE_CAPACITY = 284; // ตรงกับจำนวนช่องซองบนรั้ว 4 ชั้นใน TreeScene
 // ประตูโซนหันเข้าหาต้นไม้ และทางเดินจากประตูไปยังต้นไม้
 export const ZONE_GATE = { x: ZONE.x, z: ZONE.z + ZONE.half };
 export function inZone(x: number, z: number, pad = 0.6) {

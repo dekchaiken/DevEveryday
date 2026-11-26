@@ -6,7 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
+import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
@@ -1021,7 +1021,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c, purple: 0xa855f7 };
     const HAT_HEX = 0x1f2937;
 
-    // ---------- โซนคำอวยพรบนแผนที่: รั้วใหญ่มีประตู ทางเดินจากต้นไม้ ของตกแต่ง และซองอวยพรที่แขวนบนรั้ว ----------
+    // ---------- โซนคำอวยพรบนแผนที่: รั้วใหญ่ 2 ชั้นรอบโซน มีประตูและซุ้ม ทางเดินหินจากต้นไม้ และซองอวยพรที่แขวนบนรั้ว ----------
     const zoneGroup = new THREE.Group();
     scene.add(zoneGroup);
     const zoneCardGroup = new THREE.Group();
@@ -1035,6 +1035,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const zh = ZONE.half;
     const gx = ZONE_GATE.x;
     const gz = ZONE_GATE.z;
+    const RAIL_Y = [2.0, 1.5, 1.0, 0.5]; // 4 ชั้น ชั้นละ 0.5 หน่วย ให้การ์ดแขวนไม่ทับกัน
+    const POST_H = 2.2;
     const zBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
       m.position.set(x, y, z);
@@ -1042,71 +1044,73 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       return m;
     };
     const zPost = (x: number, z: number, h: number) => {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, h, 8), zWood);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, h, 8), zWood);
       post.position.set(x, h / 2, z);
-      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }));
-      cap.position.set(x, h + 0.08, z);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }));
+      cap.position.set(x, h + 0.1, z);
       zoneGroup.add(post, cap);
     };
     // ลานหิมะของโซน
-    zBox(zh * 2 + 1, 0.05, zh * 2 + 1, zStone, zx, 0.03, zz);
-    // รั้ว 2 ชั้น: ด้านหน้ามีประตูกว้าง 2.4 หน่วยตรงกลาง ด้านหลังและสองข้างปิดทั้งหมด
-    const rails = (x0: number, x1: number, z0: number, z1: number) => {
-      const len = Math.hypot(x1 - x0, z1 - z0);
+    zBox(zh * 2 + 1.2, 0.05, zh * 2 + 1.2, zStone, zx, 0.03, zz);
+    // รั้ว 4 ชั้น: ด้านหน้าเว้นประตูกว้าง 2.4 หน่วยตรงกลาง
+    const rail = (x0: number, x1: number, z0: number, z1: number, y: number) => {
       const horizontal = Math.abs(x1 - x0) > Math.abs(z1 - z0);
-      for (const y of [1.2, 0.62]) {
-        const w = horizontal ? len : 0.1;
-        const d = horizontal ? 0.1 : len;
-        zBox(w, 0.1, d, zRail, (x0 + x1) / 2, y, (z0 + z1) / 2);
-      }
+      const len = horizontal ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
+      zBox(horizontal ? len : 0.12, 0.12, horizontal ? 0.12 : len, zRail, (x0 + x1) / 2, y, (z0 + z1) / 2);
     };
-    rails(zx - zh, gx - 1.2, gz, gz); // หน้า ซ้ายของประตู
-    rails(gx + 1.2, zx + zh, gz, gz); // หน้า ขวาของประตู
-    rails(zx - zh, zx + zh, zz - zh, zz - zh); // หลัง
-    rails(zx - zh, zx - zh, zz - zh, zz + zh); // ซ้าย
-    rails(zx + zh, zx + zh, zz - zh, zz + zh); // ขวา
-    const postSpacing = [-zh, -zh / 2, zh / 2, zh];
-    postSpacing.forEach((t) => {
-      if (Math.abs(t) > 0.01) zPost(zx + t, gz, 1.6); // หน้า
-      zPost(zx + t, zz - zh, 1.6); // หลัง
-      zPost(zx - zh, zz + t, 1.6); // ซ้าย
-      zPost(zx + zh, zz + t, 1.6); // ขวา
+    for (const y of RAIL_Y) {
+      rail(zx - zh, gx - 1.2, gz, gz, y);
+      rail(gx + 1.2, zx + zh, gz, gz, y);
+      rail(zx - zh, zx + zh, zz - zh, zz - zh, y);
+      rail(zx - zh, zx - zh, zz - zh, zz + zh, y);
+      rail(zx + zh, zx + zh, zz - zh, zz + zh, y);
+    }
+    // เสาทุก 4 หน่วย ด้านหน้าไม่มีเสาตรงประตู
+    [-zh, -zh / 2, 0, zh / 2, zh].forEach((t) => {
+      if (Math.abs(t) > 0.01) zPost(zx + t, gz, POST_H);
+      zPost(zx + t, zz - zh, POST_H);
+      if (Math.abs(t) > 0.01 && Math.abs(t) !== zh) {
+        zPost(zx - zh, zz + t, POST_H);
+        zPost(zx + zh, zz + t, POST_H);
+      }
     });
-    zPost(gx - 1.2, gz, 1.6);
-    zPost(gx + 1.2, gz, 1.6);
-    // ซุ้มประตูโค้ง พร้อมริบบิ้นแดง
-    const arch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.06, 10, 28, Math.PI), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.5 }));
-    arch.position.set(gx, 1.6, gz);
+    zPost(zx - zh, gz, POST_H);
+    zPost(zx + zh, gz, POST_H);
+    zPost(gx - 1.2, gz, POST_H);
+    zPost(gx + 1.2, gz, POST_H);
+    // ซุ้มประตูโค้งสีแดงพร้อมไฟ
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.08, 10, 28, Math.PI), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.5 }));
+    arch.position.set(gx, POST_H, gz);
     zoneGroup.add(arch);
     // ป้ายชื่อโซนเหนือซุ้ม
     const signCv = document.createElement("canvas");
-    signCv.width = 720;
-    signCv.height = 170;
+    signCv.width = 760;
+    signCv.height = 180;
     const sg = signCv.getContext("2d");
     if (sg) {
       sg.fillStyle = "#0f3d2e";
-      sg.fillRect(0, 0, 720, 170);
+      sg.fillRect(0, 0, 760, 180);
       sg.strokeStyle = "#e8d19a";
       sg.lineWidth = 9;
-      sg.strokeRect(14, 14, 692, 142);
+      sg.strokeRect(14, 14, 732, 152);
       sg.fillStyle = "#f6e7bf";
-      sg.font = "700 70px 'IBM Plex Sans Thai', sans-serif";
+      sg.font = "700 74px 'IBM Plex Sans Thai', sans-serif";
       sg.textAlign = "center";
       sg.textBaseline = "middle";
-      sg.fillText("โซนคำอวยพร", 360, 88);
+      sg.fillText("โซนคำอวยพร", 380, 94);
     }
     const signTex = new THREE.CanvasTexture(signCv);
     signTex.colorSpace = THREE.SRGBColorSpace;
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.85), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
-    sign.position.set(gx, 3.2, gz + 0.06);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.99), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
+    sign.position.set(gx, 3.7, gz + 0.06);
     zoneGroup.add(sign);
     // ไฟประดับตามขอบรั้วด้านบน กระพริบเบา ๆ
     const bulbColors = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
-    for (let k = 0; k < 22; k++) {
-      const t = -zh + (k / 21) * zh * 2;
-      if (Math.abs(t - (gx - zx)) < 1.5) continue;
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), new THREE.MeshBasicMaterial({ color: bulbColors[k % 4], transparent: true, opacity: 1 }));
-      bulb.position.set(zx + t, 1.32, gz);
+    let bulbIdx = 0;
+    for (let t = -zh; t <= zh + 0.01; t += 0.9) {
+      if (Math.abs(zx + t - gx) < 1.6) continue;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({ color: bulbColors[bulbIdx++ % 4], transparent: true, opacity: 1 }));
+      bulb.position.set(zx + t, 1.6, gz);
       zoneGroup.add(bulb);
       zoneLights.push(bulb);
     }
@@ -1114,59 +1118,61 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const pathLen = Math.hypot(gx, gz);
     const dirX = -gx / pathLen;
     const dirZ = -gz / pathLen;
-    for (let k = 0; k < 11; k++) {
-      const d = 1.6 + k * 1.15;
+    for (let k = 0; k < 16; k++) {
+      const d = 1.8 + k * 1.1;
       const px = gx + dirX * d;
       const pz = gz + dirZ * d;
       if (Math.hypot(px, pz) < 3.6) break;
-      const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.48, 0.06, 14), zStone);
+      const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.52, 0.06, 14), zStone);
       stone.position.set(px, 0.04, pz);
       zoneGroup.add(stone);
     }
-    [0.35, 0.7].forEach((f) => {
-      const d = 1.6 + f * 10.5 * 1.15;
+    [0.2, 0.5, 0.8].forEach((f) => {
+      const d = 1.8 + f * 16 * 1.1;
       const ox = -dirZ;
       const oz = dirX;
       [-1, 1].forEach((side) => {
-        const px = gx + dirX * d + ox * side * 1.1;
-        const pz = gz + dirZ * d + oz * side * 1.1;
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 1.6, 8), zWood);
-        pole.position.set(px, 0.8, pz);
-        const glow = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 12), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.9 }));
-        glow.position.set(px, 1.7, pz);
+        const px = gx + dirX * d + ox * side * 1.3;
+        const pz = gz + dirZ * d + oz * side * 1.3;
+        if (Math.hypot(px, pz) < 3.6) return;
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.7, 8), zWood);
+        pole.position.set(px, 0.85, pz);
+        const glow = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 12), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.9 }));
+        glow.position.set(px, 1.8, pz);
         zoneGroup.add(pole, glow);
         zoneLights.push(glow);
       });
     });
     // ของขวัญและต้นสนรอบโซน (ห่างจากพื้นที่ตุ๊กตา)
-    const presentColors = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e];
+    const presentColors = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e, 0xec4899];
     [
-      [zx - zh - 1.6, zz + zh + 1.4],
-      [zx + zh + 1.6, zz + zh + 1.2],
-      [zx + zh + 1.8, zz - zh - 0.8],
-      [zx - zh - 1.3, zz - zh - 1.4],
+      [zx - zh - 2, zz + zh + 1.6],
+      [zx + zh + 2, zz + zh + 1.4],
+      [zx + zh + 2.2, zz - zh - 1],
+      [zx - zh - 1.6, zz - zh - 1.6],
+      [zx + 3, zz - zh - 2.4],
     ].forEach(([px, pz], i) => {
-      const box = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.55, 0.7), new THREE.MeshStandardMaterial({ color: presentColors[i], roughness: 0.4 }));
-      box.position.set(px, 0.28, pz);
-      const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.57, 0.12), new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.5, roughness: 0.3 }));
-      ribbon.position.set(px, 0.28, pz);
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.62, 0.8), new THREE.MeshStandardMaterial({ color: presentColors[i], roughness: 0.4 }));
+      box.position.set(px, 0.31, pz);
+      const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.64, 0.14), new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.5, roughness: 0.3 }));
+      ribbon.position.set(px, 0.31, pz);
       zoneGroup.add(box, ribbon);
     });
     [
-      [zx + zh + 2.6, zz + 1.2, 1.2],
-      [zx - zh - 2.8, zz + 0.5, 1],
-      [zx + 2.2, zz - zh - 2.6, 1.3],
-      [zx - 3.4, zz - zh - 2.8, 0.9],
+      [zx + zh + 3.2, zz + 1.8, 1.4],
+      [zx - zh - 3.4, zz + 0.5, 1.1],
+      [zx + 3.6, zz - zh - 3.2, 1.4],
+      [zx - 4.6, zz - zh - 3.4, 1],
     ].forEach(([px, pz, sc]) => {
       const leaf = new THREE.MeshStandardMaterial({ color: 0x1f7a4d, roughness: 0.8 });
-      const low = new THREE.Mesh(new THREE.ConeGeometry(0.95 * sc, 1.7 * sc, 12), leaf);
-      low.position.set(px, 0.85 * sc, pz);
-      const top = new THREE.Mesh(new THREE.ConeGeometry(0.62 * sc, 1.3 * sc, 12), leaf);
-      top.position.set(px, 2 * sc, pz);
+      const low = new THREE.Mesh(new THREE.ConeGeometry(1 * sc, 1.9 * sc, 12), leaf);
+      low.position.set(px, 0.95 * sc, pz);
+      const top = new THREE.Mesh(new THREE.ConeGeometry(0.66 * sc, 1.4 * sc, 12), leaf);
+      top.position.set(px, 2.2 * sc, pz);
       zoneGroup.add(low, top);
     });
 
-    // ซองอวยพร: ขนาดเล็กลง มีแสงฟุ้งบาง ๆ และคำว่า "อวยพร" ให้รู้ว่าเป็นซองอวยพร
+    // ซองอวยพรบนรั้ว 4 ชั้น ด้านหน้ามองเห็นก่อน รวมไม่เกิน ZONE_CAPACITY (284 ช่อง)
     const ENV_HEX: Record<string, [string, string, string]> = {
       red: ["#b91c3c", "#9b1630", "#ffffff"],
       gold: ["#d9a93a", "#b98a2a", "#ffffff"],
@@ -1227,20 +1233,27 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       hg.fillRect(0, 0, 128, 128);
     }
     const haloTex = new THREE.CanvasTexture(haloCv);
-    // ตำแหน่งซอง: หน้า หลัง ซ้าย ขวา ยกเว้นช่องที่ประตู หันออกนอกโซน
-    const ZONE_SLOTS: { x: number; z: number; ry: number }[] = [];
-    // ด้านหน้าที่กล้องมองเห็นก่อน แล้วค่อยด้านข้างและด้านหลัง
-    const ts = [-4.5, -3, -1.5, 0, 1.5, 3, 4.5];
-    ts.forEach((t) => {
-      if (Math.abs(t) > 1.6) ZONE_SLOTS.push({ x: zx + t, z: gz + 0.07, ry: 0 });
-    });
-    ts.forEach((t) => {
-      ZONE_SLOTS.push({ x: zx - zh - 0.07, z: zz + t, ry: -Math.PI / 2 });
-      ZONE_SLOTS.push({ x: zx + zh + 0.07, z: zz + t, ry: Math.PI / 2 });
-    });
-    ts.forEach((t) => {
-      ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.07, ry: Math.PI });
-    });
+    // ตำแหน่งซอง: ด้านหน้าก่อน (กล้องมองเห็น) แล้วด้านข้าง และด้านหลัง ทำทีละชั้น
+    const ZONE_SLOTS: { x: number; z: number; ry: number; y: number }[] = [];
+    const step = 0.8;
+    const sideTs: number[] = [];
+    for (let t = -zh + 0.8; t <= zh - 0.8 + 0.001; t += step) sideTs.push(Math.round(t * 100) / 100);
+    for (const y of RAIL_Y) {
+      sideTs.forEach((t) => {
+        if (Math.abs(zx + t - gx) > 1.8) ZONE_SLOTS.push({ x: zx + t, z: gz + 0.09, ry: 0, y: y - 0.3 });
+      });
+    }
+    for (const y of RAIL_Y) {
+      sideTs.forEach((t) => {
+        ZONE_SLOTS.push({ x: zx - zh - 0.09, z: zz + t, ry: -Math.PI / 2, y: y - 0.3 });
+        ZONE_SLOTS.push({ x: zx + zh + 0.09, z: zz + t, ry: Math.PI / 2, y: y - 0.3 });
+      });
+    }
+    for (const y of RAIL_Y) {
+      sideTs.forEach((t) => {
+        ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.09, ry: Math.PI, y: y - 0.3 });
+      });
+    }
     function api_setZoneCards(list: CardRecord[]) {
       while (zoneCardGroup.children.length) {
         const c = zoneCardGroup.children.pop()!;
@@ -1252,21 +1265,22 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           mat?.dispose?.();
         });
       }
-      const shown = list.slice(0, Math.min(36, ZONE_SLOTS.length));
+      const shown = list.slice(0, Math.min(ZONE_CAPACITY, ZONE_SLOTS.length));
       shown.forEach((c, i) => {
         const slot = ZONE_SLOTS[i];
         const pivot = new THREE.Group();
-        pivot.position.set(slot.x, 1.2, slot.z);
+        pivot.position.set(slot.x, RAIL_Y[0], slot.z);
+        pivot.position.y = slot.y + 0.3;
         pivot.rotation.y = slot.ry;
-        const string = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.22, 6), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
-        string.position.set(0, -0.11, 0);
-        const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.68), new THREE.MeshBasicMaterial({ map: haloTex, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
-        halo.position.set(0, -0.42, -0.02);
+        const string = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.2, 6), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
+        string.position.set(0, 0.1 - 0.02, 0);
+        const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.52), new THREE.MeshBasicMaterial({ map: haloTex, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
+        halo.position.set(0, -0.3, -0.02);
         const card = new THREE.Mesh(
-          new THREE.PlaneGeometry(0.62, 0.4),
+          new THREE.PlaneGeometry(0.5, 0.32),
           new THREE.MeshStandardMaterial({ map: envelopeTexture(c.envelope, c.name), roughness: 0.6, side: THREE.DoubleSide }),
         );
-        card.position.set(0, -0.42, 0.01);
+        card.position.set(0, -0.3, 0.01);
         card.userData.cardId = c.id;
         pivot.userData.phase = i * 0.7;
         pivot.userData.halo = halo;
