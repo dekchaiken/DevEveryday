@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import type { OrderPreview } from "@/lib/christmas/types";
 import "./christmas.css";
 import { Icon } from "./Icon";
-import { SnowmanPreview } from "./SnowmanPreview";
+import { SnowmanPreview, type SnowParts } from "./SnowmanPreview";
 import type { MessageTheme } from "@/lib/christmas/types";
 import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
 import type { Social } from "@/lib/christmas/social";
@@ -25,7 +25,10 @@ const THANKS_CHIPS = ["ขอบคุณที่ทำให้คริสต
 // ตุ๊กตาหิมะยักษ์ชุดพิเศษสำหรับหน้าสนับสนุน
 const GIANT_PARTS = { hat: "crown", scarf: "gold", nose: "star", arms: "wings", body: "white", legs: "snow", acc: "bow" };
 
-type Cfg = { enabled: boolean; payMode: "manual" | "gateway"; presetPrices: number[]; customMin: number; customMax: number };
+type Cfg = { enabled: boolean; payMode: "manual" | "gateway"; presetPrices: number[]; customMin: number; customMax: number; decorPrice: number };
+
+// ตุ๊กตา Exclusive ที่ผู้ใช้ตกแต่งและเลือกช่องไว้แล้ว รอชำระเงินเพื่อวาง
+export type DecorDraft = { slot: number; parts: SnowParts; name: string; social?: Social };
 
 // ป๊อปอัปสนับสนุน: เลือกยอด กรอกชื่อและข้อความ แล้วชำระผ่าน PromptPay
 // โหมด manual แสดง QR ให้โอนแล้วรอแอดมินยืนยัน โหมด gateway แสดง QR จาก Omise และตรวจสถานะอัตโนมัติ
@@ -37,11 +40,13 @@ export default function DonateModal({
   onPreview,
   defaultName = "",
   social,
+  decor,
 }: {
   roomId: string;
   roomName: string;
   onClose: () => void;
   onPaid: (name: string) => void;
+  decor?: DecorDraft;
   onPreview?: (p: { spot: number; name: string; message: string; theme: MessageTheme }) => void;
   defaultName?: string;
   social?: Social;
@@ -108,7 +113,11 @@ export default function DonateModal({
       const res = await fetch("/api/christmas/donate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind, theme, spot, social: social ?? {} }),
+        body: JSON.stringify(
+          decor
+            ? { room: roomId, kind: "decor", decor: { ...decor.parts, slot: decor.slot }, name, social: social ?? {} }
+            : { room: roomId, amount: chosen, name, message, kind, theme, spot, social: social ?? {} },
+        ),
       });
       const data = (await res.json()) as { order?: OrderPreview; error?: string };
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
@@ -130,19 +139,33 @@ export default function DonateModal({
         </button>
         <div className="xmas-donate-hero" aria-hidden>
           <div className="xmas-donate-glow" />
-          <SnowmanPreview parts={GIANT_PARTS} className="xmas-donate-snow" />
+          <SnowmanPreview parts={decor ? decor.parts : GIANT_PARTS} className="xmas-donate-snow" />
         </div>
-        <p className="xmas-kicker">{kind === "giant" ? `Exclusive · ${roomName}` : "สนับสนุนทีม DevEveryday"}</p>
-        <h2>{kind === "giant" ? "ตั้งป้ายประจำห้อง" : "ส่งกำลังใจให้ทีม"}</h2>
+        <p className="xmas-kicker">{decor || kind === "giant" ? `Exclusive · ${roomName}` : "สนับสนุนทีม DevEveryday"}</p>
+        <h2>{decor ? "วางตุ๊กตาหิมะ Exclusive" : kind === "giant" ? "ตั้งป้ายประจำห้อง" : "ส่งกำลังใจให้ทีม"}</h2>
         <p className="xmas-hint">
-          {kind === "giant"
+          {decor
+            ? `ช่อง ${decor.slot + 1} · ฿${cfg?.decorPrice ?? "—"} ต่อตัว วางได้ไม่จำกัด และวางบนช่องสงวนได้`
+            : kind === "giant"
             ? "ป้ายของคุณจะแสดงให้ทุกคนในห้องเห็นพร้อมกัน และข้อความจะขึ้นบนท้องฟ้า"
             : "ยอดสนับสนุนช่วยให้ทีม DevEveryday พัฒนาและดูแลกิจกรรมนี้ต่อไป ชื่อของคุณจะแสดงในรายการผู้สนับสนุน"}
         </p>
 
         {disabled && <p className="xmas-msg err">ตอนนี้ปิดรับการสนับสนุนชั่วคราว</p>}
 
-        {!order && cfg && !disabled && (
+        {!order && cfg && !disabled && decor && (
+          <form onSubmit={submit} className="xmas-form">
+            <label>
+              ชื่อที่แสดงบนตุ๊กตา
+              <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
+            </label>
+            <button className="xmas-submit" disabled={busy}>
+              {busy ? "กำลังสร้างรายการ…" : `ชำระ ฿${cfg.decorPrice}`}
+            </button>
+          </form>
+        )}
+
+        {!order && cfg && !disabled && !decor && (
           <form onSubmit={submit} className="xmas-form">
             <div className="xmas-kind" role="tablist" aria-label="ประเภทการสนับสนุน">
               <button type="button" role="tab" aria-selected={kind === "giant"} className={kind === "giant" ? "is-on" : ""} onClick={() => setKind("giant")}>
@@ -266,11 +289,11 @@ export default function DonateModal({
         {order && order.status === "paid" && (
           <div className="xmas-thanks-card">
             <div className="xmas-donate-glow" aria-hidden />
-            <SnowmanPreview parts={GIANT_PARTS} className="xmas-donate-snow" />
+            <SnowmanPreview parts={decor ? decor.parts : GIANT_PARTS} className="xmas-donate-snow" />
             <p className="xmas-thanks-kicker">ขอบคุณจากใจจริง</p>
             <blockquote>{message.trim() || "ขอบคุณที่มาร่วมแขวนแสงให้ห้องนี้"}</blockquote>
             <p className="xmas-thanks-by">— {name}</p>
-            <p className="xmas-hint">{kind === "giant" ? "ตุ๊กตาหิมะยักษ์ของคุณขึ้นป้ายให้ทุกคนในห้องเห็นแล้ว" : "ขอบคุณที่ช่วยสนับสนุนทีม"}</p>
+            <p className="xmas-hint">{decor ? "ตุ๊กตาหิมะ Exclusive ของคุณวางบนต้นให้ทุกคนในห้องเห็นแล้ว" : kind === "giant" ? "ตุ๊กตาหิมะยักษ์ของคุณขึ้นป้ายให้ทุกคนในห้องเห็นแล้ว" : "ขอบคุณที่ช่วยสนับสนุนทีม"}</p>
             <button className="xmas-submit" onClick={onClose}>
               ปิด
             </button>

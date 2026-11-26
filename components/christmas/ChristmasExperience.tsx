@@ -9,7 +9,7 @@ import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
 import { RoomSkyline } from "./RoomSkyline";
 import { Backdrop } from "./Crowd";
-import DonateModal from "./DonateModal";
+import DonateModal, { type DecorDraft } from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
 import { useBoard } from "./useBoard";
@@ -23,7 +23,6 @@ import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import { ShareCardModal } from "./ShareCard";
 import { ProfileCard, SocialLinks } from "./ProfileCard";
 import { loadProfile, saveProfile, type Profile } from "./profile";
-import { isReservedSlot } from "@/lib/christmas/slots";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
 
@@ -219,6 +218,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
   const [coach, setCoach] = useState(false); // คำแนะนำครั้งแรกใต้เมนู
   const [coachStep, setCoachStep] = useState(0);
+  const [exclusiveDraft, setExclusiveDraft] = useState<DecorDraft | null>(null); // ตุ๊กตา Exclusive ที่รอชำระเงิน
   const [shareOf, setShareOf] = useState<Ornament | null>(null); // การ์ดคำอวยพรที่กำลังแชร์
   useEffect(() => {
     try {
@@ -468,10 +468,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           decor={decor}
           markerSlot={markerSlot}
           onGroundPick={(slot) => {
-            if (isReservedSlot(slot)) {
-              notify("err", "ช่องนี้สงวนไว้สำหรับป้ายประจำห้อง แตะตำแหน่งอื่นบนพื้นหิมะ");
-              return;
-            }
             setMarkerSlot(slot);
             setDecorSlot(slot);
             setDecorOpen(true);
@@ -733,6 +729,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           initialSlot={decorSlot}
           defaultName={profile?.name ?? ""}
           social={profile?.social}
+          onExclusive={(d) => {
+            setExclusiveDraft(d);
+            setDecorOpen(false);
+            setMarkerSlot(null);
+          }}
           onPickOnMap={() => {
             setDecorOpen(false);
             notify("ok", "แตะพื้นหิมะบนฉากเพื่อเลือกช่อง");
@@ -748,6 +749,21 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             refreshDecor();
             notify("ok", `วางตุ๊กตาหิมะของ ${d.name} รอบต้นแล้ว`);
           }}
+        />
+      )}
+
+      {exclusiveDraft && (
+        <DonateModal
+          decor={exclusiveDraft}
+          roomId={room.id}
+          roomName={room.name}
+          onClose={() => setExclusiveDraft(null)}
+          onPaid={(name) => {
+            refreshDecor();
+            notify("ok", `${name} วางตุ๊กตาหิมะ Exclusive บนต้นแล้ว`);
+          }}
+          defaultName={profile?.name ?? ""}
+          social={profile?.social}
         />
       )}
 
