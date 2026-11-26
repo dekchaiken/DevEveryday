@@ -16,8 +16,11 @@ type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook
 
 export type Preview = { height: number; angle: number; color: string; shape: string } | null;
 
+export type LocateTarget = { kind: "decor"; slot: number } | { kind: "giant"; spot: number };
+
 export type TreeSceneHandle = {
   launchFirework: (color: string) => void;
+  locate: (target: LocateTarget) => void;
   highlightDecor: (slot: number) => void;
   focusOrnament: (id: string | null) => void;
   focusDecor: (d: Decor | null) => void;
@@ -750,6 +753,18 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         focusDecorGroup.position.y = Math.abs(Math.sin(t * 2.6)) * 0.1;
       }
       const now = performance.now();
+      if (beacon) {
+        const age = (now - beacon.start) / 1000;
+        const b = beacon;
+        if (age > 7) clearBeacon();
+        else {
+          const fade = age > 6 ? 7 - age : 1;
+          b.ring.scale.setScalar(1 + (reduced ? 0 : 0.22 * Math.sin(t * 5)));
+          (b.ring.material as THREE.MeshBasicMaterial).opacity = 0.95 * fade;
+          b.arrow.position.y = b.top + (reduced ? 0 : Math.abs(Math.sin(t * 3)) * 0.35);
+          (b.arrow.material as THREE.MeshBasicMaterial).opacity = 0.95 * fade;
+        }
+      }
 
       if (camAnim) {
         const k = Math.min((now - camAnim.start) / 900, 1);
@@ -923,15 +938,15 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // ป้ายอยู่ฝั่งที่หันเข้าหาใจกลางฉาก เพื่อให้มองเห็นได้จากมุมกล้องหลัก
       const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
       const side = def.x > 0 ? -1 : 1;
-      board.position.set(side * 1.2, 1.3, 0.3);
+      board.position.set(side * 1.55, 2.05, 0.25);
       board.rotation.y = side * -0.3;
-      // มือที่กุมขอบป้าย
+      // เสาไม้ปักข้างตัว และมือที่จับเสาไว้
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.7, 12), new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 }));
+      pole.position.set(side * 1.55, 0.85, 0.25);
       const glove = new THREE.MeshStandardMaterial({ color: 0x9b1c31, roughness: 0.5 });
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 12), glove);
-      hand.position.set(side * 0.56, 1.2, 0.32);
-      const hand2 = hand.clone();
-      hand2.position.set(side * 1.84, 1.12, 0.4);
-      grp.add(board, hand, hand2);
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 12), glove);
+      hand.position.set(side * 1.55, 1.1, 0.3);
+      grp.add(board, pole, hand);
 
       const gx = def.x;
       const gz = def.z;
@@ -1058,6 +1073,18 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const heart = new THREE.Mesh(new THREE.ExtrudeGeometry(hs, { depth: 0.014, bevelEnabled: false, curveSegments: 16 }), new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }));
         heart.position.set(0, 1.4, 0.2);
         add(heart);
+      } else if (d.nose === "star") {
+        const starShape = new THREE.Shape();
+        for (let i = 0; i < 10; i++) {
+          const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+          const rad = i % 2 === 0 ? 0.05 : 0.022;
+          if (i === 0) starShape.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+          else starShape.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        starShape.closePath();
+        const star = new THREE.Mesh(new THREE.ExtrudeGeometry(starShape, { depth: 0.02, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.6, roughness: 0.3 }));
+        star.position.set(0, 1.4, 0.2);
+        add(star);
       } else {
         add(nose);
       }
@@ -1096,9 +1123,30 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         cap.position.y = 1.5;
         add(cap);
       } else if (d.hat === "crown") {
-        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 6), hatMat);
-        crown.position.y = 1.55;
+        const crownShape = new THREE.Shape();
+        crownShape.moveTo(-0.2, 0);
+        crownShape.lineTo(-0.2, 0.2);
+        crownShape.lineTo(-0.1, 0.07);
+        crownShape.lineTo(0, 0.24);
+        crownShape.lineTo(0.1, 0.07);
+        crownShape.lineTo(0.2, 0.2);
+        crownShape.lineTo(0.2, 0);
+        crownShape.closePath();
+        const crownGeo = new THREE.ExtrudeGeometry(crownShape, { depth: 0.34, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.015, bevelSegments: 2, curveSegments: 1 });
+        crownGeo.translate(0, 0, -0.17);
+        const crown = new THREE.Mesh(crownGeo, new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.7, roughness: 0.25 }));
+        crown.position.y = 1.5;
         add(crown);
+        // อัญมณีสามเม็ดบนมงกุฎ
+        [
+          [0, 1.56, 0.2, 0xdc2643],
+          [-0.12, 1.53, 0.19, 0x22a95a],
+          [0.12, 1.53, 0.19, 0x3b82f6],
+        ].forEach(([x, y, z, c]) => {
+          const gem = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), new THREE.MeshStandardMaterial({ color: c as number, metalness: 0.2, roughness: 0.15 }));
+          gem.position.set(x as number, y as number, z as number);
+          add(gem);
+        });
       }
       // หมวกเบเร่ต์และที่ปิดหู (หมวกฟรี)
       if (d.hat === "beret") {
@@ -1248,6 +1296,15 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         ribbon.position.copy(box.position);
         add(box, ribbon);
       }
+      if (d.arms === "wings") {
+        [-1, 1].forEach((side) => {
+          const wing = new THREE.Mesh(new THREE.SphereGeometry(0.12, 20, 14), bodyMat);
+          wing.scale.set(1.5, 0.45, 0.5);
+          wing.position.set(side * 0.44, 0.98, 0);
+          wing.rotation.z = side * -0.35;
+          add(wing);
+        });
+      }
       grp.userData.decorId = d.id;
       grp.traverse((o) => (o.userData.decorId = d.id));
       return grp;
@@ -1388,6 +1445,53 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     // ---------- วงแสงทองบนพื้นและประกายที่ช่องของตุ๊กตาใหม่ อยู่ 5 วินาทีแล้วค่อย ๆ จางหาย
     let highlight: { ring: THREE.Mesh; start: number } | null = null;
+    // ตัวชี้ตำแหน่งตุ๊กตาที่เพิ่งวาง: วงแหวนเต้นบนพื้นและลูกศรที่โยกขึ้นลงเหนือหัว (ประมาณ 7 วินาที)
+    let beacon: { group: THREE.Group; ring: THREE.Mesh; arrow: THREE.Mesh; start: number; top: number } | null = null;
+    function clearBeacon() {
+      if (!beacon) return;
+      scene.remove(beacon.group);
+      beacon.group.traverse((o) => {
+        const m = o as THREE.Mesh;
+        m.geometry?.dispose?.();
+        (m.material as THREE.Material | undefined)?.dispose?.();
+      });
+      beacon = null;
+    }
+    function showBeacon(x: number, z: number, big: boolean) {
+      clearBeacon();
+      const r = big ? 1.5 : 0.6;
+      const group = new THREE.Group();
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(r * 0.82, r, 64),
+        new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }),
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.04;
+      const top = big ? 5.0 : 1.15;
+      const arrow = new THREE.Mesh(new THREE.ConeGeometry(big ? 0.22 : 0.09, big ? 0.45 : 0.2, 24), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.95 }));
+      arrow.rotation.x = Math.PI;
+      arrow.position.y = top;
+      group.add(ring, arrow);
+      group.position.set(x, 0, z);
+      scene.add(group);
+      beacon = { group, ring, arrow, start: performance.now(), top };
+      burst(new THREE.Vector3(x, top, z), 0xffe7a3, big ? 40 : 24, 0.3);
+    }
+    // พาเข้าไปหาตุ๊กตาที่ระบุ: กล้องเลื่อนไปใกล้ และขึ้นตัวชี้ให้เห็นทันที
+    function locate(target: LocateTarget) {
+      const big = target.kind === "giant";
+      const p = big ? GIANT_POSITIONS[target.spot] : SLOT_POSITIONS[target.slot];
+      if (!p) return;
+      const out = new THREE.Vector3(p.x, 0, p.z);
+      if (out.lengthSq() < 1e-6) out.set(0, 0, 1);
+      out.normalize();
+      const dist = big ? 8 : 3.4;
+      const toTgt = new THREE.Vector3(p.x, big ? 1.8 : 0.7, p.z);
+      const toPos = new THREE.Vector3(p.x + out.x * dist, big ? 4.6 : 2.4, p.z + out.z * dist);
+      animateCam(toPos, toTgt);
+      showBeacon(p.x, p.z, big);
+    }
+
     function highlightDecor(slot: number) {
       const p = SLOT_POSITIONS[slot];
       if (!p) return;
@@ -1547,6 +1651,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       highlightDecor: (slot: number) => highlightDecor(slot),
       focusOrnament: (id: string | null) => focusOrnament(id),
       focusDecor: (d: Decor | null) => focusDecor(d),
+      locate: (target: LocateTarget) => locate(target),
       zoomBy: (factor: number) => zoomBy(factor),
       resetView: () => resetView(),
     });
