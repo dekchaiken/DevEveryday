@@ -17,9 +17,11 @@ function crc16(input: string) {
   return crc.toString(16).toUpperCase().padStart(4, "0");
 }
 
-// แปลงเบอร์มือถือเป็นรูปแบบ 0066xxxxxxxxx หรือส่งเลขบัตรประชาชน 13 หลักตรง ๆ
+// แปลงเบอร์มือถือเป็นรูปแบบ 0066xxxxxxxxx, ส่งเลขบัตร/เลขผู้เสียภาษี 13 หลักตรง ๆ
+// หรือเลข e-Wallet 15 หลัก (เช่นเลขวอลเล็ตทรูมันนี่) ตามมาตรฐาน PromptPay
 function target(id: string) {
   const digits = id.replace(/\D/g, "");
+  if (digits.length === 15) return { sub: "03", value: digits };
   if (digits.length === 13) return { sub: "02", value: digits };
   const local = digits.startsWith("0") ? digits.slice(1) : digits;
   return { sub: "01", value: "0066" + local };
