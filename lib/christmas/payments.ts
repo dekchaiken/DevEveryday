@@ -3,6 +3,7 @@
 import { enqueueEvent } from "@/lib/christmas/store";
 import { getOrder, markPaid } from "@/lib/christmas/orders";
 import { writeLog } from "@/lib/christmas/log";
+import { placePaidDecor } from "@/lib/christmas/decor";
 
 export async function confirmPayment(orderId: string, providerRef: string) {
   const before = await getOrder(orderId);
@@ -10,7 +11,16 @@ export async function confirmPayment(orderId: string, providerRef: string) {
   const now = Date.now();
   const paid = await markPaid(orderId, providerRef, now);
   if (paid) await writeLog({ type: "paid", room: paid.room, actor: paid.mode, text: `ชำระแล้ว ฿${paid.amount} · ${paid.name} (${paid.kind})` });
-  if (paid && paid.kind !== "support") {
+  if (paid && paid.kind === "decor" && paid.decor) {
+    const placed = await placePaidDecor(paid.room, paid.id, paid.name, paid.social ?? {}, paid.decor);
+    await writeLog({
+      type: "decor",
+      room: paid.room,
+      actor: paid.mode,
+      text: placed ? `ตุ๊กตา Exclusive ${paid.name} วางช่อง ${placed.decor.slot + 1}${placed.moved ? " (ช่องที่เลือกถูกแย่งไปก่อน ย้ายให้อัตโนมัติ)" : ""}` : `ตุ๊กตา Exclusive ${paid.name} วางไม่ได้ ไม่มีช่องว่าง`,
+    });
+  }
+  if (paid && paid.kind === "giant") {
     await enqueueEvent(
       paid.room,
       {

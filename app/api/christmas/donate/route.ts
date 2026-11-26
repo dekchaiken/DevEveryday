@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getConfig } from "@/lib/christmas/config";
 import { getRoom } from "@/lib/christmas/rooms";
-import { saveOrder, toPreview, type Order } from "@/lib/christmas/orders";
+import { saveOrder, toPreview, type Order, type OrderKind } from "@/lib/christmas/orders";
 import { createPromptPayCharge } from "@/lib/christmas/omise";
 import { promptPayPayload } from "@/lib/christmas/promptpay";
 import { rateOk } from "@/lib/christmas/store";
@@ -10,11 +10,12 @@ import { MESSAGE_THEMES, type MessageTheme } from "@/lib/christmas/types";
 import { maskIp, writeLog } from "@/lib/christmas/log";
 import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
 import { sanitizeSocial } from "@/lib/christmas/social";
+import { listDecor, parseDecorPick } from "@/lib/christmas/decor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// สร้างคำสั่งสนับสนุนตุ๊กตาหิมะยักษ์ตามโหมดที่แอดมินตั้งไว้
+// สร้างคำสั่งซื้อ: giant (ป้าย Exclusive) · support (สนับสนุนทีม) · decor (ตุ๊กตา Exclusive จ่ายต่อตัว)
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {
@@ -33,20 +34,36 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "ทำรายการบ่อยเกินไป ลองใหม่ภายหลัง" }, { status: 429 });
   }
 
-  const amount = Number(body.amount);
-  const allowed = config.presetPrices.includes(amount) || (Number.isInteger(amount) && amount >= config.customMin && amount <= config.customMax);
-  if (!Number.isInteger(amount) || !allowed) {
-    return NextResponse.json({ error: `จำนวนเงินต้องอยู่ระหว่าง ฿${config.customMin}–฿${config.customMax}` }, { status: 400 });
+  const kind: OrderKind = body.kind === "support" ? "support" : body.kind === "decor" ? "decor" : "giant";
+
+  // ตุ๊กตา Exclusive: ราคาตั้งจากระบบเสมอ ไม่รับราคาจากหน้าเว็บ
+  let amount = config.decorPrice;
+  if (kind !== "decor") {
+    amount = Number(body.amount);
+    const allowed = config.presetPrices.includes(amount) || (Number.isInteger(amount) && amount >= config.customMin && amount <= config.customMax);
+    if (!Number.isInteger(amount) || !allowed) {
+      return NextResponse.json({ error: `จำนวนเงินต้องอยู่ระหว่าง ฿${config.customMin}–฿${config.customMax}` }, { status: 400 });
+    }
   }
+
   const name = clean(body.name, 20);
-  const message = clean(body.message, 80);
+  const message = kind === "decor" ? "" : clean(body.message, 80);
   if (!name) return NextResponse.json({ error: "กรุณาใส่ชื่อ" }, { status: 400 });
   if (hasBlocked(name, config.blockedWords) || hasBlocked(message, config.blockedWords)) {
     await writeLog({ type: "blocked", room: room.id, actor: maskIp(ip), text: `สนับสนุน: ${name} / ${message}` });
     return NextResponse.json({ error: "ข้อความมีคำที่ไม่เหมาะสม" }, { status: 400 });
   }
 
-  const kind = body.kind === "support" ? "support" : "giant";
+  let decor: ReturnType<typeof parseDecorPick> = null;
+  if (kind === "decor") {
+    decor = parseDecorPick(body.decor);
+    if (!decor) return NextResponse.json({ error: "ชิ้นส่วนตุ๊กตาไม่ถูกต้อง" }, { status: 400 });
+    // ช่องที่ซื้อยังต้องว่าง (ช่องสงวนซื้อได้ แต่ช่องที่คนอื่นวางแล้วไม่ได้)
+    if ((await listDecor(room.id)).some((d) => d.slot === decor!.slot)) {
+      return NextResponse.json({ error: "ช่องนี้มีคนวางแล้ว เลือกช่องอื่น" }, { status: 409 });
+    }
+  }
+
   const id = crypto.randomUUID();
   const base: Order = {
     id,
@@ -55,8 +72,8 @@ export async function POST(req: Request) {
     amount,
     name,
     message,
-    spot: kind === "giant" && Number.isInteger(Number(body.spot)) && Number(body.spot) >= 0 && Number(body.spot) < GIANT_SPOT_DEFS.length ? Number(body.spot) : 0,
     social: sanitizeSocial(body.social, (s) => hasBlocked(s, config.blockedWords)),
+    spot: kind === "giant" && Number.isInteger(Number(body.spot)) && Number(body.spot) >= 0 && Number(body.spot) < GIANT_SPOT_DEFS.length ? Number(body.spot) : 0,
     theme: MESSAGE_THEMES.includes(body.theme as MessageTheme) ? (body.theme as MessageTheme) : "fireworks",
     mode: config.payMode,
     status: "awaiting_payment",
@@ -65,6 +82,7 @@ export async function POST(req: Request) {
     providerRef: "",
     qrPayload: "",
     qrImage: "",
+    ...(decor ? { decor } : {}),
   };
 
   try {
@@ -82,6 +100,7 @@ export async function POST(req: Request) {
   }
 
   await saveOrder(base);
-  await writeLog({ type: "order", room: room.id, actor: maskIp(ip), text: `${kind === "giant" ? "Exclusive" : "สนับสนุนทีม"} ฿${amount} · ${name} · ${config.payMode} · รอชำระ` });
+  const label = kind === "giant" ? "Exclusive" : kind === "decor" ? `ตุ๊กตา Exclusive ช่อง ${decor!.slot + 1}` : "สนับสนุนทีม";
+  await writeLog({ type: "order", room: room.id, actor: maskIp(ip), text: `${label} ฿${amount} · ${name} · ${config.payMode} · รอชำระ` });
   return NextResponse.json({ order: toPreview(base) });
 }

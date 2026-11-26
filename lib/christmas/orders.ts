@@ -2,10 +2,12 @@
 import { cmd, storeConfigured } from "@/lib/redis";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
+import type { DecorPick } from "@/lib/christmas/decor";
 
 export type OrderStatus = "awaiting_payment" | "paid" | "cancelled";
 // giant = ตุ๊กตาหิมะยักษ์ (Exclusive ประจำห้อง) | support = สนับสนุนทีม DevEveryday
-export type OrderKind = "giant" | "support";
+// decor = ตุ๊กตาหิมะ Exclusive ที่วางได้ไม่จำกัด (จ่ายต่อตัว)
+export type OrderKind = "giant" | "support" | "decor";
 export type Order = {
   id: string;
   room: string;
@@ -16,6 +18,7 @@ export type Order = {
   theme: MessageTheme; // ธีมการแสดงบนท้องฟ้า (เฉพาะ giant)
   spot: number; // ตำแหน่งป้ายประจำห้อง 0–3 (เฉพาะ giant)
   social?: Social; // ลิงก์โซเชียลของผู้สนับสนุน
+  decor?: DecorPick; // ชิ้นส่วนตุ๊กตา (เฉพาะ decor)
   mode: "manual" | "gateway";
   status: OrderStatus;
   createdAt: number;
@@ -65,7 +68,7 @@ export async function markPaid(id: string, providerRef: string, now: number): Pr
   if (!o || o.status === "paid") return o;
   const paid: Order = { ...o, status: "paid", paidAt: now, providerRef: providerRef || o.providerRef };
   await saveOrder(paid);
-  if (paid.kind !== "support") {
+  if (paid.kind === "giant") {
     const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, spot: paid.spot ?? 0, social: paid.social };
     if (!storeConfigured()) mem.giants.set(paid.room, giant);
     else await cmd("SET", K.giant(paid.room), JSON.stringify(giant));

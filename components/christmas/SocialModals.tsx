@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Decor } from "@/lib/christmas/decor";
 import { ACCESSORIES, HATS, SCARVES, NOSES, ARMS, BODY_COLORS, LEGS, SLOT_COUNT } from "@/lib/christmas/decor";
 import { isReservedSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { SnowmanPreview } from "./SnowmanPreview";
+import type { DecorDraft } from "./DonateModal";
 import { getClientId } from "./clientId";
 import type { Social } from "@/lib/christmas/social";
 import { SocialLinks } from "./ProfileCard";
@@ -147,6 +148,7 @@ export function DecorModal({
   onPickOnMap,
   defaultName = "",
   social,
+  onExclusive,
 }: {
   roomId: string;
   roomName: string;
@@ -157,7 +159,22 @@ export function DecorModal({
   onPickOnMap?: () => void;
   defaultName?: string;
   social?: Social;
+  onExclusive?: (d: DecorDraft) => void; // วางแบบ Exclusive (จ่ายต่อตัว วางได้ไม่จำกัด วางช่องสงวนได้)
 }) {
+  // ราคาตุ๊กตา Exclusive จากการตั้งค่า แสดงปุ่มเฉพาะเมื่อเปิดรับการสนับสนุนอยู่
+  const [exclusivePrice, setExclusivePrice] = useState<number | null>(null);
+  const hasExclusive = Boolean(onExclusive);
+  useEffect(() => {
+    if (!hasExclusive) return;
+    fetch("/api/christmas/config")
+      .then((r) => r.json())
+      .then((d: { enabled?: boolean; decorPrice?: number }) => {
+        if (d.enabled && typeof d.decorPrice === "number") setExclusivePrice(d.decorPrice);
+      })
+      .catch(() => {
+        /* ไม่แสดงปุ่ม Exclusive ถ้าโหลดค่าไม่ได้ */
+      });
+  }, [hasExclusive]);
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [tab, setTab] = useState<PartKey | "slot">("hat");
   const [name, setName] = useState(defaultName);
@@ -185,6 +202,21 @@ export function DecorModal({
       }
     }
     return best;
+  }
+
+  // สุ่มจากทุกช่องที่ว่าง รวมช่องสงวน (ใช้กับการวางแบบ Exclusive)
+  function randomAny() {
+    for (let tries = 0; tries < 5000; tries++) {
+      const i = Math.floor(Math.random() * SLOT_COUNT);
+      if (!taken.has(i)) return setSlot(i);
+    }
+  }
+
+  function buyExclusive() {
+    if (!onExclusive || slot === null || slotTaken) return;
+    if (!name.trim()) return setError("กรุณาใส่ชื่อ");
+    setError("");
+    onExclusive({ slot, parts, name: name.trim(), social });
   }
 
   function randomFree() {
@@ -287,6 +319,11 @@ export function DecorModal({
             <button type="button" className="xmas-chip-btn" onClick={randomFree}>
               สุ่มช่อง
             </button>
+            {onExclusive && exclusivePrice !== null && (
+              <button type="button" className="xmas-chip-btn" onClick={randomAny}>
+                สุ่มทุกช่อง
+              </button>
+            )}
             <button type="button" className="xmas-chip-btn" onClick={() => onPickOnMap?.()}>
               เลือกบนฉาก
             </button>
@@ -295,7 +332,7 @@ export function DecorModal({
             {slot === null
               ? "เลือกช่องก่อนวาง: กรอกเลข สุ่ม หรือแตะพื้นหิมะบนฉาก"
               : slotReserved
-                ? `ช่อง ${slot + 1} สงวนไว้สำหรับป้ายประจำห้อง`
+                ? `ช่อง ${slot + 1} สงวนไว้สำหรับป้ายประจำห้อง วางได้เฉพาะแบบ Exclusive`
                 : slotTaken
                   ? `ช่อง ${slot + 1} มี ${taken.get(slot)?.name} วางแล้ว`
                   : `ช่อง ${slot + 1} ว่าง พร้อมวาง`}
@@ -310,6 +347,11 @@ export function DecorModal({
             <span className="xmas-field-label">ชื่อที่จะแสดงบนตุ๊กตา</span>
             <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
           </label>
+          {onExclusive && exclusivePrice !== null && (
+            <button type="button" className="xmas-submit xmas-exclusive-buy" onClick={buyExclusive} disabled={slot === null || slotTaken}>
+              วางแบบ Exclusive{` ฿${exclusivePrice}`} · วางได้ไม่จำกัด
+            </button>
+          )}
           <button className="xmas-submit" onClick={place} disabled={busy || slotBlocked || slot === null || alreadyFree}>
             {busy ? "กำลังวาง…" : alreadyFree ? "วางตุ๊กตาฟรีไปแล้ว" : slot === null ? "เลือกช่องก่อนวาง" : slotReserved ? "ช่องนี้สงวนไว้" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาหิมะรอบต้น"}
           </button>

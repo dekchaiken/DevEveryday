@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const c = await getConfig();
   return NextResponse.json(
-    { enabled: c.enabled, payMode: c.payMode, presetPrices: c.presetPrices, customMin: c.customMin, customMax: c.customMax },
+    { enabled: c.enabled, payMode: c.payMode, presetPrices: c.presetPrices, customMin: c.customMin, customMax: c.customMax, decorPrice: c.decorPrice },
     { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } },
   );
 }
