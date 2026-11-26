@@ -8,6 +8,11 @@ import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { GIANT_SPOT_DEFS, GIANT_SPOT_RADIUS, nearestSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
+import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
+import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
+
+// ตุ๊กตายักษ์ที่ตั้งป้ายไว้: ชื่อ ข้อความ ตำแหน่ง และลุค (ถ้าไม่มีจะใช้ลุคเริ่มต้น)
+type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook };
 
 export type Preview = { height: number; angle: number; color: string; shape: string } | null;
 
@@ -30,7 +35,7 @@ type Props = {
   onError: () => void;
   onReady: (handle: TreeSceneHandle) => void; // ส่งตัวควบคุมฉากให้พาเรนต์ เช่น สั่งจุดพลุ
   ground: string; // สีพื้นหิมะตามห้อง
-  giant: { name: string; message: string; spot: number } | null; // ป้ายประจำห้องพร้อมตำแหน่ง
+  giant: GiantSpec | null; // ตุ๊กตายักษ์ประจำห้องพร้อมป้ายและตำแหน่ง
   decor: Decor[]; // ตุ๊กตาหิมะที่ผู้ใช้ตกแต่งรอบต้น
   onDecorClick: (d: Decor) => void;
   markerSlot: number | null; // ช่องที่กำลังเลือกบนพื้น
@@ -53,7 +58,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setReduced: (v: boolean) => void;
     setCrowd: (count: number, seed: string) => void;
     highlightDecor: (slot: number) => void;
-    setGiant: (g: { name: string; message: string; spot: number } | null) => void;
+    setGiant: (g: GiantSpec | null) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
   } | null>(null);
@@ -660,8 +665,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const hex = ORNAMENT_HEX[colorName] ?? 0xffd76a;
       const group = new THREE.Group();
       scene.add(group);
-      const accent = theme === "snow" ? "#bae6fd" : theme === "sleigh" ? "#fca5a5" : "#f5c542";
-      const panel = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeSkyPanelTexture(text, by, accent), transparent: true, opacity: 0, depthWrite: false }));
+      const panel = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeSkyPanelTexture(text, by, theme as SkyTheme), transparent: true, opacity: 0, depthWrite: false }));
       panel.position.set(0, 5.2, -1.6);
       panel.scale.set(isSmall ? 5.8 : 6.4, isSmall ? 1.45 : 1.6, 1);
       group.add(panel);
@@ -684,6 +688,16 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       if (theme === "fireworks") {
         burst(new THREE.Vector3(-2.6, 5.4, -1.6), hex, n, 0.6);
         burst(new THREE.Vector3(2.6, 5.4, -1.6), 0xffffff, n, 0.6);
+        // ระเบิดลูกที่สองและสามตามมาเป็นชุด ให้ท้องฟ้าดูอลังการ
+        window.setTimeout(() => {
+          if (sky?.group === group) burst(new THREE.Vector3(0.2, 6.2, -2.2), 0xffe7a3, Math.round(n * 0.8), 0.7);
+        }, 900);
+        window.setTimeout(() => {
+          if (sky?.group === group) {
+            burst(new THREE.Vector3(-4.2, 4.6, -1.8), 0xfff6d6, Math.round(n * 0.7), 0.55);
+            burst(new THREE.Vector3(4.2, 4.6, -1.8), hex, Math.round(n * 0.7), 0.55);
+          }
+        }, 1700);
       } else {
         burst(new THREE.Vector3(-2.6, 5.4, -1.6), hex, Math.round(n / 2), 0.4);
         burst(new THREE.Vector3(2.6, 5.4, -1.6), 0xffffff, Math.round(n / 2), 0.4);
@@ -928,70 +942,45 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     // ---------- ตุ๊กตาหิมะยักษ์ของห้อง พร้อมป้ายห้อย ----------
     let giantGroup: THREE.Group | null = null;
-    function buildGiant(g: { name: string; message: string; spot: number }) {
+    // ตุ๊กตายักษ์: ลุคที่ผู้ซื้อเลือก และถือป้ายข้อความด้วยมือขวา
+    function buildGiant(g: GiantSpec) {
+      const look = g.look ?? DEFAULT_GIANT_LOOK;
       const grp = new THREE.Group();
-      const snow = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.55, clearcoat: 0.3 });
-      const addBall = (r: number, y: number) => {
-        const m = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 32), snow);
-        m.position.y = y;
-        grp.add(m);
-      };
-      addBall(0.62, 0.62);
-      addBall(0.46, 1.5);
-      addBall(0.33, 2.2);
-      const hat = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.32, 0.42, 32), new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.4 }));
-      hat.position.y = 2.55;
-      const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.05, 32), hat.material);
-      brim.position.y = 2.33;
-      const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.07, 16, 40), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.6 }));
-      scarf.rotation.x = Math.PI / 2;
-      scarf.position.y = 1.86;
-      const nose = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.32, 16), new THREE.MeshStandardMaterial({ color: 0xff8a1f }));
-      nose.rotation.x = Math.PI / 2;
-      nose.position.set(0, 2.2, 0.34);
-      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-      [-0.11, 0.11].forEach((x) => {
-        const e = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), eyeMat);
-        e.position.set(x, 2.3, 0.3);
-        grp.add(e);
-      });
-      grp.add(hat, brim, scarf, nose);
-      // ป้ายห้อยจากไม้ที่ข้างตุ๊กตา
-      const signCanvas = document.createElement("canvas");
-      signCanvas.width = 512;
-      signCanvas.height = 300;
-      const c2 = signCanvas.getContext("2d")!;
-      c2.fillStyle = "#0f2a22";
-      c2.fillRect(0, 0, 512, 300);
-      c2.strokeStyle = "#f5c542";
-      c2.lineWidth = 10;
-      c2.strokeRect(12, 12, 488, 276);
-      c2.fillStyle = "#ffe08a";
-      c2.font = "bold 46px sans-serif";
-      c2.textAlign = "center";
-      c2.fillText(g.name.slice(0, 20), 256, 110);
-      c2.fillStyle = "#f8fafc";
-      c2.font = "34px sans-serif";
-      c2.fillText(g.message.slice(0, 40), 256, 175);
-      c2.fillText(g.message.slice(40, 80), 256, 220);
-      const signTex = new THREE.CanvasTexture(signCanvas);
-      signTex.colorSpace = THREE.SRGBColorSpace;
-      const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.88), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
-      sign.position.set(0.95, 1.45, 0.25);
-      sign.rotation.y = -0.25;
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.5, 8), new THREE.MeshStandardMaterial({ color: 0x6b4423 }));
-      post.position.set(0.95, 0.75, 0.25);
-      grp.add(sign, post);
+      const figure = buildDecorSnowman({ ...look, id: "giant" } as unknown as Decor);
+      figure.scale.setScalar(2.1);
+      grp.add(figure);
+
+      // ป้ายข้อความ วาดจากงานศิลป์ร่วม
+      const boardCv = document.createElement("canvas");
+      boardCv.width = 1024;
+      boardCv.height = 640;
+      const bg = boardCv.getContext("2d");
+      const boardTex = new THREE.CanvasTexture(boardCv);
+      if (bg) drawGiantBoard(bg, 14, 14, 996, 612, { name: g.name, message: g.message, style: (look.board as BoardStyle) ?? "spruce" });
+      boardTex.colorSpace = THREE.SRGBColorSpace;
+      boardTex.needsUpdate = true;
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 0.83), new THREE.MeshBasicMaterial({ map: boardTex, transparent: true }));
+      // ป้ายอยู่ฝั่งที่หันเข้าหาใจกลางฉาก เพื่อให้มองเห็นได้จากมุมกล้องหลัก
+      const side = (GIANT_SPOT_DEFS[g.spot] ? Math.cos(GIANT_SPOT_DEFS[g.spot].angle) : 1) > 0 ? -1 : 1;
+      board.position.set(side * 1.2, 1.3, 0.3);
+      board.rotation.y = side * -0.3;
+      // มือที่กุมขอบป้าย
+      const glove = new THREE.MeshStandardMaterial({ color: 0x9b1c31, roughness: 0.5 });
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 12), glove);
+      hand.position.set(side * 0.56, 1.2, 0.32);
+      const hand2 = hand.clone();
+      hand2.position.set(side * 1.84, 1.12, 0.4);
+      grp.add(board, hand, hand2);
+
       const def = GIANT_SPOT_DEFS[g.spot] ?? GIANT_SPOT_DEFS[0];
       const gx = Math.cos(def.angle) * GIANT_SPOT_RADIUS;
       const gz = Math.sin(def.angle) * GIANT_SPOT_RADIUS;
       grp.position.set(gx, 0, gz);
-      // หันหน้าเข้าหาต้นคริสต์มาส
-      grp.rotation.y = Math.atan2(-gx, -gz);
-      grp.scale.setScalar(1.15);
+      // หันหน้าเข้าหาผู้ชม เพื่อให้เห็นป้ายที่ถืออยู่ (ตำแหน่งอื่นหมุนเล็กน้อยไปทางต้น)
+      grp.rotation.y = -0.2 + (gx > 0 ? -0.15 : 0.15);
       return grp;
     }
-    const api_setGiant = (g: { name: string; message: string; spot: number } | null) => {
+    const api_setGiant = (g: GiantSpec | null) => {
       if (giantGroup) {
         scene.remove(giantGroup);
         giantGroup.traverse((o) => {
@@ -1008,7 +997,6 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         scene.add(giantGroup);
       }
     };
-    api_setGiant(giant);
 
     // ---------- ตุ๊กตาหิมะที่ผู้ใช้ตกแต่ง วางรอบต้น ----------
     const decorGroup = new THREE.Group();
@@ -1016,9 +1004,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const decorById = new Map<string, Decor>();
     const SLOT_R = 2.7;
     const slotAngle = (i: number) => (i / SLOT_COUNT) * Math.PI * 2 + 0.4;
-    const BODY_HEX: Record<string, number> = { white: 0xffffff, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3 };
+    const BODY_HEX: Record<string, number> = { white: 0xffffff, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3, pearl: 0xfff6e6, ice: 0xd6f3ff };
     const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c };
     const HAT_HEX = 0x1f2937;
+    // ตั้งตุ๊กตายักษ์หลังค่าสีทั้งหมดพร้อมแล้ว (กันการเข้าถึงก่อนประกาศ)
+    api_setGiant(giant);
 
     function buildDecorSnowman(d: Decor) {
       const grp = new THREE.Group();
@@ -1121,6 +1111,58 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         wreath.rotation.x = Math.PI / 2;
         wreath.position.y = 1.5;
         add(wreath);
+      }
+      // หมวกพิเศษของตุ๊กตายักษ์: ทิอารา เขากวาง หมวกเอลฟ์
+      if (d.hat === "tiara") {
+        const gold = new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.8, roughness: 0.2 });
+        const band = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.025, 10, 40), gold);
+        band.rotation.x = Math.PI / 2;
+        band.position.y = 1.52;
+        add(band);
+        [-0.1, 0, 0.1].forEach((x, i) => {
+          const gem = new THREE.Mesh(new THREE.OctahedronGeometry(i === 1 ? 0.045 : 0.03, 0), new THREE.MeshStandardMaterial({ color: i === 1 ? 0xdc2643 : 0x7dd3fc, metalness: 0.2, roughness: 0.1 }));
+          gem.position.set(x, 1.58 + (i === 1 ? 0.03 : 0), 0.18);
+          add(gem);
+        });
+      } else if (d.hat === "antlers") {
+        const antler = new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 });
+        [-1, 1].forEach((side) => {
+          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.028, 0.34, 8), antler);
+          stem.position.set(side * 0.12, 1.66, 0);
+          stem.rotation.z = side * -0.5;
+          add(stem);
+          const fork = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.018, 0.22, 6), antler);
+          fork.position.set(side * 0.22, 1.86, 0);
+          fork.rotation.z = side * -1.0;
+          add(fork);
+          const tine = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.014, 0.14, 6), antler);
+          tine.position.set(side * 0.25, 1.98, 0.02);
+          tine.rotation.z = side * -0.3;
+          add(tine);
+        });
+      } else if (d.hat === "elf") {
+        const green = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.5 });
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.6, 24), green);
+        cone.position.set(0.04, 1.8, 0);
+        cone.rotation.z = -0.25;
+        const trim = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 10, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }));
+        trim.rotation.x = Math.PI / 2;
+        trim.position.y = 1.5;
+        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 12), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.8, roughness: 0.2 }));
+        bell.position.set(0.22, 2.05, 0.02);
+        add(cone, trim, bell);
+      }
+      // พวงมาลัยรอบคอ
+      if (d.acc === "wreath") {
+        const wreath = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.05, 12, 40), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.7 }));
+        wreath.rotation.x = Math.PI / 2;
+        wreath.position.y = 1.16;
+        add(wreath);
+        [0, 1.2, 2.4, 3.6, 4.8].forEach((a) => {
+          const berry = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.4 }));
+          berry.position.set(Math.cos(a) * 0.26, 1.16, Math.sin(a) * 0.26);
+          add(berry);
+        });
       }
       // แขน
       // แขนกิ่งไม้: ติดที่ข้างตัว ยกขึ้นเล็กน้อย มีกิ่งแยกที่ปลาย
@@ -1744,33 +1786,15 @@ function seededRandom(seed: string) {
   };
 }
 
-// แผงข้อความบนท้องฟ้า: กรอบโปร่งแสง ผู้ส่งและข้อความ
-function makeSkyPanelTexture(text: string, by: string, accent: string) {
+// แผงข้อความบนท้องฟ้า วาดจากงานศิลป์ร่วม (skyArt) ให้เหมือนตัวอย่างในหน้าแก้ไข
+function makeSkyPanelTexture(text: string, by: string, theme: SkyTheme) {
   const cv = document.createElement("canvas");
   cv.width = 1024;
   cv.height = 256;
   const g = cv.getContext("2d");
   const tex = new THREE.CanvasTexture(cv);
   if (!g) return tex;
-  g.beginPath();
-  g.roundRect(14, 14, 996, 228, 42);
-  g.fillStyle = "rgba(6,22,20,0.82)";
-  g.fill();
-  g.lineWidth = 8;
-  g.strokeStyle = accent;
-  g.globalAlpha = 0.9;
-  g.stroke();
-  g.globalAlpha = 1;
-  g.textAlign = "center";
-  g.fillStyle = accent;
-  g.font = "600 46px sans-serif";
-  g.shadowColor = accent;
-  g.shadowBlur = 18;
-  g.fillText(`จาก ${by.slice(0, 20)}`, 512, 92);
-  g.fillStyle = "#ffffff";
-  g.font = "bold 74px sans-serif";
-  g.shadowBlur = 24;
-  g.fillText(text.slice(0, 40), 512, 186);
+  drawSkyPanel(g, 14, 14, 996, 228, { text, by, theme });
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.needsUpdate = true;
   return tex;
@@ -1784,55 +1808,7 @@ function makeSleighTexture() {
   const g = cv.getContext("2d");
   const tex = new THREE.CanvasTexture(cv);
   if (!g) return tex;
-  g.fillStyle = "#fef3c7";
-  g.strokeStyle = "#fef3c7";
-  g.lineWidth = 5;
-  g.lineCap = "round";
-  for (const dx of [0, 62, 124]) {
-    const x = 36 + dx;
-    const y = 92;
-    g.beginPath();
-    g.ellipse(x, y, 28, 14, -0.12, 0, Math.PI * 2);
-    g.fill();
-    g.beginPath();
-    g.moveTo(x + 22, y - 8);
-    g.lineTo(x + 38, y - 32);
-    g.stroke();
-    g.beginPath();
-    g.arc(x + 42, y - 37, 9, 0, Math.PI * 2);
-    g.fill();
-    g.beginPath();
-    g.moveTo(x + 44, y - 45);
-    g.quadraticCurveTo(x + 56, y - 66, x + 50, y - 76);
-    g.moveTo(x + 44, y - 45);
-    g.quadraticCurveTo(x + 36, y - 68, x + 32, y - 80);
-    g.stroke();
-    g.beginPath();
-    g.moveTo(x - 18, y + 8);
-    g.lineTo(x - 26, y + 36);
-    g.moveTo(x - 6, y + 10);
-    g.lineTo(x - 8, y + 38);
-    g.moveTo(x + 12, y + 10);
-    g.lineTo(x + 14, y + 36);
-    g.moveTo(x + 24, y + 6);
-    g.lineTo(x + 30, y + 30);
-    g.stroke();
-  }
-  g.fillStyle = "#dc2643";
-  g.beginPath();
-  g.roundRect(196, 68, 260, 40, 14);
-  g.fill();
-  g.fillStyle = "#f5c542";
-  g.fillRect(196, 106, 260, 6);
-  g.strokeStyle = "#f5c542";
-  g.beginPath();
-  g.moveTo(178, 100);
-  g.quadraticCurveTo(196, 118, 456, 116);
-  g.stroke();
-  g.fillStyle = "#ffffff";
-  g.beginPath();
-  g.arc(300, 80, 11, 0, Math.PI * 2);
-  g.fill();
+  drawSled(g, 512, 160);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.needsUpdate = true;
   return tex;

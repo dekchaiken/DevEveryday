@@ -466,7 +466,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onOrnamentClick={(o) => setFocus(o)}
           onError={() => setWebglOk(false)}
           ground={room.ground}
-          giant={state?.giant ? { name: state.giant.name, message: state.giant.message, spot: state.giant.spot ?? 0 } : null}
+          giant={state?.giant ? { name: state.giant.name, message: state.giant.message, spot: state.giant.spot ?? 0, look: state.giant.look } : null}
           decor={decor}
           markerSlot={markerSlot}
           onGroundPick={(slot) => {
