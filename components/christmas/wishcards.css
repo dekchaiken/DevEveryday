@@ -1,0 +1,1091 @@
+/* การ์ดอวยพร: ฉากโต๊ะ ตัวออกแบบการ์ด และโซนคำอวยพร (ใช้ร่วมกับ christmas.css) */
+
+/* ---------- การ์ด 3 มิติ ---------- */
+.xc-card-wrap {
+  display: grid;
+  place-items: center;
+  perspective: 900px;
+  min-width: 0;
+}
+.xc-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease;
+  box-shadow: 0 30px 40px -24px rgba(0, 0, 0, 0.75), 0 2px 0 rgba(255, 255, 255, 0.35) inset;
+}
+.xc-card-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+.xc-card-frame {
+  position: absolute;
+  inset: 9px;
+  border: 1.5px solid currentColor;
+  opacity: 0.55;
+  border-radius: 10px;
+  pointer-events: none;
+}
+.xc-card-title {
+  position: relative;
+  z-index: 1;
+  padding: 12px 12px 0;
+  text-align: center;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(11px, 2.4vw, 14px);
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.xc-card-props {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.xc-prop {
+  position: absolute;
+  width: 15%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
+}
+.xc-prop.is-drag {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+.xc-prop.is-sel {
+  outline: 2px dashed #ffe7a3;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.xc-prop-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.xc-card-body {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+  margin: 0;
+  padding: 10px 10px 8px;
+  border-radius: 12px;
+  text-align: center;
+  display: grid;
+  gap: 4px;
+  background: rgba(255, 252, 244, 0.82);
+  color: #1f2b22;
+}
+.xc-card-wish {
+  margin: 0;
+  font-size: clamp(12px, 2.6vw, 15px);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.xc-card-sign {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.xc-card-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 25%, rgba(255, 255, 255, 0.38) var(--shine, 50%), transparent 75%);
+  mix-blend-mode: soft-light;
+}
+
+/* แบบการ์ด 4 แบบ */
+.xc-theme-kraft {
+  background: linear-gradient(160deg, #d8b48a, #b98a5a);
+  color: #4a2e18;
+}
+.xc-theme-pine {
+  background: radial-gradient(circle at 50% 0%, #1d5a44, #0c3026 70%);
+  color: #f6e7bf;
+}
+.xc-theme-candy {
+  background: repeating-linear-gradient(-45deg, #fff 0 14px, #fde2e8 14px 28px);
+  color: #8f1a2d;
+}
+.xc-theme-frost {
+  background: radial-gradient(circle at 30% 20%, #ffffff, #d6f0fb 60%, #a6d9ef);
+  color: #1c4e66;
+}
+.xc-theme-pine .xc-card-body {
+  background: rgba(9, 40, 31, 0.78);
+  color: #f6e7bf;
+}
+.xc-swatch {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+/* สีซอง */
+.xc-env-red,
+.xz-env-red {
+  --env: #b91c3c;
+  --env-front: #9b1630;
+}
+.xc-env-gold,
+.xz-env-gold {
+  --env: #d9a93a;
+  --env-front: #b98a2a;
+}
+.xc-env-green,
+.xz-env-green {
+  --env: #1f7a4d;
+  --env-front: #16603b;
+}
+.xc-env-white,
+.xz-env-white {
+  --env: #f4efe3;
+  --env-front: #e0d6bf;
+}
+
+/* ---------- ฉากโต๊ะและตัวออกแบบ ---------- */
+.xc-studio {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  color: #f7f2e6;
+  font-family: inherit;
+}
+.xc-table {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 26px),
+    radial-gradient(ellipse at 50% 35%, #7a4a2b 0%, #4a2a17 55%, #24130a 100%);
+}
+.xc-table::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+.xc-light {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 120, 0.55), transparent 70%);
+  filter: blur(6px);
+  animation: xc-float 9s ease-in-out infinite alternate;
+  z-index: 0;
+}
+.xc-light.l1 {
+  top: -40px;
+  left: -30px;
+}
+.xc-light.l2 {
+  top: 18%;
+  right: -50px;
+  animation-delay: -3s;
+}
+.xc-light.l3 {
+  bottom: 8%;
+  left: 30%;
+  animation-delay: -6s;
+}
+@keyframes xc-float {
+  to {
+    transform: translate(26px, 18px) scale(1.08);
+  }
+}
+.xc-studio-top {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+}
+.xc-studio-title h2 {
+  margin: 0;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(18px, 4vw, 24px);
+  font-weight: 600;
+}
+.xc-kicker {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #e8d19a;
+}
+.xc-stepcount {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e8d19a;
+}
+.xc-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 209, 154, 0.4);
+  background: rgba(20, 12, 6, 0.5);
+  color: #f7f2e6;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.xc-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 4px 16px 12px;
+}
+.xc-studio-card {
+  width: min(64vw, 36dvh);
+}
+.xc-studio-card .xc-card {
+  box-shadow: 0 40px 50px -26px rgba(0, 0, 0, 0.9);
+}
+.xc-stage-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #f1e4bf;
+  background: rgba(20, 12, 6, 0.45);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.xc-panel {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(180deg, #fdf8ee, #f4ead2);
+  color: #2a1d10;
+  box-shadow: 0 -20px 40px -20px rgba(0, 0, 0, 0.6);
+  min-height: 0;
+  max-height: 48dvh;
+}
+.xc-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.xc-steps button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(90, 60, 30, 0.2);
+  background: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4a3420;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.xc-steps button span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(184, 144, 74, 0.2);
+  font-size: 11px;
+}
+.xc-steps button.is-on {
+  background: linear-gradient(180deg, #2f6b52, #1d4a37);
+  color: #f7f2e6;
+  border-color: transparent;
+}
+.xc-steps button.is-on span {
+  background: rgba(232, 209, 154, 0.3);
+}
+.xc-panel-body {
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px;
+}
+.xc-pick {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.xc-pick h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.xc-row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.xc-count {
+  font-size: 12px;
+  color: #7a6446;
+}
+.xc-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.xc-theme-opt {
+  min-width: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(90, 60, 30, 0.18);
+  background: #fff;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4a3420;
+  cursor: pointer;
+  text-align: center;
+}
+.xc-theme-opt.is-on {
+  box-shadow: 0 0 0 2px #b9862a;
+}
+.xc-env-row {
+  display: flex;
+  gap: 10px;
+}
+.xc-env-chip {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: var(--env);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  font-size: 0;
+}
+.xc-env-chip.is-on {
+  box-shadow: 0 0 0 3px #b9862a;
+}
+.xc-palette {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.xc-palette-item {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border-radius: 12px;
+  border: 1px solid rgba(90, 60, 30, 0.15);
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  color: #4a3420;
+  cursor: pointer;
+  min-width: 0;
+}
+.xc-palette-item:hover {
+  border-color: #b9862a;
+}
+.xc-palette-art {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+}
+.xc-sel-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 44px;
+  align-items: center;
+}
+.xc-sel-empty {
+  margin: 0;
+  font-size: 12px;
+  color: #7a6446;
+}
+.xc-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(90, 60, 30, 0.2);
+  background: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4a3420;
+  cursor: pointer;
+}
+.xc-tool.is-danger {
+  color: #8f1a2d;
+  border-color: rgba(143, 26, 45, 0.35);
+}
+.xc-field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a3420;
+}
+.xc-field em {
+  font-style: normal;
+  font-weight: 500;
+  color: #7a6446;
+}
+.xc-field input,
+.xc-field textarea {
+  font: inherit;
+  font-size: 15px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(90, 60, 30, 0.2);
+  background: #fff;
+  color: #2a1d10;
+  resize: none;
+  min-width: 0;
+}
+.xc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.xc-chips button {
+  font: inherit;
+  font-size: 11.5px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(90, 60, 30, 0.2);
+  background: #fff;
+  color: #4a3420;
+  cursor: pointer;
+  text-align: left;
+}
+.xc-review p {
+  margin: 0;
+  font-size: 14px;
+}
+.xc-review-note {
+  font-size: 12.5px !important;
+  color: #7a6446;
+}
+.xc-panel-foot {
+  display: grid;
+  gap: 6px;
+}
+.xc-msg {
+  margin: 0;
+  font-size: 12.5px;
+  color: #8f1a2d;
+  font-weight: 600;
+}
+.xc-nav {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+}
+.xc-btn,
+.xc-btn-ghost {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.xc-btn-ghost {
+  border: 1px solid rgba(90, 60, 30, 0.25);
+  background: #fff;
+  color: #4a3420;
+}
+.xc-btn {
+  border: 0;
+  background: linear-gradient(180deg, #2f6b52, #1d4a37);
+  color: #f7f2e6;
+}
+.xc-btn.is-send {
+  background: linear-gradient(180deg, #d9a93a, #b98a2a);
+  color: #2a1d10;
+}
+.xc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* คอมพิวเตอร์: ตั้งการ์ดซ้าย แผงตัวเลือกขวา ไม่ต้องเลื่อน */
+@media (min-width: 760px) {
+  .xc-studio {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .xc-studio-top {
+    grid-column: 1 / -1;
+  }
+  .xc-stage {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .xc-panel {
+    grid-column: 2;
+    grid-row: 2;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: -20px 0 40px -20px rgba(0, 0, 0, 0.6);
+    padding: 18px 20px;
+  }
+  .xc-studio-card {
+    width: min(34vw, 50dvh);
+  }
+}
+
+/* ---------- โซนคำอวยพร ---------- */
+.xz-zone {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  overflow: hidden;
+  color: #f7f2e6;
+  background: radial-gradient(ellipse at 50% 0%, #1d4a52 0%, #0d2430 55%, #061219 100%);
+}
+.xz-sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.xz-moon {
+  position: absolute;
+  top: 9%;
+  right: 12%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fff7d6, #f1d88a 60%, #c9a24a);
+  box-shadow: 0 0 40px rgba(255, 230, 160, 0.5);
+}
+.xz-star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  animation: xz-twinkle 2.6s ease-in-out infinite alternate;
+}
+@keyframes xz-twinkle {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.xz-lights {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  pointer-events: none;
+}
+.xz-light {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  animation: xz-blink 1.6s ease-in-out infinite alternate;
+  box-shadow: 0 0 10px currentColor;
+}
+.xz-light.c0 {
+  color: #ffd76a;
+  background: #ffd76a;
+}
+.xz-light.c1 {
+  color: #ff6b8a;
+  background: #ff6b8a;
+}
+.xz-light.c2 {
+  color: #7dd3fc;
+  background: #7dd3fc;
+}
+.xz-light.c3 {
+  color: #86efac;
+  background: #86efac;
+}
+@keyframes xz-blink {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.xz-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: calc(30px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+}
+.xz-head h2 {
+  margin: 2px 0 0;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(20px, 4.4vw, 26px);
+  font-weight: 600;
+}
+.xz-kicker {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: #e8d19a;
+}
+.xz-count {
+  font-size: 12px;
+  color: #cfe9e4;
+}
+.xz-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 209, 154, 0.45);
+  background: rgba(6, 18, 25, 0.5);
+  color: #f7f2e6;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+}
+.xz-area {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 118px;
+  bottom: 0;
+  padding: 0 max(14px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+}
+.xz-bells {
+  position: relative;
+  height: 36px;
+}
+.xz-bell {
+  position: absolute;
+  top: 4px;
+  width: 22px;
+  height: 28px;
+  margin-left: -11px;
+  transform-origin: 50% 0;
+  animation: xz-swing 3.2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.4));
+}
+@keyframes xz-swing {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+.xz-fence {
+  position: relative;
+  height: 26px;
+  margin: 0 -4px;
+}
+.xz-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  height: 7px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #a77a4a, #6b4423);
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.35);
+}
+.xz-rail.r2 {
+  top: 18px;
+  height: 5px;
+}
+.xz-grid {
+  list-style: none;
+  margin: 0;
+  padding: 10px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 10px;
+  justify-items: center;
+}
+.xz-hang {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: 50% 0;
+  animation: xz-sway 4s ease-in-out infinite alternate;
+  color: inherit;
+}
+@keyframes xz-sway {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+.xz-string {
+  width: 2px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.55);
+}
+.xz-env-mini {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 118px;
+  height: 78px;
+  border-radius: 8px;
+  background: var(--env);
+  box-shadow: 0 10px 14px -8px rgba(0, 0, 0, 0.7), inset 0 -18px 0 var(--env-front);
+  transition: transform 0.2s ease;
+}
+.xz-hang:hover .xz-env-mini,
+.xz-hang:focus-visible .xz-env-mini {
+  transform: translateY(-3px) scale(1.04);
+}
+.xz-seal {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: #ffd76a;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+}
+.xz-to {
+  position: absolute;
+  bottom: 22px;
+  left: 6px;
+  right: 6px;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.xz-empty {
+  margin: 36px auto 0;
+  max-width: 320px;
+  text-align: center;
+  font-size: 14px;
+  color: #cfe9e4;
+}
+
+/* การเปิดซองอวยพร */
+.xz-open {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(4, 12, 18, 0.74);
+  backdrop-filter: blur(4px);
+}
+.xz-letter {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: min(88vw, 300px, 42dvh);
+}
+.xz-envelope {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  background: var(--env);
+  border-radius: 10px;
+  box-shadow: 0 30px 40px -20px rgba(0, 0, 0, 0.8);
+}
+.xz-env-back {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--env);
+  z-index: 1;
+}
+.xz-card-slot {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  width: 74%;
+  z-index: 2;
+  transform: translate(-50%, 70%);
+  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.xz-env-front {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  z-index: 3;
+  background: var(--env-front);
+  clip-path: polygon(0 0, 50% 40%, 100% 0, 100% 100%, 0 100%);
+  border-radius: 0 0 10px 10px;
+}
+.xz-flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 56%;
+  z-index: 4;
+  background: var(--env-front);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: 50% 0;
+  transition: transform 0.6s ease;
+}
+
+.xz-open.is-shake .xz-envelope {
+  animation: xz-shake 0.5s ease-in-out;
+}
+@keyframes xz-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+.xz-open.is-open .xz-flap,
+.xz-open.is-out .xz-flap,
+.xz-open.is-show .xz-flap {
+  transform: rotateX(180deg);
+  z-index: 0;
+}
+.xz-open.is-out .xz-card-slot,
+.xz-open.is-show .xz-card-slot {
+  z-index: 5;
+  transform: translate(-50%, -30%);
+}
+.xz-open.is-show .xz-card-slot .xc-card {
+  transition: transform 0.25s ease;
+}
+.xz-reveal {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: 100%;
+  margin-top: 14px;
+  animation: xz-rise 0.4s ease both;
+}
+@keyframes xz-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.xz-from {
+  margin: 0;
+  font-size: 13px;
+  color: #e8d19a;
+}
+.xz-reveal-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.xz-like,
+.xz-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.xz-like {
+  border: 1px solid rgba(255, 107, 138, 0.6);
+  background: rgba(255, 107, 138, 0.15);
+  color: #ffd1dc;
+}
+.xz-like.is-on {
+  background: #ff6b8a;
+  color: #fff;
+}
+.xz-like:disabled {
+  cursor: default;
+}
+.xz-like b {
+  font-variant-numeric: tabular-nums;
+}
+.xz-done {
+  border: 1px solid rgba(232, 209, 154, 0.5);
+  background: rgba(6, 18, 25, 0.5);
+  color: #f7f2e6;
+}
+
+@media (min-width: 760px) {
+  .xz-area {
+    top: 124px;
+  }
+  .xz-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 16px 40px 0;
+  }
+  .xz-bells {
+    padding: 0 40px;
+  }
+  .xz-fence {
+    margin: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xz-star,
+  .xz-light,
+  .xz-bell,
+  .xz-hang,
+  .xc-light,
+  .xz-open.is-shake .xz-envelope {
+    animation: none;
+  }
+}
+
+/* ป้ายชี้ไปโซนคำอวยพรหลังส่งการ์ด (อยู่เหนือแถบเมนู) */
+.xz-tip {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  transform: translateX(-50%);
+  max-width: min(90vw, 360px);
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(232, 209, 154, 0.6);
+  background: rgba(20, 40, 32, 0.94);
+  color: #f7f2e6;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.7);
+  animation: xz-tip-in 0.45s ease both, xz-tip-bob 1.6s ease-in-out 0.45s infinite alternate;
+}
+.xz-tip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  transform: rotate(45deg);
+  background: rgba(20, 40, 32, 0.94);
+  border-right: 1px solid rgba(232, 209, 154, 0.6);
+  border-bottom: 1px solid rgba(232, 209, 154, 0.6);
+}
+@keyframes xz-tip-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes xz-tip-bob {
+  to {
+    translate: 0 -5px;
+  }
+}
+
+/* มือถือ: ของตกแต่งและแถบเครื่องมือเรียงเป็นตาราง 5 ช่อง ให้พอดีจอไม่ต้องเลื่อน */
+@media (max-width: 759px) {
+  .xc-palette {
+    gap: 4px;
+  }
+  .xc-palette-item {
+    padding: 4px 1px;
+    font-size: 10px;
+  }
+  .xc-palette-art {
+    width: 30px;
+    height: 30px;
+  }
+  .xc-sel-bar {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    min-height: 40px;
+  }
+  .xc-sel-empty {
+    grid-column: 1 / -1;
+  }
+  .xc-tool {
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 2px;
+    font-size: 10.5px;
+    min-width: 0;
+  }
+}
