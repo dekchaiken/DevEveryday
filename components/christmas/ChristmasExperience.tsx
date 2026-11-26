@@ -13,6 +13,7 @@ import DonateModal from "./DonateModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
 import { useBoard } from "./useBoard";
+import { RankPanel } from "./RankPanel";
 import { Icon } from "./Icon";
 import { isMusicPlaying, startMusic, stopMusic } from "./music";
 import { OrnamentPreview } from "./OrnamentPreview";
@@ -86,7 +87,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   }, [focus]);
   const [pick, setPick] = useState<{ height: number; angle: number } | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [feedOpen, setFeedOpen] = useState(false); // แผงรายการบนมือถือ
+  const [feedOpen, setFeedOpen] = useState(false); // แผงประวัติล่าสุด (เปิดจากปุ่มมุมขวาหรือแถบเมนู)
+  const [rankOpen, setRankOpen] = useState(false); // แผงอันดับถูกใจ
   const [local, setLocal] = useState<Ornament[]>([]);
   const [donateOpen, setDonateOpen] = useState(false);
   // นับถอยหลังถึงวันคริสต์มาส (เวลาท้องถิ่นของผู้ใช้) คำนวณหลังโหลดเพื่อไม่ให้ต่างกันตอน SSR
@@ -524,6 +526,32 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
               </span>
             )}
           </div>
+          <div className="xmas-tools" role="group" aria-label="ประวัติและอันดับ">
+            <button
+              type="button"
+              className={`xmas-tool ${feedOpen ? "is-on" : ""}`}
+              aria-pressed={feedOpen}
+              onClick={() => {
+                setFeedOpen((v) => !v);
+                setRankOpen(false);
+              }}
+            >
+              <Icon name="clock" size={15} />
+              <span>ประวัติ</span>
+            </button>
+            <button
+              type="button"
+              className={`xmas-tool ${rankOpen ? "is-on" : ""}`}
+              aria-pressed={rankOpen}
+              onClick={() => {
+                setRankOpen((v) => !v);
+                setFeedOpen(false);
+              }}
+            >
+              <Icon name="trophy" size={15} />
+              <span>อันดับ</span>
+            </button>
+          </div>
           <button type="button" className={`xmas-music-toggle ${musicOn ? "is-on" : ""}`} aria-pressed={musicOn} aria-label={musicOn ? "ปิดเพลงคลอ" : "เปิดเพลงคลอ"} onClick={toggleMusic}>
             <Icon name="music" size={15} />
             <span className="xmas-music-bars" aria-hidden>
@@ -573,6 +601,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </button>
         <button className="xmas-action xmas-action-mobile" onClick={() => {
           setFeedOpen(true);
+          setRankOpen(false);
           setSheetOpen(false);
         }}>
           <Icon name="heart" size={18} /> ประวัติล่าสุด
@@ -843,10 +872,19 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         wishes={ornaments}
         decor={decor}
         feed={feed}
-        board={board}
         onWishClick={(o) => setFocus(o)}
         mobileOpen={feedOpen}
         onMobileClose={() => setFeedOpen(false)}
+      />
+      <RankPanel
+        board={board}
+        wishes={ornaments}
+        open={rankOpen}
+        onClose={() => setRankOpen(false)}
+        onWishClick={(o) => {
+          setRankOpen(false);
+          setFocus(o);
+        }}
       />
     </div>
   );
