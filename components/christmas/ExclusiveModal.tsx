@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
-import { DEFAULT_GIANT_LOOK, GIANT_BODY, GIANT_LIGHTS, SIGN_BOARDS, type GiantLook } from "@/lib/christmas/giant";
+import { DECO_GROUND, DECO_ROOF, DEFAULT_GIANT_LOOK, GIANT_BODY, GIANT_LIGHTS, SIGN_BOARDS, type GiantLook } from "@/lib/christmas/giant";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { CottagePreview } from "./CottagePreview";
@@ -42,7 +42,6 @@ const LABEL: Record<string, string> = {
   plaid: "ลายสก็อต",
   carrot: "แครอท",
   button: "กระดุม",
-  star: "ดาว",
   bell: "ระฆัง",
   sticks: "กิ่งไม้",
   wings: "ปีกเล็ก",
@@ -61,7 +60,11 @@ const LABEL: Record<string, string> = {
   spruce: "สปรูซ",
   ivory: "งาช้าง",
   berry: "เบอร์รี่",
-  pine: "สน",
+  pine: "ต้นสน",
+  snowman: "ตุ๊กตาหิมะ",
+  candy: "ไม้เท้าขนม",
+  lantern: "โคมไฟ",
+  star: "ดาวดวงใหญ่",
   cream: "ครีม",
   multi: "หลากสี",
 };
@@ -191,6 +194,9 @@ export default function ExclusiveModal({
 
   function setPart(key: GiantKey, value: string) {
     setLook((l) => ({ ...l, [key]: value }));
+  }
+  function setDeco(index: number, value: string) {
+    setLook((l) => ({ ...l, deco: l.deco.map((x, j) => (j === index ? value : x)) }));
   }
 
   async function create(kind: "giant" | "message" | "decor", body: Record<string, unknown>) {
@@ -364,9 +370,14 @@ export default function ExclusiveModal({
               <section className="xmas-sec" data-step="2" data-on={step === 2}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">3</span>
-                  <h3>ตกแต่ง · ป้ายข้างบ้าน</h3>
+                  <h3>ตกแต่ง · ป้ายและของหน้าบ้าน</h3>
                 </header>
                 <PickRow title="สีป้าย" options={SIGN_BOARDS} value={look.board} onChange={(v) => setPart("board", v)} />
+                <PickRow title="ลาน · ซ้ายใกล้ประตู" options={["none", ...DECO_GROUND]} value={look.deco[0]} onChange={(v) => setDeco(0, v)} />
+                <PickRow title="ลาน · ขวาใกล้ประตู" options={["none", ...DECO_GROUND]} value={look.deco[1]} onChange={(v) => setDeco(1, v)} />
+                <PickRow title="ลาน · ซ้ายหน้าสุด" options={["none", ...DECO_GROUND]} value={look.deco[2]} onChange={(v) => setDeco(2, v)} />
+                <PickRow title="ลาน · ขวาหน้าสุด" options={["none", ...DECO_GROUND]} value={look.deco[3]} onChange={(v) => setDeco(3, v)} />
+                <PickRow title="ยอดหลังคา" options={["none", ...DECO_ROOF]} value={look.deco[4]} onChange={(v) => setDeco(4, v)} />
               </section>
 
               <section className="xmas-sec" data-step="3" data-on={step === 3}>

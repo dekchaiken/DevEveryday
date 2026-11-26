@@ -95,7 +95,18 @@ const ROOF_H = 1.0; // ความสูงหลังคา
 const OVER = 0.25; // ชายคายื่นจากผนัง
 const FRONT = D / 2; // ผิวหน้าผนัง
 
-export function buildCottage(look: { body: string; lights: string }): Scenery {
+// จุดวางของตกแต่งที่คงที่ ไม่ซ้อนกันและอยู่ห่างจากประตูและป้าย
+// 4 จุดแรกวางบนลาน ส่วนจุดสุดท้ายเป็นยอดหลังคา
+const DECO_ANCHORS: { x: number; z: number; rot: number; roof?: boolean }[] = [
+  { x: -0.95, z: FRONT + 0.42, rot: 0.2 },
+  { x: 0.95, z: FRONT + 0.42, rot: -0.2 },
+  { x: -1.5, z: FRONT + 0.9, rot: 0.5 },
+  { x: 1.5, z: FRONT + 0.9, rot: -0.5 },
+  { x: 0, z: 0, rot: 0, roof: true },
+];
+const GIFT_COLORS = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e];
+
+export function buildCottage(look: { body: string; lights: string; deco?: string[] }): Scenery {
   const group = new THREE.Group();
   const updates: Updater[] = [];
   const add = <T extends THREE.Object3D>(o: T, x = 0, y = 0, z = 0): T => put(group, o, x, y, z);
@@ -259,8 +270,24 @@ export function buildCottage(look: { body: string; lights: string }): Scenery {
   ]) {
     add(new THREE.Mesh(mound, snowMat), mx, 0.05, mz).scale.set(1.1, 0.35, 1.1);
   }
-  add(giftBox(0.3, 0xdc2643, 0xf5c542), -1.22, 0, FRONT + 0.55);
-  add(giftBox(0.22, 0x3b82f6, 0xfff6e6), -0.92, 0, FRONT + 0.62);
+  // ของตกแต่งตามที่ผู้ซื้อเลือกไว้ที่จุดคงที่ (ยอดหลังคามีดาวที่หมุนช้า ๆ)
+  DECO_ANCHORS.forEach((a, i) => {
+    const kind = look.deco?.[i] ?? "none";
+    if (kind === "none") return;
+    if (a.roof) {
+      if (kind !== "star") return;
+      const star = add(starMesh(), a.x, H + ROOF_H + 0.26, a.z);
+      updates.push((t, reduced) => {
+        star.rotation.y = reduced ? 0 : t * 0.8;
+      });
+      return;
+    }
+    const item = decoItem(kind, i);
+    if (!item) return;
+    item.position.set(a.x, 0, a.z);
+    item.rotation.y = a.rot;
+    group.add(item);
+  });
 
   return {
     group: shade(group),
@@ -377,9 +404,24 @@ function bauble(color: number): THREE.Group {
   return g;
 }
 
-function starPost(): { group: THREE.Group; star: THREE.Mesh } {
-  const g = new THREE.Group();
-  put(g, new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 1.0, 10), std(0x7a4a24, 0.8)), 0, 0.5, 0);
+function decoItem(kind: string, index: number): THREE.Group | null {
+  switch (kind) {
+    case "gift":
+      return giftBox(0.28, GIFT_COLORS[index % GIFT_COLORS.length], 0xfff6e6);
+    case "snowman":
+      return snowman();
+    case "pine":
+      return miniPine(0.9, 0.85);
+    case "candy":
+      return candyCane();
+    case "lantern":
+      return lantern().group;
+    default:
+      return null;
+  }
+}
+
+function starMesh(): THREE.Mesh {
   const shape = new THREE.Shape();
   for (let i = 0; i < 10; i++) {
     const r = i % 2 === 0 ? 0.22 : 0.09;
@@ -390,7 +432,13 @@ function starPost(): { group: THREE.Group; star: THREE.Mesh } {
   shape.closePath();
   const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 2 });
   geo.center();
-  const star = put(g, new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xf5c542, roughness: 0.25, metalness: 0.7, emissive: 0x6b4a00, emissiveIntensity: 0.6 })), 0, 1.08, 0);
+  return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xf5c542, roughness: 0.25, metalness: 0.7, emissive: 0x6b4a00, emissiveIntensity: 0.6 }));
+}
+
+function starPost(): { group: THREE.Group; star: THREE.Mesh } {
+  const g = new THREE.Group();
+  put(g, new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 1.0, 10), std(0x7a4a24, 0.8)), 0, 0.5, 0);
+  const star = put(g, starMesh(), 0, 1.08, 0);
   return { group: g, star };
 }
 
@@ -447,7 +495,7 @@ export function buildYardScenery(): Scenery {
   const group = new THREE.Group();
   const updates: Updater[] = [];
 
-  const cottage = buildCottage({ body: "cream", lights: "gold" });
+  const cottage = buildCottage({ body: "cream", lights: "gold", deco: ["gift", "none", "snowman", "pine", "star"] });
   // บ้านอยู่มุมหลังด้านขวาของลาน ไม่อยู่หลังป้ายประตู จึงเห็นได้ชัดจากทุกมุม
   const COTTAGE = { x: 2.6, z: -2.6 };
   cottage.group.position.set(COTTAGE.x, 0, COTTAGE.z);
