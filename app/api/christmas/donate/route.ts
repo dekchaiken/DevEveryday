@@ -11,6 +11,7 @@ import { maskIp, writeLog } from "@/lib/christmas/log";
 import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
 import { sanitizeSocial } from "@/lib/christmas/social";
 import { listDecor, parseDecorPick } from "@/lib/christmas/decor";
+import { parseGiantLook } from "@/lib/christmas/giant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,6 +66,12 @@ export async function POST(req: Request) {
     }
   }
 
+  let look: ReturnType<typeof parseGiantLook> = null;
+  if (kind === "giant") {
+    look = parseGiantLook(body.look);
+    if (!look) return NextResponse.json({ error: "ตกแต่งตุ๊กตายักษ์ไม่ถูกต้อง" }, { status: 400 });
+  }
+
   const id = crypto.randomUUID();
   const base: Order = {
     id,
@@ -84,6 +91,7 @@ export async function POST(req: Request) {
     qrPayload: "",
     qrImage: "",
     ...(decor ? { decor } : {}),
+    ...(look ? { look } : {}),
   };
 
   try {

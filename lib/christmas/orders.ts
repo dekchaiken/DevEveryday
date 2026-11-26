@@ -3,6 +3,7 @@ import { cmd, storeConfigured } from "@/lib/redis";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
 import type { DecorPick } from "@/lib/christmas/decor";
+import type { GiantLook } from "@/lib/christmas/giant";
 
 export type OrderStatus = "awaiting_payment" | "paid" | "cancelled";
 // giant = ตุ๊กตาหิมะยักษ์ (Exclusive ประจำห้อง) | support = สนับสนุนทีม DevEveryday
@@ -20,6 +21,7 @@ export type Order = {
   spot: number; // ตำแหน่งป้ายประจำห้อง 0–3 (เฉพาะ giant)
   social?: Social; // ลิงก์โซเชียลของผู้สนับสนุน
   decor?: DecorPick; // ชิ้นส่วนตุ๊กตา (เฉพาะ decor)
+  look?: GiantLook; // ลุคตุ๊กตายักษ์ (เฉพาะ giant)
   mode: "manual" | "gateway";
   status: OrderStatus;
   createdAt: number;
@@ -29,7 +31,7 @@ export type Order = {
   qrImage: string; // ลิงก์รูป QR จาก Omise (โหมด gateway)
 };
 
-export type Giant = { orderId: string; name: string; message: string; amount: number; paidAt: number; spot: number; social?: Social };
+export type Giant = { orderId: string; name: string; message: string; amount: number; paidAt: number; spot: number; social?: Social; look?: GiantLook };
 
 const mem = { orders: new Map<string, Order>(), giants: new Map<string, Giant>() };
 const K = {
@@ -70,7 +72,7 @@ export async function markPaid(id: string, providerRef: string, now: number): Pr
   const paid: Order = { ...o, status: "paid", paidAt: now, providerRef: providerRef || o.providerRef };
   await saveOrder(paid);
   if (paid.kind === "giant") {
-    const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, spot: paid.spot ?? 0, social: paid.social };
+    const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, spot: paid.spot ?? 0, social: paid.social, look: paid.look };
     if (!storeConfigured()) mem.giants.set(paid.room, giant);
     else await cmd("SET", K.giant(paid.room), JSON.stringify(giant));
   }

@@ -18,6 +18,8 @@ const BODY: Record<string, [string, string]> = {
   mint: ["#e6fbf1", "#a7e3c7"],
   sky: ["#eaf4ff", "#9cc9f0"],
   blush: ["#fff0f6", "#f2b6cf"],
+  pearl: ["#fffaf0", "#e4cfa8"],
+  ice: ["#f0fcff", "#8fd4ea"],
 };
 const SCARF: Record<string, [string, string]> = {
   red: ["#e8334f", "#8f1028"],
@@ -144,6 +146,14 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
         <path d="M76 96 Q100 115 124 96" fill="none" stroke="#fff" strokeWidth="2" strokeDasharray="4 6" strokeLinecap="round" opacity="0.8" />
       )}
       <path d="M118 104 L124 126 L114 124 Z" fill={scarfFill} />
+      {parts.acc === "wreath" && (
+        <g>
+          <path d="M70 104 Q100 130 130 104" fill="none" stroke="#15803d" strokeWidth="9" strokeLinecap="round" />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <circle key={i} cx={80 + i * 10} cy={116 + Math.sin((i / 4) * Math.PI) * 4} r="3.4" fill="#dc2643" />
+          ))}
+        </g>
+      )}
       {parts.acc === "bell" && (
         <>
           <circle cx="120" cy="122" r="6" fill={`url(#g${uid})`} />
@@ -159,6 +169,27 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
       )}
 
       {/* หมวก */}
+      {parts.hat === "tiara" && (
+        <>
+          <path d="M74 52 L80 40 L100 46 L120 40 L126 52 Z" fill={`url(#g${uid})`} />
+          <circle cx="100" cy="44" r="4" fill="#dc2643" />
+          <circle cx="88" cy="48" r="2.6" fill="#7dd3fc" />
+          <circle cx="112" cy="48" r="2.6" fill="#7dd3fc" />
+        </>
+      )}
+      {parts.hat === "antlers" && (
+        <g fill="none" stroke="#7a4a24" strokeWidth="4" strokeLinecap="round">
+          <path d="M84 48 Q76 30 66 26 M72 36 L64 30 M78 40 L70 40" />
+          <path d="M116 48 Q124 30 134 26 M128 36 L136 30 M122 40 L130 40" />
+        </g>
+      )}
+      {parts.hat === "elf" && (
+        <>
+          <path d="M74 54 Q100 -16 128 50 Z" fill="#16a34a" />
+          <rect x="70" y="48" width="60" height="10" rx="5" fill="#ffffff" />
+          <circle cx="126" cy="22" r="7" fill={`url(#g${uid})`} />
+        </>
+      )}
       {parts.hat === "top" && (
         <>
           <ellipse cx="100" cy="46" rx="36" ry="5" fill="#1f2937" />

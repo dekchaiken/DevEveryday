@@ -1,30 +1,134 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
 import type { Social } from "@/lib/christmas/social";
+import {
+  DEFAULT_GIANT_LOOK,
+  GIANT_ACC,
+  GIANT_ARMS,
+  GIANT_BODY,
+  GIANT_HATS,
+  GIANT_LEGS,
+  GIANT_NOSES,
+  GIANT_SCARVES,
+  SIGN_BOARDS,
+  type GiantLook,
+} from "@/lib/christmas/giant";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { Icon } from "./Icon";
 import { PaymentPanel, useDonateConfig } from "./PaymentPanel";
+import { drawGiantBoard, paintSkyScene, type BoardStyle, type SkyTheme } from "./skyArt";
 
 // ตุ๊กตาหิมะ Exclusive ที่ผู้ใช้ตกแต่งและเลือกช่องไว้แล้ว รอชำระเงินเพื่อวาง
 export type DecorDraft = { slot: number; parts: SnowParts; name: string; social?: Social };
 
-const GIANT_PARTS: SnowParts = { hat: "crown", scarf: "gold", nose: "star", arms: "wings", body: "white", legs: "snow", acc: "bow" };
 const TIER_NAMES = ["ดาวดวงเล็ก", "ระฆังเงิน", "ดาวประจำห้อง"];
 const THEMES: { id: MessageTheme; label: string; hint: string; icon: "firework" | "snow" | "sparkle" | "sleigh" }[] = [
-  { id: "fireworks", label: "พลุฉลอง", hint: "พลุสีทองระเบิดเหนือต้น", icon: "firework" },
-  { id: "snow", label: "หิมะโปรยปราย", hint: "หิมะตกหนักพร้อมแสงน้ำแข็ง", icon: "snow" },
-  { id: "sparkle", label: "ประกายระยิบ", hint: "กรอบดาวกระพริบรอบข้อความ", icon: "sparkle" },
-  { id: "sleigh", label: "เลื่อนกวางเรนเดียร์", hint: "เลื่อนของซานตาวิ่งผ่านท้องฟ้า", icon: "sleigh" },
+  { id: "fireworks", label: "พลุฉลอง", hint: "พลุทองระเบิดเป็นชุดเหนือต้น", icon: "firework" },
+  { id: "snow", label: "หิมะโปรยปราย", hint: "หิมะหนาแน่นพร้อมแสงน้ำแข็ง", icon: "snow" },
+  { id: "sparkle", label: "ประกายระยิบ", hint: "ประกายทองวิ่งไปตามกรอบ", icon: "sparkle" },
+  { id: "sleigh", label: "เลื่อนกวางเรนเดียร์", hint: "เลื่อนซานตามีกวางนำหน้า", icon: "sleigh" },
 ];
 const THANKS_CHIPS = ["ขอบคุณที่ทำให้คริสต์มาสนี้อบอุ่น", "ขอให้ปีใหม่มีแต่รอยยิ้ม", "สุขสันต์วันคริสต์มาสนะ"];
-// ตำแหน่งจุดประกายของพื้นหลังตัวอย่างท้องฟ้า (คงที่เพื่อให้ภาพเหมือนเดิมทุกครั้ง)
-const FX = Array.from({ length: 14 }, (_, i) => ({ left: `${(i * 37) % 92 + 4}%`, top: `${(i * 53) % 80 + 6}%`, delay: `${(i % 7) * 0.22}s` }));
+
+// ชื่อภาษาไทยของชิ้นส่วนแต่ละแบบ
+const LABEL: Record<string, string> = {
+  top: "หมวกทรงสูง",
+  beanie: "หมวกไหมพรม",
+  santa: "ซานตา",
+  crown: "มงกุฎ",
+  pom: "ปอมปอม",
+  holly: "พวงฮอลลี่",
+  tiara: "ทิอารา",
+  antlers: "เขากวาง",
+  elf: "หมวกเอลฟ์",
+  red: "แดง",
+  green: "เขียว",
+  gold: "ทอง",
+  blue: "น้ำเงิน",
+  white: "ขาว",
+  plaid: "ลายสก็อต",
+  carrot: "แครอท",
+  button: "กระดุม",
+  star: "ดาว",
+  bell: "ระฆัง",
+  sticks: "กิ่งไม้",
+  wings: "ปีกเล็ก",
+  gift: "ของขวัญ",
+  none: "ไม่มี",
+  snow: "ฐานหิมะ",
+  boots: "บู๊ต",
+  mint: "มิ้นต์",
+  sky: "ฟ้า",
+  blush: "ชมพู",
+  pearl: "มุก",
+  ice: "น้ำแข็ง",
+  glasses: "แว่น",
+  bow: "โบว์",
+  wreath: "พวงมาลัย",
+  spruce: "สปรูซ",
+  ivory: "งาช้าง",
+  berry: "เบอร์รี่",
+  pine: "สน",
+};
 
 type View = "menu" | "giant" | "message" | "decor";
+type GiantKey = keyof GiantLook;
+
+// ปุ่มเลือกชิ้นส่วนแบบแถวเดียว ใช้ทั้งตุ๊กตายักษ์และข้อความ
+function PickRow({ title, options, value, onChange }: { title: string; options: readonly string[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="xmas-pick-row">
+      <span className="xmas-pick-title">{title}</span>
+      <div className="xmas-pick-chips" role="radiogroup" aria-label={title}>
+        {options.map((o) => (
+          <button type="button" key={o} role="radio" aria-checked={value === o} className={value === o ? "is-on" : ""} onClick={() => onChange(o)}>
+            {LABEL[o] ?? o}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ป้ายตุ๊กตายักษ์ วาดด้วยงานศิลป์ร่วมให้ตรงกับที่แสดงบนฉากจริง
+function BoardCanvas({ name, message, style }: { name: string; message: string; style: BoardStyle }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const cv = ref.current;
+    const g = cv?.getContext("2d");
+    if (!cv || !g) return;
+    g.clearRect(0, 0, cv.width, cv.height);
+    drawGiantBoard(g, 14, 14, cv.width - 28, cv.height - 28, { name, message, style });
+  }, [name, message, style]);
+  return <canvas ref={ref} width={1024} height={640} className="xmas-board-canvas" aria-label="ตัวอย่างป้ายตุ๊กตายักษ์" />;
+}
+
+// ท้องฟ้าตัวอย่าง วาดต่อเนื่องด้วยเวลาจริง (ถ้าผู้ใช้ตั้งค่าลดการเคลื่อนไหวจะหยุดนิ่ง)
+function SkyCanvas({ theme, text, by }: { theme: SkyTheme; text: string; by: string }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const latest = useRef({ theme, text, by });
+  latest.current = { theme, text, by };
+  useEffect(() => {
+    const cv = ref.current;
+    const g = cv?.getContext("2d");
+    if (!cv || !g) return;
+    const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = performance.now();
+    let raf = 0;
+    const draw = () => {
+      const t = reduced ? 4 : (performance.now() - start) / 1000;
+      paintSkyScene(g, cv.width, cv.height, t, latest.current);
+      if (!reduced) raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={ref} width={960} height={540} className="xmas-sky-canvas" aria-label="ตัวอย่างการแสดงบนท้องฟ้า" />;
+}
 
 export default function ExclusiveModal({
   roomId,
@@ -49,6 +153,7 @@ export default function ExclusiveModal({
   const [message, setMessage] = useState("");
   const [theme, setTheme] = useState<MessageTheme>("fireworks");
   const [spot, setSpot] = useState(0);
+  const [look, setLook] = useState<GiantLook>(DEFAULT_GIANT_LOOK);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -67,6 +172,10 @@ export default function ExclusiveModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [locked, onClose]);
+
+  function setPart(key: GiantKey, value: string) {
+    setLook((l) => ({ ...l, [key]: value }));
+  }
 
   async function create(kind: "giant" | "message" | "decor", body: Record<string, unknown>) {
     setBusy(true);
@@ -92,7 +201,7 @@ export default function ExclusiveModal({
     e.preventDefault();
     if (!giantChosen) return setError("เลือกหรือกรอกยอดก่อน");
     if (!name.trim()) return setError("กรุณาใส่ชื่อที่จะแสดงบนป้าย");
-    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), spot });
+    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), spot, look });
   }
 
   function submitMessage(e: FormEvent) {
@@ -111,12 +220,12 @@ export default function ExclusiveModal({
 
   const title = {
     menu: "Exclusive",
-    giant: "ตั้งป้ายตุ๊กตาหิมะยักษ์",
+    giant: "ตั้งตุ๊กตาหิมะยักษ์",
     message: "ข้อความอวยพรขึ้นจอ",
     decor: "วางตุ๊กตาหิมะ Exclusive",
   }[view];
 
-  const themeList = (
+  const themeOptions = (
     <div className="xmas-theme-list" role="radiogroup" aria-label="ธีมการแสดง">
       {THEMES.map((t) => (
         <button type="button" key={t.id} role="radio" aria-checked={theme === t.id} className={`xmas-theme-opt ${theme === t.id ? "is-on" : ""}`} onClick={() => setTheme(t.id)}>
@@ -158,7 +267,7 @@ export default function ExclusiveModal({
               </span>
               <span className="xmas-ex-body">
                 <b>ตุ๊กตาหิมะยักษ์</b>
-                <small>ป้ายประจำห้องบนลาน 4 ตำแหน่ง พร้อมชื่อและข้อความของคุณที่ติดอยู่บนป้าย</small>
+                <small>ตกแต่งได้อิสระกว่าตุ๊กตาฟรี ถือป้ายข้อความของคุณไว้บนลาน</small>
                 <em>เริ่มที่ ฿{cfg.presetPrices[0]}</em>
               </span>
               <span className="xmas-ex-arrow" aria-hidden>
@@ -181,7 +290,7 @@ export default function ExclusiveModal({
           </div>
         )}
 
-        {/* ตุ๊กตาหิมะยักษ์: ซ้ายเลือกและพิมพ์ ขวาดูป้ายแบบเรียลไทม์ */}
+        {/* ตุ๊กตาหิมะยักษ์: ซ้ายเลือกและพิมพ์ ขวาดูตุ๊กตาและป้ายแบบเรียลไทม์ */}
         {!order && cfg && !disabled && view === "giant" && (
           <form className="xmas-ex-split" onSubmit={submitGiant}>
             <button type="button" className="xmas-ex-back" onClick={() => setView("menu")}>
@@ -191,7 +300,7 @@ export default function ExclusiveModal({
               <section className="xmas-sec">
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">1</span>
-                  <h3>ตำแหน่งป้าย</h3>
+                  <h3>ตำแหน่งบนลาน</h3>
                 </header>
                 <div className="xmas-spot-grid">
                   {GIANT_SPOT_DEFS.map((d, i) => (
@@ -244,6 +353,21 @@ export default function ExclusiveModal({
               <section className="xmas-sec">
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">3</span>
+                  <h3>ตกแต่งตุ๊กตา</h3>
+                </header>
+                <PickRow title="หมวก" options={GIANT_HATS} value={look.hat} onChange={(v) => setPart("hat", v)} />
+                <PickRow title="ผ้าพันคอ" options={GIANT_SCARVES} value={look.scarf} onChange={(v) => setPart("scarf", v)} />
+                <PickRow title="สีตัว" options={GIANT_BODY} value={look.body} onChange={(v) => setPart("body", v)} />
+                <PickRow title="จมูก" options={GIANT_NOSES} value={look.nose} onChange={(v) => setPart("nose", v)} />
+                <PickRow title="แขน" options={GIANT_ARMS} value={look.arms} onChange={(v) => setPart("arms", v)} />
+                <PickRow title="ฐาน" options={GIANT_LEGS} value={look.legs} onChange={(v) => setPart("legs", v)} />
+                <PickRow title="ของประดับ" options={GIANT_ACC} value={look.acc} onChange={(v) => setPart("acc", v)} />
+                <PickRow title="สีป้าย" options={SIGN_BOARDS} value={look.board} onChange={(v) => setPart("board", v)} />
+              </section>
+
+              <section className="xmas-sec">
+                <header className="xmas-sec-head">
+                  <span className="xmas-sup-num">4</span>
                   <h3>ชื่อและข้อความบนป้าย</h3>
                 </header>
                 <label className="xmas-sup-field">
@@ -268,14 +392,10 @@ export default function ExclusiveModal({
 
             <aside className="xmas-ex-col xmas-ex-side">
               <div className="xmas-sign-stage">
-                <SnowmanPreview parts={GIANT_PARTS} className="xmas-sign-snow" />
-                <div className="xmas-sign-board">
-                  <small>ตุ๊กตาของ</small>
-                  <b>{name.trim() || "ชื่อของคุณ"}</b>
-                  <p>{message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"}</p>
-                </div>
+                <SnowmanPreview parts={look} className="xmas-sign-snow" />
+                <BoardCanvas name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} style={look.board as BoardStyle} />
               </div>
-              <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่คุณพิมพ์ ป้ายจะตั้งอยู่ตรงตำแหน่งที่เลือกและหันหน้าเข้าหาต้นคริสต์มาส</p>
+              <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ ตุ๊กตาจะถือป้ายนี้ไว้บนลานตรงตำแหน่งที่เลือก</p>
               {error && <p className="xmas-msg err">{error}</p>}
               <button className="xmas-submit" disabled={busy}>
                 {busy ? "กำลังสร้างรายการ…" : giantChosen ? `ชำระ ฿${giantChosen}` : "เลือกยอดก่อน"}
@@ -284,7 +404,7 @@ export default function ExclusiveModal({
           </form>
         )}
 
-        {/* ข้อความขึ้นจอ: ซ้ายเลือกธีมและพิมพ์ ขวาดูตัวอย่างท้องฟ้า */}
+        {/* ข้อความขึ้นจอ: ซ้ายเลือกธีมและพิมพ์ ขวาดูการแสดงจริงแบบเรียลไทม์ */}
         {!order && cfg && !disabled && view === "message" && (
           <form className="xmas-ex-split" onSubmit={submitMessage}>
             <button type="button" className="xmas-ex-back" onClick={() => setView("menu")}>
@@ -296,7 +416,7 @@ export default function ExclusiveModal({
                   <span className="xmas-sup-num">1</span>
                   <h3>ธีมการแสดง</h3>
                 </header>
-                {themeList}
+                {themeOptions}
               </section>
               <section className="xmas-sec">
                 <header className="xmas-sec-head">
@@ -324,20 +444,8 @@ export default function ExclusiveModal({
             </div>
 
             <aside className="xmas-ex-col xmas-ex-side">
-              <div className={`xmas-sky-preview is-${theme}`}>
-                <div className="xmas-sky-fx" aria-hidden>
-                  {FX.map((p, i) => (
-                    <i key={i} style={{ left: p.left, top: p.top, animationDelay: p.delay }} />
-                  ))}
-                </div>
-                {theme === "sparkle" && <span className="xmas-sky-frame" aria-hidden />}
-                {theme === "sleigh" && <span className="xmas-sky-sleigh" aria-hidden />}
-                <div className="xmas-sky-text">
-                  <p>{message.trim() || "ข้อความของคุณจะขึ้นบนท้องฟ้า"}</p>
-                  <small>— {name.trim() || "ชื่อผู้ส่ง"}</small>
-                </div>
-              </div>
-              <p className="xmas-hint">ตัวอย่างการแสดงบนท้องฟ้า ทุกคนในห้องจะเห็นพร้อมกัน</p>
+              <SkyCanvas theme={theme} text={message.trim() || "ข้อความของคุณจะขึ้นบนท้องฟ้า"} by={name.trim() || "ชื่อผู้ส่ง"} />
+              <p className="xmas-hint">ตัวอย่างนี้คือการแสดงจริงที่ทุกคนในห้องจะเห็นพร้อมกัน</p>
               {error && <p className="xmas-msg err">{error}</p>}
               <button className="xmas-submit" disabled={busy}>
                 {busy ? "กำลังสร้างรายการ…" : `ชำระ ฿${cfg.messagePrice}`}

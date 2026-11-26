@@ -1,6 +1,7 @@
 // ชนิดข้อมูลของต้นคริสต์มาสร่วมกัน ใช้ร่วมกันทั้งฝั่งเซิร์ฟเวอร์และเบราว์เซอร์
 
 import type { Social } from "@/lib/christmas/social";
+import type { GiantLook } from "@/lib/christmas/giant";
 
 export const ORNAMENT_COLORS = ["gold", "red", "blue", "pink", "white", "green"] as const;
 export type OrnamentColor = (typeof ORNAMENT_COLORS)[number];
@@ -43,7 +44,7 @@ export type ShowEvent = {
 };
 
 // ตุ๊กตาหิมะยักษ์ของห้อง (ป้ายจากการสนับสนุนที่จ่ายแล้วล่าสุด)
-export type GiantSign = { name: string; message: string; amount: number; paidAt: number; spot: number; social?: Social };
+export type GiantSign = { name: string; message: string; amount: number; paidAt: number; spot: number; social?: Social; look?: GiantLook };
 
 export type ChristmasState = {
   version: number;
