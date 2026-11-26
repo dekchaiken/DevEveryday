@@ -16,11 +16,13 @@ export function ProfileCard({
   editing,
   onSave,
   onCancel,
+  submitLabel = "บันทึกและเข้าต้นคริสต์มาส",
 }: {
   initial: Profile | null;
   editing: boolean;
   onSave: (p: Profile) => void;
   onCancel?: () => void; // มีเฉพาะตอนแก้ไข (ครั้งแรกต้องกรอกชื่อ)
+  submitLabel?: string;
 }) {
   const start = initial ?? EMPTY_PROFILE;
   const [name, setName] = useState(start.name);
@@ -67,7 +69,7 @@ export function ProfileCard({
         {error && <p className="xmas-msg err">{error}</p>}
 
         <button className="xmas-intro-btn" type="submit">
-          <span>{editing ? "บันทึก" : "บันทึกและเข้าต้นคริสต์มาส"}</span>
+          <span>{editing ? "บันทึก" : submitLabel}</span>
         </button>
         {editing && onCancel && (
           <button type="button" className="xmas-link-btn xmas-profile-skip" onClick={onCancel}>

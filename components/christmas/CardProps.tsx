@@ -91,3 +91,14 @@ export function PropArt({ kind }: { kind: PropKind }) {
       );
   }
 }
+
+// ซองการ์ดแบบ flat ใช้ตัวแปรสี --env ของคลาส xc-env-* (ดูหน้าตาเต็มใน wishcards.css)
+export function EnvelopeArt({ envelope, className }: { envelope: "red" | "gold" | "green" | "white"; className?: string }) {
+  return (
+    <span className={`xc-env-art xc-env-${envelope} ${className ?? ""}`} aria-hidden>
+      <span className="xc-env-body" />
+      <span className="xc-env-pocket" />
+      <span className="xc-env-flap" />
+    </span>
+  );
+}

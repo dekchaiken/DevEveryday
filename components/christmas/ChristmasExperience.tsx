@@ -33,10 +33,10 @@ import "./christmas.css";
 
 // คำแนะนำครั้งแรกตามลำดับ ย้อนกลับได้
 const COACH_STEPS = [
-  { title: 'เริ่มจาก "แขวนคำอวยพร"', body: "เลือกสีและรูปทรงลูกบอล เขียนคำอวยพร แล้วแตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่งแขวน" },
+  { title: "ออกแบบการ์ดอวยพร", body: "เลือกแบบการ์ด ของตกแต่ง และเขียนคำอวยพร แล้วส่งการ์ดไปโซนคำอวยพร" },
+  { title: "โซนคำอวยพร", body: 'แตะ "โซนคำอวยพร" เพื่อแกะซองการ์ดของทุกคนในห้อง และกดถูกใจการ์ดที่ชอบได้' },
   { title: "ตกแต่งตุ๊กตาหิมะ", body: "สร้างตุ๊กตาหิมะของคุณแล้ววางรอบต้น แตะตุ๊กตาของคนอื่นเพื่อดูว่าใครวาง และกดถูกใจได้" },
   { title: "เปลี่ยนห้องหรือภูมิภาค", body: 'แตะ "เปลี่ยนห้อง" ใต้ชื่อห้องด้านบนเพื่อไปดูต้นคริสต์มาสของภูมิภาคอื่น' },
-  { title: "แชร์คำอวยพรของคุณ", body: 'แตะคำอวยพรที่ต้นแล้วกด "แชร์เป็นการ์ด" เพื่อส่งไป Story IG หรือ Facebook' },
 ] as const;
 
 // Three.js โหลดเฉพาะฝั่งเบราว์เซอร์ ไม่ให้กระทบเวลาเปิดหน้าแรก
@@ -108,6 +108,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [tipX, setTipX] = useState<number | null>(null); // ตำแหน่งแนวนอนของป้ายให้ตรงปุ่มโซนคำอวยพร
   const [cards, setCards] = useState<CardRecord[]>([]);
   const [cardsLoading, setCardsLoading] = useState(false);
+  const [studioEnter, setStudioEnter] = useState(false); // เล่นแอนิเมชันเข้าโต๊ะ
+  const [studioMandatory, setStudioMandatory] = useState(false); // ครั้งแรก: ต้องออกแบบการ์ดก่อน
+  const [leavingOnboard, setLeavingOnboard] = useState(false); // หน้าโปรไฟล์กำลังจางออกไปโต๊ะ
   const [local, setLocal] = useState<Ornament[]>([]);
   const [supportOpen, setSupportOpen] = useState(false); // หน้าต่างสนับสนุนทีมงานอย่างเดียว
   const [exclusiveOpen, setExclusiveOpen] = useState(false); // หน้าต่าง Exclusive (ป้ายยักษ์ / ข้อความขึ้นจอ)
@@ -397,11 +400,19 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   // ---------- การ์ดอวยพร: โต๊ะออกแบบ โซนคำอวยพร ----------
   const SHAPE_PROP: Record<OrnamentShape, PropKind> = { ball: "bauble", star: "star", bell: "bell", gift: "gift" };
   function saveProfileAndClose(p: Profile) {
-    const first = profile === null; // ตั้งชื่อครั้งแรก: เข้าโต๊ะออกแบบการ์ดต่อทันที
+    const first = profile === null; // ตั้งชื่อครั้งแรก: จางไปโต๊ะออกแบบการ์ดต่อทันที
     saveProfile(p);
     setProfile(p);
     setProfileEdit(false);
-    if (first) setStudioOpen(true);
+    if (!first) return;
+    setLeavingOnboard(true);
+    setTimeout(() => {
+      setLeavingOnboard(false);
+      setIntro(false);
+      setStudioMandatory(true);
+      setStudioEnter(true);
+      setStudioOpen(true);
+    }, 620);
   }
 
   const refreshCards = useCallback(async () => {
@@ -533,16 +544,23 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {shareOf && <ShareCardModal ornament={shareOf} roomName={room.name} onClose={() => setShareOf(null)} />}
 
-      {/* โปรไฟล์: ถามครั้งแรกหลังเปิดของขวัญ และเปิดแก้ไขได้จากฟอร์ม */}
-      {intro && profile === null && (
-        <ProfileCard initial={null} editing={false} onSave={saveProfileAndClose} />
+      {/* โปรไฟล์: ครั้งแรกหลังเปิดของขวัญ แสดงบนฉากโต๊ะ แล้วจางเข้าสู่โต๊ะออกแบบการ์ด */}
+      {(profile === null || leavingOnboard) && (
+        <div className={`xc-onboard ${leavingOnboard ? "is-leaving" : ""}`}>
+          <div className="xc-table" aria-hidden>
+            <span className="xc-light l1" />
+            <span className="xc-light l2" />
+            <span className="xc-light l3" />
+          </div>
+          <ProfileCard initial={profile ?? null} editing={false} onSave={saveProfileAndClose} submitLabel="บันทึกแล้วไปโต๊ะออกแบบการ์ด" />
+        </div>
       )}
       {profileEdit && profile && (
         <ProfileCard initial={profile} editing onSave={saveProfileAndClose} onCancel={() => setProfileEdit(false)} />
       )}
 
       {/* ป๊อปอัปเชิญเข้าร่วม */}
-      {intro && profile !== undefined && profile !== null && (
+      {intro && !leavingOnboard && profile !== undefined && profile !== null && (
         <div className="xmas-intro" role="dialog" aria-modal="true" aria-labelledby="xmas-intro-title">
           <div className="xmas-intro-card">
             <div className="xmas-intro-orb" aria-hidden>
@@ -682,7 +700,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {/* เมนูหลัก: แขวน ตกแต่ง ชวนเพื่อน และสนับสนุน (ตุ๊กตาหิมะยักษ์) */}
       <nav className="xmas-actions" aria-label="เมนูกิจกรรม">
-        <button className="xmas-action" data-studio-btn onClick={() => { setFeedOpen(false); setStudioOpen(true); }}>
+        <button className="xmas-action" data-studio-btn onClick={() => { setFeedOpen(false); setStudioMandatory(false); setStudioEnter(false); setStudioOpen(true); }}>
           <Icon name="bauble" size={18} /> ทำการ์ดอวยพร
         </button>
         <button className="xmas-action" data-zone-btn onClick={() => { setZoneHint(false); setZoneOpen(true); }}>
@@ -726,7 +744,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         ]}
       />
 
-      {coach && (
+      {coach && profile !== null && profile !== undefined && !studioOpen && !leavingOnboard && (
         <div className="xmas-coach" role="note">
           <span className="xmas-coach-orb" aria-hidden />
           <div className="xmas-coach-step">
@@ -890,9 +908,13 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           roomName={room.name}
           defaultName={profile?.name ?? ""}
           social={profile?.social}
+          mandatory={studioMandatory}
+          enter={studioEnter}
           onClose={() => setStudioOpen(false)}
           onSent={(card) => {
             setStudioOpen(false);
+            setStudioMandatory(false);
+            setStudioEnter(false);
             setCards((list) => [card, ...list.filter((c) => c.id !== card.id)]);
             setZoneHint(true);
             notify("ok", "การ์ดของคุณถูกส่งไปโซนคำอวยพรแล้ว");
