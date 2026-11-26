@@ -979,7 +979,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const SLOT_R = 2.7;
     const slotAngle = (i: number) => (i / SLOT_COUNT) * Math.PI * 2 + 0.4;
     const BODY_HEX: Record<string, number> = { white: 0xffffff, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3, pearl: 0xfff6e6, ice: 0xd6f3ff };
-    const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c };
+    const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c, purple: 0xa855f7 };
     const HAT_HEX = 0x1f2937;
     // ตั้งตุ๊กตายักษ์หลังค่าสีทั้งหมดพร้อมแล้ว (กันการเข้าถึงก่อนประกาศ)
     api_setGiants(giants);
@@ -1047,7 +1047,20 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const nose = new THREE.Mesh(d.nose === "button" || d.nose === "bell" ? new THREE.SphereGeometry(0.04, 12, 12) : new THREE.ConeGeometry(0.035, 0.2, 12), noseMat);
       if (d.nose === "carrot") nose.rotation.x = Math.PI / 2;
       nose.position.set(0, 1.4, 0.22);
-      add(nose);
+      if (d.nose === "heart") {
+        // จมูกรูปหัวใจ: รูปร่างแบนที่ฉายออกมาเล็กน้อย
+        const hs = new THREE.Shape();
+        hs.moveTo(0, -0.035);
+        hs.bezierCurveTo(-0.01, -0.012, -0.035, 0.0, -0.035, 0.02);
+        hs.bezierCurveTo(-0.035, 0.045, -0.012, 0.05, 0, 0.03);
+        hs.bezierCurveTo(0.012, 0.05, 0.035, 0.045, 0.035, 0.02);
+        hs.bezierCurveTo(0.035, 0.0, 0.01, -0.012, 0, -0.035);
+        const heart = new THREE.Mesh(new THREE.ExtrudeGeometry(hs, { depth: 0.014, bevelEnabled: false, curveSegments: 16 }), new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }));
+        heart.position.set(0, 1.4, 0.2);
+        add(heart);
+      } else {
+        add(nose);
+      }
       // ผ้าพันคอ
       // ผ้าพันคอ: เส้นโค้งรอบคอพร้อมชายผ้าที่ห้อยลงด้านหน้า
       const scarfMat = new THREE.MeshPhysicalMaterial({ color: SCARF_HEX[d.scarf] ?? 0xdc2643, roughness: 0.55, sheen: 0.4, sheenColor: new THREE.Color(0xffffff) });
@@ -1087,7 +1100,37 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         crown.position.y = 1.55;
         add(crown);
       }
+      // หมวกเบเร่ต์และที่ปิดหู (หมวกฟรี)
+      if (d.hat === "beret") {
+        const beret = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 14), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.7 }));
+        beret.scale.set(1, 0.32, 1);
+        beret.position.set(0.02, 1.58, 0);
+        beret.rotation.z = 0.12;
+        const stem = new THREE.Mesh(new THREE.SphereGeometry(0.028, 10, 10), new THREE.MeshStandardMaterial({ color: 0x7f1d1d }));
+        stem.position.set(0.06, 1.66, 0);
+        add(beret, stem);
+      } else if (d.hat === "earmuff") {
+        const band = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.02, 8, 24, Math.PI), new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.4 }));
+        band.position.set(0, 1.42, 0);
+        const cupMat = new THREE.MeshStandardMaterial({ color: 0xfb7185, roughness: 0.5 });
+        [-1, 1].forEach((side) => {
+          const cup = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 12), cupMat);
+          cup.position.set(side * 0.21, 1.42, 0);
+          add(cup);
+        });
+        add(band);
+      }
       // เครื่องประดับ
+      if (d.acc === "snowflake") {
+        // เข็มกลัดเกล็ดหิมะที่หน้าอก
+        const ice = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, roughness: 0.2, metalness: 0.1, emissive: 0x0c4a6e, emissiveIntensity: 0.25 });
+        [0, Math.PI / 3, -Math.PI / 3].forEach((a) => {
+          const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.016, 0.016), ice);
+          bar.position.set(0, 1.02, 0.28);
+          bar.rotation.z = a;
+          add(bar);
+        });
+      }
       if (d.acc === "glasses") {
         const gm = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3, metalness: 0.4 });
         [-0.07, 0.07].forEach((x) => {
@@ -1226,7 +1269,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     let instMeshes: THREE.InstancedMesh[] = [];
     let instBodies: THREE.InstancedMesh | null = null;
     let instDecor: Decor[] = [];
-    const HAT_COLOR: Record<string, number> = { top: 0x1f2937, beanie: 0x3b82f6, santa: 0xdc2643, crown: 0xf5c542, pom: 0xf8fafc, holly: 0x16a34a };
+    const HAT_COLOR: Record<string, number> = { top: 0x1f2937, beanie: 0x3b82f6, santa: 0xdc2643, crown: 0xf5c542, pom: 0xf8fafc, holly: 0x16a34a, beret: 0xdc2643, earmuff: 0x1f2937 };
 
     // มุมมองบุคคลที่หนึ่ง: เลื่อนกล้องไปใกล้ลูกบอลที่เลือก และกลับมาที่เดิมเมื่อปิด
     type CamAnim = { fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number };
