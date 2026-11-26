@@ -110,6 +110,16 @@ const PART_TABS: { key: PartKey; label: string; list: readonly string[] }[] = [
 ];
 
 // ตัวสร้างตุ๊กตาหิมะ: ตัวอย่างอยู่ด้านบนแบบเรียลไทม์ ส่วนด้านล่างเลือกทีละหมวด
+// ช่องว่างที่ไม่สงวน แบบสุ่ม (ใช้ตอนเปิดฟอร์มโดยยังไม่ได้เลือกช่อง)
+function randomFreeSlot(decor: Decor[]): number | null {
+  const taken = new Set(decor.map((d) => d.slot));
+  for (let t = 0; t < 5000; t++) {
+    const i = Math.floor(Math.random() * SLOT_COUNT);
+    if (!taken.has(i) && !isReservedSlot(i)) return i;
+  }
+  return null;
+}
+
 export function DecorModal({
   roomId,
   roomName,
@@ -134,7 +144,7 @@ export function DecorModal({
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [tab, setTab] = useState<PartKey | "slot">("hat");
   const [name, setName] = useState(defaultName);
-  const [slot, setSlot] = useState<number | null>(initialSlot);
+  const [slot, setSlot] = useState<number | null>(() => initialSlot ?? randomFreeSlot(decor));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const taken = new Map(decor.map((d) => [d.slot, d]));
@@ -272,6 +282,7 @@ export function DecorModal({
               </button>
             )}
           </p>
+          <p className="xmas-build-note">วางได้หลายตัว แต่ละช่องวางได้ 1 ตัว</p>
           <label className="xmas-field">
             <span className="xmas-field-label">ชื่อที่จะแสดงบนตุ๊กตา</span>
             <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
