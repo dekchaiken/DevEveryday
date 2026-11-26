@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Ornament } from "@/lib/christmas/types";
+import type { Decor } from "@/lib/christmas/decor";
 import { Icon } from "./Icon";
 
 export type FeedEntry = { id: string; name: string; message: string; amount: number; paidAt: number | null };
@@ -33,34 +34,53 @@ export function useFeed(roomId: string): FeedData {
   return data;
 }
 
-type Tab = "wishes" | "exclusive" | "team";
+type Tab = "recent" | "wishes" | "exclusive" | "team";
 
 // แผงแท็บด้านขวา: คำอวยพรล่าสุด / Exclusive (ตุ๊กตาหิมะยักษ์ของห้อง) / สนับสนุนทีม DevEveryday
+// เวลาแบบอ่านง่าย เช่น "5 นาทีที่แล้ว"
+function ago(t: number) {
+  const m = Math.max(0, Math.floor((Date.now() - t) / 60000));
+  if (m < 1) return "เมื่อสักครู่";
+  if (m < 60) return `${m} นาทีที่แล้ว`;
+  if (m < 1440) return `${Math.floor(m / 60)} ชั่วโมงที่แล้ว`;
+  return `${Math.floor(m / 1440)} วันที่แล้ว`;
+}
+
 export function FeedPanel({
   wishes,
+  decor,
   feed,
   onWishClick,
   mobileOpen,
   onMobileClose,
 }: {
   wishes: Ornament[];
+  decor: Decor[];
   feed: FeedData;
   onWishClick: (o: Ornament) => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
 }) {
-  const [tab, setTab] = useState<Tab>("wishes");
-  const tabs: { id: Tab; label: string; icon: "heart" | "star" | "gift"; count: number }[] = [
+  const [tab, setTab] = useState<Tab>("recent");
+  // ประวัติรวมของโซน: ลูกบอลและตุ๊กตาหิมะเรียงจากล่าสุด
+  const recent = [
+    ...wishes.map((o) => ({ key: `o-${o.id}`, at: o.createdAt, kind: "wish" as const, name: o.name, text: o.wish || "ขอให้มีความสุขในวันคริสต์มาส", ornament: o })),
+    ...decor.map((d) => ({ key: `d-${d.id}`, at: d.createdAt, kind: "snowman" as const, name: d.name, text: `วางตุ๊กตาหิมะที่ช่อง ${d.slot + 1}${d.likes ? ` · ถูกใจ ${d.likes}` : ""}`, ornament: undefined })),
+  ]
+    .sort((a, b) => b.at - a.at)
+    .slice(0, 60);
+  const tabs: { id: Tab; label: string; icon: "heart" | "star" | "gift" | "sparkle"; count: number }[] = [
+    { id: "recent", label: "ล่าสุด", icon: "sparkle", count: recent.length },
     { id: "wishes", label: "คำอวยพร", icon: "heart", count: wishes.length },
     { id: "exclusive", label: "Exclusive", icon: "star", count: feed.exclusive.length },
     { id: "team", label: "สนับสนุนทีม", icon: "gift", count: feed.supporters.length },
   ];
 
   return (
-    <aside className={`xmas-feed glass ${mobileOpen ? "is-open" : ""}`} aria-label="รายการในห้อง">
+    <aside className={`xmas-feed glass ${mobileOpen ? "is-open" : ""}`} aria-label="ประวัติล่าสุดของโซนนี้">
       <div className="xmas-sheet-head">
-        <b>รายการในห้อง</b>
-        <button type="button" className="xmas-form-close" onClick={onMobileClose} aria-label="ปิดรายการ">
+        <b>ประวัติล่าสุดของโซนนี้</b>
+        <button type="button" className="xmas-form-close xmas-feed-close" onClick={onMobileClose} aria-label="ปิดประวัติ">
           <Icon name="close" size={18} />
         </button>
       </div>
@@ -81,6 +101,27 @@ export function FeedPanel({
       </div>
 
       <div className="xmas-tab-panel" role="tabpanel">
+        {tab === "recent" && (
+          <ul>
+            {recent.map((r) => (
+              <li key={r.key}>
+                <button type="button" onClick={() => r.ornament && onWishClick(r.ornament)} disabled={!r.ornament}>
+                  <span className={`xmas-timeline-dot is-${r.kind}`} aria-hidden>
+                    <Icon name={r.kind === "wish" ? "bauble" : "snowman"} size={15} />
+                  </span>
+                  <span className="xmas-entry">
+                    <b>
+                      {r.name} <small>{ago(r.at)}</small>
+                    </b>
+                    <em>{r.text}</em>
+                  </span>
+                </button>
+              </li>
+            ))}
+            {recent.length === 0 && <li className="xmas-empty">ยังไม่มีความเคลื่อนไหวในโซนนี้ เป็นคนแรกที่เริ่มได้เลย</li>}
+          </ul>
+        )}
+
         {tab === "wishes" && (
           <ul>
             {wishes.slice(0, 40).map((o) => (

@@ -912,7 +912,7 @@
 .xmas-panel {
   left: 22px;
   width: 310px;
-  max-height: calc(100dvh - 300px);
+  max-height: calc(100dvh - 330px);
   display: flex;
   flex-direction: column;
 }
@@ -1130,7 +1130,7 @@
 .xmas-feed {
   right: 22px;
   width: 340px;
-  max-height: calc(100dvh - 300px);
+  max-height: calc(100dvh - 330px);
   display: flex;
   flex-direction: column;
 }
@@ -2638,5 +2638,340 @@
   }
   .xmas-action.is-exclusive {
     padding: 0 18px;
+  }
+}
+
+/* ==========================================================================
+   รอบปรับปรุง 2: ticker กลางจอ ป๊อปอัปแนะนำ ประวัติ ปุ่มปิด ของขวัญ และหิมะเกาะปุ่ม
+   ========================================================================== */
+
+/* ข้อความวิ่งอยู่ในแคปซูลกลางจอ ไม่เอียงไปทางซ้าย */
+.xmas-ticker {
+  left: 50%;
+  right: auto;
+  width: min(680px, calc(100vw - 40px));
+  transform: translateX(-50%);
+  top: 98px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--glass-dark);
+  border: 1px solid rgba(232, 209, 154, 0.3);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.6);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.xmas-ticker-track {
+  animation-duration: 48s;
+}
+
+/* ป๊อปอัปแนะนำ: ลูกแก้วแขวนแกว่งและจุดบอกขั้นตอน */
+.xmas-coach {
+  padding-top: 24px;
+  overflow: visible;
+}
+.xmas-coach-orb {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, #fff8e6, #e8d19a 55%, #b8904a 100%);
+  box-shadow: 0 10px 22px -8px rgba(184, 144, 74, 0.9);
+  transform-origin: 50% -26px;
+  animation: xmas-swing 2.6s ease-in-out infinite;
+}
+.xmas-coach-orb::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  width: 1px;
+  height: 18px;
+  background: rgba(184, 144, 74, 0.8);
+}
+@keyframes xmas-swing {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
+}
+.xmas-coach-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.xmas-coach-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(184, 144, 74, 0.35);
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.xmas-coach-dots i.is-on {
+  width: 22px;
+  border-radius: 999px;
+  background: var(--berry);
+}
+.xmas-coach-next {
+  box-shadow: 0 10px 20px -12px rgba(8, 30, 22, 0.8);
+}
+.xmas-coach-next:hover {
+  background: var(--spruce);
+}
+
+/* ประวัติ: ไอคอนวงกลมสีบอกชนิด แถวเต็มความกว้าง */
+.xmas-feed .xmas-feed-close {
+  display: none;
+}
+.xmas-timeline-dot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 50%;
+  margin-top: 1px;
+}
+.xmas-timeline-dot.is-wish {
+  background: rgba(184, 144, 74, 0.16);
+  color: #8a6a2e;
+}
+.xmas-timeline-dot.is-snowman {
+  background: rgba(47, 106, 85, 0.14);
+  color: var(--spruce-3);
+}
+.xmas-tab-panel li > button:disabled {
+  cursor: default;
+}
+.xmas-tab-panel li > button:disabled:hover {
+  background: transparent;
+}
+.xmas-entry b small {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  margin-left: 6px;
+}
+.xmas-tabs {
+  padding-inline: 14px;
+}
+.xmas-feed {
+  width: 350px;
+}
+
+/* ปุ่มปิด: พื้นที่กดใหญ่ อยู่บนสุดของเลเยอร์ ไม่ถูกเนื้อหาบัง */
+.xmas-x {
+  z-index: 4;
+  width: 40px;
+  height: 40px;
+  top: 8px;
+  right: 8px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.xmas-x .xicon {
+  pointer-events: none;
+}
+
+/* ป๊อปอัป Exclusive: แสงกระพริบรอบป้าย ตัวเลือกมีการเด้งเล็กน้อยเมื่อเลือก */
+.xmas-donate {
+  overflow: hidden;
+}
+.xmas-donate::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 60%;
+  background: linear-gradient(100deg, transparent 30%, rgba(232, 209, 154, 0.28) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: xmas-sheen 3.6s ease-in-out 0.6s infinite;
+  pointer-events: none;
+}
+@keyframes xmas-sheen {
+  0% { transform: translateX(-100%); }
+  55%, 100% { transform: translateX(100%); }
+}
+.xmas-donate-hero::before {
+  content: "";
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  border: 1px dashed rgba(184, 144, 74, 0.55);
+  animation: xmas-spin 22s linear infinite;
+}
+.xmas-donate-hero .xmas-donate-glow {
+  z-index: 0;
+}
+.xmas-donate-snow {
+  z-index: 1;
+}
+.xmas-shapes button,
+.xmas-spot-grid button,
+.xmas-theme-grid button,
+.xmas-kind button {
+  transition: transform 0.18s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.xmas-shapes button:active,
+.xmas-spot-grid button:active,
+.xmas-theme-grid button:active {
+  transform: scale(0.97);
+}
+.xmas-shapes button[aria-pressed="true"],
+.xmas-spot-grid button.is-on,
+.xmas-theme-grid button.is-on {
+  animation: xmas-pick 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+@keyframes xmas-pick {
+  from { transform: scale(0.94); }
+  to { transform: scale(1); }
+}
+@keyframes xmas-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ของขวัญเปิดตัว: กล่องสั่นรอ ฝาเด้งเมื่อแกะ ตัวอักษรค่อย ๆ ขึ้น แล้วฉากจางเข้าหน้าหลัก */
+.xmas-gift-title h1 span {
+  display: inline-block;
+  animation: xmas-letter 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes xmas-letter {
+  from { opacity: 0; translate: 0 16px; filter: blur(4px); }
+  to { opacity: 1; translate: 0 0; filter: blur(0); }
+}
+.xmas-gift:not(.is-opening) .xmas-gift-box {
+  animation: xmas-shake 2.6s ease-in-out infinite;
+}
+@keyframes xmas-shake {
+  0%, 86%, 100% { rotate: 0deg; }
+  89% { rotate: -4deg; }
+  92% { rotate: 4deg; }
+  95% { rotate: -2deg; }
+}
+.xmas-gift.is-opening .xmas-gift-lid {
+  animation: xmas-lid 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes xmas-lid {
+  0% { transform: translateY(0) rotate(0deg); }
+  30% { transform: translateY(-14px) rotate(-8deg); }
+  100% { transform: translate(-46px, -150px) rotate(-30deg); opacity: 0; }
+}
+.xmas-gift.is-opening .xmas-gift-body {
+  animation: xmas-body 0.9s ease both;
+}
+@keyframes xmas-body {
+  0% { filter: brightness(1); }
+  40% { filter: brightness(1.35); }
+  100% { filter: brightness(1.1); }
+}
+.xmas-gift.is-opening {
+  animation: xmas-out 0.55s ease 1.05s both;
+}
+@keyframes xmas-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.xmas-gift-burst {
+  background: radial-gradient(circle at 50% 46%, rgba(232, 209, 154, 0.55), transparent 42%);
+  opacity: 0;
+}
+.xmas-gift.is-opening .xmas-gift-burst {
+  animation: xmas-burst 1.1s ease-out both;
+}
+@keyframes xmas-burst {
+  0% { opacity: 0; transform: scale(0.4); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+/* หิมะเกาะที่ปุ่มและสวิตช์: เกล็ดเล็กติดมุม ค่อย ๆ หมุน */
+.xmas-snow-toggle,
+.xmas-music-toggle,
+.xmas-switch.is-donate {
+  position: relative;
+}
+.xmas-snow-toggle::after,
+.xmas-music-toggle::after,
+.xmas-switch.is-donate::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbf4df' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 7l17 10M3.5 17l17-10'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  animation: xmas-spin 12s linear infinite;
+  pointer-events: none;
+}
+.xmas-music-toggle::after {
+  top: -10px;
+  right: auto;
+  left: -6px;
+  width: 14px;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fbf4df'%3E%3Cpath d='M12 1l2.2 7.8L22 12l-7.8 2.2L12 23l-2.2-8.8L2 12l7.8-3.2z'/%3E%3C/svg%3E");
+  animation: xmas-twinkle 2.8s ease-in-out infinite;
+}
+.xmas-switch.is-donate::after {
+  top: -8px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  animation-duration: 16s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-donate::before,
+  .xmas-donate-hero::before,
+  .xmas-coach-orb,
+  .xmas-snow-toggle::after,
+  .xmas-music-toggle::after,
+  .xmas-switch.is-donate::after,
+  .xmas-gift:not(.is-opening) .xmas-gift-box,
+  .xmas-gift.is-opening .xmas-gift-lid,
+  .xmas-gift.is-opening {
+    animation: none;
+  }
+}
+
+/* มือถือ: ประวัติเป็นชีตด้านล่าง ปุ่มปิดแสดง และ ticker เต็มความกว้าง */
+@media (max-width: 759px) {
+  .xmas-feed .xmas-feed-close {
+    display: grid;
+  }
+  .xmas-ticker {
+    top: 76px;
+    width: calc(100vw - 28px);
+    height: 30px;
+  }
+  .xmas-feed {
+    width: auto;
+  }
+  .xmas-coach {
+    top: 128px;
+  }
+}
+
+/* เดสก์ท็อป: ซูมเป็นแถวเล็กเหนือแถบเมนู ไม่ทับแผงประวัติด้านขวา */
+@media (min-width: 760px) {
+  .xmas-zoom {
+    top: auto;
+    bottom: 96px;
+    right: 28px;
+    transform: none;
+    grid-auto-flow: column;
+  }
+  .xmas-panel,
+  .xmas-feed {
+    max-height: calc(100dvh - 330px);
+  }
+}
+@media (max-width: 759px) {
+  .xmas-zoom {
+    grid-auto-flow: row;
   }
 }
