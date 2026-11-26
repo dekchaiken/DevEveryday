@@ -28,6 +28,7 @@ export type FontKey = (typeof FONT_KEYS)[number];
 export const TEXT_EFFECTS = ["none", "outline", "shadow", "glow"] as const;
 export type TextEffect = (typeof TEXT_EFFECTS)[number];
 
+export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 export const TEXT_COLORS = ["#1f2b22", "#ffffff", "#b91c3c", "#15803d", "#b9862a", "#1d4ed8", "#7c3aed", "#db2777"] as const;
 
 // ของตกแต่งหนึ่งชิ้น: x,y เป็นสัดส่วน 0..1 ของพื้นที่ r เป็นองศา s เป็นขนาด
@@ -55,6 +56,7 @@ export type CardSpec = {
   envProps: CardProp[]; // ของตกแต่งบนซอง
   texts: TextItem[];
   name: string;
+  bgColor?: string; // สีกระดาษกำหนดเอง (hex) ถ้าไม่ระบุใช้สีของแบบการ์ด
   wish?: string; // ฟิลด์เก่าก่อนมีกล่องข้อความ ใช้แสดงแทนถ้ายังไม่มี texts
 };
 
@@ -193,7 +195,7 @@ export function parseCard(body: Record<string, unknown>, isBlocked: (s: string) 
     const o = t as Record<string, unknown>;
     const text = typeof o.text === "string" ? o.text.trim().slice(0, TEXT_MAX) : "";
     if (!text) continue;
-    const color = typeof o.color === "string" && (TEXT_COLORS as readonly string[]).includes(o.color) ? o.color : TEXT_COLORS[0];
+    const color = typeof o.color === "string" && HEX_RE.test(o.color) ? o.color : TEXT_COLORS[0];
     texts.push({
       id: typeof o.id === "string" ? o.id.slice(0, 40) : crypto.randomUUID(),
       text,
@@ -210,9 +212,10 @@ export function parseCard(body: Record<string, unknown>, isBlocked: (s: string) 
   }
 
   const name = typeof body.name === "string" ? body.name.trim().slice(0, NAME_MAX) : "";
+  const bgColor = typeof body.bgColor === "string" && HEX_RE.test(body.bgColor) ? body.bgColor : undefined;
   if (!name) return { error: "กรุณาใส่ชื่อที่จะแสดงบนการ์ด" };
   if (texts.length === 0) return { error: "เพิ่มข้อความอวยพรอย่างน้อย 1 กล่อง" };
   if (isBlocked(name) || texts.some((t) => isBlocked(t.text))) return { error: "ข้อความมีคำที่ไม่เหมาะสม กรุณาแก้ไข" };
 
-  return { value: { theme, envelope, props, envProps, texts, name } };
+  return { value: { theme, envelope, props, envProps, texts, name, ...(bgColor ? { bgColor } : {}) } };
 }

@@ -12,9 +12,7 @@
   width: 100%;
   aspect-ratio: 3 / 4;
   border-radius: 16px;
-  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
   transform-style: preserve-3d;
-  transition: transform 0.25s ease;
   box-shadow: 0 30px 40px -24px rgba(0, 0, 0, 0.75), 0 2px 0 rgba(255, 255, 255, 0.35) inset;
 }
 .xc-card-face {
@@ -1593,5 +1591,299 @@
     min-height: 34px;
     padding: 0;
     font-size: 12px;
+  }
+}
+
+/* แถบควบคุมโซนคำอวยพรและกลับมุมเดิม (อยู่เหนือแถบเมนู) */
+.xz-hud {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  z-index: 62;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(14, 34, 27, 0.9);
+  border: 1px solid rgba(232, 209, 154, 0.45);
+  box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.7);
+  color: #f7f2e6;
+  white-space: nowrap;
+  animation: xz-tip-in 0.45s ease both;
+}
+.xz-hud-count {
+  padding: 0 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #e8d19a;
+}
+.xz-hud-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(180deg, #d9a93a, #b98a2a);
+  color: #2a1d10;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.xz-hud-btn.is-ghost {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f7f2e6;
+  border: 1px solid rgba(232, 209, 154, 0.4);
+}
+
+/* การ์ดขยับเองตลอดเวลา ไม่ต้องเอาเมาส์ไปชี้ และแสงวิ่งผ่านผิวการ์ด */
+.xc-card.is-idle {
+  animation: xc-idle 7s ease-in-out infinite;
+}
+@keyframes xc-idle {
+  0%,
+  100% {
+    transform: rotateX(3deg) rotateY(-7deg) translateY(0);
+  }
+  50% {
+    transform: rotateX(-3deg) rotateY(7deg) translateY(-5px);
+  }
+}
+.xc-card-shine {
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.42) 50%, transparent 70%);
+  background-size: 250% 100%;
+  mix-blend-mode: soft-light;
+  animation: xc-sheen 5s linear infinite;
+}
+@keyframes xc-sheen {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -150% 0;
+  }
+}
+
+/* ลวดลายกระดาษ 6 แบบ: ทุกแบบใช้สีพื้น --base ได้ จึงเปลี่ยนสีเองได้ */
+.xc-theme-kraft {
+  --base: #d8b48a;
+  background: radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.25) 0 1.5px, transparent 2.5px) 0 0 / 22px 22px, repeating-linear-gradient(35deg, rgba(90, 50, 20, 0.09) 0 2px, transparent 2px 9px), linear-gradient(160deg, color-mix(in srgb, var(--base) 85%, white), var(--base));
+  color: #4a2e18;
+}
+.xc-theme-pine {
+  --base: #0c3026;
+  background: radial-gradient(circle, #e2b93b 0 1.2px, transparent 2px) 0 0 / 28px 28px, repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.05) 0 3px, transparent 3px 14px), linear-gradient(170deg, color-mix(in srgb, var(--base) 80%, #1f7a4d), var(--base));
+  color: #f6e7bf;
+}
+.xc-theme-pine .xc-card-frame {
+  border-color: #e2b93b;
+}
+.xc-theme-candy {
+  --base: #ffffff;
+  background: repeating-linear-gradient(-45deg, #ef4444 0 14px, var(--base) 14px 28px), linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
+  color: #8f1a2d;
+}
+.xc-theme-candy .xc-card-frame {
+  border-color: #ef4444;
+}
+.xc-theme-frost {
+  --base: #d6f0fb;
+  background: radial-gradient(circle, #ffffff 0 1.8px, transparent 3px) 0 0 / 26px 26px, radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), transparent 55%), linear-gradient(170deg, var(--base), color-mix(in srgb, var(--base) 70%, #7dd3fc));
+  color: #1c4e66;
+}
+.xc-theme-berry {
+  --base: #9f1239;
+  background: radial-gradient(circle, rgba(255, 228, 230, 0.55) 0 3px, transparent 4px) 0 0 / 30px 30px, radial-gradient(circle at 82% 80%, rgba(0, 0, 0, 0.28), transparent 55%), linear-gradient(160deg, color-mix(in srgb, var(--base) 80%, #fb7185), var(--base));
+  color: #fff1f2;
+}
+.xc-theme-night {
+  --base: #0f172a;
+  background: radial-gradient(circle, rgba(253, 230, 138, 0.95) 0 1px, transparent 1.6px) 0 0 / 26px 26px, radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.5px) 13px 13px / 40px 40px, linear-gradient(170deg, color-mix(in srgb, var(--base) 85%, #334155), var(--base));
+  color: #fef3c7;
+}
+.xc-bg-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.xc-color-input {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.xc-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #4a3420;
+}
+.xc-seg {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.xc-seg button {
+  min-height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 209, 154, 0.5);
+  background: rgba(20, 12, 6, 0.5);
+  color: #f7f2e6;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.xc-seg button.is-on {
+  background: #e8d19a;
+  color: #2a1d10;
+}
+.xc-stage-cap {
+  font-size: 12px;
+  color: #f1e4bf;
+}
+.xc-send-env {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  width: min(44vw, 190px);
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+  transform: translate(-50%, -50%);
+}
+.xc-send-env.is-on {
+  display: block;
+}
+
+/* คำแนะนำครั้งแรก: ทั้งหน้าเทาดำ เหลือปุ่มที่สอนให้สว่าง */
+.xc-spot-block {
+  position: fixed;
+  z-index: 70;
+  background: rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: grayscale(1) brightness(0.6);
+  backdrop-filter: grayscale(1) brightness(0.6);
+  pointer-events: auto;
+}
+.xc-spot-ring {
+  position: fixed;
+  z-index: 71;
+  border: 2px solid #ffd76a;
+  border-radius: 18px;
+  box-shadow: 0 0 0 6px rgba(255, 215, 106, 0.25), 0 0 26px rgba(255, 215, 106, 0.6);
+  pointer-events: none;
+  animation: xc-spot-pulse 1.4s ease-in-out infinite;
+}
+@keyframes xc-spot-pulse {
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 215, 106, 0.1), 0 0 34px rgba(255, 215, 106, 0.85);
+  }
+}
+.xc-spot-tip {
+  position: fixed;
+  z-index: 72;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fdf8ee;
+  color: #2a1d10;
+  box-shadow: 0 20px 40px -18px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  animation: xz-tip-in 0.4s ease both;
+}
+.xc-spot-tip .xc-kicker {
+  color: #7a6446;
+}
+.xc-spot-tip b {
+  font-size: 16px;
+}
+.xc-spot-tip p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.xc-spot-tip small {
+  color: #7a6446;
+  font-size: 11.5px;
+}
+
+/* มือถือ: แผงตัวเลือกสูงขึ้นเล็กน้อย การ์ดและซองเล็กลง ตัวเลือกกระชับ ให้พอดีจอโดยไม่ต้องเลื่อน */
+@media (max-width: 759px) {
+  .xc-panel {
+    max-height: 56dvh;
+  }
+  .xc-studio-card {
+    width: min(44vw, 24dvh);
+  }
+  .xc-env-hero {
+    width: min(58vw, 24dvh);
+  }
+  .xc-theme-grid {
+    gap: 6px;
+  }
+  .xc-theme-opt {
+    padding: 4px;
+    gap: 4px;
+    font-size: 10.5px;
+  }
+  .xc-theme-opt .xc-swatch {
+    aspect-ratio: 2 / 1;
+  }
+  .xc-env-row {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .xc-env-chip {
+    padding: 5px 2px;
+    gap: 2px;
+    font-size: 10px;
+  }
+  .xc-env-chip .xc-env-art {
+    max-width: 36px;
+  }
+  .xc-palette {
+    gap: 4px;
+  }
+  .xc-palette-item {
+    padding: 3px 1px;
+    font-size: 9.5px;
+  }
+  .xc-palette-art {
+    width: 26px;
+    height: 26px;
+  }
+}
+@media (max-width: 759px) {
+  .xc-theme-opt .xc-swatch {
+    aspect-ratio: 3 / 1;
+  }
+  .xc-bg-row {
+    gap: 5px;
+  }
+  .xc-bg-row .xc-swatch-dot {
+    width: 20px;
+    height: 20px;
+  }
+  .xc-bg-row .xc-color-input {
+    width: 24px;
+    height: 24px;
+  }
+  .xc-bg-row .xc-chip-btn {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+}
+@media (max-width: 759px) {
+  .xc-panel {
+    gap: 6px;
+    padding-top: 10px;
   }
 }

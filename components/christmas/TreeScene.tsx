@@ -6,7 +6,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
+import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE } from "@/lib/christmas/slots";
+import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
@@ -24,6 +25,8 @@ export type TreeSceneHandle = {
   highlightDecor: (slot: number) => void;
   focusOrnament: (id: string | null) => void;
   focusDecor: (d: Decor | null) => void;
+  flyToZone: () => void; // ซูมออกเป็นแผนที่ แล้วไปที่โซนคำอวยพร
+  returnView: () => void; // กลับไปมุมกล้องเดิมก่อนไปดูตุ๊กตาหรือโซน
   zoomBy: (factor: number) => void;
   resetView: () => void;
 };
@@ -42,12 +45,15 @@ type Props = {
   onDecorClick: (d: Decor) => void;
   markerSlot: number | null; // ช่องที่กำลังเลือกบนพื้น
   onGroundPick: (slot: number) => void; // แตะพื้นหิมะเพื่อเลือกช่องใกล้ที่สุด
+  zoneCards?: CardRecord[]; // การ์ดที่แขวนบนรั้วโซนคำอวยพร
+  onZoneCardClick?: (id: string) => void;
+  onAwayChange?: (away: boolean) => void; // บอกพาเรนต์ว่ากล้องอยู่นอกมุมเดิมหรือไม่
   snowing: boolean; // เปิด/ปิดหิมะตก
   crowd: { count: number; seed: string }; // จำนวนคนออนไลน์ในโซนนี้ และรหัสโซนสำหรับจัดตำแหน่ง
 };
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, markerSlot, onGroundPick, snowing, crowd }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange }: Props) {
   const snowingRef = useRef(snowing);
   snowingRef.current = snowing;
   const mountRef = useRef<HTMLDivElement>(null);
@@ -61,11 +67,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setCrowd: (count: number, seed: string) => void;
     highlightDecor: (slot: number) => void;
     setGiants: (list: GiantSpec[]) => void;
+    setZoneCards: (list: CardRecord[]) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
   } | null>(null);
-  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGroundPick });
-  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGroundPick };
+  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGroundPick, onZoneCardClick, onAwayChange });
+  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGroundPick, onZoneCardClick, onAwayChange };
   const readyRef = useRef(onReady);
   readyRef.current = onReady;
 
@@ -717,6 +724,15 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           return;
         }
       }
+      const zoneHit = raycaster.intersectObjects(zoneCardGroup.children, true)[0];
+      if (zoneHit) {
+        let obj: THREE.Object3D | null = zoneHit.object;
+        while (obj && !obj.userData.cardId) obj = obj.parent;
+        if (obj?.userData.cardId) {
+          callbacks.current.onZoneCardClick?.(obj.userData.cardId as string);
+          return;
+        }
+      }
       const hit = raycaster.intersectObject(hitCone, false)[0];
       if (hit) {
         const local = treeGroup.worldToLocal(hit.point.clone());
@@ -766,8 +782,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         }
       }
 
+      zoneCardGroup.children.forEach((g) => {
+        g.rotation.z = reduced ? 0 : Math.sin(t * 1.5 + (g.userData.phase as number)) * 0.06;
+      });
+      zoneLights.forEach((m, i) => {
+        (m.material as THREE.MeshBasicMaterial).opacity = reduced ? 1 : 0.6 + 0.4 * Math.sin(t * 3 + i);
+      });
       if (camAnim) {
-        const k = Math.min((now - camAnim.start) / 900, 1);
+        const k = Math.min((now - camAnim.start) / camAnim.dur, 1);
         const e = 1 - Math.pow(1 - k, 3);
         camera.position.lerpVectors(camAnim.fromPos, camAnim.toPos, e);
         controls.target.lerpVectors(camAnim.fromTgt, camAnim.toTgt, e);
@@ -996,6 +1018,208 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const BODY_HEX: Record<string, number> = { white: 0xffffff, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3, pearl: 0xfff6e6, ice: 0xd6f3ff };
     const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c, purple: 0xa855f7 };
     const HAT_HEX = 0x1f2937;
+
+    // ---------- โซนคำอวยพรบนแผนที่: รั้วสี่เหลี่ยม ของตกแต่ง และการ์ดที่แขวนบนรั้ว ----------
+    const zoneGroup = new THREE.Group();
+    scene.add(zoneGroup);
+    const zoneCardGroup = new THREE.Group();
+    scene.add(zoneCardGroup);
+    const zoneLights: THREE.Mesh[] = [];
+    const zWood = new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 });
+    const zRail = new THREE.MeshStandardMaterial({ color: 0x9a6a3a, roughness: 0.8 });
+    const zx = ZONE.x;
+    const zz = ZONE.z;
+    const zh = ZONE.half;
+    const zBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number, ry = 0) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      m.position.set(x, y, z);
+      m.rotation.y = ry;
+      zoneGroup.add(m);
+      return m;
+    };
+    // ลานหิมะของโซนและรั้วไม้ 4 ด้าน
+    zBox(zh * 2 + 0.7, 0.05, zh * 2 + 0.7, new THREE.MeshStandardMaterial({ color: 0xf6fbff, roughness: 0.6 }), zx, 0.03, zz);
+    const sides: { x: number; z: number; along: "x" | "z" }[] = [
+      { x: zx, z: zz + zh, along: "x" },
+      { x: zx, z: zz - zh, along: "x" },
+      { x: zx - zh, z: zz, along: "z" },
+      { x: zx + zh, z: zz, along: "z" },
+    ];
+    for (const side of sides) {
+      const len = zh * 2;
+      if (side.along === "x") {
+        zBox(len, 0.08, 0.09, zRail, side.x, 1.2, side.z);
+        zBox(len, 0.08, 0.09, zRail, side.x, 0.62, side.z);
+      } else {
+        zBox(0.09, 0.08, len, zRail, side.x, 1.2, side.z);
+        zBox(0.09, 0.08, len, zRail, side.x, 0.62, side.z);
+      }
+      for (let k = 0; k <= 4; k++) {
+        const t = -zh + (k / 4) * len;
+        const px = side.along === "x" ? side.x + t : side.x;
+        const pz = side.along === "x" ? side.z : side.z + t;
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 1.4, 8), zWood);
+        post.position.set(px, 0.7, pz);
+        zoneGroup.add(post);
+      }
+    }
+    // ป้ายชื่อโซนเหนือรั้วด้านหน้า
+    const signCv = document.createElement("canvas");
+    signCv.width = 640;
+    signCv.height = 150;
+    const sg = signCv.getContext("2d");
+    if (sg) {
+      sg.fillStyle = "#0f3d2e";
+      sg.fillRect(0, 0, 640, 150);
+      sg.strokeStyle = "#e8d19a";
+      sg.lineWidth = 8;
+      sg.strokeRect(14, 14, 612, 122);
+      sg.fillStyle = "#f6e7bf";
+      sg.font = "700 64px 'IBM Plex Sans Thai', sans-serif";
+      sg.textAlign = "center";
+      sg.textBaseline = "middle";
+      sg.fillText("โซนคำอวยพร", 320, 80);
+    }
+    const signTex = new THREE.CanvasTexture(signCv);
+    signTex.colorSpace = THREE.SRGBColorSpace;
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.75), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
+    sign.position.set(zx, 2.05, zz + zh + 0.06);
+    zoneGroup.add(sign);
+    // ไฟประดับตามขอบรั้วด้านบน กระพริบเบา ๆ
+    const bulbColors = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
+    for (let k = 0; k < 16; k++) {
+      const t = -zh + (k / 15) * zh * 2;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), new THREE.MeshBasicMaterial({ color: bulbColors[k % 4], transparent: true, opacity: 1 }));
+      bulb.position.set(zx + t, 1.3, zz + zh);
+      zoneGroup.add(bulb);
+      zoneLights.push(bulb);
+    }
+    // ของขวัญ โคมไฟ และต้นสนรอบโซน
+    const presentColors = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e];
+    [
+      [zx - zh - 1.5, zz + zh + 1.2],
+      [zx + zh + 1.4, zz + zh + 0.9],
+      [zx + zh + 1.6, zz - zh - 0.7],
+      [zx - zh - 1.1, zz - zh - 1.2],
+    ].forEach(([px, pz], i) => {
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.6), new THREE.MeshStandardMaterial({ color: presentColors[i], roughness: 0.4 }));
+      box.position.set(px, 0.25, pz);
+      const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.52, 0.1), new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.5, roughness: 0.3 }));
+      ribbon.position.set(px, 0.25, pz);
+      zoneGroup.add(box, ribbon);
+    });
+    [
+      [zx - zh - 0.9, zz - zh - 0.9],
+      [zx + zh + 0.9, zz - zh - 0.2],
+    ].forEach(([px, pz]) => {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.1, 8), zWood);
+      pole.position.set(px, 1.05, pz);
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 14, 12), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0.9 }));
+      glow.position.set(px, 2.25, pz);
+      zoneGroup.add(pole, glow);
+      zoneLights.push(glow);
+    });
+    [
+      [zx + zh + 2.2, zz + 1.2, 1],
+      [zx - zh - 2.4, zz + 0.5, 0.8],
+      [zx + 1.8, zz - zh - 2.2, 1.1],
+    ].forEach(([px, pz, sc]) => {
+      const leaf = new THREE.MeshStandardMaterial({ color: 0x1f7a4d, roughness: 0.8 });
+      const low = new THREE.Mesh(new THREE.ConeGeometry(0.9 * sc, 1.6 * sc, 12), leaf);
+      low.position.set(px, 0.8 * sc, pz);
+      const top = new THREE.Mesh(new THREE.ConeGeometry(0.6 * sc, 1.2 * sc, 12), leaf);
+      top.position.set(px, 1.9 * sc, pz);
+      zoneGroup.add(low, top);
+    });
+
+    // การ์ดแขวนบนรั้ว 3 ด้าน (หน้า ซ้าย ขวา) และด้านหลัง: ต้องไม่เกิน 36 ใบบนฉาก
+    const ENV_HEX: Record<string, [string, string, string]> = {
+      red: ["#b91c3c", "#9b1630", "#ffffff"],
+      gold: ["#d9a93a", "#b98a2a", "#ffffff"],
+      green: ["#1f7a4d", "#16603b", "#ffffff"],
+      white: ["#f4efe3", "#e0d6bf", "#3b2a14"],
+      pink: ["#f9a8d4", "#f472b6", "#5b1a3a"],
+      blue: ["#93c5fd", "#60a5fa", "#0f2a4a"],
+    };
+    function envelopeTexture(env: string, name: string) {
+      const cv = document.createElement("canvas");
+      cv.width = 256;
+      cv.height = 164;
+      const g = cv.getContext("2d");
+      const [c1, c2, ink] = ENV_HEX[env] ?? ENV_HEX.red;
+      if (g) {
+        g.fillStyle = c1;
+        g.fillRect(0, 0, 256, 164);
+        g.fillStyle = c2;
+        g.beginPath();
+        g.moveTo(0, 164);
+        g.lineTo(128, 86);
+        g.lineTo(256, 164);
+        g.closePath();
+        g.fill();
+        g.fillStyle = "rgba(255,255,255,0.14)";
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(128, 86);
+        g.lineTo(256, 0);
+        g.closePath();
+        g.fill();
+        g.fillStyle = "#ffd76a";
+        g.beginPath();
+        g.arc(128, 92, 13, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = ink;
+        g.font = "600 22px 'IBM Plex Sans Thai', sans-serif";
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText(name.slice(0, 14), 128, 140);
+      }
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    // ตำแหน่งการ์ด: ไล่ตามด้านของรั้วแล้วกำหนดทิศให้หันออกนอกโซน
+    const ZONE_SLOTS: { x: number; z: number; ry: number }[] = [];
+    const span = zh * 2 - 0.9;
+    const cardsPer = 8;
+    for (let k = 0; k < cardsPer; k++) {
+      const t = -span / 2 + (k / (cardsPer - 1)) * span;
+      ZONE_SLOTS.push({ x: zx + t, z: zz + zh + 0.07, ry: 0 }); // หน้า
+      ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.07, ry: Math.PI }); // หลัง
+      ZONE_SLOTS.push({ x: zx - zh - 0.07, z: zz + t, ry: -Math.PI / 2 }); // ซ้าย
+      ZONE_SLOTS.push({ x: zx + zh + 0.07, z: zz + t, ry: Math.PI / 2 }); // ขวา
+    }
+    function api_setZoneCards(list: CardRecord[]) {
+      while (zoneCardGroup.children.length) {
+        const c = zoneCardGroup.children.pop()!;
+        c.traverse((o) => {
+          const m = o as THREE.Mesh;
+          m.geometry?.dispose?.();
+          const mat = m.material as THREE.MeshStandardMaterial | undefined;
+          mat?.map?.dispose?.();
+          mat?.dispose?.();
+        });
+      }
+      const shown = list.slice(0, Math.min(36, ZONE_SLOTS.length));
+      shown.forEach((c, i) => {
+        const slot = ZONE_SLOTS[i];
+        const pivot = new THREE.Group();
+        pivot.position.set(slot.x, 1.2, slot.z);
+        pivot.rotation.y = slot.ry;
+        const string = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.24, 6), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
+        string.position.set(0, -0.12, 0);
+        const card = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.84, 0.53),
+          new THREE.MeshStandardMaterial({ map: envelopeTexture(c.envelope, c.name), roughness: 0.6, side: THREE.DoubleSide }),
+        );
+        card.position.set(0, -0.5, 0.01);
+        card.userData.cardId = c.id;
+        pivot.userData.phase = i * 0.7;
+        pivot.add(string, card);
+        zoneCardGroup.add(pivot);
+      });
+    }
+    api_setZoneCards(zoneCards);
     // ตั้งตุ๊กตายักษ์หลังค่าสีทั้งหมดพร้อมแล้ว (กันการเข้าถึงก่อนประกาศ)
     api_setGiants(giants);
 
@@ -1329,11 +1553,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const HAT_COLOR: Record<string, number> = { top: 0x1f2937, beanie: 0x3b82f6, santa: 0xdc2643, crown: 0xf5c542, pom: 0xf8fafc, holly: 0x16a34a, beret: 0xdc2643, earmuff: 0x1f2937 };
 
     // มุมมองบุคคลที่หนึ่ง: เลื่อนกล้องไปใกล้ลูกบอลที่เลือก และกลับมาที่เดิมเมื่อปิด
-    type CamAnim = { fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number };
+    type CamAnim = { fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number; dur: number };
     let camAnim: CamAnim | null = null;
     let savedView: { pos: THREE.Vector3; tgt: THREE.Vector3; min: number } | null = null;
-    function animateCam(toPos: THREE.Vector3, toTgt: THREE.Vector3) {
-      camAnim = { fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt, start: performance.now() };
+    function animateCam(toPos: THREE.Vector3, toTgt: THREE.Vector3, dur = 900) {
+      camAnim = { fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt, start: performance.now(), dur };
     }
     const HOME_POS = new THREE.Vector3(0, 2.6, 9.2);
     const HOME_TGT = new THREE.Vector3(0, 1.85, 0);
@@ -1350,6 +1574,50 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       animateCam(HOME_POS.clone(), HOME_TGT.clone());
       controls.minDistance = 4.5;
       savedView = null;
+    }
+
+    // ---------- มุมมองโซนคำอวยพร: ซูมออกเป็นแผนที่ แล้วเลื่อนไปที่โซน และกลับมุมเดิมได้
+    const FOG_FAR = 40;
+    let zoneTimers: number[] = [];
+    let zoneAway = false;
+    function rememberView() {
+      if (!savedView) savedView = { pos: camera.position.clone(), tgt: controls.target.clone(), min: controls.minDistance };
+    }
+    function flyToZone() {
+      zoneTimers.forEach((t) => clearTimeout(t));
+      zoneTimers = [];
+      clearBeacon();
+      rememberView();
+      zoneAway = true;
+      callbacks.current.onAwayChange?.(true);
+      const fog = scene.fog as THREE.Fog | null;
+      if (fog) fog.far = 120;
+      controls.minDistance = 0.5;
+      const cx = ZONE.x;
+      const cz = ZONE.z;
+      // 1) ซูมออกขึ้นไปมองจากด้านบนเหมือนแผนที่
+      animateCam(new THREE.Vector3(cx * 0.4, 50, cz * 0.4 + 8), new THREE.Vector3(cx * 0.5, 0, cz * 0.5), 1100);
+      // 2) เลื่อนไปเหนือโซน
+      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx, 34, cz + 6), new THREE.Vector3(cx, 0, cz), 1000), 1150));
+      // 3) ลงมาดูรั้วและการ์ดระดับสายตา
+      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx + 2.6, 3.4, cz + 10.5), new THREE.Vector3(cx, 1.3, cz), 1100), 2200));
+    }
+    function returnView() {
+      zoneTimers.forEach((t) => clearTimeout(t));
+      zoneTimers = [];
+      clearBeacon();
+      const fog = scene.fog as THREE.Fog | null;
+      if (fog) fog.far = FOG_FAR;
+      zoneAway = false;
+      callbacks.current.onAwayChange?.(false);
+      if (savedView) {
+        animateCam(savedView.pos, savedView.tgt, 1000);
+        controls.minDistance = savedView.min;
+        savedView = null;
+      } else {
+        animateCam(new THREE.Vector3(0, 2.6, 9.2), new THREE.Vector3(0, 1.85, 0), 1000);
+        controls.minDistance = 4.5;
+      }
     }
     // ตุ๊กตาหิมะที่คลิก: กล้องเลื่อนไปหา และตุ๊กตาโยกทักทายเบา ๆ ตอนเปิดดู
     let focusDecorGroup: THREE.Group | null = null;
@@ -1482,6 +1750,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const big = target.kind === "giant";
       const p = big ? GIANT_POSITIONS[target.spot] : SLOT_POSITIONS[target.slot];
       if (!p) return;
+      // จำมุมกล้องเดิมไว้ก่อนเลื่อนไปหาตุ๊กตา เพื่อให้กลับมาได้
+      rememberView();
+      callbacks.current.onAwayChange?.(true);
       const out = new THREE.Vector3(p.x, 0, p.z);
       if (out.lengthSq() < 1e-6) out.set(0, 0, 1);
       out.normalize();
@@ -1615,6 +1886,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         marker.visible = true;
       },
       setGiants: api_setGiants,
+      setZoneCards: api_setZoneCards,
       setOrnaments: (list) => {
         const ids = new Set(list.map((o) => o.id));
         for (const [id, entry] of ornMeshes) {
@@ -1651,6 +1923,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       highlightDecor: (slot: number) => highlightDecor(slot),
       focusOrnament: (id: string | null) => focusOrnament(id),
       focusDecor: (d: Decor | null) => focusDecor(d),
+      flyToZone: () => flyToZone(),
+      returnView: () => returnView(),
       locate: (target: LocateTarget) => locate(target),
       zoomBy: (factor: number) => zoomBy(factor),
       resetView: () => resetView(),
@@ -1700,6 +1974,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
   useEffect(() => {
     api.current?.setMarker(markerSlot);
   }, [markerSlot]);
+
+  // ซิงก์การ์ดที่แขวนบนรั้วโซนคำอวยพร
+  const zoneKey = zoneCards.map((c) => c.id).join(",");
+  useEffect(() => {
+    api.current?.setZoneCards(zoneCards);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoneKey]);
 
   // ซิงก์ตุ๊กตาหิมะยักษ์เมื่อมีการสนับสนุนใหม่
   const giantKey = JSON.stringify(giants);

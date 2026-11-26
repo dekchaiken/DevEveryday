@@ -42,6 +42,12 @@ export function nearestSlot(x: number, z: number): number {
 
 // ตำแหน่งตุ๊กตาหิมะยักษ์: วงกว้างรอบลานที่ขยายออกเรื่อย ๆ ตามจำนวนที่ซื้อ
 // ระบบจัดให้อัตโนมัติ ตัวที่ซื้อแล้วจะไม่ถูกแทนที่หรือหายไป
+// โซนคำอวยพรแบบมีรั้วบนแผนที่: สงวนพื้นที่นี้ไม่ให้วางตุ๊กตายักษ์
+export const ZONE = { x: -7, z: -14, half: 4.5 };
+export function inZone(x: number, z: number, pad = 0.6) {
+  return Math.abs(x - ZONE.x) <= ZONE.half + pad && Math.abs(z - ZONE.z) <= ZONE.half + pad;
+}
+
 export const GIANT_RING_START = 10;
 export const GIANT_RING_GAP = 3.2;
 export const GIANT_SPACING = 5.2;
@@ -52,7 +58,10 @@ export const GIANT_POSITIONS: { x: number; z: number; angle: number }[] = (() =>
     const offset = (ring % 2) * 0.5;
     for (let i = 0; i < n; i++) {
       const a = Math.PI / 4 + ((i + offset) / n) * Math.PI * 2;
-      out.push({ x: Math.round(Math.cos(a) * r * 100) / 100, z: Math.round(Math.sin(a) * r * 100) / 100, angle: a });
+      const x = Math.round(Math.cos(a) * r * 100) / 100;
+      const z = Math.round(Math.sin(a) * r * 100) / 100;
+      if (inZone(x, z)) continue; // เว้นพื้นที่โซนคำอวยพร
+      out.push({ x, z, angle: a });
     }
   }
   return out;
