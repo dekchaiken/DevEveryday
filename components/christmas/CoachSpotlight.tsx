@@ -35,9 +35,13 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
   useEffect(() => {
     if (!active || i >= steps.length) return;
     const target = steps[i].target;
+    // กดปุ่มที่ไฮไลท์ = ไปขั้นถัดไปของการสอน โดยไม่ทำงานของปุ่มนั้นจริง
     const onClick = (e: MouseEvent) => {
       const el = document.querySelector(target);
-      if (el && e.target instanceof Node && el.contains(e.target)) setI((n) => n + 1);
+      if (!el || !(e.target instanceof Node) || !el.contains(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setI((n) => n + 1);
     };
     window.addEventListener("click", onClick, true);
     return () => window.removeEventListener("click", onClick, true);

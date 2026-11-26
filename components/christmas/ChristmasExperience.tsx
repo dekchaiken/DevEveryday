@@ -274,6 +274,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   }, [state]);
   const [decorSlot, setDecorSlot] = useState<number | null>(null);
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
+  // แผงแขวนลูกบอลเปิดได้เฉพาะตอนเลือกแขวน ปิดเองเมื่อเข้าโซนหรือโต๊ะการ์ด
+  useEffect(() => {
+    if (zoneOpen || studioOpen) setSheetOpen(false);
+  }, [zoneOpen, studioOpen]);
   const [coachArmed, setCoachArmed] = useState(false); // เริ่มสอนหลังส่งการ์ดใบแรกแล้วกลับมาหน้าต้นคริสต์มาส
   const [coachDone, setCoachDone] = useState(true); // ค่าเริ่มต้นซ่อนไว้จนอ่านค่าจากเครื่องเสร็จ
   useEffect(() => {
@@ -1093,14 +1097,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         />
       )}
 
-      {zoneHint && !zoneOpen && (
+      {zoneHint && !zoneOpen && !(coachArmed && !coachDone) && (
         <button type="button" className="xz-tip" style={tipX !== null ? { left: tipX } : undefined} onClick={() => { setZoneHint(false); setZoneOpen(true); treeRef.current?.flyToZone(); }}>
           การ์ดของคุณอยู่ที่โซนคำอวยพรแล้ว แตะเพื่อดู
         </button>
       )}
 
       {/* ป้ายบอกให้แตะต้นไม้เพื่อเลือกตำแหน่ง */}
-      {hintOn && !pick && (
+      {sheetOpen && hintOn && !pick && !zoneOpen && !away && !studioOpen && !chooseOpen && !(coachArmed && !coachDone) && (
         <div className="xmas-tap-hint" role="status" onClick={() => setHintOn(false)}>
           <span className="xmas-tap-ring" aria-hidden />
           แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่ง
@@ -1108,6 +1112,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
 
       {/* แผงแขวนลูกบอล */}
+      {sheetOpen && (
       <section key={panelPulse} className={`xmas-panel glass xmas-wish ${sheetOpen ? "is-open" : ""} ${panelPulse ? "is-pulse" : ""}`} aria-label="แขวนคำอวยพร" onPointerDown={() => setHintOn(true)}>
         <button className="xmas-sheet-toggle" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen}>
           {sheetOpen ? "ปิดแผง" : "แขวนคำอวยพรของคุณ"}
@@ -1223,6 +1228,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           </div>
         </form>
       </section>
+      )}
 
       {/* แผงแท็บ: คำอวยพร / Exclusive / สนับสนุนทีม */}
       <FeedPanel
