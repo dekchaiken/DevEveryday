@@ -1,3 +1,4 @@
+import { sanitizeSocial } from "@/lib/christmas/social";
 import { EVENT_KINDS, MESSAGE_THEMES, ORNAMENT_COLORS, ORNAMENT_SHAPES, type EventKind, type MessageTheme, type OrnamentColor, type OrnamentShape } from "@/lib/christmas/types";
 
 // กรองคำหยาบเบื้องต้น (รายการสั้น ๆ สำหรับเริ่มต้น ควรขยายตามการใช้งานจริง)
@@ -32,10 +33,12 @@ export function parseOrnament(body: Record<string, unknown>, extra: readonly str
   if (hasBlocked(name, extra) || hasBlocked(wish, extra)) return { error: "ข้อความมีคำที่ไม่เหมาะสม" } as const;
   if (!Number.isFinite(height) || height < 0.12 || height > 0.96) return { error: "ตำแหน่งบนต้นไม่ถูกต้อง" } as const;
   if (!Number.isFinite(angle)) return { error: "ตำแหน่งบนต้นไม่ถูกต้อง" } as const;
+  const social = sanitizeSocial(body.social, (s) => hasBlocked(s, extra));
   return {
     value: {
       name,
       wish,
+      social,
       color,
       shape,
       height: Math.round(height * 1000) / 1000,

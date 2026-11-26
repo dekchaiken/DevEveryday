@@ -1,6 +1,7 @@
 // ตุ๊กตาหิมะที่ผู้ใช้ตกแต่งและวางบนช่องรอบต้นคริสต์มาส (ฟรี) เก็บแยกตามห้อง
 import { cmd, storeConfigured } from "@/lib/redis";
 import { SLOT_COUNT } from "@/lib/christmas/slots";
+import type { Social } from "@/lib/christmas/social";
 
 export { SLOT_COUNT };
 export const HATS = ["top", "beanie", "santa", "crown", "pom", "holly"] as const;
@@ -25,6 +26,7 @@ export type Decor = {
   acc: string;
   createdAt: number;
   likes: number;
+  social?: Social; // ลิงก์โซเชียลของผู้วาง (ไม่บังคับ)
 };
 
 const K = {

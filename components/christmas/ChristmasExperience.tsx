@@ -20,6 +20,8 @@ import { OrnamentPreview } from "./OrnamentPreview";
 import { useDecor } from "./useDecor";
 import { markInternalNav } from "./skipIntro";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
+import { ProfileCard, SocialLinks } from "./ProfileCard";
+import { loadProfile, saveProfile, EMPTY_PROFILE, type Profile } from "./profile";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
 
@@ -159,6 +161,12 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [hintOn, setHintOn] = useState(true);
   const prevOnline = useRef<number | null>(null);
   const [intro, setIntro] = useState(true); // ป๊อปอัปเชิญก่อนเข้าต้นไม้
+  // โปรไฟล์ผู้เยี่ยมชม: undefined = ยังอ่านจากเครื่องไม่เสร็จ, null = ยังไม่เคยกรอก
+  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  const [profileEdit, setProfileEdit] = useState(false);
+  useEffect(() => {
+    setProfile(loadProfile());
+  }, []);
   const [toast, setToast] = useState<{ id: number; kind: "ok" | "err"; text: string } | null>(null); // ลูกบอลที่เพิ่งแขวนจากเครื่องนี้ แสดงทันทีก่อนเซิร์ฟเวอร์ตอบ
 
   const treeRef = useRef<TreeSceneHandle | null>(null);
@@ -348,6 +356,17 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const shapesLeft = ORNAMENT_SHAPES.filter((s) => !usedShapes.includes(s));
   const allShapesUsed = shapesLeft.length === 0;
 
+  // ชื่อในฟอร์มเริ่มจากโปรไฟล์ ถ้ายังไม่ได้พิมพ์เอง
+  useEffect(() => {
+    if (profile?.name) setForm((f) => (f.name ? f : { ...f, name: profile.name }));
+  }, [profile]);
+  function saveProfileAndClose(p: Profile) {
+    saveProfile(p);
+    setProfile(p);
+    setForm((f) => ({ ...f, name: p.name }));
+    setProfileEdit(false);
+  }
+
   const previewData: Preview = pick ? { ...pick, color: form.color, shape: form.shape } : null;
 
   async function hang(e: FormEvent) {
@@ -377,7 +396,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       const res = await fetch("/api/christmas/ornament", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, ...pick, room: roomId }),
+        body: JSON.stringify({ ...form, ...pick, room: roomId, social: profile?.social ?? {} }),
       });
       const data = (await res.json()) as { error?: string; ornament?: Ornament };
       if (!res.ok || !data.ornament) throw new Error(data.error ?? "แขวนไม่สำเร็จ");
@@ -456,8 +475,16 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </div>
       )}
 
+      {/* โปรไฟล์: ถามครั้งแรกหลังเปิดของขวัญ และเปิดแก้ไขได้จากฟอร์ม */}
+      {intro && profile === null && (
+        <ProfileCard initial={null} editing={false} onSave={saveProfileAndClose} onCancel={() => setProfile(EMPTY_PROFILE)} />
+      )}
+      {profileEdit && profile && (
+        <ProfileCard initial={profile} editing onSave={saveProfileAndClose} onCancel={() => setProfileEdit(false)} />
+      )}
+
       {/* ป๊อปอัปเชิญเข้าร่วม */}
-      {intro && (
+      {intro && profile !== undefined && profile !== null && (
         <div className="xmas-intro" role="dialog" aria-modal="true" aria-labelledby="xmas-intro-title">
           <div className="xmas-intro-card">
             <div className="xmas-intro-orb" aria-hidden>
@@ -485,6 +512,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           roomId={room.id}
           roomName={room.name}
           onClose={() => setDonateOpen(false)}
+          defaultName={profile?.name ?? ""}
+          social={profile?.social}
           onPaid={(name) => notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว`)}
         />
       )}
@@ -672,6 +701,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           roomName={room.name}
           decor={decor}
           initialSlot={decorSlot}
+          defaultName={profile?.name ?? ""}
+          social={profile?.social}
           onPickOnMap={() => {
             setDecorOpen(false);
             notify("ok", "แตะพื้นหิมะบนฉากเพื่อเลือกช่อง");
@@ -732,6 +763,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             {SHAPE_LABEL[focus.shape]} · {COLOR_LABEL[focus.color]}
           </span>
           <b>{focus.name}</b>
+          <SocialLinks social={focus.social} />
           <blockquote className="xmas-focus-wish">{focus.wish || "ขอให้มีความสุขในวันคริสต์มาส"}</blockquote>
           <button
             type="button"
@@ -839,6 +871,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
                   <span className="xmas-field-label">ชื่อที่จะแสดงบนลูกบอล</span>
                   <input value={form.name} maxLength={20} required onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="เช่น ฟ้า" autoComplete="nickname" />
                 </label>
+                <button type="button" className="xmas-link-btn xmas-profile-edit" onClick={() => setProfileEdit(true)}>
+                  {profile?.social && Object.keys(profile.social).length > 0 ? "แก้ไขชื่อและโซเชียล" : "เพิ่มลิงก์ Instagram / Facebook"}
+                </button>
                 <label className="xmas-field">
                   <span className="xmas-field-label">
                     คำอวยพร <em>{form.wish.length}/140</em>

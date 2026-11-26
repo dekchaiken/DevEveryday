@@ -8,6 +8,7 @@ import { Icon } from "./Icon";
 import { SnowmanPreview } from "./SnowmanPreview";
 import type { MessageTheme } from "@/lib/christmas/types";
 import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
+import type { Social } from "@/lib/christmas/social";
 
 // ธีมการแสดงข้อความบนท้องฟ้า: ทุกคนในห้องจะเห็นพร้อมกัน ทั้งคอมและมือถือ
 const THEMES: { id: MessageTheme; label: string; hint: string; icon: "firework" | "snow" | "sparkle" | "sleigh" }[] = [
@@ -34,17 +35,21 @@ export default function DonateModal({
   onClose,
   onPaid,
   onPreview,
+  defaultName = "",
+  social,
 }: {
   roomId: string;
   roomName: string;
   onClose: () => void;
   onPaid: (name: string) => void;
   onPreview?: (p: { spot: number; name: string; message: string; theme: MessageTheme }) => void;
+  defaultName?: string;
+  social?: Social;
 }) {
   const [cfg, setCfg] = useState<Cfg | null>(null);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(defaultName);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -103,7 +108,7 @@ export default function DonateModal({
       const res = await fetch("/api/christmas/donate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind, theme, spot }),
+        body: JSON.stringify({ room: roomId, amount: chosen, name, message, kind, theme, spot, social: social ?? {} }),
       });
       const data = (await res.json()) as { order?: OrderPreview; error?: string };
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");

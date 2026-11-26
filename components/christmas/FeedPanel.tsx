@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import type { Ornament } from "@/lib/christmas/types";
 import type { Decor } from "@/lib/christmas/decor";
 import { Icon } from "./Icon";
+import { SocialLinks } from "./ProfileCard";
+import type { Social } from "@/lib/christmas/social";
 
-export type FeedEntry = { id: string; name: string; message: string; amount: number; paidAt: number | null };
+export type FeedEntry = { id: string; name: string; message: string; amount: number; paidAt: number | null; social?: Social };
 export type FeedData = { exclusive: FeedEntry[]; supporters: FeedEntry[] };
 
 // ดึงข้อมูลสาธารณะของห้อง (Exclusive และผู้สนับสนุนทีม) เป็นระยะ
@@ -150,6 +152,7 @@ export function FeedPanel({
                       {e.name} <small>฿{e.amount}</small>
                     </b>
                     <em>{e.message || "ตุ๊กตาหิมะยักษ์ของห้องนี้"}</em>
+                    <SocialLinks social={e.social} />
                   </span>
                 </div>
               </li>

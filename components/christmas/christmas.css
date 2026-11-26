@@ -4330,3 +4330,54 @@
 .xmas-gift.is-opening {
   animation: none;
 }
+
+/* ---------- โปรไฟล์ผู้เยี่ยมชมและลิงก์โซเชียล ---------- */
+.xmas-profile-card {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+.xmas-profile-card h1,
+.xmas-profile-card .xmas-intro-kicker,
+.xmas-profile-card .xmas-intro-text {
+  text-align: center;
+}
+.xmas-profile-preview {
+  margin: 0;
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.8;
+}
+.xmas-profile-skip {
+  justify-self: center;
+}
+.xmas-profile-edit {
+  margin-top: 4px;
+}
+.xmas-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.xmas-social-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 107, 74, 0.35);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--spruce, #1f4d36);
+  font-size: 12px;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.xmas-social-chip:hover {
+  text-decoration: underline;
+}
+.xmas-social-chip.is-text {
+  border-style: dashed;
+}
