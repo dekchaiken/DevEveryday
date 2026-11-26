@@ -20,7 +20,8 @@ export async function confirmPayment(orderId: string, providerRef: string) {
       text: placed ? `ตุ๊กตา Exclusive ${paid.name} วางช่อง ${placed.decor.slot + 1}${placed.moved ? " (ช่องที่เลือกถูกแย่งไปก่อน ย้ายให้อัตโนมัติ)" : ""}` : `ตุ๊กตา Exclusive ${paid.name} วางไม่ได้ ไม่มีช่องว่าง`,
     });
   }
-  if (paid && (paid.kind === "giant" || paid.kind === "message")) {
+  // ข้อความขึ้นท้องฟ้าเฉพาะแบบข้อความอวยพรขึ้นจอ ข้อความของตุ๊กตายักษ์อยู่บนป้ายเท่านั้น
+  if (paid && paid.kind === "message") {
     await enqueueEvent(
       paid.room,
       {

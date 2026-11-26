@@ -10,8 +10,8 @@ const W = 1080;
 const H = 1920;
 const GOLD = "#c9a255";
 const INK = "#1d2b22";
-const SERIF = '"Noto Serif Thai", Georgia, serif';
-const SANS = 'Sarabun, "Segoe UI", sans-serif';
+const SERIF = '"IBM Plex Sans Thai", "JetBrains Mono", monospace';
+const SANS = '"IBM Plex Sans Thai", "JetBrains Mono", monospace';
 const COLOR_HEX: Record<OrnamentColor, string> = {
   gold: "#e0b04f",
   red: "#c0354c",

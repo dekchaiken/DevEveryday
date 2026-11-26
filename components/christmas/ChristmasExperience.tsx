@@ -535,11 +535,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <ExclusiveModal
           roomId={room.id}
           roomName={room.name}
-          onPreview={(p) => {
-            setExclusiveOpen(false);
-            treeRef.current?.previewGiant(p.spot, p.name, p.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส");
-            treeRef.current?.skyMessage(p.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส", p.name, "gold", p.theme);
-          }}
           onClose={() => setExclusiveOpen(false)}
           defaultName={profile?.name ?? ""}
           social={profile?.social}

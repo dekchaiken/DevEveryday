@@ -30,8 +30,9 @@
   --shadow-md: 0 18px 40px -20px rgba(8, 30, 22, 0.5);
   --shadow-sm: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 8px 20px -14px rgba(8, 30, 22, 0.5);
   --crystal: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='none' stroke='%23b8904a' stroke-opacity='.12' stroke-width='1'%3E%3Cpath d='M60 10v100M14 35l92 50M14 85l92-50M60 10l-8 6M60 10l8 6M60 110l-8-6M60 110l8-6'/%3E%3C/svg%3E");
-  --serif: "Cormorant Garamond", "Noto Serif Thai", Georgia, serif;
-  --sans: "Sarabun", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* ฟอนต์ทั้งระบบคริสต์มาส: อังกฤษ JetBrains Mono, ไทย IBM Plex Sans Thai (โหลดจาก app/layout.tsx) */
+  --serif: var(--font-mono), var(--font-thai), ui-monospace, monospace;
+  --sans: var(--font-mono), var(--font-thai), ui-monospace, monospace;
   color: var(--ink);
   font-family: var(--sans);
 }
@@ -4874,5 +4875,339 @@ a.xmas-social-chip:hover {
   .xmas-support h2,
   .xmas-exclusive h2 {
     font-size: 26px;
+  }
+}
+
+/* หน้ากล่องของขวัญคงฟอนต์เดิมไว้ */
+.xmas-gift {
+  --serif: "Cormorant Garamond", "Noto Serif Thai", Georgia, serif;
+  --sans: "Sarabun", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ---------- Exclusive: ซ้ายเลือกและพิมพ์ ขวาดูตัวอย่าง ---------- */
+.xmas-ex-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 16px;
+  align-items: start;
+}
+.xmas-ex-split > .xmas-ex-back {
+  grid-column: 1 / -1;
+}
+.xmas-ex-col {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  align-content: start;
+}
+.xmas-sec {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+.xmas-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.xmas-sec-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.xmas-spot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.xmas-spot-grid button {
+  min-height: 44px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.xmas-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.xmas-tier-grid button {
+  display: grid;
+  gap: 2px;
+  place-items: center;
+  min-height: 64px;
+  padding: 8px 6px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.xmas-tier-grid button b {
+  font-size: 18px;
+  font-weight: 700;
+}
+.xmas-tier-grid button small {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.xmas-tier-grid button:hover {
+  transform: translateY(-1px);
+  border-color: var(--foil);
+}
+.xmas-tier-grid button.is-on {
+  background: var(--spruce);
+  color: var(--paper-3);
+  border-color: var(--spruce);
+}
+.xmas-tier-grid button.is-on small {
+  color: var(--foil-soft);
+}
+
+/* ธีมการแสดงแบบรายการ */
+.xmas-theme-list {
+  display: grid;
+  gap: 8px;
+}
+.xmas-theme-opt {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.xmas-theme-opt b {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+.xmas-theme-opt small {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.xmas-theme-ico {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.xmas-theme-opt.is-on {
+  border-color: var(--berry-2);
+  background: #fff5f6;
+  box-shadow: 0 0 0 2px rgba(192, 53, 76, 0.15);
+}
+.xmas-theme-opt.is-on .xmas-theme-ico {
+  background: var(--berry-2);
+  border-color: var(--berry-2);
+}
+.xmas-theme-opt.is-on .xmas-theme-ico .xicon {
+  color: #fff;
+}
+
+/* ด้านขวา: ตัวอย่างแบบเรียลไทม์ */
+.xmas-ex-side {
+  position: sticky;
+  top: 0;
+}
+.xmas-sign-stage {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 18px 14px 14px;
+  border-radius: 22px;
+  background: radial-gradient(circle at 50% 30%, rgba(232, 209, 154, 0.4), transparent 70%), #fff;
+  border: 1px solid var(--line);
+}
+.xmas-sign-snow {
+  width: 150px;
+  height: auto;
+}
+.xmas-sign-board {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  text-align: center;
+  color: #f6e7b8;
+  background: linear-gradient(180deg, #123f2e, #0b2a21);
+  border: 2px solid var(--foil);
+  box-shadow: 0 12px 24px -16px rgba(8, 30, 22, 0.9);
+}
+.xmas-sign-board small {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--foil-soft);
+}
+.xmas-sign-board b {
+  font-size: 18px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.xmas-sign-board p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ตัวอย่างท้องฟ้าของข้อความขึ้นจอ */
+.xmas-sky-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 230px;
+  padding: 22px 18px;
+  overflow: hidden;
+  border-radius: 22px;
+  text-align: center;
+  color: #fff8e6;
+  background: radial-gradient(circle at 50% 100%, rgba(232, 209, 154, 0.3), transparent 70%), linear-gradient(180deg, #0b2a21, #1f4d3c);
+  box-shadow: var(--shadow-sm);
+}
+.xmas-sky-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.xmas-sky-fx i {
+  position: absolute;
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0;
+}
+.xmas-sky-text {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  max-width: 92%;
+}
+.xmas-sky-text p {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.xmas-sky-text small {
+  font-size: 13px;
+  color: var(--foil-soft);
+}
+.xmas-sky-preview.is-fireworks .xmas-sky-fx i {
+  background: #f5c542;
+  animation: xmas-sky-burst 1.8s ease-out infinite;
+}
+.xmas-sky-preview.is-snow .xmas-sky-fx i {
+  width: 5px;
+  height: 5px;
+  background: #fff;
+  animation: xmas-sky-fall 3.2s linear infinite;
+}
+.xmas-sky-preview.is-sparkle .xmas-sky-fx i {
+  width: 4px;
+  height: 4px;
+  background: #e8d19a;
+  animation: xmas-sky-twinkle 1.6s ease-in-out infinite;
+}
+.xmas-sky-frame {
+  position: absolute;
+  inset: 12px;
+  border: 2px solid rgba(232, 209, 154, 0.7);
+  border-radius: 16px;
+  animation: xmas-sky-twinkle 2.2s ease-in-out infinite;
+}
+.xmas-sky-sleigh {
+  position: absolute;
+  bottom: 14px;
+  left: -70px;
+  width: 64px;
+  height: 22px;
+  border-radius: 12px 12px 4px 4px;
+  background: linear-gradient(90deg, #c0354c, #f5c542);
+  animation: xmas-sky-sleigh 4.4s linear infinite;
+}
+@keyframes xmas-sky-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes xmas-sky-fall {
+  0% {
+    opacity: 0.9;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 0.2;
+    transform: translateY(240px);
+  }
+}
+@keyframes xmas-sky-twinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes xmas-sky-sleigh {
+  to {
+    transform: translateX(420px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-sky-fx i,
+  .xmas-sky-frame,
+  .xmas-sky-sleigh {
+    animation: none;
+  }
+}
+
+/* มือถือ: คอลัมน์เดียว ตัวอย่างอยู่ท้ายฟอร์ม */
+@media (max-width: 759px) {
+  .xmas-ex-split {
+    grid-template-columns: 1fr;
+  }
+  .xmas-ex-side {
+    position: static;
+  }
+  .xmas-sign-snow {
+    width: 120px;
+  }
+  .xmas-sky-preview {
+    min-height: 180px;
+  }
+  .xmas-tier-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
