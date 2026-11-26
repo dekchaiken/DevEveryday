@@ -1887,3 +1887,27 @@
     padding-top: 10px;
   }
 }
+
+/* มือถือ: แถบโซนคำอวยพรอยู่ใต้หัวข้อ ไม่ทับปุ่มซูมและแถบเมนู */
+@media (max-width: 759px) {
+  .xz-hud {
+    top: 218px;
+    bottom: auto;
+    max-width: calc(100vw - 24px);
+  }
+  .xz-hud-btn {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .xz-hud-count {
+    font-size: 11.5px;
+  }
+}
+/* มือถือ: ป้าย Exclusive ไม่ล้นไปทับปุ่มสนับสนุน */
+@media (max-width: 759px) {
+  .xmas-action.is-exclusive {
+    font-size: 9.5px;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+}

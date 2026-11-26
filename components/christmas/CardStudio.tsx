@@ -370,6 +370,7 @@ export function CardStudio({
             onPropDown={step === 1 ? (i, e) => startDrag({ kind: "prop", index: i }, e) : undefined}
             selectedText={step === 2 ? selText : null}
             onTextDown={step === 2 ? (id, e) => startDrag({ kind: "text", id }, e) : undefined}
+            tilt={step === 0 || step === 4} // ขยับเองเฉพาะตอนดูตัวอย่าง ตอนตกแต่งให้นิ่งไว้
             className="xc-studio-card"
           />
         )}
