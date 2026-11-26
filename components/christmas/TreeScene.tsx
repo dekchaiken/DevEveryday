@@ -90,7 +90,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environmentIntensity = 0.55;
     // หมอกบาง ๆ ทำให้พื้นหิมะไกลค่อย ๆ กลมกลืนกับท้องฟ้าค่ำ
-    scene.fog = new THREE.Fog(0x0b1d2a, 14, 40);
+    scene.fog = new THREE.Fog(0x0c251d, 14, 40);
 
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(0, 2.6, 9.2);
@@ -532,7 +532,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const variant = rnd() < 0.15 ? "child" : variants[Math.floor(rnd() * variants.length)];
         const h = variant === "child" ? 1.25 : 1.75 + (rnd() - 0.5) * 0.12;
         const aspect = variant === "child" ? 0.5 : 0.48;
-        const mat = new THREE.SpriteMaterial({ map: silTex.get(variant), color: 0x23496a, transparent: true, opacity: 0.92, depthWrite: false, fog: true });
+        const mat = new THREE.SpriteMaterial({ map: silTex.get(variant), color: 0x1f4a3b, transparent: true, opacity: 0.92, depthWrite: false, fog: true });
         crowdMats.push(mat);
         const sp = new THREE.Sprite(mat);
         sp.scale.set(h * aspect, h, 1);
@@ -1623,8 +1623,8 @@ function buildHills(): THREE.Mesh {
   geo.translate(0, -4.6, 0);
   const p = geo.getAttribute("position") as THREE.BufferAttribute;
   const colors = new Float32Array(p.count * 3);
-  const cBase = new THREE.Color(0x071820);
-  const cSlope = new THREE.Color(0x163a4f);
+  const cBase = new THREE.Color(0x08211a);
+  const cSlope = new THREE.Color(0x1d4a3b);
   const cSnow = new THREE.Color(0xdfeaf4);
   const c = new THREE.Color();
   for (let i = 0; i < p.count; i++) {
