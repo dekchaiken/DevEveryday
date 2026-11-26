@@ -765,7 +765,7 @@ function PaymentTab({ dash, reload, flash }: { dash: Dash | null; reload: () => 
             </label>
           </div>
           <label>
-            ราคาตุ๊กตาหิมะ Exclusive ต่อตัว (฿) วางได้ไม่จำกัด
+            ราคาตุ๊กตาหิมะ Exclusive (฿) จ่ายทุกครั้งที่วาง 1 ตัว
             <input inputMode="numeric" value={String(form.decorPrice)} onChange={(e) => set("decorPrice", Number(e.target.value.replace(/\D/g, "")) || 0)} />
           </label>
           <button className="adm-btn primary" disabled={saving}>
