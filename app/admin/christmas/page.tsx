@@ -11,6 +11,7 @@ type Config = {
   customMin: number;
   customMax: number;
   decorPrice: number;
+  messagePrice: number;
   blockedWords: string[];
 };
 type Dash = {
@@ -767,6 +768,10 @@ function PaymentTab({ dash, reload, flash }: { dash: Dash | null; reload: () => 
           <label>
             ราคาตุ๊กตาหิมะ Exclusive (฿) จ่ายทุกครั้งที่วาง 1 ตัว
             <input inputMode="numeric" value={String(form.decorPrice)} onChange={(e) => set("decorPrice", Number(e.target.value.replace(/\D/g, "")) || 0)} />
+          </label>
+          <label>
+            ราคาข้อความอวยพรขึ้นจอ (฿)
+            <input inputMode="numeric" value={String(form.messagePrice)} onChange={(e) => set("messagePrice", Number(e.target.value.replace(/\D/g, "")) || 0)} />
           </label>
           <button className="adm-btn primary" disabled={saving}>
             {saving ? "กำลังบันทึก…" : "บันทึกการตั้งค่า"}

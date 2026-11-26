@@ -7,7 +7,8 @@ import type { DecorPick } from "@/lib/christmas/decor";
 export type OrderStatus = "awaiting_payment" | "paid" | "cancelled";
 // giant = ตุ๊กตาหิมะยักษ์ (Exclusive ประจำห้อง) | support = สนับสนุนทีม DevEveryday
 // decor = ตุ๊กตาหิมะ Exclusive ที่วางได้ไม่จำกัด (จ่ายต่อตัว)
-export type OrderKind = "giant" | "support" | "decor";
+// message = ข้อความอวยพรขึ้นจอ (ไม่มีป้าย) · decor = ตุ๊กตาหิมะ Exclusive จ่ายต่อตัว
+export type OrderKind = "giant" | "support" | "decor" | "message";
 export type Order = {
   id: string;
   room: string;

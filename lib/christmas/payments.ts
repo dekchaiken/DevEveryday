@@ -20,7 +20,7 @@ export async function confirmPayment(orderId: string, providerRef: string) {
       text: placed ? `ตุ๊กตา Exclusive ${paid.name} วางช่อง ${placed.decor.slot + 1}${placed.moved ? " (ช่องที่เลือกถูกแย่งไปก่อน ย้ายให้อัตโนมัติ)" : ""}` : `ตุ๊กตา Exclusive ${paid.name} วางไม่ได้ ไม่มีช่องว่าง`,
     });
   }
-  if (paid && paid.kind === "giant") {
+  if (paid && (paid.kind === "giant" || paid.kind === "message")) {
     await enqueueEvent(
       paid.room,
       {
