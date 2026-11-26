@@ -3,7 +3,7 @@
 import { cmd, storeConfigured } from "@/lib/redis";
 import type { ChristmasState, Ornament, ShowEvent } from "@/lib/christmas/types";
 import { ROOM_CAPACITY, ROOMS } from "@/lib/christmas/rooms";
-import { getGiant } from "@/lib/christmas/orders";
+import { listGiants } from "@/lib/christmas/orders";
 
 const MAX_ORNAMENTS = 400;
 const SHOW_MEMORY_MS = 10 * 60 * 1000; // เก็บเหตุการณ์ที่จบแล้วไว้สักพักก่อนลบ
@@ -47,21 +47,21 @@ export async function readState(room: string, now: number): Promise<ChristmasSta
       version: m.version,
       ornaments: m.ornaments.slice(0, 300),
       events: m.events.filter((e) => e.startAt + e.duration > now),
-      giant: await getGiant(room),
+      giants: await listGiants(room),
       persistent: false,
     };
   }
-  const [ver, ornRaw, evtRaw, giant] = await Promise.all([
+  const [ver, ornRaw, evtRaw, giants] = await Promise.all([
     cmd<string | null>("GET", K.ver(room)),
     cmd<string[]>("LRANGE", K.orn(room), 0, 299),
     cmd<string[]>("ZRANGEBYSCORE", K.evt(room), now, "+inf"),
-    getGiant(room),
+    listGiants(room),
   ]);
   return {
     version: Number(ver ?? 0),
     ornaments: (ornRaw ?? []).map((s) => JSON.parse(s) as Ornament),
     events: (evtRaw ?? []).map((s) => JSON.parse(s) as ShowEvent),
-    giant,
+    giants,
     persistent: true,
   };
 }

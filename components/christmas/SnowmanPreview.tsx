@@ -85,6 +85,10 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
       <circle cx="100" cy="170" r="44" fill={bodyFill} />
       <circle cx="100" cy="112" r="34" fill={bodyFill} />
       <circle cx="100" cy="68" r="27" fill={bodyFill} />
+      {/* กระดุมสามเม็ด */}
+      {[156, 170, 184].map((y) => (
+        <circle key={y} cx="100" cy={y} r="3.2" fill="#1f2937" />
+      ))}
 
       {/* แขน */}
       {parts.arms === "sticks" && (

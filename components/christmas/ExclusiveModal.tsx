@@ -152,6 +152,7 @@ function SkyCanvas({ theme, text, by }: { theme: SkyTheme; text: string; by: str
 export default function ExclusiveModal({
   roomId,
   roomName,
+  takenSpots = [],
   onClose,
   onPaid,
   defaultName = "",
@@ -160,6 +161,7 @@ export default function ExclusiveModal({
 }: {
   roomId: string;
   roomName: string;
+  takenSpots?: number[]; // ตำแหน่งตุ๊กตายักษ์ที่มีคนซื้อไปแล้ว
   onClose: () => void;
   onPaid: (kind: "giant" | "message" | "decor", name: string) => void;
   defaultName?: string;
@@ -328,12 +330,23 @@ export default function ExclusiveModal({
                   <span className="xmas-sup-num">1</span>
                   <h3>ตำแหน่งบนลาน</h3>
                 </header>
-                <div className="xmas-spot-grid">
-                  {GIANT_SPOT_DEFS.map((d, i) => (
-                    <button type="button" key={d.label} className={spot === i ? "is-on" : ""} aria-pressed={spot === i} onClick={() => setSpot(i)}>
-                      {d.label}
-                    </button>
-                  ))}
+                <div className="xmas-spot-grid is-wide">
+                  {GIANT_SPOT_DEFS.map((d, i) => {
+                    const used = takenSpots.includes(i);
+                    return (
+                      <button
+                        type="button"
+                        key={d.label}
+                        className={spot === i ? "is-on" : used ? "is-used" : ""}
+                        aria-pressed={spot === i}
+                        disabled={used}
+                        onClick={() => setSpot(i)}
+                        title={used ? "ตำแหน่งนี้มีตุ๊กตายักษ์แล้ว" : d.label}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  })}
                 </div>
               </section>
 

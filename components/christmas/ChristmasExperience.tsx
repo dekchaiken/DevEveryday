@@ -22,6 +22,8 @@ import { useDecor } from "./useDecor";
 import { markInternalNav } from "./skipIntro";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import { ShareCardModal } from "./ShareCard";
+import { SkyOverlay, type SkyShow } from "./SkyOverlay";
+import type { SkyTheme } from "./skyArt";
 import { ProfileCard, SocialLinks } from "./ProfileCard";
 import { loadProfile, saveProfile, type Profile } from "./profile";
 import type { Decor } from "@/lib/christmas/decor";
@@ -91,7 +93,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [loadError, setLoadError] = useState(false);
   const [webglOk, setWebglOk] = useState(true);
   const [reduced, setReduced] = useState(false);
-  const [banner, setBanner] = useState<{ id: string; text: string; by: string; color: OrnamentColor } | null>(null);
   const [focus, setFocus] = useState<Ornament | null>(null);
   // เมื่อเลือกคำอวยพร กล้องจะเคลื่อนไปที่ลูกบอลนั้นแบบมุมมองบุคคลที่หนึ่ง
   useEffect(() => {
@@ -104,6 +105,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [local, setLocal] = useState<Ornament[]>([]);
   const [supportOpen, setSupportOpen] = useState(false); // หน้าต่างสนับสนุนทีมงานอย่างเดียว
   const [exclusiveOpen, setExclusiveOpen] = useState(false); // หน้าต่าง Exclusive (ป้ายยักษ์ / ข้อความขึ้นจอ)
+  const [skyShow, setSkyShow] = useState<SkyShow | null>(null); // ข้อความขึ้นจอที่กำลังแสดงเหนือต้น
   // นับถอยหลังถึงวันคริสต์มาส (เวลาท้องถิ่นของผู้ใช้) คำนวณหลังโหลดเพื่อไม่ให้ต่างกันตอน SSR
   const [xmasDays, setXmasDays] = useState<number | null>(null);
   useEffect(() => {
@@ -340,9 +342,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       treeRef.current?.launchFirework(ev.color);
       return;
     }
-    treeRef.current?.skyMessage(ev.text, ev.by, ev.color, ev.theme ?? "fireworks");
-    setBanner({ id: ev.id, text: ev.text, by: ev.by, color: ev.color });
-    setTimeout(() => setBanner((b) => (b?.id === ev.id ? null : b)), Math.max(ev.duration - 400, 2000));
+    // ข้อความขึ้นจอแสดงเพียงที่เดียวเหนือต้นไม้ (ไม่ซ้ำกับแถบข้อความ)
+    setSkyShow({ id: ev.id, text: ev.text, by: ev.by, theme: (ev.theme ?? "fireworks") as SkyTheme, duration: Math.max(ev.duration, 4000) });
   }, []);
 
   // ---------- รวมลูกบอลจากเซิร์ฟเวอร์กับที่เพิ่งแขวนเอง ----------
@@ -466,7 +467,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onOrnamentClick={(o) => setFocus(o)}
           onError={() => setWebglOk(false)}
           ground={room.ground}
-          giant={state?.giant ? { name: state.giant.name, message: state.giant.message, spot: state.giant.spot ?? 0, look: state.giant.look } : null}
+          giants={(state?.giants ?? []).map((g) => ({ name: g.name, message: g.message, spot: g.spot ?? 0, look: g.look }))}
           decor={decor}
           markerSlot={markerSlot}
           onGroundPick={(slot) => {
@@ -536,6 +537,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <ExclusiveModal
           roomId={room.id}
           roomName={room.name}
+          takenSpots={(state?.giants ?? []).map((g) => g.spot)}
           onClose={() => setExclusiveOpen(false)}
           defaultName={profile?.name ?? ""}
           social={profile?.social}
@@ -547,6 +549,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         />
       )}
 
+
+      {skyShow && <SkyOverlay key={skyShow.id} show={skyShow} onDone={() => setSkyShow(null)} />}
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
       {toast && (
@@ -798,14 +802,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             refreshDecor();
           }}
         />
-      )}
-
-      {/* ข้อความที่ถูกส่งขึ้นจอให้ทุกคนเห็น */}
-      {banner && (
-        <div className="xmas-banner" role="status" key={banner.id} style={{ "--c": COLOR_CSS[banner.color] } as CSSProperties}>
-          <span className="xmas-banner-by">จาก {banner.by}</span>
-          <p>{banner.text}</p>
-        </div>
       )}
 
       {/* ปุ่มซูมบนฉาก: ซูมเข้า ออก และกลับมุมมองเริ่มต้น (มือถือกดหรือบีบนิ้วได้ คอมใช้ลูกล้อเมาส์) */}
