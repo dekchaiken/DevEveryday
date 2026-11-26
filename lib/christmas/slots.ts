@@ -40,22 +40,28 @@ export function nearestSlot(x: number, z: number): number {
   return best;
 }
 
-// ตำแหน่งตุ๊กตาหิมะยักษ์ 12 จุดบนวงรอบลาน (ห่างจากตุ๊กตาทั่วไป) ซื้อได้จนครบทุกจุด
-export const GIANT_SPOT_COUNT = 12;
-export const GIANT_SPOT_RADIUS = 10;
-export const GIANT_SPOT_DEFS = Array.from({ length: GIANT_SPOT_COUNT }, (_, i) => ({
-  label: `ตำแหน่ง ${i + 1}`,
-  angle: (i / GIANT_SPOT_COUNT) * Math.PI * 2 + Math.PI / 4,
-}));
+// ตำแหน่งตุ๊กตาหิมะยักษ์: วงกว้างรอบลานที่ขยายออกเรื่อย ๆ ตามจำนวนที่ซื้อ
+// ระบบจัดให้อัตโนมัติ ตัวที่ซื้อแล้วจะไม่ถูกแทนที่หรือหายไป
+export const GIANT_RING_START = 10;
+export const GIANT_RING_GAP = 3.2;
+export const GIANT_SPACING = 5.2;
+export const GIANT_POSITIONS: { x: number; z: number; angle: number }[] = (() => {
+  const out: { x: number; z: number; angle: number }[] = [];
+  for (let r = GIANT_RING_START, ring = 0; r < 44; r += GIANT_RING_GAP, ring++) {
+    const n = Math.floor((2 * Math.PI * r) / GIANT_SPACING);
+    const offset = (ring % 2) * 0.5;
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI / 4 + ((i + offset) / n) * Math.PI * 2;
+      out.push({ x: Math.round(Math.cos(a) * r * 100) / 100, z: Math.round(Math.sin(a) * r * 100) / 100, angle: a });
+    }
+  }
+  return out;
+})();
+// จำนวนตุ๊กตายักษ์สูงสุดต่อห้อง (เต็มพื้นที่วงกว้างแล้ว)
+export const GIANT_CAPACITY = GIANT_POSITIONS.length;
 
+// ตุ๊กตายักษ์อยู่ไกลจากตุ๊กตาทั่วไป จึงไม่สงวนช่องใด
 const RESERVED = new Set<number>();
-for (const d of GIANT_SPOT_DEFS) {
-  const cx = Math.cos(d.angle) * GIANT_SPOT_RADIUS;
-  const cz = Math.sin(d.angle) * GIANT_SPOT_RADIUS;
-  SLOT_POSITIONS.forEach((p, i) => {
-    if ((p.x - cx) ** 2 + (p.z - cz) ** 2 < 1.5 ** 2) RESERVED.add(i);
-  });
-}
 
 // ช่องที่สงวนไว้สำหรับป้ายประจำห้อง
 export function isReservedSlot(slot: number) {
