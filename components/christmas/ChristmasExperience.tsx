@@ -723,7 +723,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setExclusiveOpen(false);
             if (kind === "giant") {
               pendingLocate.current = { kind: "giant", name, at: Date.now() };
-              notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว`);
+              notify("ok", `ขอบคุณ ${name} บ้านหิมะ Exclusiveขึ้นป้ายแล้ว`);
             }
             if (kind === "message") notify("ok", `ขอบคุณ ${name} ข้อความของคุณกำลังขึ้นบนท้องฟ้า`);
           }}
@@ -818,7 +818,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </div>
       </header>
 
-      {/* เมนูหลัก: แขวน ตกแต่ง ชวนเพื่อน และสนับสนุน (ตุ๊กตาหิมะยักษ์) */}
+      {/* เมนูหลัก: แขวน ตกแต่ง ชวนเพื่อน และสนับสนุน (บ้านหิมะ Exclusive) */}
       <nav className="xmas-actions" aria-label="เมนูกิจกรรม">
         <button className="xmas-action" data-studio-btn onClick={() => { setFeedOpen(false); setChooseOpen(true); }}>
           <Icon name="bauble" size={18} /> คำอวยพร
@@ -858,7 +858,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       <Ticker
         items={[
           ...ornaments.slice(0, 10).map((o) => ({ key: `w-${o.id}`, text: `${o.name}: ${o.wish || "ขอให้มีความสุขในวันคริสต์มาส"}` })),
-          ...feed.exclusive.slice(0, 6).map((e) => ({ key: `e-${e.id}`, text: `Exclusive ${e.name}: ${e.message || "ตุ๊กตาหิมะยักษ์"}`, exclusive: true })),
+          ...feed.exclusive.slice(0, 6).map((e) => ({ key: `e-${e.id}`, text: `Exclusive ${e.name}: ${e.message || "บ้านหิมะ Exclusive"}`, exclusive: true })),
           ...(ornaments.length === 0 && feed.exclusive.length === 0
             ? [{ key: "welcome", text: "ยินดีต้อนรับสู่ต้นคริสต์มาส แขวนคำอวยพรของคุณเป็นคนแรกได้เลย" }]
             : []),

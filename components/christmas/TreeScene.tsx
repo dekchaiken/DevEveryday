@@ -11,6 +11,7 @@ import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
+import { buildCottage, buildYardScenery } from "./zoneScenery";
 
 // ตุ๊กตายักษ์ที่ตั้งป้ายไว้: ชื่อ ข้อความ ตำแหน่ง และลุค (ถ้าไม่มีจะใช้ลุคเริ่มต้น)
 type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook };
@@ -782,6 +783,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         }
       }
 
+      // ฉากที่มีการเคลื่อนไหว: ไฟ ควัน ต้นสนเรืองแสง และบ้านของ Exclusive
+      sceneryUpdaters.forEach((u) => u(t, reduced));
+      giantGroups.forEach(({ grp }) => (grp.userData.update as ((t: number, r: boolean) => void) | undefined)?.(t, reduced));
+      if (!reduced && now - lastZoneBurst > 2600) {
+        lastZoneBurst = now;
+        zoneFirework();
+      }
+
       zoneCardGroup.children.forEach((g) => {
         g.rotation.z = reduced ? 0 : Math.sin(t * 1.5 + (g.userData.phase as number)) * 0.06;
         const h = g.userData.halo as THREE.Mesh | undefined;
@@ -941,13 +950,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
 
     // ---------- ตุ๊กตาหิมะยักษ์ของห้อง พร้อมป้ายห้อย ----------
-    // ตุ๊กตายักษ์: ลุคที่ผู้ซื้อเลือก และถือป้ายข้อความด้วยมือขวา
+    // บ้านหิมะ Exclusive: โมเดลในโค้ดตามลุคที่ผู้ซื้อเลือก และมีป้ายข้อความตั้งอยู่ข้างบ้าน
     function buildGiant(g: GiantSpec) {
       const look = g.look ?? DEFAULT_GIANT_LOOK;
       const grp = new THREE.Group();
-      const figure = buildDecorSnowman({ ...look, id: "giant" } as unknown as Decor);
-      figure.scale.setScalar(2.1);
-      grp.add(figure);
+      const cottage = buildCottage({ body: look.body, lights: look.lights });
+      grp.add(cottage.group);
+      grp.userData.update = cottage.update;
 
       // ป้ายข้อความ วาดจากงานศิลป์ร่วม
       const boardCv = document.createElement("canvas");
@@ -962,15 +971,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // ป้ายอยู่ฝั่งที่หันเข้าหาใจกลางฉาก เพื่อให้มองเห็นได้จากมุมกล้องหลัก
       const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
       const side = def.x > 0 ? -1 : 1;
-      board.position.set(side * 1.55, 2.05, 0.25);
+      board.position.set(side * 1.95, 1.95, 0.35);
       board.rotation.y = side * -0.3;
-      // เสาไม้ปักข้างตัว และมือที่จับเสาไว้
+      // เสาไม้ปักอยู่ข้างบ้าน ไม่ทับตัวบ้าน
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.7, 12), new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 }));
-      pole.position.set(side * 1.55, 0.85, 0.25);
-      const glove = new THREE.MeshStandardMaterial({ color: 0x9b1c31, roughness: 0.5 });
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 12), glove);
-      hand.position.set(side * 1.55, 1.1, 0.3);
-      grp.add(board, pole, hand);
+      pole.position.set(side * 1.95, 0.85, 0.35);
+      grp.add(board, pole);
 
       const gx = def.x;
       const gz = def.z;
@@ -1287,6 +1293,18 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         pivot.add(string, halo, card);
         zoneCardGroup.add(pivot);
       });
+    }
+    // ลานโซน: บ้านหิมะ ต้นสนเรืองแสง และของตกแต่งอยู่ด้านในรั้ว ช่องการ์ดอยู่บนรั้วจึงไม่ถูกบัง
+    const yard = buildYardScenery();
+    yard.group.position.set(zx, 0, zz);
+    zoneGroup.add(yard.group);
+    const sceneryUpdaters: ((t: number, reduced: boolean) => void)[] = [yard.update];
+    // พลุในโซนเป็นจังหวะเบา ๆ เหนือลาน (ปิดเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว)
+    let lastZoneBurst = 0;
+    const ZONE_FIREWORK_HEX = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
+    function zoneFirework() {
+      const origin = new THREE.Vector3(zx + (Math.random() - 0.5) * 9, 4.0 + Math.random() * 0.8, zz + (Math.random() - 0.5) * 8);
+      burst(origin, ZONE_FIREWORK_HEX[Math.floor(Math.random() * ZONE_FIREWORK_HEX.length)], isSmall ? 70 : 110, 0.7);
     }
     api_setZoneCards(zoneCards);
     // ตั้งตุ๊กตายักษ์หลังค่าสีทั้งหมดพร้อมแล้ว (กันการเข้าถึงก่อนประกาศ)

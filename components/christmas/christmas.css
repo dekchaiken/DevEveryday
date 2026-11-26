@@ -6580,3 +6580,12 @@ a.xmas-social-chip:hover {
     height: 34px;
   }
 }
+
+/* ---------- ภาพตัวอย่างบ้านหิมะ Exclusive: กรอบกว้างกว่าตุ๊กตา จึงขยายให้ได้สัดส่วนเดียวกับป้าย ---------- */
+.xmas-cottage.xmas-sign-snow {
+  width: 190px;
+  height: auto;
+}
+.xmas-ex-side .xmas-cottage.xmas-sign-snow {
+  width: 130px;
+}
