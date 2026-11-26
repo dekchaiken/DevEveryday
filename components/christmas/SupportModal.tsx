@@ -31,6 +31,8 @@ export default function SupportModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [order, setOrder] = useState<OrderPreview | null>(null);
+  // บนมือถือแสดงทีละขั้น: 0 เลือกจำนวน · 1 ชื่อและข้อความ
+  const [step, setStep] = useState(0);
 
   const chosen = amount ?? (custom ? Number(custom) : null);
   const locked = order !== null && order.status !== "paid";
@@ -94,7 +96,7 @@ export default function SupportModal({
 
         {!order && cfg && !disabled && (
           <form className="xmas-sup-grid" onSubmit={submit}>
-            <section className="xmas-sup-card">
+            <section className="xmas-sup-card" data-step="0" data-on={step === 0}>
               <h3>
                 <span className="xmas-sup-num">1</span> เลือกจำนวน
               </h3>
@@ -131,7 +133,7 @@ export default function SupportModal({
               </label>
             </section>
 
-            <section className="xmas-sup-card">
+            <section className="xmas-sup-card" data-step="1" data-on={step === 1}>
               <h3>
                 <span className="xmas-sup-num">2</span> ฝากชื่อและข้อความ
               </h3>
@@ -156,7 +158,20 @@ export default function SupportModal({
 
             <div className="xmas-sup-foot">
               {error && <p className="xmas-msg err">{error}</p>}
-              <button className="xmas-submit" disabled={busy || !chosen}>
+              <nav className="xmas-wiz-nav" aria-label="ขั้นตอน">
+                <button type="button" className="xmas-wiz-back" onClick={() => setStep(0)} disabled={step === 0}>
+                  ย้อนกลับ
+                </button>
+                <span className="xmas-wiz-count">ขั้นที่ {step + 1} จาก 2</span>
+                {step === 0 ? (
+                  <button type="button" className="xmas-wiz-next" onClick={() => setStep(1)} disabled={!chosen}>
+                    ถัดไป
+                  </button>
+                ) : (
+                  <span className="xmas-wiz-spacer" />
+                )}
+              </nav>
+              <button className="xmas-submit xmas-wiz-final" data-step="1" data-on={step === 1} disabled={busy || !chosen}>
                 {busy ? "กำลังสร้างรายการ…" : chosen ? `ชำระ ฿${chosen}` : "เลือกจำนวนก่อน"}
               </button>
             </div>

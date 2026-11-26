@@ -1275,7 +1275,36 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
     // ตุ๊กตาหิมะที่คลิก: กล้องเลื่อนไปหา และตุ๊กตาโยกทักทายเบา ๆ ตอนเปิดดู
     let focusDecorGroup: THREE.Group | null = null;
+    // ซ่อนตุ๊กตาต้นฉบับตรงช่องที่เปิดดู เพื่อไม่ให้เห็นตัวซ้อนกัน
+    let focusHidden: { groups: THREE.Object3D[]; inst: { mesh: THREE.InstancedMesh; idx: number; data: Float32Array }[] } = { groups: [], inst: [] };
+    function restoreHidden() {
+      focusHidden.groups.forEach((g) => (g.visible = true));
+      focusHidden.inst.forEach(({ mesh, idx, data }) => {
+        mesh.instanceMatrix.array.set(data, idx * 16);
+        mesh.instanceMatrix.needsUpdate = true;
+      });
+      focusHidden = { groups: [], inst: [] };
+    }
+    function hideOriginal(d: Decor) {
+      decorGroup.children.forEach((c) => {
+        if (c.userData.decorId === d.id) {
+          c.visible = false;
+          focusHidden.groups.push(c);
+        }
+      });
+      const idx = instDecor.findIndex((x) => x.id === d.id);
+      if (idx >= 0) {
+        const zeroM = new THREE.Matrix4().makeScale(0, 0, 0);
+        instMeshes.forEach((m) => {
+          const data = m.instanceMatrix.array.slice(idx * 16, idx * 16 + 16) as Float32Array;
+          focusHidden.inst.push({ mesh: m, idx, data });
+          m.setMatrixAt(idx, zeroM);
+          m.instanceMatrix.needsUpdate = true;
+        });
+      }
+    }
     function focusDecor(d: Decor | null) {
+      restoreHidden();
       if (focusDecorGroup) {
         scene.remove(focusDecorGroup);
         focusDecorGroup.traverse((o) => {
@@ -1295,6 +1324,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       }
       const pp = SLOT_POSITIONS[d.slot];
       if (!pp) return;
+      hideOriginal(d);
       const grp = buildDecorSnowman(d);
       const aa = Math.atan2(pp.z, pp.x);
       grp.position.set(pp.x, 0, pp.z);
@@ -1304,8 +1334,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       focusDecorGroup = grp;
       if (!savedView) savedView = { pos: camera.position.clone(), tgt: controls.target.clone(), min: controls.minDistance };
       const out = new THREE.Vector3(pp.x, 0, pp.z).normalize();
-      const toTgt = new THREE.Vector3(pp.x, 0.95, pp.z);
-      const toPos = new THREE.Vector3(pp.x + out.x * 2.6, 1.5, pp.z + out.z * 2.6);
+      // มองจากด้านนอกและสูงขึ้นเล็กน้อย ให้พุ่มต้นไม้ไม่บังตุ๊กตา
+      const toTgt = new THREE.Vector3(pp.x, 0.9, pp.z);
+      const toPos = new THREE.Vector3(pp.x + out.x * 3.2, 2.9, pp.z + out.z * 3.2);
       controls.minDistance = 0.5;
       animateCam(toPos, toTgt);
       burst(new THREE.Vector3(pp.x, 1.1, pp.z), 0xffe7a3, isSmall ? 26 : 40, 0.3);

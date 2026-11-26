@@ -5785,3 +5785,530 @@ a.xmas-social-chip:hover {
     color: #fff;
   }
 }
+
+/* ---------- ขั้นตอนบนมือถือ: ทีละหน้าจอ ไม่ต้องเลื่อน ---------- */
+.xmas-wiz-nav {
+  display: none;
+}
+@media (max-width: 759px) {
+  .xmas-mk [data-step]:not([data-on="true"]) {
+    display: none !important;
+  }
+  .xmas-mk {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    border-radius: 0;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .xmas-mk-head {
+    padding-bottom: 10px;
+  }
+  .xmas-mk-head h2 {
+    font-size: 22px;
+  }
+  .xmas-mk-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 0;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .xmas-mk-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: visible;
+    padding-right: 0;
+  }
+  .xmas-mk-stage {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+    justify-items: unset;
+  }
+  .xmas-mk-snow {
+    width: 96px;
+  }
+  .xmas-mk-name {
+    font-size: 15px;
+    text-align: left;
+  }
+  .xmas-mk-card {
+    padding: 12px;
+  }
+  .xmas-mk-main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+  }
+  .xmas-mk-tabs {
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 6px;
+  }
+  .xmas-mk-tabs button {
+    min-height: 34px;
+    padding: 0 11px;
+    font-size: 12px;
+  }
+  .xmas-mk-options {
+    overflow: visible;
+    padding: 12px;
+  }
+  .xmas-mk-options h3 {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .xmas-mk-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .xmas-mk-grid button {
+    min-height: 42px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  .xmas-mk-foot {
+    gap: 8px;
+    padding-top: 10px;
+  }
+  .xmas-wiz-nav {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .xmas-wiz-back,
+  .xmas-wiz-next {
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 14px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .xmas-wiz-back {
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+  }
+  .xmas-wiz-back:disabled {
+    opacity: 0.4;
+  }
+  .xmas-wiz-next {
+    border: 0;
+    background: linear-gradient(180deg, var(--spruce-2), var(--spruce));
+    color: var(--paper-3);
+  }
+  .xmas-wiz-count {
+    justify-self: center;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .xmas-wiz-spacer {
+    width: 1px;
+  }
+  .xmas-mk-actions {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-mk-body {
+    align-self: start;
+    align-content: start;
+  }
+  .xmas-mk-foot {
+    align-self: end;
+  }
+}
+@media (max-width: 759px) {
+  /* กล่องหน้าต่างบนมือถือเป็นคอลัมน์ธรรมดา (แถบจับด้านบนเป็นองค์ประกอบของกล่องเอง) */
+  .xmas-mk {
+    display: flex;
+    flex-direction: column;
+  }
+  .xmas-mk-head,
+  .xmas-mk-foot {
+    flex: none;
+  }
+  .xmas-mk-body {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-mk-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .xmas-mk-foot .xmas-wiz-nav,
+  .xmas-mk-foot .xmas-mk-actions {
+    width: 100%;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-mk > * {
+    align-self: stretch;
+    width: 100%;
+    justify-self: stretch;
+  }
+}
+
+/* ---------- Exclusive และสนับสนุนบนมือถือ: ทีละขั้น พอดีจอ ---------- */
+@media (max-width: 759px) {
+  .xmas-support,
+  .xmas-exclusive {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    overflow: hidden;
+  }
+  .xmas-support > *,
+  .xmas-exclusive > * {
+    flex: none;
+    width: 100%;
+  }
+  .xmas-support h2,
+  .xmas-exclusive h2 {
+    font-size: 22px;
+    margin: 0;
+  }
+  .xmas-support .xmas-sup-lead,
+  .xmas-exclusive .xmas-sup-lead {
+    display: none;
+  }
+  .xmas-support .xmas-x,
+  .xmas-exclusive .xmas-x {
+    top: 12px;
+    right: 12px;
+  }
+  .xmas-sup-grid,
+  .xmas-ex-split {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .xmas-sup-grid > .xmas-sup-card,
+  .xmas-sup-grid > .xmas-sup-wide,
+  .xmas-ex-split > .xmas-ex-col {
+    flex: none;
+    width: 100%;
+  }
+  .xmas-ex-split > .xmas-ex-back {
+    flex: none;
+  }
+  .xmas-ex-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .xmas-ex-side {
+    order: -1;
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .xmas-ex-side .xmas-sign-stage {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+  }
+  .xmas-ex-side .xmas-sign-snow,
+  .xmas-ex-side .xmas-snowman {
+    width: 84px;
+    flex: none;
+  }
+  .xmas-ex-side .xmas-board-canvas {
+    width: 100%;
+    min-width: 0;
+  }
+  .xmas-ex-side .xmas-sky-canvas {
+    border-radius: 16px;
+  }
+  .xmas-ex-side .xmas-hint {
+    display: none;
+  }
+  .xmas-ex-side .xmas-msg {
+    margin: 0;
+  }
+  .xmas-sec {
+    padding: 12px;
+    gap: 8px;
+  }
+  .xmas-sec-head h3 {
+    font-size: 14px;
+  }
+  .xmas-sup-card {
+    padding: 12px;
+    gap: 8px;
+  }
+  .xmas-sup-prices button {
+    min-height: 50px;
+    font-size: 18px;
+  }
+  .xmas-spot-grid button,
+  .xmas-sup-chips button,
+  .xmas-pick-chips button {
+    min-height: 34px;
+    font-size: 12.5px;
+  }
+  .xmas-sup-foot,
+  .xmas-ex-final {
+    display: grid;
+    gap: 8px;
+  }
+  .xmas-sup-foot .xmas-submit,
+  .xmas-ex-final .xmas-submit {
+    width: 100%;
+  }
+  /* ปุ่มสุดท้ายแสดงเฉพาะขั้นสุดท้าย */
+  .xmas-exclusive [data-step]:not([data-on="true"]),
+  .xmas-support [data-step]:not([data-on="true"]) {
+    display: none !important;
+  }
+  .xmas-exclusive .xmas-wiz-nav,
+  .xmas-support .xmas-wiz-nav {
+    display: grid;
+  }
+  .xmas-exclusive .xmas-msg,
+  .xmas-support .xmas-msg {
+    font-size: 12.5px;
+    margin: 0;
+  }
+}
+
+/* ---------- มือถือ: แผงแขวนคำอวยพร ---------- */
+@media (max-width: 759px) {
+  .xmas-wish.is-open .xmas-sheet-toggle {
+    display: none;
+  }
+  .xmas-wish .xmas-form-close {
+    display: grid;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(15, 46, 36, 0.08);
+    color: var(--ink);
+    border: 0;
+  }
+  .xmas-wish .xmas-build-top {
+    position: relative;
+  }
+  .xmas-wish .xmas-build-preview {
+    height: 128px;
+    margin-bottom: 4px;
+  }
+  .xmas-wish .xmas-build-slot {
+    margin: 4px 0 6px;
+    font-size: 12.5px;
+  }
+  .xmas-wish .xmas-part-grid {
+    gap: 6px;
+  }
+  .xmas-wish .xmas-part-grid button {
+    min-height: 56px;
+    padding: 6px;
+  }
+}
+
+/* ---------- มือถือ: ชวนเพื่อน ---------- */
+@media (max-width: 759px) {
+  .xmas-invite {
+    display: block;
+    width: min(92vw, 400px);
+  }
+  .xmas-invite::before {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 28px 28px 0 0;
+  }
+}
+
+/* ---------- มือถือ: ประวัติล่าสุด แท็บเรียงเท่ากันพอดีจอ ---------- */
+@media (max-width: 759px) {
+  .xmas-feed .xmas-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 8px 10px;
+    overflow: visible;
+  }
+  .xmas-feed .xmas-tab {
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    min-height: 52px;
+    padding: 6px 2px;
+    font-size: 11px;
+    line-height: 1.15;
+    justify-content: center;
+    text-align: center;
+  }
+  .xmas-feed .xmas-tab span {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .xmas-feed .xmas-tab em {
+    font-size: 10px;
+    padding: 0 6px;
+  }
+  .xmas-feed .xmas-tab .xicon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ---------- มือถือ: เมนูล่างแบบกระจกเข้ม ตามแบบอ้างอิง ---------- */
+@media (max-width: 759px) {
+  .xmas-actions {
+    background: rgba(12, 42, 33, 0.92);
+    border: 1px solid rgba(232, 209, 154, 0.22);
+    border-radius: 24px;
+    box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.7);
+  }
+  .xmas-action {
+    background: transparent;
+    color: rgba(247, 242, 230, 0.82);
+    border-radius: 16px;
+    transform: none;
+  }
+  .xmas-action.is-exclusive {
+    transform: none;
+    background: transparent;
+    color: #e8d19a;
+    font-weight: 700;
+    box-shadow: none;
+    min-height: 56px;
+  }
+  .xmas-action.is-exclusive .xicon {
+    color: #e8d19a;
+  }
+  .xmas-action-phone {
+    background: var(--berry-2);
+    color: #fff;
+    border-radius: 16px;
+    min-height: 56px;
+  }
+  .xmas-action-phone:hover,
+  .xmas-action-phone:active {
+    background: var(--berry);
+  }
+}
+@media (max-width: 759px) {
+  /* แท็บข้อความไม่ต้องใช้ตัวอย่างลูกบอล จึงซ่อนเพื่อให้พอดีจอ */
+  .xmas-wish-form.is-text-tab .xmas-build-preview {
+    display: none;
+  }
+  .xmas-wish-form.is-text-tab textarea {
+    min-height: 84px;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-support .xmas-kicker,
+  .xmas-exclusive .xmas-kicker,
+  .xmas-support h2,
+  .xmas-exclusive h2 {
+    padding-right: 48px;
+  }
+  .xmas-exclusive h2,
+  .xmas-support h2 {
+    margin-bottom: 10px;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-ex-split > *,
+  .xmas-sup-grid > *,
+  .xmas-sup-foot,
+  .xmas-wiz-nav {
+    align-self: stretch;
+    width: 100%;
+  }
+  .xmas-wiz-nav {
+    grid-template-columns: auto 1fr auto;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-support .xmas-kicker,
+  .xmas-exclusive .xmas-kicker,
+  .xmas-support h2,
+  .xmas-exclusive h2 {
+    max-width: calc(100% - 52px);
+    padding-right: 0;
+  }
+  .xmas-ex-side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .xmas-ex-side .xmas-ex-final {
+    order: 5;
+  }
+}
+@media (max-width: 759px) {
+  /* บนมือถือ ตัวอย่างอยู่บนสุด ปุ่มยืนยันและแถบขั้นอยู่ล่างสุด */
+  .xmas-ex-side {
+    display: contents;
+  }
+  .xmas-ex-side .xmas-sign-stage,
+  .xmas-ex-side .xmas-sky-canvas {
+    order: -1;
+  }
+  .xmas-ex-side .xmas-ex-final {
+    order: 10;
+  }
+  .xmas-ex-split > .xmas-wiz-nav {
+    order: 11;
+  }
+  .xmas-ex-split > .xmas-ex-col {
+    order: 0;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-ex-final,
+  .xmas-sup-foot .xmas-wiz-final {
+    width: 100%;
+    align-self: stretch;
+  }
+  .xmas-ex-final .xmas-submit,
+  .xmas-wiz-final {
+    width: 100%;
+    margin: 0;
+  }
+}
+@media (max-width: 759px) {
+  .xmas-sup-head {
+    padding-right: 48px;
+    gap: 0;
+  }
+  .xmas-sup-badge {
+    display: none;
+  }
+  .xmas-support h2 {
+    max-width: 100%;
+  }
+}
