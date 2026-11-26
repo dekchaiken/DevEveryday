@@ -414,7 +414,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
   return (
     <div
-      className={`xmas-stage ${intro ? "" : "is-ready"}`}
+      className="xmas-stage"
       style={{ "--sky-top": room.skyTop, "--sky-bottom": room.skyBottom, "--room-accent": room.accent } as CSSProperties}
     >
       {/* พื้นหลังท้องฟ้าค่ำและดาว */}

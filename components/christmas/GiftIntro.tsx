@@ -8,7 +8,7 @@ import "./christmas.css";
 // play: รอให้แตะ · open: แกะโบว์และเปิดฝา · leaving: วาบเข้าหน้าหลักแล้วฉากจาง · done: แสดงหน้าหลัก
 type Phase = "play" | "open" | "leaving" | "done";
 
-const LEAVE_MS = 800; // ระยะเวลาฉากจางหลังวาบ
+const LEAVE_MS = 900; // ระยะเวลาที่ฉากของขวัญจางออกพร้อมหน้าหลักที่จางเข้า
 
 // เปิดตัวด้วยกล่องของขวัญ 3 มิติ: ต้องแตะเพื่อแกะ (ไม่เปิดเองอัตโนมัติ) แล้ววาบเข้าหน้าหลัก
 // เล่นทุกครั้งที่โหลดหน้าหรือรีเฟรช และข้ามได้ตลอดเวลา
@@ -32,7 +32,7 @@ export default function GiftIntro({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <div className={`xmas-gift-under ${phase === "done" ? "is-shown" : ""}`}>{children}</div>
+      <div className={`xmas-gift-under ${phase === "leaving" || phase === "done" ? "is-shown" : ""}`}>{children}</div>
 
       {phase !== "done" && (
         <div
