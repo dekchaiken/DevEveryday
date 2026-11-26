@@ -5,8 +5,13 @@ import type { Ornament, OrnamentColor } from "@/lib/christmas/types";
 import { socialLinks } from "@/lib/christmas/social";
 
 // การ์ดคำอวยพรแนวตั้ง 9:16 สำหรับ Story IG / Facebook วาดด้วย canvas ทั้งหมด (ไม่ต้องใช้รูปภายนอก)
+// โทนเดียวกับหน้าเว็บ (Spruce & Foil): พื้นต้นสน กระดาษงาช้าง ขอบทองฟอยล์ และลูกบอลสีจริง
 const W = 1080;
 const H = 1920;
+const GOLD = "#c9a255";
+const INK = "#1d2b22";
+const SERIF = '"Noto Serif Thai", Georgia, serif';
+const SANS = 'Sarabun, "Segoe UI", sans-serif';
 const COLOR_HEX: Record<OrnamentColor, string> = {
   gold: "#e0b04f",
   red: "#c0354c",
@@ -48,9 +53,43 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
+// เส้นฟอยล์ทองจางที่ปลายสองข้าง
+function foilLine(x: CanvasRenderingContext2D, y: number, half: number) {
+  const g = x.createLinearGradient(W / 2 - half, 0, W / 2 + half, 0);
+  g.addColorStop(0, "rgba(201,162,85,0)");
+  g.addColorStop(0.5, "rgba(232,209,154,1)");
+  g.addColorStop(1, "rgba(201,162,85,0)");
+  x.strokeStyle = g;
+  x.lineWidth = 2;
+  x.beginPath();
+  x.moveTo(W / 2 - half, y);
+  x.lineTo(W / 2 + half, y);
+  x.stroke();
+}
+
+// ต้นสนแบบชั้น วาดไว้ด้านหลังแผงกระดาษ
+function drawTree(x: CanvasRenderingContext2D, base: number) {
+  const tiers = [
+    { top: base - 700, w: 280 },
+    { top: base - 560, w: 440 },
+    { top: base - 420, w: 600 },
+    { top: base - 280, w: 780 },
+  ];
+  x.fillStyle = "rgba(6,30,21,0.9)";
+  for (const t of tiers) {
+    x.beginPath();
+    x.moveTo(W / 2, t.top);
+    x.lineTo(W / 2 + t.w / 2, t.top + 230);
+    x.lineTo(W / 2 - t.w / 2, t.top + 230);
+    x.closePath();
+    x.fill();
+  }
+  x.fillRect(W / 2 - 22, base - 30, 44, 50);
+}
+
 async function drawCard(o: Ornament, roomName: string): Promise<HTMLCanvasElement> {
   try {
-    await Promise.all([document.fonts.load('700 64px "Noto Serif Thai"'), document.fonts.load('400 40px Sarabun')]);
+    await Promise.all([document.fonts.load(`700 76px ${SERIF}`), document.fonts.load(`400 40px ${SANS}`)]);
   } catch {
     /* ใช้ฟอนต์สำรองของเครื่อง */
   }
@@ -59,114 +98,139 @@ async function drawCard(o: Ornament, roomName: string): Promise<HTMLCanvasElemen
   c.height = H;
   const x = c.getContext("2d");
   if (!x) return c;
+  x.textAlign = "center";
+  x.textBaseline = "alphabetic";
 
-  // พื้นหลังท้องฟ้าต้นสนกับแสงทอง
+  // พื้นหลังท้องฟ้าต้นสน พร้อมแสงทองด้านหลังแผง
   const bg = x.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, "#0c2e22");
-  bg.addColorStop(0.6, "#123f2e");
-  bg.addColorStop(1, "#071d16");
+  bg.addColorStop(0, "#0d3125");
+  bg.addColorStop(0.55, "#103a2b");
+  bg.addColorStop(1, "#061b13");
   x.fillStyle = bg;
   x.fillRect(0, 0, W, H);
-  const glow = x.createRadialGradient(W / 2, 900, 40, W / 2, 900, 820);
-  glow.addColorStop(0, "rgba(232,209,154,0.35)");
+  const glow = x.createRadialGradient(W / 2, 800, 30, W / 2, 800, 760);
+  glow.addColorStop(0, "rgba(232,209,154,0.32)");
   glow.addColorStop(1, "rgba(232,209,154,0)");
   x.fillStyle = glow;
   x.fillRect(0, 0, W, H);
 
-  // เกล็ดหิมะคงที่ตามลำดับ (วาดซ้ำได้ภาพเดิม)
-  let seed = 7;
+  // เกล็ดหิมะคงที่ (วาดซ้ำได้ภาพเดิม)
+  let seed = 11;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  x.fillStyle = "rgba(255,250,240,0.5)";
-  for (let i = 0; i < 90; i++) {
+  for (let i = 0; i < 110; i++) {
+    x.fillStyle = `rgba(255,250,240,${0.25 + rnd() * 0.5})`;
     x.beginPath();
-    x.arc(rnd() * W, rnd() * H, 1.5 + rnd() * 4, 0, Math.PI * 2);
+    x.arc(rnd() * W, rnd() * H, 1 + rnd() * 3.5, 0, Math.PI * 2);
     x.fill();
   }
 
-  // หัวการ์ด: ชื่อห้อง
-  x.textAlign = "center";
-  x.textBaseline = "alphabetic";
+  // หัวการ์ด: ชื่อห้องและชื่อการ์ด
   x.fillStyle = "#e8d19a";
-  x.font = '600 46px Sarabun, "Segoe UI", sans-serif';
-  x.fillText(`ต้นคริสต์มาส${roomName}`, W / 2, 170);
-  x.font = '400 34px Sarabun, "Segoe UI", sans-serif';
-  x.fillStyle = "rgba(232,209,154,0.85)";
-  x.fillText("คำอวยพรคริสต์มาส", W / 2, 232);
+  x.font = `600 40px ${SANS}`;
+  x.fillText(`ต้นคริสต์มาส${roomName}`, W / 2, 150);
+  x.fillStyle = "#f6e7b8";
+  x.font = `700 84px ${SERIF}`;
+  x.fillText("คำอวยพรคริสต์มาส", W / 2, 260);
+  foilLine(x, 304, 260);
 
-  // คำอวยพรต้องวัดก่อน เพื่อให้แผงกระดาษสูงพอดีกับเนื้อหา
-  const px = 90;
-  const py = 300;
-  const pw = W - 180;
-  x.font = '700 66px "Noto Serif Thai", Georgia, serif';
+  drawTree(x, 1880);
+
+  // วัดคำอวยพรก่อน เพื่อให้แผงสูงพอดีกับเนื้อหา
   const wish = o.wish?.trim() || "ขอให้มีความสุขในวันคริสต์มาส";
-  const lines = wrapLines(x, `“${wish}”`, pw - 200, 7);
-  const afterQuote = 560 + lines.length * 94 + 60;
-  const ph = afterQuote + 240 - py;
+  x.font = `700 76px ${SERIF}`;
+  const lines = wrapLines(x, `“${wish}”`, 700, 6);
+  const panelW = 900;
+  const panelX = (W - panelW) / 2;
+  const panelY = 420;
+  const panelH = 200 + lines.length * 112 + 250;
 
-  // แผงกระดาษ
-  roundRect(x, px, py, pw, ph, 56);
-  x.fillStyle = "#fffaf0";
+  // แผงกระดาษงาช้างพร้อมเงาและขอบทองสองชั้น
+  x.save();
+  x.shadowColor = "rgba(0,0,0,0.4)";
+  x.shadowBlur = 50;
+  x.shadowOffsetY = 20;
+  roundRect(x, panelX, panelY, panelW, panelH, 56);
+  const paper = x.createLinearGradient(0, panelY, 0, panelY + panelH);
+  paper.addColorStop(0, "#fffdf6");
+  paper.addColorStop(1, "#f4ecd8");
+  x.fillStyle = paper;
   x.fill();
+  x.restore();
+  x.lineWidth = 5;
+  x.strokeStyle = GOLD;
+  roundRect(x, panelX, panelY, panelW, panelH, 56);
+  x.stroke();
+  x.lineWidth = 1.5;
+  x.strokeStyle = "rgba(201,162,85,0.55)";
+  roundRect(x, panelX + 18, panelY + 18, panelW - 36, panelH - 36, 42);
+  x.stroke();
+
+  // ลูกบอลที่แขวนจากขอบบนของแผง ใช้สีจริงของลูกบอล
+  const ballY = panelY + 6;
+  x.strokeStyle = GOLD;
+  x.lineWidth = 5;
+  x.beginPath();
+  x.moveTo(W / 2, panelY - 110);
+  x.lineTo(W / 2, ballY - 62);
+  x.stroke();
+  const ball = x.createRadialGradient(W / 2 - 18, ballY - 22, 6, W / 2, ballY, 66);
+  ball.addColorStop(0, "#ffffff");
+  ball.addColorStop(0.22, COLOR_HEX[o.color]);
+  ball.addColorStop(1, "#2a1a10");
+  x.fillStyle = ball;
+  x.beginPath();
+  x.arc(W / 2, ballY, 62, 0, Math.PI * 2);
+  x.fill();
+  x.strokeStyle = GOLD;
   x.lineWidth = 3;
-  x.strokeStyle = "rgba(184,144,74,0.7)";
   x.stroke();
 
-  // ลูกบอลที่แขวนไว้ ใช้สีจริงของลูกบอล
-  const ballY = py + 20;
-  x.strokeStyle = "#b8904a";
-  x.lineWidth = 4;
+  // ป้ายหัวและคำอวยพร
+  x.fillStyle = "#a57a2c";
+  x.font = `600 34px ${SANS}`;
+  x.fillText("คำอวยพรจาก", W / 2, panelY + 160);
+  x.fillStyle = INK;
+  x.font = `700 76px ${SERIF}`;
+  const quoteTop = panelY + 250;
+  lines.forEach((line, i) => x.fillText(line, W / 2, quoteTop + i * 112));
+
+  // เส้นฟอยล์กั้นพร้อมรูปข้าวหลามตัดตรงกลาง
+  const divY = quoteTop + lines.length * 112 + 30;
+  foilLine(x, divY, 180);
+  x.fillStyle = GOLD;
   x.beginPath();
-  x.moveTo(W / 2, py - 40);
-  x.lineTo(W / 2, ballY - 46);
-  x.stroke();
-  const grad = x.createRadialGradient(W / 2 - 14, ballY - 10, 6, W / 2, ballY, 52);
-  grad.addColorStop(0, "#ffffff");
-  grad.addColorStop(0.25, COLOR_HEX[o.color]);
-  grad.addColorStop(1, "#3a2a14");
-  x.fillStyle = grad;
-  x.beginPath();
-  x.arc(W / 2, ballY + 40, 52, 0, Math.PI * 2);
+  x.moveTo(W / 2, divY - 10);
+  x.lineTo(W / 2 + 10, divY);
+  x.lineTo(W / 2, divY + 10);
+  x.lineTo(W / 2 - 10, divY);
+  x.closePath();
   x.fill();
 
-  // คำอวยพร
-  x.fillStyle = "#b8904a";
-  x.font = '600 34px Sarabun, "Segoe UI", sans-serif';
-  x.fillText("คำอวยพรจาก", W / 2, 470);
-  x.fillStyle = "#1d2b22";
-  x.font = '700 66px "Noto Serif Thai", Georgia, serif';
-  lines.forEach((line, i) => x.fillText(line, W / 2, 560 + i * 94));
-
-  // ชื่อและโซเชียล
-  x.strokeStyle = "rgba(184,144,74,0.6)";
-  x.lineWidth = 2;
-  x.beginPath();
-  x.moveTo(W / 2 - 120, afterQuote);
-  x.lineTo(W / 2 + 120, afterQuote);
-  x.stroke();
-  x.fillStyle = "#1d2b22";
-  x.font = '700 56px Sarabun, "Segoe UI", sans-serif';
-  x.fillText(o.name, W / 2, afterQuote + 90);
+  // ชื่อ ลิงก์โซเชียล และวันที่
+  x.fillStyle = INK;
+  x.font = `700 62px ${SANS}`;
+  x.fillText(o.name, W / 2, divY + 92);
   const links = socialLinks(o.social)
     .map((l) => l.label)
     .join("  ·  ");
   if (links) {
     x.fillStyle = "#3d5a48";
-    x.font = '400 36px Sarabun, "Segoe UI", sans-serif';
-    x.fillText(links, W / 2, afterQuote + 150);
+    x.font = `400 38px ${SANS}`;
+    x.fillText(links, W / 2, divY + 150);
   }
   x.fillStyle = "#7a7566";
-  x.font = '400 32px Sarabun, "Segoe UI", sans-serif';
+  x.font = `400 32px ${SANS}`;
   const when = new Date(o.createdAt).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
-  x.fillText(`แขวนเมื่อ ${when} · ลูก${COLOR_LABEL[o.color]}`, W / 2, afterQuote + 184);
+  x.fillText(`แขวนเมื่อ ${when} · ลูก${COLOR_LABEL[o.color]}`, W / 2, divY + (links ? 206 : 160));
 
   // เครดิตด้านล่างการ์ด
   x.fillStyle = "#fffaf0";
-  x.font = '700 50px Sarabun, "Segoe UI", sans-serif';
-  x.fillText("Power by DevEveryDay ❤️", W / 2, py + ph + 200);
-  x.fillStyle = "#cbb57a";
-  x.font = '400 34px Sarabun, "Segoe UI", sans-serif';
+  x.font = `700 52px ${SANS}`;
+  x.fillText("Power by DevEveryDay ❤️", W / 2, 1800);
+  x.fillStyle = "#e8d19a";
+  x.font = `400 34px ${SANS}`;
   const host = typeof window !== "undefined" ? window.location.host : "";
-  x.fillText(`${host}/Christmas`, W / 2, py + ph + 270);
+  x.fillText(`${host}/Christmas`, W / 2, 1862);
   return c;
 }
 
