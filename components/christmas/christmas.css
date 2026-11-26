@@ -5267,3 +5267,521 @@ a.xmas-social-chip:hover {
   width: 170px;
   height: auto;
 }
+
+/* ---------- ตกแต่งตุ๊กตาหิมะ: จัดวางใหม่ซ้าย (ตัวอย่างและช่อง) ขวา (ชิ้นส่วน) ---------- */
+.xmas-mk {
+  width: min(94vw, 980px);
+  max-height: 92dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: 22px 22px 18px;
+  border-radius: 28px;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper));
+  border: 1px solid rgba(184, 144, 74, 0.35);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.xmas-mk-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.xmas-mk-head h2 {
+  margin: 2px 0 0;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.xmas-mk-head .xmas-kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--foil);
+}
+.xmas-mk-head .xmas-x {
+  position: static;
+  flex: none;
+}
+.xmas-mk-body {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 18px;
+  min-height: 0;
+  padding: 16px 0;
+}
+.xmas-mk-side {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.xmas-mk-stage {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 10px 8px;
+  border-radius: 22px;
+  background: radial-gradient(circle at 50% 35%, rgba(232, 209, 154, 0.38), transparent 70%), #fff;
+  border: 1px solid var(--line);
+}
+.xmas-mk-snow {
+  width: 150px;
+  height: auto;
+}
+.xmas-mk-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.xmas-mk-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.xmas-mk-label,
+.xmas-mk-field > span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+.xmas-mk-slot-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 6px;
+}
+.xmas-mk-slot-row input,
+.xmas-mk-field input {
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+.xmas-mk-slot-row input:focus,
+.xmas-mk-field input:focus {
+  border-color: var(--foil);
+  box-shadow: 0 0 0 3px rgba(184, 144, 74, 0.18);
+}
+.xmas-mk-chip {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.xmas-mk-chip:hover {
+  border-color: var(--foil);
+}
+.xmas-mk-chip.is-wide {
+  width: 100%;
+}
+.xmas-mk-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.xmas-mk-status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  flex: none;
+}
+.xmas-mk-status.is-ok i {
+  background: #2f9a64;
+}
+.xmas-mk-status.is-warn {
+  color: #8f1a2d;
+}
+.xmas-mk-status.is-warn i {
+  background: var(--berry-2);
+}
+.xmas-mk-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--spruce-2);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.xmas-mk-field {
+  display: grid;
+  gap: 6px;
+}
+.xmas-mk-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* ขวา: หมวดชิ้นส่วนแบบแท็บ และตัวเลือกแบบตาราง */
+.xmas-mk-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+.xmas-mk-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.xmas-mk-tabs::-webkit-scrollbar {
+  display: none;
+}
+.xmas-mk-tabs button {
+  flex: none;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.xmas-mk-tabs button.is-on {
+  background: var(--spruce);
+  border-color: var(--spruce);
+  color: var(--paper-3);
+}
+.xmas-mk-options {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.xmas-mk-options h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.xmas-mk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+}
+.xmas-mk-grid button {
+  min-height: 46px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--paper-3);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+}
+.xmas-mk-grid button:hover {
+  transform: translateY(-1px);
+  border-color: var(--foil);
+}
+.xmas-mk-grid button.is-on {
+  background: var(--spruce);
+  color: var(--paper-3);
+  border-color: var(--spruce);
+}
+
+/* ท้าย: ปุ่มสองแบบชัดเจน */
+.xmas-mk-foot {
+  display: grid;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.xmas-mk-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.xmas-mk-primary,
+.xmas-mk-exclusive {
+  display: grid;
+  gap: 2px;
+  place-items: center;
+  min-height: 56px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+.xmas-mk-primary {
+  border: 0;
+  background: linear-gradient(180deg, var(--spruce-2), var(--spruce));
+  color: var(--paper-3);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 14px 24px -16px rgba(15, 46, 36, 0.9);
+}
+.xmas-mk-exclusive {
+  border: 1px solid rgba(184, 144, 74, 0.55);
+  background: linear-gradient(180deg, #fff8e6, #f3e3b8);
+  color: var(--ink);
+}
+.xmas-mk-exclusive span {
+  font-size: 15px;
+  font-weight: 700;
+}
+.xmas-mk-exclusive small {
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+.xmas-mk-primary:disabled,
+.xmas-mk-exclusive:disabled,
+.xmas-mk-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 759px) {
+  .xmas-mk {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    padding: 14px 14px 12px;
+  }
+  .xmas-mk-body {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .xmas-mk-side {
+    overflow: visible;
+    padding-right: 0;
+  }
+  .xmas-mk-stage {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    justify-items: start;
+  }
+  .xmas-mk-snow {
+    width: 110px;
+  }
+  .xmas-mk-main {
+    grid-template-rows: auto auto;
+  }
+  .xmas-mk-options {
+    overflow: visible;
+  }
+  .xmas-mk-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .xmas-mk-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- การ์ดตุ๊กตาหิมะที่คลิก ---------- */
+.xmas-decor-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(92vw, 320px);
+  padding: 22px 20px 18px;
+  text-align: center;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--paper-3), var(--paper));
+  border: 1px solid rgba(184, 144, 74, 0.4);
+  border-radius: 26px;
+  box-shadow: var(--shadow-lg);
+  animation: xmas-decor-card-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes xmas-decor-card-in {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+.xmas-decor-card-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 10px 0 4px;
+}
+.xmas-decor-card-glow {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 209, 154, 0.55), transparent 70%);
+}
+.xmas-decor-card-snow {
+  position: relative;
+  width: 150px;
+  height: auto;
+  animation: xmas-decor-bob 2.6s ease-in-out infinite;
+}
+@keyframes xmas-decor-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1.5deg);
+  }
+}
+.xmas-decor-card-tag {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--foil);
+}
+.xmas-decor-card-name {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.xmas-decor-card-parts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.xmas-decor-card-parts span {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+}
+.xmas-decor-card-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  margin-top: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(155, 28, 49, 0.35);
+  background: #fff;
+  color: var(--berry);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.xmas-decor-card-like.is-liked {
+  background: var(--berry-2);
+  color: #fff;
+}
+.xmas-decor-card-like:disabled {
+  cursor: default;
+}
+
+
+/* ---------- เมนูล่างบนมือถือ: แถบกระจกสีสปรูซ ปุ่ม Exclusive ยกขึ้นเป็นทอง ---------- */
+@media (max-width: 759px) {
+  .xmas-actions {
+    left: 8px;
+    right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    justify-content: space-between;
+    gap: 2px;
+    padding: 6px;
+    border-radius: 26px;
+    background: linear-gradient(180deg, rgba(20, 64, 50, 0.94), rgba(9, 34, 27, 0.97));
+    border: 1px solid rgba(232, 209, 154, 0.32);
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .xmas-action {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 56px;
+    padding: 6px 2px;
+    gap: 4px;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    color: rgba(247, 242, 230, 0.74);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: transform 0.18s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .xmas-action:active {
+    transform: scale(0.94);
+  }
+  .xmas-action .xicon {
+    width: 22px;
+    height: 22px;
+    color: var(--foil-soft);
+  }
+  .xmas-action.is-exclusive {
+    flex: 1.2 1 0;
+    min-height: 64px;
+    transform: translateY(-12px);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #f7dc8a, #b8864a);
+    color: #2a1a08;
+    font-weight: 700;
+    box-shadow: 0 14px 26px -12px rgba(184, 134, 74, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  .xmas-action.is-exclusive .xicon {
+    color: #2a1a08;
+  }
+  .xmas-action-phone {
+    min-height: 56px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #c0354c, #8f1028);
+    color: #fff;
+    font-weight: 700;
+  }
+  .xmas-action-phone .xicon,
+  .xmas-action-phone:hover .xicon {
+    color: #fff;
+  }
+  .xmas-action-phone:hover {
+    background: linear-gradient(180deg, #c0354c, #8f1028);
+    color: #fff;
+  }
+}

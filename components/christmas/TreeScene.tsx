@@ -21,6 +21,7 @@ export type TreeSceneHandle = {
   skyMessage: (text: string, by: string, color: string, theme: string) => void;
   highlightDecor: (slot: number) => void;
   focusOrnament: (id: string | null) => void;
+  focusDecor: (d: Decor | null) => void;
   zoomBy: (factor: number) => void;
   resetView: () => void;
   previewGiant: (spot: number, name: string, message: string) => void;
@@ -788,6 +789,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const startedAt = performance.now();
     function frame() {
       const t = (performance.now() - startedAt) / 1000;
+      if (focusDecorGroup) {
+        // โยกตัวเบา ๆ และกระโดดนิดหนึ่ง เหมือนกำลังทักทาย
+        focusDecorGroup.rotation.z = Math.sin(t * 2.4) * 0.09;
+        focusDecorGroup.position.y = Math.abs(Math.sin(t * 2.6)) * 0.1;
+      }
       const now = performance.now();
 
       if (camAnim) {
@@ -1267,6 +1273,43 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       controls.minDistance = 4.5;
       savedView = null;
     }
+    // ตุ๊กตาหิมะที่คลิก: กล้องเลื่อนไปหา และตุ๊กตาโยกทักทายเบา ๆ ตอนเปิดดู
+    let focusDecorGroup: THREE.Group | null = null;
+    function focusDecor(d: Decor | null) {
+      if (focusDecorGroup) {
+        scene.remove(focusDecorGroup);
+        focusDecorGroup.traverse((o) => {
+          const m = o as THREE.Mesh;
+          m.geometry?.dispose?.();
+          (m.material as THREE.Material | undefined)?.dispose?.();
+        });
+        focusDecorGroup = null;
+      }
+      if (!d) {
+        if (savedView) {
+          animateCam(savedView.pos, savedView.tgt);
+          controls.minDistance = savedView.min;
+          savedView = null;
+        }
+        return;
+      }
+      const pp = SLOT_POSITIONS[d.slot];
+      if (!pp) return;
+      const grp = buildDecorSnowman(d);
+      const aa = Math.atan2(pp.z, pp.x);
+      grp.position.set(pp.x, 0, pp.z);
+      grp.rotation.y = -aa + Math.PI / 2;
+      grp.scale.setScalar(DECOR_SCALE * 1.3);
+      scene.add(grp);
+      focusDecorGroup = grp;
+      if (!savedView) savedView = { pos: camera.position.clone(), tgt: controls.target.clone(), min: controls.minDistance };
+      const out = new THREE.Vector3(pp.x, 0, pp.z).normalize();
+      const toTgt = new THREE.Vector3(pp.x, 0.95, pp.z);
+      const toPos = new THREE.Vector3(pp.x + out.x * 2.6, 1.5, pp.z + out.z * 2.6);
+      controls.minDistance = 0.5;
+      animateCam(toPos, toTgt);
+      burst(new THREE.Vector3(pp.x, 1.1, pp.z), 0xffe7a3, isSmall ? 26 : 40, 0.3);
+    }
     function focusOrnament(id: string | null) {
       if (!id) {
         if (savedView) {
@@ -1451,6 +1494,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       skyMessage: (text: string, by: string, color: string, theme: string) => skyMessage(text, by, color, theme),
       highlightDecor: (slot: number) => highlightDecor(slot),
       focusOrnament: (id: string | null) => focusOrnament(id),
+      focusDecor: (d: Decor | null) => focusDecor(d),
       zoomBy: (factor: number) => zoomBy(factor),
       resetView: () => resetView(),
       previewGiant: (spot: number, name: string, message: string) => previewGiant(spot, name, message),
