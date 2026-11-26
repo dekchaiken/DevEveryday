@@ -21,7 +21,7 @@ export const FONT_CSS: Record<FontKey, string> = {
 // การ์ดหนึ่งใบแบบ 3 มิติ: เอียงตามเมาส์หรือนิ้ว ของตกแต่งและข้อความวางได้อิสระ
 export function CardView({
   spec,
-  tilt = true,
+  tilt = true, // เปิดการขยับอัตโนมัติของการ์ด
   cardRef,
   selected,
   onPropDown,
@@ -41,27 +41,12 @@ export function CardView({
   const own = useRef<HTMLDivElement>(null);
   const ref = cardRef ?? own;
   const texts = textsOf(spec);
-
-  function onMove(e: ReactPointerEvent<HTMLDivElement>) {
-    const el = ref.current;
-    if (!tilt || !el) return;
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    el.style.setProperty("--rx", `${(-py * 12).toFixed(2)}deg`);
-    el.style.setProperty("--ry", `${(px * 16).toFixed(2)}deg`);
-    el.style.setProperty("--shine", `${Math.round((px + 0.5) * 100)}%`);
-  }
-  function onLeave() {
-    const el = ref.current;
-    if (!el) return;
-    el.style.setProperty("--rx", "0deg");
-    el.style.setProperty("--ry", "0deg");
-  }
+  // การ์ดขยับเบา ๆ ตลอดเวลาเอง ไม่ต้องเอาเมาส์ไปชี้ก่อน (tilt ใช้เป็นการเคลื่อนไหวอัตโนมัติ)
+  const cardStyle = (spec.bgColor ? ({ "--base": spec.bgColor } as CSSProperties) : undefined);
 
   return (
-    <div className={`xc-card-wrap ${className ?? ""}`} onPointerMove={onMove} onPointerLeave={onLeave}>
-      <div ref={ref} className={`xc-card xc-theme-${spec.theme} xc-env-${spec.envelope}`}>
+    <div className={`xc-card-wrap ${className ?? ""}`}>
+      <div ref={ref} className={`xc-card xc-theme-${spec.theme} xc-env-${spec.envelope} ${tilt ? "is-idle" : ""}`} style={cardStyle}>
         <div className="xc-card-face">
           <div className="xc-card-frame" aria-hidden />
           <div className="xc-card-props">

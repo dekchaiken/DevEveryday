@@ -46,6 +46,7 @@ const PALETTE: { label: string; kinds: StickerKind[] }[] = [
   { label: "แต่งเพิ่ม", kinds: ["stamp", "seal", "crown", "lantern", "firework", "icicle", "snowball", "pinecone", "cloud", "rainbow"] },
 ];
 
+const BG_PRESETS = ["#d8b48a", "#0c3026", "#ffffff", "#d6f0fb", "#9f1239", "#0f172a", "#fde68a", "#fbcfe8"];
 const WISH_CHIPS = ["ขอให้มีความสุขในวันคริสต์มาส", "Merry Christmas & Happy New Year", "ขอให้ปีใหม่มีแต่รอยยิ้ม", "สุขสันต์วันคริสต์มาสนะ"];
 
 type Drag = { kind: "prop" | "env" | "text"; index?: number; id?: string };
@@ -80,6 +81,10 @@ export function CardStudio({
   const [left, setLeft] = useState<number | null>(null); // โควตาที่เหลือของผู้ใช้ในห้องนี้
   const cardRef = useRef<HTMLDivElement>(null);
   const envRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const sendEnvRef = useRef<HTMLDivElement>(null);
+  const [sending, setSending] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"paper" | "env">("paper");
 
   // โหลดโควตาที่เหลือของผู้ใช้ในห้องนี้
   useEffect(() => {
@@ -178,24 +183,48 @@ export function CardStudio({
     window.addEventListener("pointerup", up);
   }
 
-  // การ์ดบินลงไปที่ปุ่มโซนคำอวยพรก่อนปิดหน้า
-  async function flyToZone() {
-    const el = cardRef.current;
-    const target = document.querySelector("[data-zone-btn]") as HTMLElement | null;
-    if (!el || !target || typeof el.animate !== "function") return;
-    const a = el.getBoundingClientRect();
-    const b = target.getBoundingClientRect();
-    const dx = b.left + b.width / 2 - (a.left + a.width / 2);
-    const dy = b.top + b.height / 2 - (a.top + a.height / 2);
-    const anim = el.animate(
-      [
-        { transform: "translate(0,0) scale(1) rotate(0deg)", opacity: 1, offset: 0 },
-        { transform: `translate(${dx * 0.55}px, ${dy * 0.55 - 90}px) scale(0.8) rotate(-10deg)`, opacity: 1, offset: 0.5 },
-        { transform: `translate(${dx}px, ${dy}px) scale(0.1) rotate(14deg)`, opacity: 0.1, offset: 1 },
-      ],
-      { duration: 950, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" },
-    );
-    await anim.finished.catch(() => undefined);
+  // พับการ์ดใส่ซอง ปิดฝา แล้วซองบินไปที่ปุ่มโซนคำอวยพร ก่อนฉากโต๊ะจางไปหน้าต้นคริสต์มาส
+  async function playSend() {
+    const root = rootRef.current;
+    const card = cardRef.current;
+    const env = sendEnvRef.current;
+    if (!root || !card || !env || typeof card.animate !== "function") return;
+    setSending(true);
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    const cr = card.getBoundingClientRect();
+    const er = env.getBoundingClientRect();
+    const dx = er.left + er.width / 2 - (cr.left + cr.width / 2);
+    const dy = er.top + er.height / 2 - (cr.top + cr.height / 2);
+    env.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, fill: "forwards" });
+    await card
+      .animate(
+        [
+          { transform: "translate(0,0) scale(1) rotateX(0deg)", opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px) scale(0.2) rotateX(75deg)`, opacity: 0 },
+        ],
+        { duration: 800, easing: "cubic-bezier(.5,0,.6,1)", fill: "forwards" },
+      )
+      .finished.catch(() => undefined);
+    const flap = env.querySelector(".xc-env-flap") as HTMLElement | null;
+    await flap
+      ?.animate([{ transform: "rotateX(180deg)" }, { transform: "rotateX(0deg)" }], { duration: 450, easing: "ease-out", fill: "forwards" })
+      .finished.catch(() => undefined);
+    const zb = document.querySelector("[data-zone-btn]") as HTMLElement | null;
+    const tr = zb ? zb.getBoundingClientRect() : ({ left: window.innerWidth / 2, top: window.innerHeight - 60, width: 0, height: 0 } as DOMRect);
+    const ex = tr.left + tr.width / 2 - (er.left + er.width / 2);
+    const ey = tr.top + tr.height / 2 - (er.top + er.height / 2);
+    await env
+      .animate(
+        [
+          { transform: "translate(0,0) scale(1) rotate(0deg)", opacity: 1 },
+          { transform: `translate(${ex}px, ${ey}px) scale(0.3) rotate(-8deg)`, opacity: 0.15 },
+        ],
+        { duration: 900, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" },
+      )
+      .finished.catch(() => undefined);
+    await root
+      .animate([{ opacity: 1, filter: "blur(0px)" }, { opacity: 0, filter: "blur(6px)" }], { duration: 600, easing: "ease", fill: "forwards" })
+      .finished.catch(() => undefined);
   }
 
   async function send() {
@@ -214,7 +243,7 @@ export function CardStudio({
         throw new Error(data.error ?? "ส่งการ์ดไม่สำเร็จ");
       }
       setLeft(typeof data.left === "number" ? data.left : null);
-      await flyToZone();
+      await playSend();
       onSent(data.card);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
@@ -287,7 +316,7 @@ export function CardStudio({
   }
 
   return (
-    <div className={`xc-studio ${enter ? "is-enter" : ""}`} role="dialog" aria-modal="true" aria-label="ออกแบบการ์ดอวยพร">
+    <div ref={rootRef} className={`xc-studio ${enter ? "is-enter" : ""}`} role="dialog" aria-modal="true" aria-label="ออกแบบการ์ดอวยพร">
       <div className="xc-table" aria-hidden>
         <span className="xc-light l1" />
         <span className="xc-light l2" />
@@ -312,10 +341,26 @@ export function CardStudio({
         </span>
       </header>
 
-      <div className={`xc-stage ${step === 0 ? "has-env" : ""}`}>
-        {step === 3 ? (
-          <div className="xc-env-big" ref={envRef}>
-            <EnvelopeArt envelope={spec.envelope} props={spec.envProps} selected={sel} onPropDown={(i, e) => startDrag({ kind: "env", index: i }, e)} className="xc-env-hero" />
+      <div className="xc-stage">
+        {step === 0 && (
+          <div className="xc-seg" role="tablist" aria-label="ดูตัวอย่าง">
+            <button type="button" role="tab" aria-selected={previewMode === "paper"} className={previewMode === "paper" ? "is-on" : ""} onClick={() => setPreviewMode("paper")}>
+              กระดาษ
+            </button>
+            <button type="button" role="tab" aria-selected={previewMode === "env"} className={previewMode === "env" ? "is-on" : ""} onClick={() => setPreviewMode("env")}>
+              ซอง
+            </button>
+          </div>
+        )}
+        {step === 3 || (step === 0 && previewMode === "env") ? (
+          <div className="xc-env-big" ref={step === 3 ? envRef : undefined}>
+            <EnvelopeArt
+              envelope={spec.envelope}
+              props={spec.envProps}
+              selected={step === 3 ? sel : null}
+              onPropDown={step === 3 ? (i, e) => startDrag({ kind: "env", index: i }, e) : undefined}
+              className="xc-env-hero"
+            />
           </div>
         ) : (
           <CardView
@@ -328,15 +373,13 @@ export function CardStudio({
             className="xc-studio-card"
           />
         )}
-        {step === 0 && (
-          <div className="xc-env-stage">
-            <EnvelopeArt envelope={spec.envelope} />
-            <span>ซอง{ENVELOPE_LABEL[spec.envelope]}</span>
-          </div>
-        )}
+        {step === 0 && <span className="xc-stage-cap">{previewMode === "paper" ? THEME_LABEL[spec.theme] : `ซอง${ENVELOPE_LABEL[spec.envelope]}`}</span>}
         {step === 1 && <p className="xc-stage-hint">แตะของบนการ์ดเพื่อเลือก แล้วลากเพื่อย้ายที่</p>}
         {step === 2 && <p className="xc-stage-hint">แตะข้อความบนการ์ดเพื่อเลือก ลากเพื่อวางได้ทุกที่</p>}
         {step === 3 && <p className="xc-stage-hint">แตะสติ๊กเกอร์บนซองแล้วลากเพื่อย้ายได้</p>}
+        <div ref={sendEnvRef} className={`xc-send-env ${sending ? "is-on" : ""}`} aria-hidden>
+          <EnvelopeArt envelope={spec.envelope} props={spec.envProps} />
+        </div>
       </div>
 
       <section className="xc-panel">
@@ -360,6 +403,16 @@ export function CardStudio({
                     {THEME_LABEL[t]}
                   </button>
                 ))}
+              </div>
+              <h3>สีกระดาษ</h3>
+              <div className="xc-bg-row">
+                {BG_PRESETS.map((c) => (
+                  <button key={c} type="button" className={`xc-swatch-dot ${spec.bgColor === c ? "is-on" : ""}`} style={{ background: c }} aria-label={`สีกระดาษ ${c}`} onClick={() => setSpec({ ...spec, bgColor: c })} />
+                ))}
+                <input type="color" className="xc-color-input" value={spec.bgColor ?? "#d8b48a"} onChange={(e) => setSpec({ ...spec, bgColor: e.target.value })} aria-label="สีกระดาษแบบกำหนดเอง" />
+                <button type="button" className="xc-chip-btn" onClick={() => setSpec({ ...spec, bgColor: undefined })}>
+                  ค่าเริ่มต้น
+                </button>
               </div>
               <h3>สีซอง</h3>
               <div className="xc-env-row" role="radiogroup" aria-label="สีซอง">
@@ -430,6 +483,10 @@ export function CardStudio({
                       <button key={c} type="button" role="radio" aria-checked={selT.color === c} aria-label={`สี ${c}`} className={`xc-swatch-dot ${selT.color === c ? "is-on" : ""}`} style={{ background: c }} onClick={() => patchText(selT.id, { color: c })} />
                     ))}
                   </div>
+                  <label className="xc-color-row">
+                    <span>สีอื่น</span>
+                    <input type="color" className="xc-color-input" value={selT.color} onChange={(e) => patchText(selT.id, { color: e.target.value })} aria-label="สีข้อความแบบกำหนดเอง" />
+                  </label>
                   <div className="xc-sel-bar is-on">
                     <button type="button" className={`xc-tool ${selT.bold ? "is-on" : ""}`} onClick={() => patchText(selT.id, { bold: !selT.bold })} aria-pressed={selT.bold} aria-label="ตัวหนา">
                       <b>B</b>
