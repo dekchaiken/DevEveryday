@@ -71,9 +71,8 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
       };
     }
 
-    const size = Math.min(360, Math.max(240, mount.clientWidth || 360));
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(size, size);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -82,6 +81,7 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
+    renderer.setClearColor(0x000000, 0);
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -89,8 +89,14 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
     scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environmentIntensity = 0.7;
 
-    const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
-    const CAM_START = new THREE.Vector3(0, 1.9, 7.4);
+    const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 100);
+    // ระยะกล้องปรับตามสัดส่วนจอ: จอแนวตั้งถอยออกไป กล่องจึงไม่ล้นจอ
+    const framing = () => {
+      const aspect = window.innerWidth / window.innerHeight;
+      const k = 1.7 / Math.min(1, aspect * 1.2);
+      return new THREE.Vector3(0, 1.9 * k, 7.4 * k);
+    };
+    let CAM_START = framing();
     camera.position.copy(CAM_START);
     camera.lookAt(0, 1.0, 0);
     scene.add(camera);
@@ -248,8 +254,10 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
     const t0 = performance.now();
 
     function resize() {
-      const w = Math.min(360, Math.max(240, mount!.clientWidth || 360));
-      renderer.setSize(w, w);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      CAM_START = framing();
     }
     window.addEventListener("resize", resize);
 
@@ -336,7 +344,7 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
 
   return (
     <button type="button" className="gift3d" onClick={onOpen} aria-label="แตะเพื่อแกะของขวัญ">
-      <div ref={mountRef} className="gift3d-canvas" />
+      <span ref={mountRef} className="gift3d-canvas" />
     </button>
   );
 }
