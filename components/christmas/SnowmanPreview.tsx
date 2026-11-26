@@ -28,6 +28,7 @@ const SCARF: Record<string, [string, string]> = {
   blue: ["#3b82f6", "#1e3a8a"],
   white: ["#ffffff", "#c9d6e2"],
   plaid: ["#d6334c", "#7a1020"],
+  purple: ["#b58cff", "#5b21b6"],
 };
 
 // ตุ๊กตาหิมะแบบ SVG สไตล์ flat ที่มีแสงและเงาเล็กน้อย ปรับตามชิ้นส่วนที่เลือก
@@ -143,6 +144,7 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
           <circle cx="100" cy="84" r="1.6" fill="#7a4a10" />
         </>
       )}
+      {parts.nose === "heart" && <path d="M100 86 C90 79 88 74 91 70 C94 66 99 68 100 72 C101 68 106 66 109 70 C112 74 110 79 100 86 Z" fill={`url(#r${uid})`} />}
 
       {/* ผ้าพันคอ */}
       <path d="M72 96 Q100 116 128 96" fill="none" stroke={scarfFill} strokeWidth="11" strokeLinecap="round" />
@@ -170,6 +172,9 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
           <path d="M84 118 L96 110 L96 126 Z" fill={`url(#r${uid})`} />
           <circle cx="84" cy="118" r="3" fill="#7d0d24" />
         </>
+      )}
+      {parts.acc === "snowflake" && (
+        <path d="M93 138 L107 138 M96.5 131.9 L103.5 144.1 M103.5 131.9 L96.5 144.1" fill="none" stroke="#38bdf8" strokeWidth="2.6" strokeLinecap="round" />
       )}
 
       {/* หมวก */}
@@ -228,6 +233,19 @@ export function SnowmanPreview({ parts, className }: { parts: SnowParts; classNa
           <path d="M72 58 Q72 26 100 26 Q128 26 128 58 Z" fill="#7dd3fc" />
           <path d="M72 52 H128 V60 H72 Z" fill="#ffffff" />
           <circle cx="100" cy="22" r="11" fill="#ffffff" />
+        </>
+      )}
+      {parts.hat === "beret" && (
+        <>
+          <ellipse cx="100" cy="46" rx="33" ry="10" fill="#dc2643" transform="rotate(-6 100 46)" />
+          <circle cx="104" cy="36" r="3.4" fill="#7f1d1d" />
+        </>
+      )}
+      {parts.hat === "earmuff" && (
+        <>
+          <path d="M74 62 Q100 12 126 62" fill="none" stroke="#1f2937" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="74" cy="62" r="9.5" fill="#fb7185" />
+          <circle cx="126" cy="62" r="9.5" fill="#fb7185" />
         </>
       )}
       {parts.hat === "holly" && (

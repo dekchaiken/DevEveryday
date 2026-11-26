@@ -4,13 +4,13 @@ import { SLOT_COUNT } from "@/lib/christmas/slots";
 import type { Social } from "@/lib/christmas/social";
 
 export { SLOT_COUNT };
-export const HATS = ["top", "beanie", "santa", "crown", "pom", "holly"] as const;
-export const SCARVES = ["red", "green", "gold", "blue", "white", "plaid"] as const;
-export const NOSES = ["carrot", "button", "star", "bell"] as const;
+export const HATS = ["top", "beanie", "santa", "crown", "pom", "holly", "beret", "earmuff"] as const;
+export const SCARVES = ["red", "green", "gold", "blue", "white", "plaid", "purple"] as const;
+export const NOSES = ["carrot", "button", "star", "bell", "heart"] as const;
 export const ARMS = ["sticks", "wings", "gift", "none"] as const;
 export const BODY_COLORS = ["white", "mint", "sky", "blush"] as const;
 export const LEGS = ["snow", "boots", "gift", "none"] as const; // ฐาน/ขา
-export const ACCESSORIES = ["none", "glasses", "bow", "bell"] as const;
+export const ACCESSORIES = ["none", "glasses", "bow", "bell", "snowflake"] as const;
 
 // ชิ้นส่วนตุ๊กตาที่ผู้ซื้อ Exclusive เลือก (ใช้ตอนสร้างคำสั่งซื้อ)
 export type DecorPick = { slot: number; hat: string; scarf: string; nose: string; arms: string; body: string; legs: string; acc: string };

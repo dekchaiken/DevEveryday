@@ -40,6 +40,11 @@ const LABEL: Record<string, string> = {
   bell: "กระดิ่ง",
   glasses: "แว่นตา",
   bow: "โบว์",
+  beret: "เบเร่ต์",
+  earmuff: "ที่ปิดหู",
+  purple: "ม่วง",
+  heart: "หัวใจ",
+  snowflake: "เกล็ดหิมะ",
 };
 
 const BODY_HEX: Record<string, string> = { white: "#ffffff", mint: "#d1fae5", sky: "#dbeafe", blush: "#fce7f3" };
@@ -100,14 +105,33 @@ export function InviteModal({ roomId, roomName, online, capacity, onClose }: { r
 
 // ----- ตกแต่งตุ๊กตาหิมะ: เลือกชิ้นส่วน เลือกช่อง แล้ววาง -----
 type PartKey = "hat" | "scarf" | "nose" | "arms" | "body" | "legs" | "acc";
-const PART_TABS: { key: PartKey; label: string; list: readonly string[] }[] = [
-  { key: "hat", label: "หัว", list: HATS },
-  { key: "scarf", label: "ผ้าพันคอ", list: SCARVES },
-  { key: "nose", label: "จมูก", list: NOSES },
-  { key: "arms", label: "แขน", list: ARMS },
-  { key: "body", label: "ตัว", list: BODY_COLORS },
-  { key: "legs", label: "ฐาน", list: LEGS },
-  { key: "acc", label: "เครื่องประดับ", list: ACCESSORIES },
+// หมวดการตกแต่ง 3 หมวด แต่ละหมวดมีกลุ่มย่อยที่ต้องพอดีบนหน้าจอโดยไม่ต้องเลื่อน
+const SECTIONS: { title: string; short: string; groups: { key: PartKey; label: string; list: readonly string[] }[] }[] = [
+  {
+    title: "หัวและใบหน้า",
+    short: "หัว/หน้า",
+    groups: [
+      { key: "hat", label: "หมวก", list: HATS },
+      { key: "nose", label: "จมูก", list: NOSES },
+    ],
+  },
+  {
+    title: "ผ้าพันคอและตัว",
+    short: "ผ้าพัน/ตัว",
+    groups: [
+      { key: "scarf", label: "ผ้าพันคอ", list: SCARVES },
+      { key: "body", label: "สีตัว", list: BODY_COLORS },
+    ],
+  },
+  {
+    title: "แขน ฐาน และประดับ",
+    short: "แขน/ฐาน/ประดับ",
+    groups: [
+      { key: "arms", label: "แขน", list: ARMS },
+      { key: "legs", label: "ฐาน", list: LEGS },
+      { key: "acc", label: "เครื่องประดับ", list: ACCESSORIES },
+    ],
+  },
 ];
 
 // ตัวสร้างตุ๊กตาหิมะ: ตัวอย่างอยู่ด้านบนแบบเรียลไทม์ ส่วนด้านล่างเลือกทีละหมวด
@@ -176,7 +200,7 @@ export function DecorModal({
       });
   }, [hasExclusive]);
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
-  const [tab, setTab] = useState<PartKey | "slot">("hat");
+  const [section, setSection] = useState(0);
   // บนมือถือแสดงทีละขั้น: 0 ช่องวางและชื่อ · 1 ตกแต่งและยืนยัน (บนคอมแสดงทุกขั้นพร้อมกัน)
   const [step, setStep] = useState(0);
   const LAST = 1;
@@ -189,7 +213,6 @@ export function DecorModal({
   const slotTaken = slot !== null && taken.has(slot);
   const slotReserved = slot !== null && isReservedSlot(slot);
   const slotBlocked = slotTaken || slotReserved;
-  const current = PART_TABS.find((t) => t.key === tab);
 
   function nearestFree(from: number): number | null {
     const p = SLOT_POSITIONS[from];
@@ -325,32 +348,37 @@ export function DecorModal({
           </aside>
 
           <section className="xmas-mk-main" data-step="1" data-on={step === 1}>
-            <nav className="xmas-mk-tabs" role="tablist" aria-label="หมวดชิ้นส่วน">
-              {PART_TABS.map((t) => (
-                <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} onClick={() => setTab(t.key)}>
-                  {t.label}
+            <nav className="xmas-mk-tabs" role="tablist" aria-label="หมวดการตกแต่ง">
+              {SECTIONS.map((s, i) => (
+                <button key={s.title} type="button" role="tab" aria-selected={section === i} className={section === i ? "is-on" : ""} onClick={() => setSection(i)}>
+                  <span className="xmas-mk-tab-num">{i + 1}</span>
+                  <span className="xmas-mk-tab-long">{s.title}</span>
+                  <span className="xmas-mk-tab-short">{s.short}</span>
                 </button>
               ))}
             </nav>
             <div className="xmas-mk-options" role="tabpanel">
-              {current && (
-                <>
-                  <h3>{current.label}</h3>
+              {SECTIONS[section].groups.map((g) => (
+                <div className="xmas-mk-group" key={g.key}>
+                  <h3>
+                    {g.label}
+                    <small>{LABEL[parts[g.key]] ?? parts[g.key]}</small>
+                  </h3>
                   <div className="xmas-mk-grid">
-                    {current.list.map((v) => (
+                    {g.list.map((v) => (
                       <button
                         type="button"
                         key={v}
-                        className={parts[current.key] === v ? "is-on" : ""}
-                        aria-pressed={parts[current.key] === v}
-                        onClick={() => setParts({ ...parts, [current.key]: v })}
+                        className={parts[g.key] === v ? "is-on" : ""}
+                        aria-pressed={parts[g.key] === v}
+                        onClick={() => setParts({ ...parts, [g.key]: v })}
                       >
                         {LABEL[v] ?? v}
                       </button>
                     ))}
                   </div>
-                </>
-              )}
+                </div>
+              ))}
             </div>
           </section>
         </div>
