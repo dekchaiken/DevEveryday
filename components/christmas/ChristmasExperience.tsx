@@ -32,6 +32,7 @@ import { CardReveal, WishZone } from "./WishZone";
 import { CoachSpotlight, type SpotStep } from "./CoachSpotlight";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
+import { ZONE_CAPACITY } from "@/lib/christmas/slots";
 import "./wishcards.css";
 import "./christmas.css";
 
@@ -121,6 +122,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [tipX, setTipX] = useState<number | null>(null); // ตำแหน่งแนวนอนของป้ายให้ตรงปุ่มโซนคำอวยพร
   const [cards, setCards] = useState<CardRecord[]>([]);
   const [cardsLoading, setCardsLoading] = useState(false);
+  // รายการในโซนแบบแบ่งหน้า (รองรับการ์ดจำนวนมาก) และจำนวนการ์ดทั้งหมดของห้อง
+  const [zoneAll, setZoneAll] = useState<CardRecord[]>([]);
+  const [zonePage, setZonePage] = useState(0);
+  const [zoneTotal, setZoneTotal] = useState(0);
+  const [zoneBusy, setZoneBusy] = useState(false);
   const [studioEnter, setStudioEnter] = useState(false); // เล่นแอนิเมชันเข้าโต๊ะ
   const [studioMandatory, setStudioMandatory] = useState(false); // ครั้งแรก: ต้องออกแบบการ์ดก่อน
   const [leavingOnboard, setLeavingOnboard] = useState(false); // หน้าโปรไฟล์กำลังจางออกไปโต๊ะ
@@ -517,12 +523,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       .catch(() => undefined);
   }, [roomId]);
 
+  // การ์ดใหม่สุด (ที่แขวนบนรั้วในฉาก) และจำนวนทั้งหมดของห้อง
   const refreshCards = useCallback(async () => {
     setCardsLoading(true);
     try {
-      const res = await fetch(`/api/christmas/card?room=${roomId}`, { cache: "no-store" });
-      const data = (await res.json()) as { cards?: CardRecord[] };
+      const res = await fetch(`/api/christmas/card?room=${roomId}&size=${ZONE_CAPACITY}`, { cache: "no-store" });
+      const data = (await res.json()) as { cards?: CardRecord[]; total?: number };
       if (data.cards) setCards(data.cards);
+      if (typeof data.total === "number") setZoneTotal(data.total);
     } catch {
       /* ลองใหม่รอบถัดไป */
     } finally {
@@ -532,6 +540,31 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   useEffect(() => {
     refreshCards();
   }, [refreshCards]);
+
+  // รายการทั้งหมดในโซน: โหลดทีละ 60 ใบ ตามที่ผู้ใช้กดขอเพิ่ม
+  const loadZone = useCallback(
+    async (page: number) => {
+      setZoneBusy(true);
+      try {
+        const res = await fetch(`/api/christmas/card?room=${roomId}&size=60&page=${page}`, { cache: "no-store" });
+        const data = (await res.json()) as { cards?: CardRecord[]; total?: number };
+        if (data.cards) {
+          const incoming = data.cards;
+          setZoneAll((prev) => (page === 1 ? incoming : [...prev, ...incoming.filter((c) => !prev.some((p) => p.id === c.id))]));
+          setZonePage(page);
+        }
+        if (typeof data.total === "number") setZoneTotal(data.total);
+      } catch {
+        /* ลองกดอีกครั้ง */
+      } finally {
+        setZoneBusy(false);
+      }
+    },
+    [roomId],
+  );
+  useEffect(() => {
+    if (zoneList) loadZone(1);
+  }, [zoneList, loadZone]);
   // ขณะเปิดโซนคำอวยพรให้รีเฟรชรายการทุก 15 วินาที
   useEffect(() => {
     if (!zoneOpen) return;
@@ -555,6 +588,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     if (likedWishes.has(id)) return;
     setLikedWishes((set) => new Set(set).add(id));
     setCards((list) => list.map((c) => (c.id === id ? { ...c, likes: c.likes + 1 } : c)));
+    setZoneAll((list) => list.map((c) => (c.id === id ? { ...c, likes: c.likes + 1 } : c)));
     try {
       await fetch("/api/christmas/card/like", {
         method: "POST",
@@ -1052,7 +1086,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {/* โซนคำอวยพรอยู่บนแผนที่: แถบควบคุมด้านล่างเมื่อกล้องไปที่โซน */}
       {zoneOpen && !zoneList && (
         <div className="xz-hud" role="toolbar" aria-label="โซนคำอวยพร">
-          <span className="xz-hud-count">โซนคำอวยพร · {cards.length} ใบ</span>
+          <span className="xz-hud-count">โซนคำอวยพร · {zoneTotal} ใบ</span>
           <button type="button" className="xz-hud-btn" onClick={() => setZoneList(true)}>
             ดูรายการ
           </button>
@@ -1071,10 +1105,13 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
       {zoneOpen && zoneList && (
         <WishZone
-          cards={cards}
+          cards={zoneAll}
+          total={zoneTotal}
+          hasMore={zoneAll.length < zoneTotal}
           liked={likedWishes}
-          loading={cardsLoading}
+          loading={zoneBusy}
           room={roomId}
+          onLoadMore={() => loadZone(zonePage + 1)}
           onLike={(id) => likeCard(id)}
           onClose={() => setZoneList(false)}
         />

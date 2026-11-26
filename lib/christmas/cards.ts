@@ -22,7 +22,7 @@ export async function addCard(c: StoredCard) {
   await cmd("HSET", K(c.room), c.id, JSON.stringify(c));
 }
 
-// การ์ดของห้อง ใหม่สุดก่อน จำกัด 300 ใบเพื่อไม่ให้ข้อมูลตอบกลับใหญ่เกินไป
+// การ์ดทั้งหมดของห้อง ใหม่สุดก่อน (หน้าเว็บขอทีละหน้าด้วย page/size)
 export async function listCards(room: string): Promise<StoredCard[]> {
   let items: StoredCard[];
   if (!storeConfigured()) {
@@ -32,7 +32,7 @@ export async function listCards(room: string): Promise<StoredCard[]> {
     items = [];
     for (let i = 0; i < raw.length; i += 2) items.push(JSON.parse(raw[i + 1]) as StoredCard);
   }
-  return items.sort((a, b) => b.createdAt - a.createdAt).slice(0, 300);
+  return items.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export async function findCard(room: string, id: string): Promise<StoredCard | null> {

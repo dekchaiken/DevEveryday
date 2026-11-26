@@ -26,9 +26,19 @@ export async function GET(req: Request) {
     const likes = await ornamentLikeCounts(room.id);
     return NextResponse.json({ card: toPublic(card, likes[card.id] ?? 0) }, { headers: { "Cache-Control": "no-store" } });
   }
-  const [cards, likes, used] = await Promise.all([listCards(room.id), ornamentLikeCounts(room.id), clientId ? usedCardSlots(room.id, clientId) : Promise.resolve(0)]);
+  // แบ่งเป็นหน้า: หน้าละไม่เกิน 200 ใบ เพื่อรองรับการ์ดจำนวนมากในโซนเดียว
+  const size = Math.min(200, Math.max(1, Number(url.searchParams.get("size")) || 60));
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const [all, likes, used] = await Promise.all([listCards(room.id), ornamentLikeCounts(room.id), clientId ? usedCardSlots(room.id, clientId) : Promise.resolve(0)]);
+  const slice = all.slice((page - 1) * size, page * size);
   return NextResponse.json(
-    { cards: cards.map((c) => toPublic(c, likes[c.id] ?? 0)), left: clientId ? Math.max(0, CARDS_PER_PERSON - used) : CARDS_PER_PERSON },
+    {
+      cards: slice.map((c) => toPublic(c, likes[c.id] ?? 0)),
+      total: all.length,
+      page,
+      size,
+      left: clientId ? Math.max(0, CARDS_PER_PERSON - used) : CARDS_PER_PERSON,
+    },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
