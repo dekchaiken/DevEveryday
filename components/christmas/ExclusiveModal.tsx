@@ -3,20 +3,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
-import {
-  DEFAULT_GIANT_LOOK,
-  GIANT_ACC,
-  GIANT_ARMS,
-  GIANT_BODY,
-  GIANT_HATS,
-  GIANT_LEGS,
-  GIANT_NOSES,
-  GIANT_SCARVES,
-  SIGN_BOARDS,
-  type GiantLook,
-} from "@/lib/christmas/giant";
+import { DEFAULT_GIANT_LOOK, GIANT_BODY, GIANT_LIGHTS, SIGN_BOARDS, type GiantLook } from "@/lib/christmas/giant";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
+import { CottagePreview } from "./CottagePreview";
 import { Icon } from "./Icon";
 import { PaymentPanel, useDonateConfig } from "./PaymentPanel";
 import { drawGiantBoard, paintSkyScene, type BoardStyle, type SkyTheme } from "./skyArt";
@@ -72,6 +62,8 @@ const LABEL: Record<string, string> = {
   ivory: "งาช้าง",
   berry: "เบอร์รี่",
   pine: "สน",
+  cream: "ครีม",
+  multi: "หลากสี",
 };
 
 type View = "menu" | "giant" | "message" | "decor";
@@ -244,7 +236,7 @@ export default function ExclusiveModal({
 
   const title = {
     menu: "Exclusive",
-    giant: "ตั้งตุ๊กตาหิมะยักษ์",
+    giant: "ตั้งบ้านหิมะ Exclusive",
     message: "ข้อความอวยพรขึ้นจอ",
     decor: "วางตุ๊กตาหิมะ Exclusive",
   }[view];
@@ -290,8 +282,8 @@ export default function ExclusiveModal({
                 <Icon name="crown" size={26} />
               </span>
               <span className="xmas-ex-body">
-                <b>ตุ๊กตาหิมะยักษ์</b>
-                <small>ตกแต่งได้อิสระกว่าตุ๊กตาฟรี ถือป้ายข้อความของคุณไว้บนลาน</small>
+                <b>บ้านหิมะ Exclusive</b>
+                <small>บ้านโมเดลหิมะหลังใหญ่ เลือกสีผนังและป้ายข้อความของคุณได้ ตั้งไว้บนลาน</small>
                 <em>เริ่มที่ ฿{cfg.presetPrices[0]}</em>
               </span>
               <span className="xmas-ex-arrow" aria-hidden>
@@ -314,7 +306,7 @@ export default function ExclusiveModal({
           </div>
         )}
 
-        {/* ตุ๊กตาหิมะยักษ์: ซ้ายเลือกและพิมพ์ ขวาดูตุ๊กตาและป้ายแบบเรียลไทม์ */}
+        {/* บ้านหิมะ Exclusive: ซ้ายเลือกและพิมพ์ ขวาดูตุ๊กตาและป้ายแบบเรียลไทม์ */}
         {!order && cfg && !disabled && view === "giant" && (
           <form className="xmas-ex-split" onSubmit={submitGiant}>
             <button type="button" className="xmas-ex-back" onClick={() => goView("menu")}>
@@ -363,22 +355,17 @@ export default function ExclusiveModal({
               <section className="xmas-sec" data-step="1" data-on={step === 1}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">2</span>
-                  <h3>ตกแต่ง · หัวและตัว</h3>
+                  <h3>ตกแต่ง · บ้านหลังนี้</h3>
                 </header>
-                <PickRow title="หมวก" options={GIANT_HATS} value={look.hat} onChange={(v) => setPart("hat", v)} />
-                <PickRow title="ผ้าพันคอ" options={GIANT_SCARVES} value={look.scarf} onChange={(v) => setPart("scarf", v)} />
-                <PickRow title="สีตัว" options={GIANT_BODY} value={look.body} onChange={(v) => setPart("body", v)} />
-                <PickRow title="จมูก" options={GIANT_NOSES} value={look.nose} onChange={(v) => setPart("nose", v)} />
+                <PickRow title="สีผนังบ้าน" options={GIANT_BODY} value={look.body} onChange={(v) => setPart("body", v)} />
+                <PickRow title="สีไฟประดับ" options={GIANT_LIGHTS} value={look.lights} onChange={(v) => setPart("lights", v)} />
               </section>
 
               <section className="xmas-sec" data-step="2" data-on={step === 2}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">3</span>
-                  <h3>ตกแต่ง · แขน ฐาน และป้าย</h3>
+                  <h3>ตกแต่ง · ป้ายข้างบ้าน</h3>
                 </header>
-                <PickRow title="แขน" options={GIANT_ARMS} value={look.arms} onChange={(v) => setPart("arms", v)} />
-                <PickRow title="ฐาน" options={GIANT_LEGS} value={look.legs} onChange={(v) => setPart("legs", v)} />
-                <PickRow title="ของประดับ" options={GIANT_ACC} value={look.acc} onChange={(v) => setPart("acc", v)} />
                 <PickRow title="สีป้าย" options={SIGN_BOARDS} value={look.board} onChange={(v) => setPart("board", v)} />
               </section>
 
@@ -409,10 +396,10 @@ export default function ExclusiveModal({
 
             <aside className="xmas-ex-col xmas-ex-side">
               <div className="xmas-sign-stage">
-                <SnowmanPreview parts={look} className="xmas-sign-snow" />
+                <CottagePreview look={look} className="xmas-sign-snow" />
                 <BoardCanvas name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} style={look.board as BoardStyle} />
               </div>
-              <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ ตุ๊กตาจะถือป้ายนี้ไว้บนลานตรงตำแหน่งที่เลือก</p>
+              <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ บ้านหลังนี้จะตั้งอยู่บนลานตรงตำแหน่งที่เลือก พร้อมป้ายนี้ข้างบ้าน</p>
               <div className="xmas-ex-final" data-step="3" data-on={step === 3}>
                 {error && <p className="xmas-msg err">{error}</p>}
                 <button className="xmas-submit" disabled={busy}>

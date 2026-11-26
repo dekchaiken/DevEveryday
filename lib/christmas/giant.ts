@@ -1,34 +1,28 @@
-// ลุคของตุ๊กตาหิมะยักษ์ (Exclusive) ใช้ร่วมกันทั้งฝั่งเซิร์ฟเวอร์และเบราว์เซอร์
-// ตัวเลือกชุดนี้มากกว่าตุ๊กตาฟรี เช่น มงกุฎทิอารา เขากวาง หมวกเอลฟ์ สีตัวแบบมุก และสีป้าย
+// ลุคของ Exclusive: บ้านหิมะโมเดลที่สร้างเองในโค้ด พร้อมป้ายห้อยข้างบ้าน
+// ผู้ซื้อเลือกสีผนัง สีสายไฟประดับ และสีป้าย ใช้ร่วมกันทั้งฝั่งเซิร์ฟเวอร์และเบราว์เซอร์
 
-export const GIANT_HATS = ["top", "beanie", "santa", "crown", "pom", "holly", "tiara", "antlers", "elf"] as const;
-export const GIANT_BODY = ["white", "mint", "sky", "blush", "pearl", "ice"] as const;
-export const GIANT_ACC = ["none", "glasses", "bow", "bell", "wreath"] as const;
+export const GIANT_BODY = ["cream", "mint", "sky", "blush", "pearl", "ice"] as const; // สีผนังบ้าน
+export const GIANT_LIGHTS = ["red", "gold", "blue", "multi"] as const; // สีสายไฟรอบประตูและหน้าต่าง
 export const SIGN_BOARDS = ["spruce", "ivory", "berry", "gold"] as const;
-export const GIANT_SCARVES = ["red", "green", "gold", "blue", "white", "plaid"] as const;
-export const GIANT_NOSES = ["carrot", "button", "star", "bell"] as const;
-export const GIANT_ARMS = ["sticks", "wings", "gift", "none"] as const;
-export const GIANT_LEGS = ["snow", "boots", "gift", "none"] as const;
+
+// เลขสีของแต่ละตัวเลือก (ใช้ทั้งบนฉาก 3 มิติและภาพตัวอย่าง)
+export const GIANT_BODY_HEX: Record<string, number> = { cream: 0xf6e3c0, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3, pearl: 0xfff6e6, ice: 0xd6f3ff };
+export const GIANT_LIGHT_HEX: Record<string, number[]> = {
+  red: [0xff3b5c],
+  gold: [0xffd76a],
+  blue: [0x7dd3fc],
+  multi: [0xff3b5c, 0xffd76a, 0x7dd3fc, 0x86efac],
+};
 
 export type GiantLook = {
-  hat: string;
-  scarf: string;
-  nose: string;
-  arms: string;
   body: string;
-  legs: string;
-  acc: string;
+  lights: string;
   board: string;
 };
 
 export const DEFAULT_GIANT_LOOK: GiantLook = {
-  hat: "crown",
-  scarf: "gold",
-  nose: "star",
-  arms: "wings",
-  body: "pearl",
-  legs: "snow",
-  acc: "bow",
+  body: "cream",
+  lights: "red",
   board: "spruce",
 };
 
@@ -41,13 +35,8 @@ export function parseGiantLook(v: unknown): GiantLook | null {
   if (!v || typeof v !== "object") return null;
   const o = v as Record<string, unknown>;
   return {
-    hat: pick(o.hat, GIANT_HATS, DEFAULT_GIANT_LOOK.hat),
-    scarf: pick(o.scarf, GIANT_SCARVES, DEFAULT_GIANT_LOOK.scarf),
-    nose: pick(o.nose, GIANT_NOSES, DEFAULT_GIANT_LOOK.nose),
-    arms: pick(o.arms, GIANT_ARMS, DEFAULT_GIANT_LOOK.arms),
     body: pick(o.body, GIANT_BODY, DEFAULT_GIANT_LOOK.body),
-    legs: pick(o.legs, GIANT_LEGS, DEFAULT_GIANT_LOOK.legs),
-    acc: pick(o.acc, GIANT_ACC, DEFAULT_GIANT_LOOK.acc),
+    lights: pick(o.lights, GIANT_LIGHTS, DEFAULT_GIANT_LOOK.lights),
     board: pick(o.board, SIGN_BOARDS, DEFAULT_GIANT_LOOK.board),
   };
 }

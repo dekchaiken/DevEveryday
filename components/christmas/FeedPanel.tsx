@@ -38,7 +38,7 @@ export function useFeed(roomId: string): FeedData {
 
 type Tab = "recent" | "wishes" | "exclusive" | "team";
 
-// แผงแท็บด้านขวา: คำอวยพรล่าสุด / Exclusive (ตุ๊กตาหิมะยักษ์ของห้อง) / สนับสนุนทีม DevEveryday
+// แผงแท็บด้านขวา: คำอวยพรล่าสุด / Exclusive (บ้านหิมะ Exclusiveของห้อง) / สนับสนุนทีม DevEveryday
 // เวลาแบบอ่านง่าย เช่น "5 นาทีที่แล้ว"
 function ago(t: number) {
   const m = Math.max(0, Math.floor((Date.now() - t) / 60000));
@@ -151,14 +151,14 @@ export function FeedPanel({
                     <b>
                       {e.name} <small>฿{e.amount}</small>
                     </b>
-                    <em>{e.message || "ตุ๊กตาหิมะยักษ์ของห้องนี้"}</em>
+                    <em>{e.message || "บ้านหิมะ Exclusiveของห้องนี้"}</em>
                     <SocialLinks social={e.social} />
                   </span>
                 </div>
               </li>
             ))}
             {feed.exclusive.length === 0 && (
-              <li className="xmas-empty">ยังไม่มีตุ๊กตาหิมะยักษ์ในห้องนี้ ตั้งป้ายแรกได้เลย</li>
+              <li className="xmas-empty">ยังไม่มีบ้านหิมะ Exclusiveในห้องนี้ ตั้งป้ายแรกได้เลย</li>
             )}
           </ul>
         )}
