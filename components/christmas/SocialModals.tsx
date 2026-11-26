@@ -6,6 +6,8 @@ import { ACCESSORIES, HATS, SCARVES, NOSES, ARMS, BODY_COLORS, LEGS, SLOT_COUNT 
 import { isReservedSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { getClientId } from "./clientId";
+import type { Social } from "@/lib/christmas/social";
+import { SocialLinks } from "./ProfileCard";
 import { Icon } from "./Icon";
 import "./christmas.css";
 
@@ -116,6 +118,8 @@ export function DecorModal({
   onClose,
   onPlaced,
   onPickOnMap,
+  defaultName = "",
+  social,
 }: {
   roomId: string;
   roomName: string;
@@ -124,10 +128,12 @@ export function DecorModal({
   onClose: () => void;
   onPlaced: (d: Decor) => void;
   onPickOnMap?: () => void;
+  defaultName?: string;
+  social?: Social;
 }) {
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [tab, setTab] = useState<PartKey | "slot">("hat");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(defaultName);
   const [slot, setSlot] = useState<number | null>(initialSlot);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -170,7 +176,7 @@ export function DecorModal({
       const res = await fetch("/api/christmas/deco", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: roomId, slot, name, ...parts }),
+        body: JSON.stringify({ room: roomId, slot, name, ...parts, social: social ?? {} }),
       });
       const data = (await res.json()) as { decor?: Decor; error?: string };
       if (!res.ok || !data.decor) throw new Error(data.error ?? "วางไม่สำเร็จ");
@@ -318,6 +324,7 @@ export function DecorInfoCard({ d, onClose, onLiked }: { d: Decor; onClose: () =
           </small>
         </div>
       </div>
+      <SocialLinks social={d.social} />
       <button className={`xmas-like ${liked ? "is-liked" : ""}`} onClick={like} disabled={busy || liked}>
         <Icon name="heart" size={18} /> ถูกใจ <span>{d.likes}</span>
       </button>

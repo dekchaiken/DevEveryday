@@ -6,6 +6,7 @@ import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { isReservedSlot } from "@/lib/christmas/slots";
 import { getConfig } from "@/lib/christmas/config";
 import { maskIp, writeLog } from "@/lib/christmas/log";
+import { sanitizeSocial } from "@/lib/christmas/social";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
     acc,
     createdAt: Date.now(),
     likes: 0,
+    social: sanitizeSocial(body.social, (s) => hasBlocked(s, cfg.blockedWords)),
   };
   const ok = await claimDecor(decor);
   if (!ok) return NextResponse.json({ error: "ช่องนี้มีคนวางแล้ว เลือกช่องอื่น" }, { status: 409 });

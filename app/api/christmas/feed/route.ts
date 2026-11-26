@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   if (!room) return NextResponse.json({ error: "ไม่พบห้องนี้" }, { status: 400 });
 
   const paid = (await listOrders(200)).filter((o) => o.status === "paid");
-  const pick = (o: (typeof paid)[number]) => ({ id: o.id, name: o.name, message: o.message, amount: o.amount, paidAt: o.paidAt });
+  const pick = (o: (typeof paid)[number]) => ({ id: o.id, name: o.name, message: o.message, amount: o.amount, paidAt: o.paidAt, social: o.social ?? {} });
   const exclusive = paid.filter((o) => o.room === room.id && o.kind !== "support").slice(0, 30).map(pick);
   const supporters = paid.filter((o) => o.kind === "support").slice(0, 30).map(pick);
 

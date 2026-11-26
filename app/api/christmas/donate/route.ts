@@ -9,6 +9,7 @@ import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { MESSAGE_THEMES, type MessageTheme } from "@/lib/christmas/types";
 import { maskIp, writeLog } from "@/lib/christmas/log";
 import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
+import { sanitizeSocial } from "@/lib/christmas/social";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
     name,
     message,
     spot: kind === "giant" && Number.isInteger(Number(body.spot)) && Number(body.spot) >= 0 && Number(body.spot) < GIANT_SPOT_DEFS.length ? Number(body.spot) : 0,
+    social: sanitizeSocial(body.social, (s) => hasBlocked(s, config.blockedWords)),
     theme: MESSAGE_THEMES.includes(body.theme as MessageTheme) ? (body.theme as MessageTheme) : "fireworks",
     mode: config.payMode,
     status: "awaiting_payment",
