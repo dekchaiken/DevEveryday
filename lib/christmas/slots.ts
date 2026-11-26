@@ -40,15 +40,13 @@ export function nearestSlot(x: number, z: number): number {
   return best;
 }
 
-// ตำแหน่งป้ายประจำห้อง 4 จุดรอบลาน (มุมจากแกน +x, หน้าต้นคือ +z ซึ่งหันเข้าหากล้องตอนเริ่ม)
-// ตุ๊กตาหิมะทั่วไปวางบนช่องที่อยู่ใกล้จุดเหล่านี้ไม่ได้ เพื่อเว้นที่ให้ป้ายขนาดใหญ่
-export const GIANT_SPOT_DEFS = [
-  { label: "หน้าขวา", angle: Math.PI / 4 },
-  { label: "หน้าซ้าย", angle: (3 * Math.PI) / 4 },
-  { label: "หลังซ้าย", angle: (5 * Math.PI) / 4 },
-  { label: "หลังขวา", angle: (7 * Math.PI) / 4 },
-] as const;
-export const GIANT_SPOT_RADIUS = 5;
+// ตำแหน่งตุ๊กตาหิมะยักษ์ 12 จุดบนวงรอบลาน (ห่างจากตุ๊กตาทั่วไป) ซื้อได้จนครบทุกจุด
+export const GIANT_SPOT_COUNT = 12;
+export const GIANT_SPOT_RADIUS = 10;
+export const GIANT_SPOT_DEFS = Array.from({ length: GIANT_SPOT_COUNT }, (_, i) => ({
+  label: `ตำแหน่ง ${i + 1}`,
+  angle: (i / GIANT_SPOT_COUNT) * Math.PI * 2 + Math.PI / 4,
+}));
 
 const RESERVED = new Set<number>();
 for (const d of GIANT_SPOT_DEFS) {

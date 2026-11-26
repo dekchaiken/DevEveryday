@@ -6360,3 +6360,113 @@ a.xmas-social-chip:hover {
     max-width: none;
   }
 }
+
+/* ---------- ข้อความขึ้นจอ: ภาพซ้อนเหนือต้นไม้ พอดีทุกขนาดจอ ---------- */
+.xmas-sky-overlay {
+  position: absolute;
+  left: 50%;
+  top: 104px;
+  z-index: 6;
+  width: min(60vw, 620px);
+  aspect-ratio: 16 / 9;
+  transform: translateX(-50%) scale(0.98);
+  opacity: 0;
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
+}
+.xmas-sky-overlay.is-on {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+.xmas-sky-overlay canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+@media (max-width: 759px) {
+  .xmas-sky-overlay {
+    top: 96px;
+    width: 94vw;
+  }
+}
+.xmas-spot-grid.is-wide {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.xmas-spot-grid.is-wide button {
+  min-height: 42px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.xmas-spot-grid button.is-used,
+.xmas-spot-grid button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* ---------- ตุ๊กตาที่เปิดดูบนมือถือ: การ์ดแถบล่าง ให้เห็นตุ๊กตาด้านบน ---------- */
+@media (max-width: 759px) {
+  .xmas-decor-card {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 96px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    grid-template-columns: 96px minmax(0, 1fr);
+    grid-template-areas:
+      "art tag"
+      "art name"
+      "art parts"
+      "art like";
+    column-gap: 12px;
+    row-gap: 4px;
+    padding: 12px 14px;
+    justify-items: start;
+    text-align: left;
+    border-radius: 24px;
+  }
+  .xmas-decor-card-art {
+    grid-area: art;
+    padding: 0;
+    width: 96px;
+  }
+  .xmas-decor-card-snow {
+    width: 96px;
+  }
+  .xmas-decor-card-glow {
+    width: 90%;
+  }
+  .xmas-decor-card-tag {
+    grid-area: tag;
+    font-size: 11px;
+  }
+  .xmas-decor-card-name {
+    grid-area: name;
+    font-size: 19px;
+  }
+  .xmas-decor-card-parts {
+    grid-area: parts;
+    justify-content: flex-start;
+  }
+  .xmas-decor-card-like {
+    grid-area: like;
+    min-height: 36px;
+    padding: 0 12px;
+    margin-top: 2px;
+    font-size: 13px;
+  }
+  .xmas-decor-card > .xmas-social-links {
+    display: none;
+  }
+  .xmas-decor-card > .xmas-x {
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+  }
+}

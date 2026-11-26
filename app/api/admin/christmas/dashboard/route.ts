@@ -20,7 +20,7 @@ export async function GET() {
         online: counts[r.id] ?? 0,
         capacity: ROOM_CAPACITY,
         ornaments: st.ornaments.length,
-        giant: st.giant,
+        giants: st.giants.length,
       };
     }),
   );
