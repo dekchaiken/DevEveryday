@@ -1911,3 +1911,37 @@
     white-space: nowrap;
   }
 }
+
+/* เปิดซอง: การ์ดอยู่ในซองแล้วค่อย ๆ เลื่อนออกมาทางปากซอง (ซ่อนหลังซองเสมอ) จากนั้นคลี่ตั้งขึ้นให้อ่าน */
+.xz-open .xz-card-slot {
+  z-index: 0;
+  transform: translate(-50%, 70%) rotateX(78deg);
+  transform-origin: 50% 100%;
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+  opacity: 1;
+}
+.xz-open.is-out .xz-card-slot {
+  z-index: 0;
+  transform: translate(-50%, -62%) rotateX(38deg);
+}
+.xz-open.is-show .xz-card-slot {
+  z-index: 6;
+  transform: translate(-50%, -46%) rotateX(0deg);
+}
+.xz-open .xz-envelope-wrap .xc-env-art {
+  transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.xz-open.is-show .xz-envelope-wrap .xc-env-art {
+  opacity: 0.22;
+  transform: translateY(34%) scale(0.92);
+}
+
+/* ตอนคลี่ออกแล้ว การ์ดอยู่กลางซองและลอยขึ้นมาพ้นซองบ้าง ไม่หลุดขอบบนจอ */
+.xz-open .xz-card-slot {
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), bottom 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+}
+.xz-open.is-show .xz-card-slot {
+  z-index: 6;
+  bottom: 50%;
+  transform: translate(-50%, 50%) rotateX(0deg);
+}
