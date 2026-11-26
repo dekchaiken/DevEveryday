@@ -575,8 +575,12 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {coach && (
         <div className="xmas-coach" role="note">
+          <span className="xmas-coach-orb" aria-hidden />
           <div className="xmas-coach-step">
-            <span>{coachStep + 1}/2</span>
+            <span className="xmas-coach-dots" aria-label={`ขั้นที่ ${coachStep + 1} จาก 2`}>
+              <i className={coachStep === 0 ? "is-on" : ""} />
+              <i className={coachStep === 1 ? "is-on" : ""} />
+            </span>
             <button type="button" className="xmas-coach-x" onClick={dismissCoach} aria-label="ปิดคำแนะนำ">
               <Icon name="close" size={14} />
             </button>
@@ -809,6 +813,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {/* แผงแท็บ: คำอวยพร / Exclusive / สนับสนุนทีม */}
       <FeedPanel
         wishes={ornaments}
+        decor={decor}
         feed={feed}
         onWishClick={(o) => setFocus(o)}
         mobileOpen={feedOpen}
