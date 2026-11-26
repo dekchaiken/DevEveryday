@@ -22,7 +22,7 @@ import {
 import type { Social } from "@/lib/christmas/social";
 import { getClientId } from "./clientId";
 import { CardView } from "./CardView";
-import { PropArt } from "./CardProps";
+import { EnvelopeArt, PropArt } from "./CardProps";
 import { Icon } from "./Icon";
 import "./wishcards.css";
 
@@ -37,6 +37,8 @@ export function CardStudio({
   social,
   onClose,
   onSent,
+  mandatory = false,
+  enter = false,
 }: {
   roomId: string;
   roomName: string;
@@ -44,6 +46,8 @@ export function CardStudio({
   social?: Social;
   onClose: () => void;
   onSent: (card: CardRecord) => void;
+  mandatory?: boolean; // ครั้งแรกหลังตั้งชื่อ: ต้องออกแบบและส่งการ์ดก่อน จึงไม่มีปุ่มปิด
+  enter?: boolean; // เล่นแอนิเมชันเข้าโต๊ะ
 }) {
   const [spec, setSpec] = useState<CardSpec>({ ...DEFAULT_CARD, name: defaultName });
   const [step, setStep] = useState(0);
@@ -144,7 +148,7 @@ export function CardStudio({
   const selProp = sel !== null ? spec.props[sel] : null;
 
   return (
-    <div className="xc-studio" role="dialog" aria-modal="true" aria-label="ออกแบบการ์ดอวยพร">
+    <div className={`xc-studio ${enter ? "is-enter" : ""}`} role="dialog" aria-modal="true" aria-label="ออกแบบการ์ดอวยพร">
       <div className="xc-table" aria-hidden>
         <span className="xc-light l1" />
         <span className="xc-light l2" />
@@ -152,9 +156,11 @@ export function CardStudio({
       </div>
 
       <header className="xc-studio-top">
-        <button type="button" className="xc-icon-btn" onClick={onClose} aria-label="ปิด">
-          <Icon name="close" size={18} />
-        </button>
+        {mandatory ? <span className="xc-icon-spacer" aria-hidden /> : (
+          <button type="button" className="xc-icon-btn" onClick={onClose} aria-label="ปิด">
+            <Icon name="close" size={18} />
+          </button>
+        )}
         <div className="xc-studio-title">
           <p className="xc-kicker">การ์ดอวยพร · {roomName}</p>
           <h2>ออกแบบการ์ดของคุณ</h2>
@@ -164,8 +170,14 @@ export function CardStudio({
         </span>
       </header>
 
-      <div className="xc-stage">
+      <div className={`xc-stage ${step === 0 ? "has-env" : ""}`}>
         <CardView spec={spec} cardRef={cardRef} selected={step === 1 ? sel : null} onPropDown={step === 1 ? onPropDown : undefined} className="xc-studio-card" />
+        {step === 0 && (
+          <div className="xc-env-stage">
+            <EnvelopeArt envelope={spec.envelope} />
+            <span>ซอง{ENVELOPE_LABEL[spec.envelope]}</span>
+          </div>
+        )}
         {step === 1 && <p className="xc-stage-hint">แตะของบนการ์ดเพื่อเลือก แล้วลากเพื่อย้ายที่</p>}
       </div>
 
@@ -194,7 +206,8 @@ export function CardStudio({
               <h3>สีซอง</h3>
               <div className="xc-env-row" role="radiogroup" aria-label="สีซอง">
                 {ENVELOPES.map((e: Envelope) => (
-                  <button key={e} type="button" role="radio" aria-checked={spec.envelope === e} aria-label={ENVELOPE_LABEL[e]} className={`xc-env-chip xc-env-${e} ${spec.envelope === e ? "is-on" : ""}`} onClick={() => setSpec({ ...spec, envelope: e })}>
+                  <button key={e} type="button" role="radio" aria-checked={spec.envelope === e} className={`xc-env-chip xc-env-${e} ${spec.envelope === e ? "is-on" : ""}`} onClick={() => setSpec({ ...spec, envelope: e })}>
+                    <EnvelopeArt envelope={e} />
                     <span>{ENVELOPE_LABEL[e]}</span>
                   </button>
                 ))}
@@ -282,9 +295,13 @@ export function CardStudio({
         <footer className="xc-panel-foot">
           {err && <p className="xc-msg">{err}</p>}
           <div className="xc-nav">
-            <button type="button" className="xc-btn-ghost" onClick={() => (step === 0 ? onClose() : setStep(step - 1))}>
-              {step === 0 ? "ยกเลิก" : "ย้อนกลับ"}
-            </button>
+            {step === 0 && mandatory ? (
+              <span className="xc-btn-spacer" aria-hidden />
+            ) : (
+              <button type="button" className="xc-btn-ghost" onClick={() => (step === 0 ? onClose() : setStep(step - 1))}>
+                {step === 0 ? "ยกเลิก" : "ย้อนกลับ"}
+              </button>
+            )}
             {step < STEPS.length - 1 ? (
               <button type="button" className="xc-btn" onClick={() => setStep(step + 1)} disabled={step === 2 && !wishReady}>
                 {step === 2 && !wishReady ? "กรอกชื่อและคำอวยพร" : "ถัดไป"}

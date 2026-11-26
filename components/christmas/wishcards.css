@@ -262,7 +262,7 @@
   justify-items: center;
   gap: 8px;
   min-height: 0;
-  padding: 4px 16px 12px;
+  padding: 18px 16px 12px;
 }
 .xc-studio-card {
   width: min(64vw, 36dvh);
@@ -382,21 +382,48 @@
   box-shadow: 0 0 0 2px #b9862a;
 }
 .xc-env-row {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
 }
 .xc-env-chip {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 3px solid #fff;
-  background: var(--env);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 6px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(90, 60, 30, 0.15);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4a3420;
   cursor: pointer;
-  font-size: 0;
+}
+.xc-env-chip .xc-env-art {
+  width: 100%;
+  max-width: 64px;
 }
 .xc-env-chip.is-on {
-  box-shadow: 0 0 0 3px #b9862a;
+  border-color: #b9862a;
+  box-shadow: 0 6px 14px -8px rgba(90, 60, 30, 0.6);
+}
+.xc-icon-spacer,
+.xc-btn-spacer {
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+.xc-btn-spacer {
+  width: 1px;
+}
+.xc-stage.has-env .xc-studio-card {
+  width: min(50vw, 27dvh);
+}
+.xc-stage.has-env .xc-env-stage .xc-env-art {
+  width: min(38vw, 130px);
 }
 .xc-palette {
   display: grid;
@@ -1087,5 +1114,99 @@
     padding: 0 2px;
     font-size: 10.5px;
     min-width: 0;
+  }
+}
+
+/* ซองการ์ดแบบ flat (ใช้ในตัวเลือกสีซองและตัวอย่างบนโต๊ะ) */
+.xc-env-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+}
+.xc-env-body {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: var(--env);
+  box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.45);
+}
+.xc-env-pocket {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  border-radius: 0 0 8px 8px;
+  background: var(--env-front);
+  clip-path: polygon(0 0, 50% 42%, 100% 0, 100% 100%, 0 100%);
+}
+.xc-env-flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 52%;
+  background: var(--env-front);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  opacity: 0.95;
+}
+.xc-env-stage {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.xc-env-stage .xc-env-art {
+  width: min(44vw, 170px);
+}
+.xc-env-stage span {
+  font-size: 12px;
+  color: #f1e4bf;
+}
+
+/* ฉากเปิดโต๊ะหลังตั้งชื่อ: หน้าโปรไฟล์ค่อย ๆ จางไป โต๊ะค่อย ๆ ซูมเข้า การ์ดตกลงมาบนโต๊ะ */
+.xc-onboard {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow: hidden;
+}
+.xc-onboard.is-leaving {
+  animation: xc-leave 0.6s ease forwards;
+  pointer-events: none;
+}
+@keyframes xc-leave {
+  to {
+    opacity: 0;
+    transform: scale(1.03);
+    filter: blur(6px);
+  }
+}
+.xc-studio.is-enter {
+  animation: xc-enter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.xc-studio.is-enter .xc-studio-card {
+  animation: xc-card-in 1s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes xc-enter {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes xc-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(36px) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
