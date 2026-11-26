@@ -6312,3 +6312,51 @@ a.xmas-social-chip:hover {
     max-width: 100%;
   }
 }
+
+/* ---------- แก้ปุ่มปิดบนมือถือให้อยู่มุมขวาบนเสมอ และกันการเบี้ยวจากการแตะค้าง ---------- */
+@media (max-width: 759px) {
+  .xmas-support > .xmas-x,
+  .xmas-exclusive > .xmas-x,
+  .xmas-mk > .xmas-x,
+  .xmas-modal > .xmas-x {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    align-self: auto;
+    z-index: 5;
+  }
+  .xmas-mk-head .xmas-x {
+    position: static;
+    width: 40px;
+    height: 40px;
+    flex: none;
+  }
+}
+@media (hover: none) {
+  .xmas-feed .xmas-tab-panel li > button:hover,
+  .xmas-feed .xmas-tab-panel li > button:focus-visible,
+  .xmas-feed .xmas-entry-row:hover {
+    transform: none;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.55);
+    border-color: transparent;
+  }
+  .xmas-feed .xmas-tab:hover::after {
+    transform: scaleX(0);
+  }
+  .xmas-feed .xmas-tab.is-on::after {
+    transform: scaleX(1);
+  }
+}
+@media (max-width: 759px) {
+  /* ประวัติล่าสุดบนมือถือ: กว้างเต็มจอทุกขนาด ไม่ค้างความกว้างคงที่จากคอม */
+  .xmas-feed {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-width: none;
+  }
+}

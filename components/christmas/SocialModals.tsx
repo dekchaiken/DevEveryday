@@ -177,9 +177,9 @@ export function DecorModal({
   }, [hasExclusive]);
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [tab, setTab] = useState<PartKey | "slot">("hat");
-  // บนมือถือแสดงทีละขั้น: 0 ช่องวาง · 1 ตกแต่ง · 2 ชื่อและยืนยัน (บนคอมแสดงทุกขั้นพร้อมกัน)
+  // บนมือถือแสดงทีละขั้น: 0 ช่องวางและชื่อ · 1 ตกแต่งและยืนยัน (บนคอมแสดงทุกขั้นพร้อมกัน)
   const [step, setStep] = useState(0);
-  const LAST = 2;
+  const LAST = 1;
   const [name, setName] = useState(defaultName);
   const [alreadyFree] = useState(() => hasFreePlaced(roomId));
   const [slot, setSlot] = useState<number | null>(() => initialSlot ?? randomFreeSlot(decor));
@@ -317,11 +317,11 @@ export function DecorModal({
               )}
             </div>
 
-            <label className="xmas-mk-field" data-step="2" data-on={step === 2}>
+            <label className="xmas-mk-field" data-step="0" data-on={step === 0}>
               <span>ชื่อที่จะแสดงบนตุ๊กตา</span>
               <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
             </label>
-            <p className="xmas-mk-note" data-step="2" data-on={step === 2}>{alreadyFree ? "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว" : "ตุ๊กตาฟรีวางได้คนละ 1 ตัวต่อห้อง"}</p>
+            <p className="xmas-mk-note" data-step="0" data-on={step === 0}>{alreadyFree ? "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว" : "ตุ๊กตาฟรีวางได้คนละ 1 ตัวต่อห้อง"}</p>
           </aside>
 
           <section className="xmas-mk-main" data-step="1" data-on={step === 1}>
@@ -370,7 +370,7 @@ export function DecorModal({
               <span className="xmas-wiz-spacer" />
             )}
           </nav>
-          <div className="xmas-mk-actions" data-step="2" data-on={step === 2}>
+          <div className="xmas-mk-actions" data-step="1" data-on={step === 1}>
             {onExclusive && exclusivePrice !== null && (
               <button type="button" className="xmas-mk-exclusive" onClick={buyExclusive} disabled={slot === null || slotTaken}>
                 <span>วางแบบ Exclusive ฿{exclusivePrice}</span>
