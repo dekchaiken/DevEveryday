@@ -1,38 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CardSpec } from "@/lib/christmas/cardSpec";
+import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { CardView } from "./CardView";
+import { EnvelopeArt } from "./CardProps";
 import { Icon } from "./Icon";
 import "./wishcards.css";
-
-// รายการในโซนคำอวยพร: การ์ดที่ผู้ใช้ทำ หรือคำอวยพรแบบลูกบอลเดิม (แสดงเป็นการ์ดแบบเรียบ)
-export type ZoneItem = { id: string; spec: CardSpec; createdAt: number; likes: number };
 
 const BELLS = 12;
 const LIGHTS = 22;
 
-// โซนคำอวยพร: รั้วที่มีกระดิ่งและไฟกระพริบ ซองการ์ดแขวนอยู่บนรั้ว แตะเพื่อแกะซองอ่าน
-export function WishZone({
-  items,
+// ลิงก์ส่วนตัวของการ์ดหนึ่งใบ เพื่อนที่เปิดลิงก์จะเห็นการ์ดใบนี้ก่อนเข้าร่วม
+export function cardLink(room: string, id: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/Christmas?room=${encodeURIComponent(room)}&card=${encodeURIComponent(id)}`;
+}
+
+// แกะซองการ์ด: สั่นซอง เปิดฝา การ์ดเลื่อนออกมา แล้วแสดงปุ่มถูกใจและแชร์
+// ใช้ทั้งในโซนคำอวยพรและตอนเพื่อนเปิดลิงก์แชร์
+export function CardReveal({
+  card,
   liked,
-  loading,
   onLike,
   onClose,
+  room,
+  autoStart = true,
 }: {
-  items: ZoneItem[];
-  liked: Set<string>;
-  loading: boolean;
-  onLike: (id: string) => void;
+  card: CardRecord;
+  liked: boolean;
+  onLike: () => void;
   onClose: () => void;
+  room: string;
+  autoStart?: boolean;
 }) {
-  const [openId, setOpenId] = useState<string | null>(null);
   const [phase, setPhase] = useState<"shake" | "open" | "out" | "show">("shake");
-  const open = items.find((i) => i.id === openId) ?? null;
+  const [copied, setCopied] = useState(false);
 
   // ลำดับแอนิเมชัน: สั่นซอง → เปิดฝา → การ์ดเลื่อนออก → แสดงผล
   useEffect(() => {
-    if (!openId) return;
+    if (!autoStart) return;
     setPhase("shake");
     const t1 = setTimeout(() => setPhase("open"), 520);
     const t2 = setTimeout(() => setPhase("out"), 1150);
@@ -42,13 +48,96 @@ export function WishZone({
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [openId]);
+  }, [card.id, autoStart]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (openId) setOpenId(null);
-      else onClose();
+      if (e.key === "Escape" && phase === "show") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, onClose]);
+
+  async function share() {
+    const url = cardLink(room, card.id);
+    const text = `${card.name} ส่งการ์ดอวยพรมาให้คุณ`;
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: "การ์ดอวยพรคริสต์มาส", text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ผู้ใช้ยกเลิกหรือเบราว์เซอร์ไม่อนุญาต */
+    }
+  }
+
+  return (
+    <div
+      className={`xz-open is-${phase}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`การ์ดจาก ${card.name}`}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && phase === "show") onClose();
+      }}
+    >
+      <div className="xz-letter">
+        <div className="xz-envelope-wrap">
+          <div className="xz-card-slot">
+            <CardView spec={card} tilt={phase === "show"} />
+          </div>
+          <EnvelopeArt envelope={card.envelope} props={card.envProps} className="xz-env-reveal" />
+        </div>
+
+        {phase === "show" && (
+          <div className="xz-reveal">
+            <p className="xz-from">จาก {card.name}</p>
+            <div className="xz-reveal-row">
+              <button type="button" className={`xz-like ${liked ? "is-on" : ""}`} onClick={onLike} disabled={liked}>
+                <Icon name="heart" size={18} />
+                {liked ? "ถูกใจแล้ว" : "ถูกใจการ์ดนี้"}
+                <b>{card.likes}</b>
+              </button>
+              <button type="button" className="xz-done" onClick={share}>
+                {copied ? "คัดลอกลิงก์แล้ว" : "แชร์การ์ดนี้"}
+              </button>
+              <button type="button" className="xz-done" onClick={onClose}>
+                ปิด
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// โซนคำอวยพร: รั้วที่มีกระดิ่งและไฟกระพริบ ซองการ์ดแขวนอยู่บนรั้ว แตะเพื่อแกะซองอ่าน
+export function WishZone({
+  cards,
+  liked,
+  loading,
+  room,
+  onLike,
+  onClose,
+}: {
+  cards: CardRecord[];
+  liked: Set<string>;
+  loading: boolean;
+  room: string;
+  onLike: (id: string) => void;
+  onClose: () => void;
+}) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = cards.find((c) => c.id === openId) ?? null;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || openId) return;
+      onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -72,7 +161,7 @@ export function WishZone({
         <div>
           <p className="xz-kicker">โซนคำอวยพร</p>
           <h2>การ์ดจากทุกคนในห้อง</h2>
-          <span className="xz-count">{loading && items.length === 0 ? "กำลังโหลด…" : `${items.length} ใบ`}</span>
+          <span className="xz-count">{loading && cards.length === 0 ? "กำลังโหลด…" : `${cards.length} ใบ`}</span>
         </div>
         <button type="button" className="xz-close" onClick={onClose} aria-label="ปิดโซนคำอวยพร">
           <Icon name="close" size={18} />
@@ -94,59 +183,31 @@ export function WishZone({
         </div>
 
         <ul className="xz-grid">
-          {items.map((it, i) => (
-            <li key={it.id}>
-              <button type="button" className="xz-hang" style={{ animationDelay: `${(i % 7) * 0.35}s` }} onClick={() => setOpenId(it.id)} aria-label={`เปิดการ์ดของ ${it.spec.name}`}>
+          {cards.map((c, i) => (
+            <li key={c.id}>
+              <button type="button" className="xz-hang" style={{ animationDelay: `${(i % 7) * 0.35}s` }} onClick={() => setOpenId(c.id)} aria-label={`เปิดการ์ดของ ${c.name}`}>
                 <span className="xz-string" aria-hidden />
-                <span className={`xz-env-mini xz-env-${it.spec.envelope}`}>
-                  <span className="xz-seal" aria-hidden />
-                  <span className="xz-to">{it.spec.name}</span>
+                <span className="xz-zone-env">
+                  <EnvelopeArt envelope={c.envelope} props={c.envProps} className="xz-env-zone-art" />
+                  <span className="xz-to">{c.name}</span>
                 </span>
               </button>
             </li>
           ))}
         </ul>
 
-        {!loading && items.length === 0 && <p className="xz-empty">ยังไม่มีการ์ดในโซนนี้ เป็นคนแรกที่ส่งการ์ดอวยพรเลย</p>}
+        {!loading && cards.length === 0 && <p className="xz-empty">ยังไม่มีการ์ดในโซนนี้ เป็นคนแรกที่ส่งการ์ดอวยพรเลย</p>}
       </div>
 
       {open && (
-        <div
-          className={`xz-open is-${phase}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`การ์ดจาก ${open.spec.name}`}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && phase === "show") setOpenId(null);
-          }}
-        >
-          <div className="xz-letter">
-            <div className={`xz-envelope xz-env-${open.spec.envelope}`}>
-              <div className="xz-env-back" aria-hidden />
-              <div className="xz-card-slot">
-                <CardView spec={open.spec} tilt={phase === "show"} />
-              </div>
-              <div className="xz-env-front" aria-hidden />
-              <span className="xz-flap" aria-hidden />
-            </div>
-
-            {phase === "show" && (
-              <div className="xz-reveal">
-                <p className="xz-from">จาก {open.spec.name}</p>
-                <div className="xz-reveal-row">
-                  <button type="button" className={`xz-like ${liked.has(open.id) ? "is-on" : ""}`} onClick={() => onLike(open.id)} disabled={liked.has(open.id)}>
-                    <Icon name="heart" size={18} />
-                    {liked.has(open.id) ? "ถูกใจแล้ว" : "ถูกใจการ์ดนี้"}
-                    <b>{open.likes}</b>
-                  </button>
-                  <button type="button" className="xz-done" onClick={() => setOpenId(null)}>
-                    ปิด
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <CardReveal
+          key={open.id}
+          card={open}
+          room={room}
+          liked={liked.has(open.id)}
+          onLike={() => onLike(open.id)}
+          onClose={() => setOpenId(null)}
+        />
       )}
     </div>
   );
