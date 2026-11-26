@@ -58,17 +58,34 @@ export default function GiftIntro({ children }: { children: ReactNode }) {
             </h1>
           </div>
 
-          <button className="xmas-gift-box" onClick={open} aria-label="แตะเพื่อแกะของขวัญ">
-            <span className="xmas-gift-lid">
-              <span className="xmas-gift-bow" />
-              <span className="xmas-gift-bow-l" />
-              <span className="xmas-gift-bow-r" />
+          <button className="xmas-gift-box gb3" onClick={open} aria-label="แตะเพื่อแกะของขวัญ">
+            <span className="gb3-scene" aria-hidden>
+              <span className="gb3-glow" />
+              <span className="gb3-box">
+                <span className="gb3-face gb3-front">
+                  <i className="gb3-rib-v" />
+                  <i className="gb3-rib-h" />
+                </span>
+                <span className="gb3-face gb3-back" />
+                <span className="gb3-face gb3-left">
+                  <i className="gb3-rib-v" />
+                </span>
+                <span className="gb3-face gb3-right">
+                  <i className="gb3-rib-v" />
+                </span>
+                <span className="gb3-face gb3-bottom" />
+                <span className="gb3-lid">
+                  <i className="gb3-rib-v" />
+                  <span className="gb3-bow">
+                    <i className="gb3-loop gb3-loop-l" />
+                    <i className="gb3-loop gb3-loop-r" />
+                    <i className="gb3-knot" />
+                  </span>
+                </span>
+              </span>
+              <span className="gb3-shadow" />
+              <span className="gb3-flash" />
             </span>
-            <span className="xmas-gift-body">
-              <span className="xmas-gift-ribbon-v" />
-              <span className="xmas-gift-ribbon-h" />
-            </span>
-            <span className="xmas-gift-inner" />
           </button>
 
           <p className="xmas-gift-hint">{phase === "play" ? "แตะกล่องเพื่อแกะของขวัญ" : "ของขวัญของคุณ…"}</p>
