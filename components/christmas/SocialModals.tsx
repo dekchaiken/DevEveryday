@@ -256,107 +256,116 @@ export function DecorModal({
     }
   }
 
+  const slotLine = slot === null ? "ยังไม่ได้เลือกช่อง" : slotReserved ? `ช่อง ${slot + 1} · สงวนไว้` : slotTaken ? `ช่อง ${slot + 1} · มี ${taken.get(slot)?.name} วางแล้ว` : `ช่อง ${slot + 1} · ว่าง`;
+  const statusTone = slot === null ? "idle" : slotBlocked ? "warn" : "ok";
   return (
     <div className="xmas-modal-back" role="presentation" onClick={onClose}>
-      <div className="xmas-modal xmas-build" role="dialog" aria-modal="true" aria-label="ตกแต่งตุ๊กตาหิมะ" onClick={(e) => e.stopPropagation()}>
-        <div className="xmas-build-top">
+      <div className="xmas-modal xmas-mk" role="dialog" aria-modal="true" aria-label="ตกแต่งตุ๊กตาหิมะ" onClick={(e) => e.stopPropagation()}>
+        <header className="xmas-mk-head">
+          <div>
+            <p className="xmas-kicker">ตกแต่งตุ๊กตาหิมะ · {roomName}</p>
+            <h2>สร้างตุ๊กตาของคุณ</h2>
+          </div>
           <button className="xmas-x" onClick={onClose} aria-label="ปิด">
             <Icon name="close" size={18} />
           </button>
-          <p className="xmas-kicker">ตกแต่งตุ๊กตาหิมะ · {roomName}</p>
-          <div className="xmas-build-preview">
-            <SnowmanPreview parts={{ ...parts, acc: parts.acc }} />
-          </div>
-          <p className="xmas-build-slot">{slot === null ? "ยังไม่ได้เลือกช่อง" : `ช่องที่ ${slot + 1}${slotReserved ? " (สงวนไว้)" : slotTaken ? " (มีคนวางแล้ว)" : ""}`}</p>
-        </div>
+        </header>
 
-        <div className="xmas-build-main">
-        <div className="xmas-part-tabs" role="tablist" aria-label="หมวดชิ้นส่วน">
-          {PART_TABS.map((t) => (
-            <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} onClick={() => setTab(t.key)}>
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <div className="xmas-mk-body">
+          <aside className="xmas-mk-side">
+            <div className="xmas-mk-stage">
+              <SnowmanPreview parts={parts} className="xmas-mk-snow" />
+              <span className="xmas-mk-name">{name.trim() || "ตุ๊กตาของคุณ"}</span>
+            </div>
 
-        <div className="xmas-part-body" role="tabpanel">
-          {current && (
-            <>
-              <p className="xmas-part-title">{current.label}</p>
-              <div className="xmas-part-grid">
-                {current.list.map((v) => (
-                  <button
-                    type="button"
-                    key={v}
-                    className={parts[current.key] === v ? "is-on" : ""}
-                    aria-pressed={parts[current.key] === v}
-                    onClick={() => setParts({ ...parts, [current.key]: v })}
-                  >
-                    {LABEL[v] ?? v}
-                  </button>
-                ))}
+            <div className="xmas-mk-card">
+              <span className="xmas-mk-label">ช่องวาง (1–{SLOT_COUNT})</span>
+              <div className="xmas-mk-slot-row">
+                <input
+                  inputMode="numeric"
+                  value={slot === null ? "" : String(slot + 1)}
+                  onChange={(e) => {
+                    const n = Number(e.target.value.replace(/\D/g, ""));
+                    setSlot(n >= 1 && n <= SLOT_COUNT ? n - 1 : null);
+                  }}
+                  placeholder="เลขช่อง"
+                  aria-label="เลขช่องวาง"
+                />
+                <button type="button" className="xmas-mk-chip" onClick={randomFree}>
+                  สุ่ม
+                </button>
+                <button type="button" className="xmas-mk-chip" onClick={() => onPickOnMap?.()}>
+                  บนฉาก
+                </button>
               </div>
-            </>
-          )}
+              <div className={`xmas-mk-status is-${statusTone}`}>
+                <i aria-hidden />
+                <span>{slotLine}</span>
+                {slotBlocked && slot !== null && (
+                  <button type="button" className="xmas-mk-link" onClick={() => setSlot(nearestFree(slot))}>
+                    ช่องว่างใกล้ที่สุด
+                  </button>
+                )}
+              </div>
+              {onExclusive && exclusivePrice !== null && (
+                <button type="button" className="xmas-mk-chip is-wide" onClick={randomAny}>
+                  สุ่มทุกช่อง รวมช่องสงวน
+                </button>
+              )}
+            </div>
 
-        </div>
-        </div>
-
-        <div className="xmas-build-foot">
-          <div className="xmas-foot-slot">
-            <label className="xmas-slot-input">
-              <span>ช่องวาง (1–{SLOT_COUNT})</span>
-              <input
-                inputMode="numeric"
-                value={slot === null ? "" : String(slot + 1)}
-                onChange={(e) => {
-                  const n = Number(e.target.value.replace(/\D/g, ""));
-                  setSlot(n >= 1 && n <= SLOT_COUNT ? n - 1 : null);
-                }}
-                placeholder="เลขช่อง"
-              />
+            <label className="xmas-mk-field">
+              <span>ชื่อที่จะแสดงบนตุ๊กตา</span>
+              <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
             </label>
-            <button type="button" className="xmas-chip-btn" onClick={randomFree}>
-              สุ่มช่อง
-            </button>
+            <p className="xmas-mk-note">{alreadyFree ? "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว" : "ตุ๊กตาฟรีวางได้คนละ 1 ตัวต่อห้อง"}</p>
+          </aside>
+
+          <section className="xmas-mk-main">
+            <nav className="xmas-mk-tabs" role="tablist" aria-label="หมวดชิ้นส่วน">
+              {PART_TABS.map((t) => (
+                <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} onClick={() => setTab(t.key)}>
+                  {t.label}
+                </button>
+              ))}
+            </nav>
+            <div className="xmas-mk-options" role="tabpanel">
+              {current && (
+                <>
+                  <h3>{current.label}</h3>
+                  <div className="xmas-mk-grid">
+                    {current.list.map((v) => (
+                      <button
+                        type="button"
+                        key={v}
+                        className={parts[current.key] === v ? "is-on" : ""}
+                        aria-pressed={parts[current.key] === v}
+                        onClick={() => setParts({ ...parts, [current.key]: v })}
+                      >
+                        {LABEL[v] ?? v}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <footer className="xmas-mk-foot">
+          {error && <p className="xmas-msg err">{error}</p>}
+          <div className="xmas-mk-actions">
             {onExclusive && exclusivePrice !== null && (
-              <button type="button" className="xmas-chip-btn" onClick={randomAny}>
-                สุ่มทุกช่อง (รวมช่องสงวน)
+              <button type="button" className="xmas-mk-exclusive" onClick={buyExclusive} disabled={slot === null || slotTaken}>
+                <span>วางแบบ Exclusive ฿{exclusivePrice}</span>
+                <small>วางได้ไม่จำกัด จ่าย 1 ตัวต่อการวาง วางช่องสงวนได้</small>
               </button>
             )}
-            <button type="button" className="xmas-chip-btn" onClick={() => onPickOnMap?.()}>
-              เลือกบนฉาก
+            <button type="button" className="xmas-mk-primary" onClick={place} disabled={busy || slotBlocked || slot === null || alreadyFree}>
+              {busy ? "กำลังวาง…" : alreadyFree ? "วางตุ๊กตาฟรีไปแล้ว" : slot === null ? "เลือกช่องก่อนวาง" : slotReserved ? "ช่องนี้สงวนไว้" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาฟรีรอบต้น"}
             </button>
           </div>
-          <p className={`xmas-slot-status ${slotBlocked || slot === null ? "is-warn" : "is-ok"}`}>
-            {slot === null
-              ? "เลือกช่องก่อนวาง: กรอกเลข สุ่ม หรือแตะพื้นหิมะบนฉาก"
-              : slotReserved
-                ? `ช่อง ${slot + 1} สงวนไว้สำหรับป้ายประจำห้อง วางได้เฉพาะแบบ Exclusive`
-                : slotTaken
-                  ? `ช่อง ${slot + 1} มี ${taken.get(slot)?.name} วางแล้ว`
-                  : `ช่อง ${slot + 1} ว่าง พร้อมวาง`}
-            {slotBlocked && slot !== null && (
-              <button type="button" className="xmas-link-btn" onClick={() => setSlot(nearestFree(slot))}>
-                ไปช่องว่างใกล้ที่สุด
-              </button>
-            )}
-          </p>
-          <p className="xmas-build-note">{alreadyFree ? "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว" : "ตุ๊กตาฟรีวางได้คนละ 1 ตัวต่อห้อง"}</p>
-          <label className="xmas-field">
-            <span className="xmas-field-label">ชื่อที่จะแสดงบนตุ๊กตา</span>
-            <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
-          </label>
-          {onExclusive && exclusivePrice !== null && (
-            <button type="button" className="xmas-submit xmas-exclusive-buy" onClick={buyExclusive} disabled={slot === null || slotTaken}>
-              วางแบบ Exclusive{` ฿${exclusivePrice}`} · จ่าย 1 ตัวต่อการวาง
-            </button>
-          )}
-          <button className="xmas-submit" onClick={place} disabled={busy || slotBlocked || slot === null || alreadyFree}>
-            {busy ? "กำลังวาง…" : alreadyFree ? "วางตุ๊กตาฟรีไปแล้ว" : slot === null ? "เลือกช่องก่อนวาง" : slotReserved ? "ช่องนี้สงวนไว้" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาหิมะรอบต้น"}
-          </button>
-          {error && <p className="xmas-msg err">{error}</p>}
-        </div>
+        </footer>
       </div>
     </div>
   );
@@ -386,28 +395,29 @@ export function DecorInfoCard({ d, onClose, onLiked }: { d: Decor; onClose: () =
     }
   }
 
+  const when = new Date(d.createdAt).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
   return (
-    <div className="xmas-focus glass xmas-decor-info" role="dialog" aria-label="ตุ๊กตาหิมะ">
+    <div className="xmas-focus glass xmas-decor-card" role="dialog" aria-label="ตุ๊กตาหิมะ">
       <button className="xmas-x" onClick={onClose} aria-label="ปิด">
         <Icon name="close" size={18} />
       </button>
-      <div className="xmas-decor-info-row">
-        <div className="xmas-decor-thumb">
-          <SnowmanPreview parts={d} />
-        </div>
-        <div>
-          <b>ตุ๊กตาของ {d.name}</b>
-          <small>
-            วางเมื่อ {new Date(d.createdAt).toLocaleString("th-TH", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" })} · ช่อง {d.slot + 1}
-          </small>
-          <small>
-            {LABEL[d.hat]} · {LABEL[d.scarf]} · {LABEL[d.nose]}
-          </small>
-        </div>
+      <div className="xmas-decor-card-art">
+        <span className="xmas-decor-card-glow" aria-hidden />
+        <SnowmanPreview parts={d} className="xmas-decor-card-snow" />
       </div>
+      <span className="xmas-decor-card-tag">ช่อง {d.slot + 1} · วางเมื่อ {when}</span>
+      <b className="xmas-decor-card-name">{d.name}</b>
       <SocialLinks social={d.social} />
-      <button className={`xmas-like ${liked ? "is-liked" : ""}`} onClick={like} disabled={busy || liked}>
-        <Icon name="heart" size={18} /> ถูกใจ <span>{d.likes}</span>
+      <div className="xmas-decor-card-parts">
+        <span>{LABEL[d.hat]}</span>
+        <span>{LABEL[d.scarf]}</span>
+        <span>{LABEL[d.body]}</span>
+        <span>{LABEL[d.acc]}</span>
+      </div>
+      <button className={`xmas-decor-card-like ${liked ? "is-liked" : ""}`} onClick={like} disabled={busy || liked}>
+        <Icon name="heart" size={18} />
+        <span>{liked ? "ถูกใจแล้ว" : "ถูกใจตุ๊กตาตัวนี้"}</span>
+        <b>{d.likes}</b>
       </button>
     </div>
   );

@@ -477,6 +477,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onDecorClick={(d) => {
             setDecorFocus(d);
             setFocus(null);
+            treeRef.current?.focusDecor(d);
           }}
           snowing={snowOn}
           crowd={{ count: online?.count ?? 0, seed: room.id }}
@@ -788,7 +789,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {decorFocus && (
         <DecorInfoCard
           d={decorFocus}
-          onClose={() => setDecorFocus(null)}
+          onClose={() => {
+            setDecorFocus(null);
+            treeRef.current?.focusDecor(null);
+          }}
           onLiked={(id, likes) => {
             setDecorFocus((f) => (f && f.id === id ? { ...f, likes } : f));
             refreshDecor();
