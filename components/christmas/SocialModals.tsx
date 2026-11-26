@@ -139,6 +139,8 @@ export function DecorModal({
   const [error, setError] = useState("");
   const taken = new Map(decor.map((d) => [d.slot, d]));
   const slotTaken = slot !== null && taken.has(slot);
+  const slotReserved = slot !== null && isReservedSlot(slot);
+  const slotBlocked = slotTaken || slotReserved;
   const current = PART_TABS.find((t) => t.key === tab);
 
   function nearestFree(from: number): number | null {
@@ -146,7 +148,7 @@ export function DecorModal({
     let best: number | null = null;
     let bestD = Infinity;
     for (let i = 0; i < SLOT_POSITIONS.length; i++) {
-      if (taken.has(i)) continue;
+      if (taken.has(i) || isReservedSlot(i)) continue;
       const q = SLOT_POSITIONS[i];
       const d = (q.x - p.x) ** 2 + (q.z - p.z) ** 2;
       if (d < bestD) {
@@ -168,6 +170,7 @@ export function DecorModal({
 
   async function place() {
     if (slot === null) return setError("เลือกช่องที่จะวางก่อน");
+    if (slotReserved) return setError("ช่องนี้สงวนไว้สำหรับป้ายประจำห้อง เลือกช่องอื่น");
     if (slotTaken) return setError("ช่องนี้มีคนวางแล้ว เลือกช่องว่างอื่น");
     if (!name.trim()) return setError("กรุณาใส่ชื่อ");
     setBusy(true);
@@ -199,7 +202,7 @@ export function DecorModal({
           <div className="xmas-build-preview">
             <SnowmanPreview parts={{ ...parts, acc: parts.acc }} />
           </div>
-          <p className="xmas-build-slot">{slot === null ? "ยังไม่ได้เลือกช่อง" : `ช่องที่ ${slot + 1}${slotTaken ? " (มีคนวางแล้ว)" : ""}`}</p>
+          <p className="xmas-build-slot">{slot === null ? "ยังไม่ได้เลือกช่อง" : `ช่องที่ ${slot + 1}${slotReserved ? " (สงวนไว้)" : slotTaken ? " (มีคนวางแล้ว)" : ""}`}</p>
         </div>
 
         <div className="xmas-build-main">
@@ -255,13 +258,15 @@ export function DecorModal({
               เลือกบนฉาก
             </button>
           </div>
-          <p className={`xmas-slot-status ${slotTaken || slot === null ? "is-warn" : "is-ok"}`}>
+          <p className={`xmas-slot-status ${slotBlocked || slot === null ? "is-warn" : "is-ok"}`}>
             {slot === null
               ? "เลือกช่องก่อนวาง: กรอกเลข สุ่ม หรือแตะพื้นหิมะบนฉาก"
-              : slotTaken
-                ? `ช่อง ${slot + 1} มี ${taken.get(slot)?.name} วางแล้ว`
-                : `ช่อง ${slot + 1} ว่าง พร้อมวาง`}
-            {slotTaken && slot !== null && (
+              : slotReserved
+                ? `ช่อง ${slot + 1} สงวนไว้สำหรับป้ายประจำห้อง`
+                : slotTaken
+                  ? `ช่อง ${slot + 1} มี ${taken.get(slot)?.name} วางแล้ว`
+                  : `ช่อง ${slot + 1} ว่าง พร้อมวาง`}
+            {slotBlocked && slot !== null && (
               <button type="button" className="xmas-link-btn" onClick={() => setSlot(nearestFree(slot))}>
                 ไปช่องว่างใกล้ที่สุด
               </button>
@@ -271,8 +276,8 @@ export function DecorModal({
             <span className="xmas-field-label">ชื่อที่จะแสดงบนตุ๊กตา</span>
             <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
           </label>
-          <button className="xmas-submit" onClick={place} disabled={busy || slotTaken || slot === null}>
-            {busy ? "กำลังวาง…" : slot === null ? "เลือกช่องก่อนวาง" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาหิมะรอบต้น"}
+          <button className="xmas-submit" onClick={place} disabled={busy || slotBlocked || slot === null}>
+            {busy ? "กำลังวาง…" : slot === null ? "เลือกช่องก่อนวาง" : slotReserved ? "ช่องนี้สงวนไว้" : slotTaken ? "ช่องนี้มีคนวางแล้ว" : "วางตุ๊กตาหิมะรอบต้น"}
           </button>
           {error && <p className="xmas-msg err">{error}</p>}
         </div>

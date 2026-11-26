@@ -20,7 +20,7 @@ export function ProfileCard({
   initial: Profile | null;
   editing: boolean;
   onSave: (p: Profile) => void;
-  onCancel: () => void;
+  onCancel?: () => void; // มีเฉพาะตอนแก้ไข (ครั้งแรกต้องกรอกชื่อ)
 }) {
   const start = initial ?? EMPTY_PROFILE;
   const [name, setName] = useState(start.name);
@@ -69,9 +69,11 @@ export function ProfileCard({
         <button className="xmas-intro-btn" type="submit">
           <span>{editing ? "บันทึก" : "บันทึกและเข้าต้นคริสต์มาส"}</span>
         </button>
-        <button type="button" className="xmas-link-btn xmas-profile-skip" onClick={onCancel}>
-          {editing ? "ยกเลิก" : "ข้ามไปก่อน"}
-        </button>
+        {editing && onCancel && (
+          <button type="button" className="xmas-link-btn xmas-profile-skip" onClick={onCancel}>
+            ยกเลิก
+          </button>
+        )}
       </form>
     </div>
   );
