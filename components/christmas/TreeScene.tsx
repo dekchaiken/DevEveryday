@@ -935,7 +935,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const body = new THREE.Group();
       body.scale.setScalar(0.85);
       grp.add(body);
-      const cottage = buildCottage({ body: look.body, lights: look.lights });
+      const cottage = buildCottage({ body: look.body, lights: look.lights, deco: look.deco });
       body.add(cottage.group);
       grp.userData.update = cottage.update;
 
