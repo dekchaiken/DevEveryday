@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import type { ChristmasState, Ornament, OrnamentColor, OrnamentShape, ShowEvent } from "@/lib/christmas/types";
-import type { TreeSceneHandle } from "./TreeScene";
+import { ORNAMENT_COLORS, ORNAMENT_SHAPES } from "@/lib/christmas/types";
+import type { Preview, TreeSceneHandle } from "./TreeScene";
 import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
 import { RoomSkyline } from "./RoomSkyline";
@@ -27,7 +28,9 @@ import { loadProfile, saveProfile, type Profile } from "./profile";
 import type { Decor } from "@/lib/christmas/decor";
 import type { CardRecord, CardSpec, PropKind } from "@/lib/christmas/cardSpec";
 import { CardStudio } from "./CardStudio";
-import { WishZone, type ZoneItem } from "./WishZone";
+import { CardReveal, WishZone } from "./WishZone";
+import { OrnamentPreview } from "./OrnamentPreview";
+import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
 import "./wishcards.css";
 import "./christmas.css";
 
@@ -103,6 +106,13 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [feedOpen, setFeedOpen] = useState(false); // แผงประวัติล่าสุด (เปิดจากปุ่มมุมขวาหรือแถบเมนู)
   const [rankOpen, setRankOpen] = useState(false); // แผงอันดับถูกใจ
   const [studioOpen, setStudioOpen] = useState(false); // โต๊ะออกแบบการ์ดอวยพร
+    const [pick, setPick] = useState<{ height: number; angle: number } | null>(null);
+    const [sheetOpen, setSheetOpen] = useState(false);
+    const [panelPulse, setPanelPulse] = useState(0);
+    const [hintOn, setHintOn] = useState(true);
+  const [chooseOpen, setChooseOpen] = useState(false);
+  const [sharedCard, setSharedCard] = useState<CardRecord | null>(null); // การ์ดจากลิงก์แชร์ของเพื่อน
+ // เลือกระหว่างการ์ดกับการแขวนลูกบอล
   const [zoneOpen, setZoneOpen] = useState(false); // โซนคำอวยพร
   const [zoneHint, setZoneHint] = useState(false); // ป้ายชี้ไปโซนคำอวยพรหลังส่งการ์ด
   const [tipX, setTipX] = useState<number | null>(null); // ตำแหน่งแนวนอนของป้ายให้ตรงปุ่มโซนคำอวยพร
@@ -195,7 +205,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   // อันดับถูกใจของห้อง และการกดถูกใจคำอวยพร (กดได้ครั้งเดียวต่อคนต่อชิ้น)
   const { board, refresh: refreshBoard } = useBoard(roomId);
   const [likedWishes, setLikedWishes] = useState<Set<string>>(new Set());
-  const noopPick = useCallback(() => undefined, []);
   async function likeWish(id: string) {
     setLikedWishes((s) => new Set(s).add(id));
     try {
@@ -397,8 +406,81 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   }, [state, local]);
 
 
+  // ---------- ฟอร์มแขวนลูกบอล ----------
+  const [form, setForm] = useState<{ name: string; wish: string; color: OrnamentColor; shape: OrnamentShape }>({
+    name: "",
+    wish: "",
+    color: "gold",
+    shape: "ball",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [wishTab, setWishTab] = useState<"color" | "shape" | "text">("color");
+  const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  // รูปทรงที่แขวนไปแล้วในรอบนี้ (รีเฟรชหน้าเพื่อเริ่มรอบใหม่) รูปทรงละ 1 ครั้ง
+  const [usedShapes, setUsedShapes] = useState<OrnamentShape[]>([]);
+  const shapesLeft = ORNAMENT_SHAPES.filter((s) => !usedShapes.includes(s));
+  const allShapesUsed = shapesLeft.length === 0;
+
+  // ชื่อในฟอร์มเริ่มจากโปรไฟล์ ถ้ายังไม่ได้พิมพ์เอง
+  useEffect(() => {
+    if (profile?.name) setForm((f) => (f.name ? f : { ...f, name: profile.name }));
+  }, [profile]);
+  const previewData: Preview = pick ? { ...pick, color: form.color, shape: form.shape } : null;
+
+  async function hang(e: FormEvent) {
+    e.preventDefault();
+    if (allShapesUsed) {
+      setMessage({ kind: "err", text: "แขวนครบทุกรูปทรงในรอบนี้แล้ว รีเฟรชหน้าเพื่อเริ่มรอบใหม่" });
+      return;
+    }
+    if (usedShapes.includes(form.shape)) {
+      setWishTab("shape");
+      setMessage({ kind: "err", text: `รูปทรง${SHAPE_LABEL[form.shape]}ใช้ไปแล้ว เลือกรูปทรงอื่น` });
+      return;
+    }
+    if (!form.name.trim()) {
+      setWishTab("text");
+      setMessage({ kind: "err", text: "กรุณาใส่ชื่อที่จะแสดงบนลูกบอล" });
+      return;
+    }
+    if (!pick) {
+      setMessage({ kind: "err", text: "แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่งก่อน" });
+      notify("err", "แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่งก่อน");
+      return;
+    }
+    setSubmitting(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/christmas/ornament", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, ...pick, room: roomId, social: profile?.social ?? {} }),
+      });
+      const data = (await res.json()) as { error?: string; ornament?: Ornament };
+      if (!res.ok || !data.ornament) throw new Error(data.error ?? "แขวนไม่สำเร็จ");
+      setLocal((l) => [data.ornament!, ...l].slice(0, 20));
+      notify("ok", "แขวนคำอวยพรของคุณบนต้นแล้ว");
+      const nextUsed = [...usedShapes, form.shape];
+      setUsedShapes(nextUsed);
+      setPick(null);
+      // เลื่อนไปรูปทรงที่ยังเหลือ เพื่อให้แขวนรอบถัดไปได้ทันที
+      setForm((f) => ({ ...f, wish: "", shape: ORNAMENT_SHAPES.find((s) => !nextUsed.includes(s)) ?? f.shape }));
+      setMessage({ kind: "ok", text: "แขวนลูกบอลของคุณแล้ว" });
+      setSheetOpen(false);
+    } catch (err) {
+      setMessage({ kind: "err", text: err instanceof Error ? err.message : "เกิดข้อผิดพลาด" });
+      notify("err", err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const onPick = useCallback((height: number, angle: number) => {
+    setPick({ height, angle });
+    setFocus(null);
+  }, []);
+
   // ---------- การ์ดอวยพร: โต๊ะออกแบบ โซนคำอวยพร ----------
-  const SHAPE_PROP: Record<OrnamentShape, PropKind> = { ball: "bauble", star: "star", bell: "bell", gift: "gift" };
   function saveProfileAndClose(p: Profile) {
     const first = profile === null; // ตั้งชื่อครั้งแรก: จางไปโต๊ะออกแบบการ์ดต่อทันที
     saveProfile(p);
@@ -414,6 +496,18 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       setStudioOpen(true);
     }, 620);
   }
+
+  // ลิงก์แชร์การ์ด: ?card=<id> เปิดการ์ดนั้นก่อนเข้าร่วมห้อง
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("card");
+    if (!id) return;
+    fetch(`/api/christmas/card?room=${roomId}&id=${encodeURIComponent(id)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { card?: CardRecord } | null) => {
+        if (d?.card) setSharedCard(d.card);
+      })
+      .catch(() => undefined);
+  }, [roomId]);
 
   const refreshCards = useCallback(async () => {
     setCardsLoading(true);
@@ -464,29 +558,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     }
   }
 
-  // รายการในโซนคำอวยพร: การ์ดที่ผู้ใช้ทำ รวมกับคำอวยพรลูกบอลเดิมที่ยังแขวนอยู่บนต้น
-  const cardIds = useMemo(() => new Set(cards.map((c) => c.id)), [cards]);
-  const zoneItems: ZoneItem[] = useMemo(() => {
-    const fromCards: ZoneItem[] = cards.map((c) => ({
-      id: c.id,
-      spec: { theme: c.theme, envelope: c.envelope, props: c.props, name: c.name, wish: c.wish } as CardSpec,
-      createdAt: c.createdAt,
-      likes: c.likes,
-    }));
-    const fromLegacy: ZoneItem[] = ornaments.map((o) => ({
-      id: o.id,
-      spec: {
-        theme: "pine",
-        envelope: "gold",
-        props: [{ kind: SHAPE_PROP[o.shape], x: 0.5, y: 0.3, r: 0, s: 1.3 }],
-        name: o.name,
-        wish: o.wish || "ขอให้มีความสุขในวันคริสต์มาส",
-      } as CardSpec,
-      createdAt: o.createdAt,
-      likes: (board.counts[o.id] ?? 0) + (likedWishes.has(o.id) && !board.counts[o.id] ? 1 : 0),
-    }));
-    return [...fromCards, ...fromLegacy].sort((a, b) => b.createdAt - a.createdAt);
-  }, [cards, ornaments, board.counts, likedWishes]);
+  // การ์ดที่แสดงในโซนคำอวยพร (เฉพาะการ์ดที่ผู้ใช้ส่ง ลูกบอลบนต้นแยกต่างหาก)
 
   // แสดงข้อความแจ้งเตือนชั่วคราว
   const notify = useCallback((kind: "ok" | "err", text: string) => {
@@ -513,9 +585,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             treeRef.current = h;
           }}
           ornaments={ornaments}
-          preview={null}
+          preview={previewData}
           reducedMotion={reduced}
-          onPick={noopPick}
+          onPick={onPick}
           onOrnamentClick={(o) => setFocus(o)}
           onError={() => setWebglOk(false)}
           ground={room.ground}
@@ -700,8 +772,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {/* เมนูหลัก: แขวน ตกแต่ง ชวนเพื่อน และสนับสนุน (ตุ๊กตาหิมะยักษ์) */}
       <nav className="xmas-actions" aria-label="เมนูกิจกรรม">
-        <button className="xmas-action" data-studio-btn onClick={() => { setFeedOpen(false); setStudioMandatory(false); setStudioEnter(false); setStudioOpen(true); }}>
-          <Icon name="bauble" size={18} /> ทำการ์ดอวยพร
+        <button className="xmas-action" data-studio-btn onClick={() => { setFeedOpen(false); setChooseOpen(true); }}>
+          <Icon name="bauble" size={18} /> คำอวยพร
         </button>
         <button className="xmas-action" data-zone-btn onClick={() => { setZoneHint(false); setZoneOpen(true); }}>
           <Icon name="sparkle" size={18} /> โซนคำอวยพร
@@ -902,6 +974,72 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </div>
       )}
 
+      {chooseOpen && (
+        <div className="xc-choose-back" role="presentation" onClick={() => setChooseOpen(false)}>
+          <div className="xc-choose" role="dialog" aria-modal="true" aria-label="เลือกแบบคำอวยพร" onClick={(e) => e.stopPropagation()}>
+            <p className="xc-kicker">คำอวยพร · {room.name}</p>
+            <h2>อยากอวยพรแบบไหน</h2>
+            <button
+              type="button"
+              className="xc-choose-opt"
+              onClick={() => {
+                setChooseOpen(false);
+                setStudioMandatory(false);
+                setStudioEnter(false);
+                setStudioOpen(true);
+              }}
+            >
+              <span className="xc-choose-ico" aria-hidden>
+                <Icon name="bauble" size={26} />
+              </span>
+              <span>
+                <b>ทำการ์ดอวยพร</b>
+                <small>ออกแบบการ์ด ตกแต่งซอง เขียนข้อความได้หลายกล่อง แล้วส่งไปโซนคำอวยพร ส่งได้ {CARDS_PER_PERSON} ใบต่อห้อง</small>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="xc-choose-opt"
+              onClick={() => {
+                setChooseOpen(false);
+                setSheetOpen(true);
+                setFeedOpen(false);
+                setPanelPulse((n) => n + 1);
+                setHintOn(true);
+              }}
+            >
+              <span className="xc-choose-ico" aria-hidden>
+                <Icon name="tree" size={26} />
+              </span>
+              <span>
+                <b>แขวนคำอวยพร</b>
+                <small>แขวนลูกบอลบนต้นคริสต์มาส เขียนคำอวยพรสั้น ๆ ไม่ต้องตกแต่งการ์ด</small>
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {sharedCard && (
+        <CardReveal
+          key={sharedCard.id}
+          card={sharedCard}
+          room={roomId}
+          liked={likedWishes.has(sharedCard.id)}
+          onLike={() => likeCard(sharedCard.id)}
+          onClose={() => {
+            setSharedCard(null);
+            try {
+              const u = new URL(window.location.href);
+              u.searchParams.delete("card");
+              window.history.replaceState(null, "", u.toString());
+            } catch {
+              /* ไม่เป็นไร */
+            }
+          }}
+        />
+      )}
+
       {studioOpen && (
         <CardStudio
           roomId={roomId}
@@ -925,10 +1063,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {zoneOpen && (
         <WishZone
-          items={zoneItems}
+          cards={cards}
           liked={likedWishes}
           loading={cardsLoading}
-          onLike={(id) => (cardIds.has(id) ? likeCard(id) : likeWish(id))}
+          room={roomId}
+          onLike={(id) => likeCard(id)}
           onClose={() => setZoneOpen(false)}
         />
       )}
@@ -938,6 +1077,131 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           การ์ดของคุณอยู่ที่โซนคำอวยพรแล้ว แตะเพื่อดู
         </button>
       )}
+
+      {/* ป้ายบอกให้แตะต้นไม้เพื่อเลือกตำแหน่ง */}
+      {hintOn && !pick && (
+        <div className="xmas-tap-hint" role="status" onClick={() => setHintOn(false)}>
+          <span className="xmas-tap-ring" aria-hidden />
+          แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่ง
+        </div>
+      )}
+
+      {/* แผงแขวนลูกบอล */}
+      <section key={panelPulse} className={`xmas-panel glass xmas-wish ${sheetOpen ? "is-open" : ""} ${panelPulse ? "is-pulse" : ""}`} aria-label="แขวนคำอวยพร" onPointerDown={() => setHintOn(true)}>
+        <button className="xmas-sheet-toggle" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen}>
+          {sheetOpen ? "ปิดแผง" : "แขวนคำอวยพรของคุณ"}
+        </button>
+        <form onSubmit={hang} className={`xmas-form xmas-wish-form ${wishTab === "text" ? "is-text-tab" : ""}`}>
+          <div className="xmas-build-top">
+            <button type="button" className="xmas-form-close" onClick={() => setSheetOpen(false)} aria-label="ปิดแผงแขวนคำอวยพร">
+              <Icon name="close" size={18} />
+            </button>
+            <p className="xmas-kicker">แขวนคำอวยพร</p>
+            <div className="xmas-build-preview xmas-ornament-preview">
+              <OrnamentPreview color={form.color} shape={form.shape} />
+            </div>
+            <p className={`xmas-build-slot ${pick ? "is-set" : ""}`}>
+              {pick ? `เลือกตำแหน่งแล้ว · ความสูง ${Math.round(pick.height * 100)}%` : "แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่ง"}
+            </p>
+          </div>
+
+          <div className="xmas-part-tabs" role="tablist" aria-label="หมวดลูกบอล">
+            {(
+              [
+                ["color", "สีลูกบอล"],
+                ["shape", "รูปทรง"],
+                ["text", "ข้อความ"],
+              ] as const
+            ).map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={wishTab === id} className={wishTab === id ? "is-on" : ""} onClick={() => setWishTab(id)}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="xmas-part-body" role="tabpanel">
+            {wishTab === "color" && (
+              <>
+                <p className="xmas-part-title">สีลูกบอล</p>
+                <div className="xmas-part-grid">
+                  {ORNAMENT_COLORS.map((c) => (
+                    <button
+                      type="button"
+                      key={c}
+                      className={form.color === c ? "is-on" : ""}
+                      aria-pressed={form.color === c}
+                      onClick={() => setForm({ ...form, color: c })}
+                    >
+                      <span className="xmas-dot" style={{ background: COLOR_CSS[c] }} aria-hidden />
+                      {COLOR_LABEL[c]}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {wishTab === "shape" && (
+              <>
+                <p className="xmas-part-title">
+                  รูปทรง <em className="xmas-part-hint">เหลือ {shapesLeft.length}/{ORNAMENT_SHAPES.length} รูปทรง</em>
+                </p>
+                <div className="xmas-part-grid">
+                  {ORNAMENT_SHAPES.map((sh) => {
+                    const used = usedShapes.includes(sh);
+                    return (
+                      <button
+                        type="button"
+                        key={sh}
+                        disabled={used}
+                        className={`${form.shape === sh && !used ? "is-on" : ""} ${used ? "is-used" : ""}`}
+                        aria-pressed={form.shape === sh}
+                        onClick={() => setForm({ ...form, shape: sh })}
+                      >
+                        {SHAPE_LABEL[sh]}
+                        {used && <small>ใช้แล้ว</small>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {wishTab === "text" && (
+              <div className="xmas-wish-text">
+                <label className="xmas-field">
+                  <span className="xmas-field-label">ชื่อที่จะแสดงบนลูกบอล</span>
+                  <input value={form.name} maxLength={20} required onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="เช่น ฟ้า" autoComplete="nickname" />
+                </label>
+                <button type="button" className="xmas-link-btn xmas-profile-edit" onClick={() => setProfileEdit(true)}>
+                  {profile?.social && Object.keys(profile.social).length > 0 ? "แก้ไขชื่อและโซเชียล" : "เพิ่มลิงก์ Instagram / Facebook"}
+                </button>
+                <label className="xmas-field">
+                  <span className="xmas-field-label">
+                    คำอวยพร <em>{form.wish.length}/140</em>
+                  </span>
+                  <textarea value={form.wish} maxLength={140} rows={4} onChange={(e) => setForm({ ...form, wish: e.target.value })} placeholder="ขอให้ปีนี้…" />
+                </label>
+                <button
+                  type="button"
+                  className="xmas-preview-btn"
+                  onClick={() =>
+                    setFocus({ id: "preview", name: form.name.trim() || "ชื่อของคุณ", wish: form.wish.trim(), color: form.color, shape: form.shape, height: 0.5, angle: 0, createdAt: Date.now() })
+                  }
+                >
+                  ดูตัวอย่างการ์ดคำอวยพร
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="xmas-build-foot">
+            {message && <p className={`xmas-msg ${message.kind}`}>{message.text}</p>}
+            <button className="xmas-submit" disabled={submitting || allShapesUsed}>
+              {submitting ? "กำลังแขวน…" : allShapesUsed ? "แขวนครบทุกรูปทรงแล้ว" : pick ? "แขวนลูกบอลบนต้น" : "เลือกตำแหน่งก่อนแขวน"}
+            </button>
+          </div>
+        </form>
+      </section>
 
       {/* แผงแท็บ: คำอวยพร / Exclusive / สนับสนุนทีม */}
       <FeedPanel

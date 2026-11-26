@@ -3,8 +3,8 @@ import { getRoom } from "@/lib/christmas/rooms";
 import { rateOk } from "@/lib/christmas/store";
 import { getConfig } from "@/lib/christmas/config";
 import { hasBlocked } from "@/lib/christmas/validate";
-import { parseCard } from "@/lib/christmas/cardSpec";
-import { addCard, listCards } from "@/lib/christmas/cards";
+import { parseCard, CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
+import { addCard, findCard, listCards, releaseCardSlot, reserveCardSlot, toPublic, usedCardSlots } from "@/lib/christmas/cards";
 import { ornamentLikeCounts } from "@/lib/christmas/likes";
 import { maskIp, writeLog } from "@/lib/christmas/log";
 import { sanitizeSocial } from "@/lib/christmas/social";
@@ -12,15 +12,28 @@ import { sanitizeSocial } from "@/lib/christmas/social";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// โซนคำอวยพร: รายการการ์ดทั้งหมดของห้อง พร้อมจำนวนถูกใจ
+// โซนคำอวยพร: รายการการ์ดทั้งหมดของห้อง พร้อมจำนวนถูกใจ และโควตาที่เหลือของผู้เรียก
 export async function GET(req: Request) {
-  const room = getRoom(new URL(req.url).searchParams.get("room"));
+  const url = new URL(req.url);
+  const room = getRoom(url.searchParams.get("room"));
   if (!room) return NextResponse.json({ error: "ไม่พบห้องนี้" }, { status: 400 });
-  const [cards, likes] = await Promise.all([listCards(room.id), ornamentLikeCounts(room.id)]);
-  return NextResponse.json({ cards: cards.map((c) => ({ ...c, likes: likes[c.id] ?? 0 })) }, { headers: { "Cache-Control": "no-store" } });
+  const clientId = (url.searchParams.get("clientId") ?? "").slice(0, 64);
+  // ลิงก์แชร์: ?id=... ขอการ์ดใบเดียว (อยู่ในไฟล์เดียวกับรายการเพื่อให้ใช้หน่วยความจำชุดเดียวกันตอนพัฒนา)
+  const oneId = (url.searchParams.get("id") ?? "").slice(0, 64);
+  if (oneId) {
+    const card = await findCard(room.id, oneId);
+    if (!card) return NextResponse.json({ error: "ไม่พบการ์ดนี้" }, { status: 404 });
+    const likes = await ornamentLikeCounts(room.id);
+    return NextResponse.json({ card: toPublic(card, likes[card.id] ?? 0) }, { headers: { "Cache-Control": "no-store" } });
+  }
+  const [cards, likes, used] = await Promise.all([listCards(room.id), ornamentLikeCounts(room.id), clientId ? usedCardSlots(room.id, clientId) : Promise.resolve(0)]);
+  return NextResponse.json(
+    { cards: cards.map((c) => toPublic(c, likes[c.id] ?? 0)), left: clientId ? Math.max(0, CARDS_PER_PERSON - used) : CARDS_PER_PERSON },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
-// ส่งการ์ดหนึ่งใบไปยังโซนคำอวยพร จำกัด 6 ใบต่อนาทีต่อ IP
+// ส่งการ์ดหนึ่งใบไปยังโซนคำอวยพร ต่อคนต่อห้องส่งได้ไม่เกินโควตา และจำกัด 6 ใบต่อนาทีต่อ IP
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {
@@ -30,6 +43,8 @@ export async function POST(req: Request) {
   }
   const room = getRoom(typeof body.room === "string" ? body.room : null);
   if (!room) return NextResponse.json({ error: "ไม่พบห้องนี้" }, { status: 400 });
+  const clientId = typeof body.clientId === "string" ? body.clientId.slice(0, 64) : "";
+  if (!clientId) return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
 
   const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
   if (!(await rateOk(ip, "card", 6, Date.now()))) {
@@ -39,14 +54,31 @@ export async function POST(req: Request) {
   const parsed = parseCard(body, (s) => hasBlocked(s, cfg.blockedWords));
   if ("error" in parsed) {
     if (parsed.error.includes("ไม่เหมาะสม")) {
-      await writeLog({ type: "blocked", room: room.id, actor: maskIp(ip), text: `การ์ด: ${String(body.name ?? "")} / ${String(body.wish ?? "")}` });
+      await writeLog({ type: "blocked", room: room.id, actor: maskIp(ip), text: `การ์ด: ${String(body.name ?? "")}` });
     }
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
   const social = sanitizeSocial(body.social, (s) => hasBlocked(s, cfg.blockedWords));
-  const card = { ...parsed.value, id: crypto.randomUUID(), room: room.id, createdAt: Date.now(), ...(Object.keys(social).length ? { social } : {}) };
-  await addCard(card);
-  await writeLog({ type: "ornament", room: room.id, actor: maskIp(ip), text: `การ์ด ${card.name}: ${card.wish}` });
-  return NextResponse.json({ ok: true, card: { ...card, likes: 0 } });
+  const card = {
+    ...parsed.value,
+    id: crypto.randomUUID(),
+    room: room.id,
+    createdAt: Date.now(),
+    owner: clientId,
+    ...(Object.keys(social).length ? { social } : {}),
+  };
+  // จองโควตาก่อนบันทึก ถ้าบันทึกไม่สำเร็จจะคืนโควตาให้
+  if (!(await reserveCardSlot(room.id, clientId))) {
+    return NextResponse.json({ error: `ส่งการ์ดในห้องนี้ครบ ${CARDS_PER_PERSON} ใบแล้ว ลองไปอวยพรห้องอื่นดูนะ` }, { status: 409 });
+  }
+  try {
+    await addCard(card);
+  } catch (err) {
+    await releaseCardSlot(room.id, clientId);
+    throw err;
+  }
+  await writeLog({ type: "ornament", room: room.id, actor: maskIp(ip), text: `การ์ด ${card.name}` });
+  const used = await usedCardSlots(room.id, clientId);
+  return NextResponse.json({ ok: true, card: toPublic(card, 0), left: Math.max(0, CARDS_PER_PERSON - used) });
 }
