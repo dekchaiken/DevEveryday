@@ -159,7 +159,7 @@ export function DecorModal({
   onPickOnMap?: () => void;
   defaultName?: string;
   social?: Social;
-  onExclusive?: (d: DecorDraft) => void; // วางแบบ Exclusive (จ่ายต่อตัว วางได้ไม่จำกัด วางช่องสงวนได้)
+  onExclusive?: (d: DecorDraft) => void; // วางแบบ Exclusive (จ่าย 1 ครั้งต่อตุ๊กตา 1 ตัว วางช่องสงวนได้)
 }) {
   // ราคาตุ๊กตา Exclusive จากการตั้งค่า แสดงปุ่มเฉพาะเมื่อเปิดรับการสนับสนุนอยู่
   const [exclusivePrice, setExclusivePrice] = useState<number | null>(null);
@@ -321,7 +321,7 @@ export function DecorModal({
             </button>
             {onExclusive && exclusivePrice !== null && (
               <button type="button" className="xmas-chip-btn" onClick={randomAny}>
-                สุ่มทุกช่อง
+                สุ่มทุกช่อง (รวมช่องสงวน)
               </button>
             )}
             <button type="button" className="xmas-chip-btn" onClick={() => onPickOnMap?.()}>
@@ -349,7 +349,7 @@ export function DecorModal({
           </label>
           {onExclusive && exclusivePrice !== null && (
             <button type="button" className="xmas-submit xmas-exclusive-buy" onClick={buyExclusive} disabled={slot === null || slotTaken}>
-              วางแบบ Exclusive{` ฿${exclusivePrice}`} · วางได้ไม่จำกัด
+              วางแบบ Exclusive{` ฿${exclusivePrice}`} · จ่าย 1 ตัวต่อการวาง
             </button>
           )}
           <button className="xmas-submit" onClick={place} disabled={busy || slotBlocked || slot === null || alreadyFree}>
