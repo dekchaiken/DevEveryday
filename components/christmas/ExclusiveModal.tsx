@@ -6,10 +6,10 @@ import type { Social } from "@/lib/christmas/social";
 import { DECO_GROUND, DECO_ROOF, DEFAULT_GIANT_LOOK, GIANT_BODY, GIANT_LIGHTS, SIGN_BOARDS, type GiantLook } from "@/lib/christmas/giant";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
-import { CottagePreview } from "./CottagePreview";
+import { CottageViewer } from "./CottageViewer";
 import { Icon } from "./Icon";
 import { PaymentPanel, useDonateConfig } from "./PaymentPanel";
-import { drawGiantBoard, paintSkyScene, type BoardStyle, type SkyTheme } from "./skyArt";
+import { paintSkyScene, type SkyTheme } from "./skyArt";
 
 // ตุ๊กตาหิมะ Exclusive ที่ผู้ใช้ตกแต่งและเลือกช่องไว้แล้ว รอชำระเงินเพื่อวาง
 export type DecorDraft = { slot: number; parts: SnowParts; name: string; social?: Social };
@@ -105,19 +105,6 @@ function PickRow({ title, options, value, onChange }: { title: string; options: 
       </div>
     </div>
   );
-}
-
-// ป้ายตุ๊กตายักษ์ วาดด้วยงานศิลป์ร่วมให้ตรงกับที่แสดงบนฉากจริง
-function BoardCanvas({ name, message, style }: { name: string; message: string; style: BoardStyle }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const cv = ref.current;
-    const g = cv?.getContext("2d");
-    if (!cv || !g) return;
-    g.clearRect(0, 0, cv.width, cv.height);
-    drawGiantBoard(g, 14, 14, cv.width - 28, cv.height - 28, { name, message, style });
-  }, [name, message, style]);
-  return <canvas ref={ref} width={1024} height={640} className="xmas-board-canvas" aria-label="ตัวอย่างป้ายตุ๊กตายักษ์" />;
 }
 
 // ท้องฟ้าตัวอย่าง วาดต่อเนื่องด้วยเวลาจริง (ถ้าผู้ใช้ตั้งค่าลดการเคลื่อนไหวจะหยุดนิ่ง)
@@ -407,8 +394,7 @@ export default function ExclusiveModal({
 
             <aside className="xmas-ex-col xmas-ex-side">
               <div className="xmas-sign-stage">
-                <CottagePreview look={look} className="xmas-sign-snow" />
-                <BoardCanvas name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} style={look.board as BoardStyle} />
+                <CottageViewer look={look} name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} />
               </div>
               <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ บ้านหลังนี้จะตั้งอยู่บนลานตรงตำแหน่งที่เลือก พร้อมป้ายนี้ข้างบ้าน</p>
               <div className="xmas-ex-final" data-step="3" data-on={step === 3}>

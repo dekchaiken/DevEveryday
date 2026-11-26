@@ -11,7 +11,8 @@ import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
-import { buildCottage, buildYardScenery, giftBox, miniPine, shade } from "./zoneScenery";
+import { buildYardScenery, candyStripes, giftBox, miniPine, shade } from "./zoneScenery";
+import { buildGiantFigure, buildZoneSign, ZONE_SIGN_H } from "./giantSign";
 
 // ตุ๊กตายักษ์ที่ตั้งป้ายไว้: ชื่อ ข้อความ ตำแหน่ง และลุค (ถ้าไม่มีจะใช้ลุคเริ่มต้น)
 type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook };
@@ -927,42 +928,18 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
 
     // ---------- ตุ๊กตาหิมะยักษ์ของห้อง พร้อมป้ายห้อย ----------
-    // บ้านหิมะ Exclusive: โมเดลในโค้ดตามลุคที่ผู้ซื้อเลือก และมีป้ายข้อความตั้งอยู่ข้างบ้าน
+    // บ้านหิมะ Exclusive: บ้านตามลุคที่ผู้ซื้อเลือก พร้อมป้ายข้างบ้านที่หันเข้าหาใจกลางฉาก
     function buildGiant(g: GiantSpec) {
       const look = g.look ?? DEFAULT_GIANT_LOOK;
-      const grp = new THREE.Group();
-      // ตัวบ้านและป้ายย่อเหลือ 85% เพื่อให้บ้านที่ซื้อใกล้กันไม่ทับป้ายกัน
-      const body = new THREE.Group();
-      body.scale.setScalar(0.85);
-      grp.add(body);
-      const cottage = buildCottage({ body: look.body, lights: look.lights, deco: look.deco });
-      body.add(cottage.group);
-      grp.userData.update = cottage.update;
-
-      // ป้ายข้อความ วาดจากงานศิลป์ร่วม
-      const boardCv = document.createElement("canvas");
-      boardCv.width = 1024;
-      boardCv.height = 640;
-      const bg = boardCv.getContext("2d");
-      const boardTex = new THREE.CanvasTexture(boardCv);
-      if (bg) drawGiantBoard(bg, 14, 14, 996, 612, { name: g.name, message: g.message, style: (look.board as BoardStyle) ?? "spruce" });
-      boardTex.colorSpace = THREE.SRGBColorSpace;
-      boardTex.needsUpdate = true;
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 0.83), new THREE.MeshBasicMaterial({ map: boardTex, transparent: true }));
-      // ป้ายอยู่ฝั่งที่หันเข้าหาใจกลางฉาก เพื่อให้มองเห็นได้จากมุมกล้องหลัก
       const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
       const side = def.x > 0 ? -1 : 1;
-      board.position.set(side * 1.95, 1.95, 0.35);
-      board.rotation.y = side * -0.3;
-      // เสาไม้ปักอยู่ข้างบ้าน ไม่ทับตัวบ้าน
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.7, 12), new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 }));
-      pole.position.set(side * 1.95, 0.85, 0.35);
-      body.add(board, pole);
-
+      const figure = buildGiantFigure({ look, name: g.name, message: g.message, side });
+      const grp = figure.group;
+      grp.userData.update = figure.update;
       const gx = def.x;
       const gz = def.z;
       grp.position.set(gx, 0, gz);
-      // หันหน้าเข้าหาผู้ชม เพื่อให้เห็นป้ายที่ถืออยู่ (ตำแหน่งอื่นหมุนเล็กน้อยไปทางต้น)
+      // หันหน้าเข้าหาผู้ชม เพื่อให้เห็นป้ายและบ้าน (ตำแหน่งอื่นหมุนเล็กน้อยไปทางต้น)
       grp.rotation.y = -0.2 + (gx > 0 ? -0.15 : 0.15);
       return grp;
     }
@@ -973,8 +950,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const m = o as THREE.Mesh;
         m.geometry?.dispose?.();
         const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-        if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
-        else mat?.dispose?.();
+        const release = (x: THREE.Material) => {
+          (x as THREE.MeshStandardMaterial).map?.dispose();
+          x.dispose();
+        };
+        if (Array.isArray(mat)) mat.forEach(release);
+        else if (mat) release(mat);
       });
     }
     // ตุ๊กตายักษ์ทุกตัวของห้อง: สร้างเฉพาะตัวที่เพิ่งมา และเอาตัวที่หายไปออก
@@ -1065,32 +1046,67 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     zPost(zx + zh, gz, POST_H);
     zPost(gx - 1.2, gz, POST_H);
     zPost(gx + 1.2, gz, POST_H);
-    // ซุ้มประตูโค้งสีแดงพร้อมไฟ
-    const arch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.08, 10, 28, Math.PI), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.5 }));
-    arch.position.set(gx, POST_H, gz);
-    zoneGroup.add(arch);
-    // ป้ายชื่อโซนเหนือซุ้ม
-    const signCv = document.createElement("canvas");
-    signCv.width = 760;
-    signCv.height = 180;
-    const sg = signCv.getContext("2d");
-    if (sg) {
-      sg.fillStyle = "#0f3d2e";
-      sg.fillRect(0, 0, 760, 180);
-      sg.strokeStyle = "#e8d19a";
-      sg.lineWidth = 9;
-      sg.strokeRect(14, 14, 732, 152);
-      sg.fillStyle = "#f6e7bf";
-      sg.font = "700 74px 'IBM Plex Sans Thai', sans-serif";
-      sg.textAlign = "center";
-      sg.textBaseline = "middle";
-      sg.fillText("โซนคำอวยพร", 380, 94);
+    // ซุ้มประตูลายไม้เท้าขนม มีพวงมาลัย ลูกประดับ สายไฟ และโบว์แดง
+    // ป้ายชื่อโซนแขวนด้วยโซ่จากเสาสองข้างประตู
+    const ARCH_R = 1.2;
+    const GARLAND_R = ARCH_R + 0.13;
+    const archPts = (r: number, n: number) =>
+      Array.from({ length: n }, (_, i) => {
+        const th = Math.PI - (i / (n - 1)) * Math.PI;
+        return new THREE.Vector3(gx + Math.cos(th) * r, POST_H + Math.sin(th) * r, gz);
+      });
+    const cane = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(archPts(ARCH_R, 48)), 96, 0.085, 14, false),
+      new THREE.MeshStandardMaterial({ map: candyStripes(), roughness: 0.35 }),
+    );
+    zoneGroup.add(cane);
+    const garland = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(archPts(GARLAND_R, 48)), 96, 0.055, 10, false),
+      new THREE.MeshStandardMaterial({ color: 0x1f7a3a, roughness: 0.8 }),
+    );
+    zoneGroup.add(garland);
+    const ornMats = [
+      new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.35 }),
+      new THREE.MeshStandardMaterial({ color: 0xf5c542, roughness: 0.25, metalness: 0.7 }),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }),
+    ];
+    for (let i = 0; i <= 14; i++) {
+      const th = Math.PI - (i / 14) * Math.PI;
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), ornMats[i % ornMats.length]);
+      orb.position.set(gx + Math.cos(th) * GARLAND_R, POST_H + Math.sin(th) * GARLAND_R, gz + 0.04);
+      zoneGroup.add(orb);
     }
-    const signTex = new THREE.CanvasTexture(signCv);
-    signTex.colorSpace = THREE.SRGBColorSpace;
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.99), new THREE.MeshBasicMaterial({ map: signTex, transparent: true }));
-    sign.position.set(gx, 3.7, gz + 0.06);
-    zoneGroup.add(sign);
+    const gateBulbCols = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
+    for (let i = 0; i < 18; i++) {
+      const th = Math.PI - ((i + 0.5) / 18) * Math.PI;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), new THREE.MeshBasicMaterial({ color: gateBulbCols[i % gateBulbCols.length], transparent: true, opacity: 1 }));
+      bulb.position.set(gx + Math.cos(th) * (ARCH_R + 0.02), POST_H + Math.sin(th) * (ARCH_R + 0.02), gz + 0.08);
+      zoneGroup.add(bulb);
+      zoneLights.push(bulb);
+    }
+    // โบว์แดงที่ยอดซุ้ม
+    const bowMat = new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.45 });
+    for (const s of [-1, 1]) {
+      const loop = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.04, 8, 18), bowMat);
+      loop.position.set(gx + s * 0.13, POST_H + ARCH_R + 0.12, gz + 0.1);
+      loop.rotation.z = s * 0.5;
+      zoneGroup.add(loop);
+    }
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), bowMat);
+    knot.position.set(gx, POST_H + ARCH_R + 0.12, gz + 0.1);
+    zoneGroup.add(knot);
+    // ป้ายชื่อโซนแขวนเหนือซุ้ม และโซ่สองเส้นจากเสาประตู
+    const signY = POST_H + ARCH_R + 0.28 + ZONE_SIGN_H / 2;
+    const zoneSign = buildZoneSign();
+    zoneSign.position.set(gx, signY, gz + 0.04);
+    zoneGroup.add(zoneSign);
+    const chainMat = new THREE.MeshStandardMaterial({ color: 0xd9b45a, roughness: 0.3, metalness: 0.8 });
+    for (const s of [-1, 1]) {
+      const len = signY - ZONE_SIGN_H / 2 - (POST_H + 0.12);
+      const link = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, len, 6), chainMat);
+      link.position.set(gx + s * 1.2, POST_H + 0.12 + len / 2, gz + 0.04);
+      zoneGroup.add(link);
+    }
     // ไฟประดับตามขอบรั้วด้านบน กระพริบเบา ๆ
     const bulbColors = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
     let bulbIdx = 0;
@@ -1994,8 +2010,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const m = o as THREE.Mesh;
         m.geometry?.dispose?.();
         const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-        if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
-        else mat?.dispose?.();
+        const release = (x: THREE.Material) => {
+          (x as THREE.MeshStandardMaterial).map?.dispose();
+          x.dispose();
+        };
+        if (Array.isArray(mat)) mat.forEach(release);
+        else if (mat) release(mat);
       });
       glowTex.dispose();
       pmrem.dispose();
