@@ -216,10 +216,6 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
     inner.position.set(0, H + 0.2, 0);
     scene.add(inner);
 
-    // แผ่นวาบสีขาวติดกับกล้อง ใช้ตอนเข้าสู่หน้าหลัก
-    const flash = new THREE.Mesh(track(new THREE.PlaneGeometry(14, 14)), new THREE.MeshBasicMaterial({ color: 0xfffaf0, transparent: true, opacity: 0, depthWrite: false }));
-    flash.position.set(0, 0, -6);
-    camera.add(flash);
 
     // ประกายที่กระจายตอนแกะโบว์
     const SPARK = 60;
@@ -241,6 +237,10 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
     sparks.position.set(0, H + 0.2, 0);
     scene.add(sparks);
 
+    // โหมดทดสอบ (เฉพาะตอนพัฒนา): ?giftFrame=ms แสดงเฟรมนิ่งของเวลานั้น เพื่อตรวจทีละเฟรม
+    const seekParam = process.env.NODE_ENV !== "production" ? new URLSearchParams(window.location.search).get("giftFrame") : null;
+    const seek = seekParam !== null ? Number(seekParam) : null;
+
     // จุดเวลาเริ่มของแอนิเมชันเปิด
     let openAt = -1;
     let finished = false;
@@ -259,7 +259,7 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
 
       if (openAt < 0 && openingRef.current) openAt = now;
 
-      if (openAt < 0) {
+      if (openAt < 0 && seek === null) {
         // รอให้แตะ: กล่องหมุนช้า ๆ และลอยขึ้นลงเบา ๆ
         root.rotation.y = Math.sin(idle * 0.7) * 0.32 - 0.25;
         root.position.y = Math.sin(idle * 1.4) * 0.05;
@@ -269,7 +269,7 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
         camera.position.lerp(CAM_START, 0.08);
         camera.lookAt(0, 1.0, 0);
       } else {
-        const t = (now - openAt) / 1000;
+        const t = seek !== null ? seek / 1000 : (now - openAt) / 1000;
         root.position.y = 0;
         root.rotation.x = 0;
         root.rotation.y = -0.25 + easeInOut(clamp01(t / 0.6)) * 0.25;
@@ -301,19 +301,16 @@ export default function GiftBox3D({ opening, onOpen, onFinish }: Props) {
         const lightT = clamp01((t - 0.9) / 0.7);
         inner.intensity = easeOut(lightT) * 36;
         glow.material.opacity = easeOut(clamp01((t - 0.8) / 0.5)) * 0.95;
-        glow.scale.setScalar(0.01 + easeOut(clamp01((t - 0.8) / 1.0)) * 4.2);
+        glow.scale.setScalar(0.01 + easeOut(clamp01((t - 0.8) / 1.0)) * 3.2);
 
         // 3) กล้องพุ่งเข้าแสง 1.25–2.2 วินาที
         const camT = easeIn(clamp01((t - 1.25) / 0.95));
         camera.position.lerpVectors(CAM_START, new THREE.Vector3(0, 3.1, 2.1), camT);
         camera.lookAt(0, 1.7, 0);
-        glow.scale.setScalar(0.01 + easeOut(clamp01((t - 0.8) / 1.0)) * 4.2 + camT * 14);
+        glow.scale.setScalar(0.01 + easeOut(clamp01((t - 0.8) / 1.0)) * 3.2 + camT * 1.2);
         glow.material.opacity = Math.min(1, 0.95 + camT * 0.05);
 
-        // 4) วาบเข้าหน้าหลัก 1.95–2.4 วินาที
-        const flashT = clamp01((t - 1.95) / 0.45);
-        (flash.material as THREE.MeshBasicMaterial).opacity = flashT;
-        if (!finished && t >= TOTAL) {
+        if (!finished && seek === null && t >= TOTAL) {
           finished = true;
           finishRef.current();
         }

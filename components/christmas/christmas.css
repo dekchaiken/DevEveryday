@@ -4281,8 +4281,29 @@
   width: 100%;
   height: 100%;
 }
+/* หลังวาบ: ฉากทั้งหมดกลายเป็นสีงาช้างก่อน แล้วค่อยจางเผยหน้าหลัก */
+.xmas-gift::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #fffaf0;
+  opacity: 0;
+  pointer-events: none;
+}
+/* ขอบกล่องแสงไม่ให้เห็นเป็นกรอบ: ฉากเริ่มขาวตั้งแต่ตอนแสงเต็มกล่อง */
+.xmas-gift.is-opening::after {
+  animation: xmas-whiteup 0.8s ease 1.5s both;
+}
+.xmas-gift.is-leaving::after {
+  opacity: 1;
+  animation: none;
+}
 .xmas-gift.is-leaving {
-  animation: xmas-out 0.8s ease both;
+  animation: xmas-out 0.7s ease 0s both;
+}
+@keyframes xmas-whiteup {
+  to { opacity: 1; }
 }
 .xmas-gift.is-opening .xmas-gift-hint,
 .xmas-gift.is-opening .xmas-gift-skip {
