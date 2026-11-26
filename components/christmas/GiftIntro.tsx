@@ -6,7 +6,6 @@ import "./christmas.css";
 
 type Phase = "play" | "open" | "done";
 
-const AUTO_OPEN_MS = 4200; // เปิดกล่องเองถ้าผู้ใช้ไม่กด
 const REVEAL_MS = 1750; // รอให้กล่องพุ่งไปและฉากจางหายครบก่อนค่อยถอดออก // ระยะเวลาเปลี่ยนจากกล่องเข้าสู่หน้าเว็บ
 
 // เปิดตัวด้วยกล่องของขวัญคริสต์มาสที่ถูกแกะออก ก่อนเข้าสู่หน้าเว็บ
@@ -24,10 +23,6 @@ export default function GiftIntro({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    if (phase === "play") {
-      const t = setTimeout(open, AUTO_OPEN_MS);
-      return () => clearTimeout(t);
-    }
     if (phase === "open") {
       const t = setTimeout(() => {
         setPhase("done");
@@ -67,20 +62,23 @@ export default function GiftIntro({ children }: { children: ReactNode }) {
                   <i className="gb3-rib-h" />
                 </span>
                 <span className="gb3-face gb3-back" />
-                <span className="gb3-face gb3-left">
-                  <i className="gb3-rib-v" />
-                </span>
+                <span className="gb3-face gb3-left" />
                 <span className="gb3-face gb3-right">
                   <i className="gb3-rib-v" />
                 </span>
-                <span className="gb3-face gb3-bottom" />
-                <span className="gb3-lid">
+                <span className="gb3-face gb3-top">
                   <i className="gb3-rib-v" />
-                  <span className="gb3-bow">
-                    <i className="gb3-loop gb3-loop-l" />
-                    <i className="gb3-loop gb3-loop-r" />
-                    <i className="gb3-knot" />
+                </span>
+                <span className="gb3-lid">
+                  <span className="gb3-lid-front">
+                    <i className="gb3-rib-v" />
+                    <span className="gb3-bow">
+                      <i className="gb3-loop gb3-loop-l" />
+                      <i className="gb3-loop gb3-loop-r" />
+                      <i className="gb3-knot" />
+                    </span>
                   </span>
+                  <span className="gb3-lid-top" />
                 </span>
               </span>
               <span className="gb3-shadow" />
