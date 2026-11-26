@@ -76,6 +76,25 @@ const LABEL: Record<string, string> = {
 };
 
 type View = "menu" | "giant" | "message" | "decor";
+
+// แถบถอยกลับ/ถัดไปของขั้นตอน (แสดงเฉพาะบนมือถือ)
+function WizardNav({ step, last, setStep }: { step: number; last: number; setStep: (n: number | ((n: number) => number)) => void }) {
+  return (
+    <nav className="xmas-wiz-nav" aria-label="ขั้นตอน">
+      <button type="button" className="xmas-wiz-back" onClick={() => setStep((n) => Math.max(0, n - 1))} disabled={step === 0}>
+        ย้อนกลับ
+      </button>
+      <span className="xmas-wiz-count">ขั้นที่ {step + 1} จาก {last + 1}</span>
+      {step < last ? (
+        <button type="button" className="xmas-wiz-next" onClick={() => setStep((n) => Math.min(last, n + 1))}>
+          ถัดไป
+        </button>
+      ) : (
+        <span className="xmas-wiz-spacer" />
+      )}
+    </nav>
+  );
+}
 type GiantKey = keyof GiantLook;
 
 // ปุ่มเลือกชิ้นส่วนแบบแถวเดียว ใช้ทั้งตุ๊กตายักษ์และข้อความ
@@ -160,6 +179,8 @@ export default function ExclusiveModal({
   const [error, setError] = useState("");
   const [order, setOrder] = useState<OrderPreview | null>(null);
   const [orderKind, setOrderKind] = useState<"giant" | "message" | "decor">("giant");
+  // บนมือถือแสดงทีละขั้น (บนคอมแสดงทุกขั้นพร้อมกัน)
+  const [step, setStep] = useState(0);
 
   const locked = order !== null && order.status !== "paid";
   const disabled = cfg !== null && !cfg.enabled;
@@ -172,6 +193,11 @@ export default function ExclusiveModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [locked, onClose]);
+
+  function goView(v: View) {
+    setStep(0);
+    setView(v);
+  }
 
   function setPart(key: GiantKey, value: string) {
     setLook((l) => ({ ...l, [key]: value }));
@@ -293,11 +319,11 @@ export default function ExclusiveModal({
         {/* ตุ๊กตาหิมะยักษ์: ซ้ายเลือกและพิมพ์ ขวาดูตุ๊กตาและป้ายแบบเรียลไทม์ */}
         {!order && cfg && !disabled && view === "giant" && (
           <form className="xmas-ex-split" onSubmit={submitGiant}>
-            <button type="button" className="xmas-ex-back" onClick={() => setView("menu")}>
+            <button type="button" className="xmas-ex-back" onClick={() => goView("menu")}>
               ← กลับไปเลือกฟีเจอร์
             </button>
             <div className="xmas-ex-col">
-              <section className="xmas-sec">
+              <section className="xmas-sec" data-step="0" data-on={step === 0}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">1</span>
                   <h3>ตำแหน่งบนลาน</h3>
@@ -311,7 +337,7 @@ export default function ExclusiveModal({
                 </div>
               </section>
 
-              <section className="xmas-sec">
+              <section className="xmas-sec" data-step="0" data-on={step === 0}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">2</span>
                   <h3>ยอดที่ชำระ</h3>
@@ -350,24 +376,31 @@ export default function ExclusiveModal({
                 </label>
               </section>
 
-              <section className="xmas-sec">
+              <section className="xmas-sec" data-step="1" data-on={step === 1}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">3</span>
-                  <h3>ตกแต่งตุ๊กตา</h3>
+                  <h3>ตกแต่ง · หัวและตัว</h3>
                 </header>
                 <PickRow title="หมวก" options={GIANT_HATS} value={look.hat} onChange={(v) => setPart("hat", v)} />
                 <PickRow title="ผ้าพันคอ" options={GIANT_SCARVES} value={look.scarf} onChange={(v) => setPart("scarf", v)} />
                 <PickRow title="สีตัว" options={GIANT_BODY} value={look.body} onChange={(v) => setPart("body", v)} />
                 <PickRow title="จมูก" options={GIANT_NOSES} value={look.nose} onChange={(v) => setPart("nose", v)} />
+              </section>
+
+              <section className="xmas-sec" data-step="2" data-on={step === 2}>
+                <header className="xmas-sec-head">
+                  <span className="xmas-sup-num">4</span>
+                  <h3>ตกแต่ง · แขน ฐาน และป้าย</h3>
+                </header>
                 <PickRow title="แขน" options={GIANT_ARMS} value={look.arms} onChange={(v) => setPart("arms", v)} />
                 <PickRow title="ฐาน" options={GIANT_LEGS} value={look.legs} onChange={(v) => setPart("legs", v)} />
                 <PickRow title="ของประดับ" options={GIANT_ACC} value={look.acc} onChange={(v) => setPart("acc", v)} />
                 <PickRow title="สีป้าย" options={SIGN_BOARDS} value={look.board} onChange={(v) => setPart("board", v)} />
               </section>
 
-              <section className="xmas-sec">
+              <section className="xmas-sec" data-step="3" data-on={step === 3}>
                 <header className="xmas-sec-head">
-                  <span className="xmas-sup-num">4</span>
+                  <span className="xmas-sup-num">5</span>
                   <h3>ชื่อและข้อความบนป้าย</h3>
                 </header>
                 <label className="xmas-sup-field">
@@ -396,29 +429,32 @@ export default function ExclusiveModal({
                 <BoardCanvas name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} style={look.board as BoardStyle} />
               </div>
               <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ ตุ๊กตาจะถือป้ายนี้ไว้บนลานตรงตำแหน่งที่เลือก</p>
-              {error && <p className="xmas-msg err">{error}</p>}
-              <button className="xmas-submit" disabled={busy}>
-                {busy ? "กำลังสร้างรายการ…" : giantChosen ? `ชำระ ฿${giantChosen}` : "เลือกยอดก่อน"}
-              </button>
+              <div className="xmas-ex-final" data-step="3" data-on={step === 3}>
+                {error && <p className="xmas-msg err">{error}</p>}
+                <button className="xmas-submit" disabled={busy}>
+                  {busy ? "กำลังสร้างรายการ…" : giantChosen ? `ชำระ ฿${giantChosen}` : "เลือกยอดก่อน"}
+                </button>
+              </div>
             </aside>
+            <WizardNav step={step} last={3} setStep={setStep} />
           </form>
         )}
 
         {/* ข้อความขึ้นจอ: ซ้ายเลือกธีมและพิมพ์ ขวาดูการแสดงจริงแบบเรียลไทม์ */}
         {!order && cfg && !disabled && view === "message" && (
           <form className="xmas-ex-split" onSubmit={submitMessage}>
-            <button type="button" className="xmas-ex-back" onClick={() => setView("menu")}>
+            <button type="button" className="xmas-ex-back" onClick={() => goView("menu")}>
               ← กลับไปเลือกฟีเจอร์
             </button>
             <div className="xmas-ex-col">
-              <section className="xmas-sec">
+              <section className="xmas-sec" data-step="0" data-on={step === 0}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">1</span>
                   <h3>ธีมการแสดง</h3>
                 </header>
                 {themeOptions}
               </section>
-              <section className="xmas-sec">
+              <section className="xmas-sec" data-step="1" data-on={step === 1}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">2</span>
                   <h3>ผู้ส่งและข้อความ</h3>
@@ -446,11 +482,14 @@ export default function ExclusiveModal({
             <aside className="xmas-ex-col xmas-ex-side">
               <SkyCanvas theme={theme} text={message.trim() || "ข้อความของคุณจะขึ้นบนท้องฟ้า"} by={name.trim() || "ชื่อผู้ส่ง"} />
               <p className="xmas-hint">ตัวอย่างนี้คือการแสดงจริงที่ทุกคนในห้องจะเห็นพร้อมกัน</p>
-              {error && <p className="xmas-msg err">{error}</p>}
-              <button className="xmas-submit" disabled={busy}>
-                {busy ? "กำลังสร้างรายการ…" : `ชำระ ฿${cfg.messagePrice}`}
-              </button>
+              <div className="xmas-ex-final" data-step="1" data-on={step === 1}>
+                {error && <p className="xmas-msg err">{error}</p>}
+                <button className="xmas-submit" disabled={busy}>
+                  {busy ? "กำลังสร้างรายการ…" : `ชำระ ฿${cfg.messagePrice}`}
+                </button>
+              </div>
             </aside>
+            <WizardNav step={step} last={1} setStep={setStep} />
           </form>
         )}
 

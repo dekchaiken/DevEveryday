@@ -177,6 +177,9 @@ export function DecorModal({
   }, [hasExclusive]);
   const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
   const [tab, setTab] = useState<PartKey | "slot">("hat");
+  // บนมือถือแสดงทีละขั้น: 0 ช่องวาง · 1 ตกแต่ง · 2 ชื่อและยืนยัน (บนคอมแสดงทุกขั้นพร้อมกัน)
+  const [step, setStep] = useState(0);
+  const LAST = 2;
   const [name, setName] = useState(defaultName);
   const [alreadyFree] = useState(() => hasFreePlaced(roomId));
   const [slot, setSlot] = useState<number | null>(() => initialSlot ?? randomFreeSlot(decor));
@@ -278,7 +281,7 @@ export function DecorModal({
               <span className="xmas-mk-name">{name.trim() || "ตุ๊กตาของคุณ"}</span>
             </div>
 
-            <div className="xmas-mk-card">
+            <div className="xmas-mk-card" data-step="0" data-on={step === 0}>
               <span className="xmas-mk-label">ช่องวาง (1–{SLOT_COUNT})</span>
               <div className="xmas-mk-slot-row">
                 <input
@@ -314,14 +317,14 @@ export function DecorModal({
               )}
             </div>
 
-            <label className="xmas-mk-field">
+            <label className="xmas-mk-field" data-step="2" data-on={step === 2}>
               <span>ชื่อที่จะแสดงบนตุ๊กตา</span>
               <input value={name} maxLength={20} onChange={(e) => setName(e.target.value)} placeholder="เช่น ฟ้า" />
             </label>
-            <p className="xmas-mk-note">{alreadyFree ? "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว" : "ตุ๊กตาฟรีวางได้คนละ 1 ตัวต่อห้อง"}</p>
+            <p className="xmas-mk-note" data-step="2" data-on={step === 2}>{alreadyFree ? "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว" : "ตุ๊กตาฟรีวางได้คนละ 1 ตัวต่อห้อง"}</p>
           </aside>
 
-          <section className="xmas-mk-main">
+          <section className="xmas-mk-main" data-step="1" data-on={step === 1}>
             <nav className="xmas-mk-tabs" role="tablist" aria-label="หมวดชิ้นส่วน">
               {PART_TABS.map((t) => (
                 <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? "is-on" : ""} onClick={() => setTab(t.key)}>
@@ -354,7 +357,20 @@ export function DecorModal({
 
         <footer className="xmas-mk-foot">
           {error && <p className="xmas-msg err">{error}</p>}
-          <div className="xmas-mk-actions">
+          <nav className="xmas-wiz-nav" aria-label="ขั้นตอน">
+            <button type="button" className="xmas-wiz-back" onClick={() => setStep((n) => Math.max(0, n - 1))} disabled={step === 0}>
+              ย้อนกลับ
+            </button>
+            <span className="xmas-wiz-count">ขั้นที่ {step + 1} จาก {LAST + 1}</span>
+            {step < LAST ? (
+              <button type="button" className="xmas-wiz-next" onClick={() => setStep((n) => Math.min(LAST, n + 1))}>
+                ถัดไป
+              </button>
+            ) : (
+              <span className="xmas-wiz-spacer" />
+            )}
+          </nav>
+          <div className="xmas-mk-actions" data-step="2" data-on={step === 2}>
             {onExclusive && exclusivePrice !== null && (
               <button type="button" className="xmas-mk-exclusive" onClick={buyExclusive} disabled={slot === null || slotTaken}>
                 <span>วางแบบ Exclusive ฿{exclusivePrice}</span>

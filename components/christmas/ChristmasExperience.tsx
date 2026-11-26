@@ -663,14 +663,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <Icon name="crown" size={18} /> Exclusive
         </button>
         <button className="xmas-action is-donate-phone xmas-action-phone" onClick={() => setSupportOpen(true)}>
-          <Icon name="sparkle" size={18} /> สนับสนุน
+          <Icon name="heart" size={18} /> สนับสนุน
         </button>
         <button className="xmas-action xmas-action-mobile" onClick={() => {
           setFeedOpen(true);
           setRankOpen(false);
           setSheetOpen(false);
         }}>
-          <Icon name="heart" size={18} /> ประวัติล่าสุด
+          <Icon name="clock" size={18} /> ประวัติล่าสุด
         </button>
       </nav>
 
@@ -862,7 +862,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <button className="xmas-sheet-toggle" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen}>
           {sheetOpen ? "ปิดแผง" : "แขวนคำอวยพรของคุณ"}
         </button>
-        <form onSubmit={hang} className="xmas-form xmas-wish-form">
+        <form onSubmit={hang} className={`xmas-form xmas-wish-form ${wishTab === "text" ? "is-text-tab" : ""}`}>
           <div className="xmas-build-top">
             <button type="button" className="xmas-form-close" onClick={() => setSheetOpen(false)} aria-label="ปิดแผงแขวนคำอวยพร">
               <Icon name="close" size={18} />
