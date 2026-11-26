@@ -27,7 +27,7 @@ function glow(): THREE.Texture {
 
 // ลายไม้เท้าน้ำตาลแดง ลายทแยงขาวแดง
 let candyTexture: THREE.Texture | null = null;
-function candyStripes(): THREE.Texture {
+export function candyStripes(): THREE.Texture {
   if (candyTexture) return candyTexture;
   const c = document.createElement("canvas");
   c.width = c.height = 128;
@@ -50,8 +50,8 @@ function candyStripes(): THREE.Texture {
   return candyTexture;
 }
 
-const std = (color: number, roughness = 0.7, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
-const snowSurface = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.3, sheen: 0.6, sheenRoughness: 0.4, sheenColor: new THREE.Color(0xdfeeff) });
+export const std = (color: number, roughness = 0.7, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
+export const snowSurface = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.3, sheen: 0.6, sheenRoughness: 0.4, sheenColor: new THREE.Color(0xdfeeff) });
 
 // ให้ทุกชิ้นทิ้งเงาและรับเงาได้ (ใช้กับทุกชิ้นของฉากนี้)
 export function shade<T extends THREE.Object3D>(o: T): T {
@@ -198,6 +198,16 @@ export function buildCottage(look: { body: string; lights: string; deco?: string
     add(new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.05, 0.1), snowMat), wx, 0.52, FRONT + 0.08);
     const haze = add(new THREE.Sprite(new THREE.SpriteMaterial({ map: glow(), color: 0xffc857, transparent: true, opacity: 0.32, depthWrite: false })), wx, 0.78, FRONT + 0.16);
     haze.scale.set(1.2, 1.2, 1);
+  }
+  // หน้าต่างด้านหลังบ้าน ให้เห็นความละเอียดเมื่อหมุนดูรอบบ้าน
+  for (const wx of [-0.62, 0.62]) {
+    const bz = -FRONT - 0.012;
+    const pane = add(new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.42), winGlowMat), wx, 0.78, bz);
+    pane.rotation.y = Math.PI;
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.03, 0.02), woodMat), wx, 0.78, -FRONT - 0.03);
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.42, 0.02), woodMat), wx, 0.78, -FRONT - 0.03);
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.03), trimMat), wx, 1.025, -FRONT - 0.03);
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.03), trimMat), wx, 0.535, -FRONT - 0.03);
   }
   // หน้าต่างกลมบนจั่ว
   add(new THREE.Mesh(new THREE.CircleGeometry(0.14, 20), winGlowMat), 0, H + 0.3, FRONT + 0.07);

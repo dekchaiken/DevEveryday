@@ -185,17 +185,33 @@ export function drawGiantBoard(g: CanvasRenderingContext2D, x: number, y: number
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.fillStyle = p.accent;
-  g.font = `500 ${Math.round(h * 0.085)}px ${fonts().sky}`;
-  g.fillText("ตุ๊กตาของ", cx, y + h * 0.16);
+  g.font = `600 ${Math.round(h * 0.068)}px ${fonts().sky}`;
+  g.letterSpacing = `${Math.round(h * 0.01)}px`;
+  g.fillText("บ้านของ", cx, y + h * 0.17);
   g.restore();
 
-  const nameFit = fitText(g, opts.name || "ชื่อของคุณ", w * 0.82, h * 0.18, 1, Math.round(h * 0.17), 700, fonts().sky);
+  const nameFit = fitText(g, opts.name || "ชื่อของคุณ", w * 0.7, h * 0.14, 1, Math.round(h * 0.13), 700, fonts().sky);
   g.save();
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.fillStyle = p.ink;
   g.font = `700 ${nameFit.px}px ${fonts().sky}`;
-  g.fillText(nameFit.lines[0] ?? "", cx, y + h * 0.33);
+  g.fillText(nameFit.lines[0] ?? "", cx, y + h * 0.34);
+  g.restore();
+
+  // ดาวเล็กสี่มุมป้าย
+  g.save();
+  g.fillStyle = p.accent;
+  for (const [sx, sy] of [[x + w * 0.1, y + h * 0.17], [x + w * 0.9, y + h * 0.17], [x + w * 0.1, y + h * 0.84], [x + w * 0.9, y + h * 0.84]]) {
+    g.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const rr = i % 2 ? h * 0.012 : h * 0.04;
+      const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
+      g.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr);
+    }
+    g.closePath();
+    g.fill();
+  }
   g.restore();
 
   // เส้นคั่นฟอยล์
@@ -213,13 +229,13 @@ export function drawGiantBoard(g: CanvasRenderingContext2D, x: number, y: number
   g.restore();
 
   const msg = (opts.message || "ข้อความของคุณจะขึ้นตรงนี้").slice(0, 80);
-  const msgFit = fitText(g, msg, w * 0.8, h * 0.44, 3, Math.round(h * 0.13), 500, fonts().sky);
+  const msgFit = fitText(g, msg, w * 0.7, h * 0.26, 2, Math.round(h * 0.085), 500, fonts().sky);
   g.save();
   g.textAlign = "center";
   g.textBaseline = "middle";
   g.fillStyle = p.ink;
   g.font = `500 ${msgFit.px}px ${fonts().sky}`;
-  const startY = y + h * 0.66 - ((msgFit.lines.length - 1) * msgFit.lineH) / 2;
+  const startY = y + h * 0.7 - ((msgFit.lines.length - 1) * msgFit.lineH) / 2;
   msgFit.lines.forEach((l, i) => g.fillText(l, cx, startY + i * msgFit.lineH));
   g.restore();
 }
