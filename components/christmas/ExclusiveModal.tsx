@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
-import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
 import type { Social } from "@/lib/christmas/social";
 import {
   DEFAULT_GIANT_LOOK,
@@ -152,7 +151,6 @@ function SkyCanvas({ theme, text, by }: { theme: SkyTheme; text: string; by: str
 export default function ExclusiveModal({
   roomId,
   roomName,
-  takenSpots = [],
   onClose,
   onPaid,
   defaultName = "",
@@ -161,7 +159,6 @@ export default function ExclusiveModal({
 }: {
   roomId: string;
   roomName: string;
-  takenSpots?: number[]; // ตำแหน่งตุ๊กตายักษ์ที่มีคนซื้อไปแล้ว
   onClose: () => void;
   onPaid: (kind: "giant" | "message" | "decor", name: string) => void;
   defaultName?: string;
@@ -173,7 +170,6 @@ export default function ExclusiveModal({
   const [name, setName] = useState(decor?.name ?? defaultName);
   const [message, setMessage] = useState("");
   const [theme, setTheme] = useState<MessageTheme>("fireworks");
-  const [spot, setSpot] = useState(0);
   const [look, setLook] = useState<GiantLook>(DEFAULT_GIANT_LOOK);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
@@ -229,7 +225,7 @@ export default function ExclusiveModal({
     e.preventDefault();
     if (!giantChosen) return setError("เลือกหรือกรอกยอดก่อน");
     if (!name.trim()) return setError("กรุณาใส่ชื่อที่จะแสดงบนป้าย");
-    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), spot, look });
+    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), look });
   }
 
   function submitMessage(e: FormEvent) {
@@ -328,31 +324,6 @@ export default function ExclusiveModal({
               <section className="xmas-sec" data-step="0" data-on={step === 0}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">1</span>
-                  <h3>ตำแหน่งบนลาน</h3>
-                </header>
-                <div className="xmas-spot-grid is-wide">
-                  {GIANT_SPOT_DEFS.map((d, i) => {
-                    const used = takenSpots.includes(i);
-                    return (
-                      <button
-                        type="button"
-                        key={d.label}
-                        className={spot === i ? "is-on" : used ? "is-used" : ""}
-                        aria-pressed={spot === i}
-                        disabled={used}
-                        onClick={() => setSpot(i)}
-                        title={used ? "ตำแหน่งนี้มีตุ๊กตายักษ์แล้ว" : d.label}
-                      >
-                        {i + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <section className="xmas-sec" data-step="0" data-on={step === 0}>
-                <header className="xmas-sec-head">
-                  <span className="xmas-sup-num">2</span>
                   <h3>ยอดที่ชำระ</h3>
                 </header>
                 <div className="xmas-tier-grid">
@@ -391,7 +362,7 @@ export default function ExclusiveModal({
 
               <section className="xmas-sec" data-step="1" data-on={step === 1}>
                 <header className="xmas-sec-head">
-                  <span className="xmas-sup-num">3</span>
+                  <span className="xmas-sup-num">2</span>
                   <h3>ตกแต่ง · หัวและตัว</h3>
                 </header>
                 <PickRow title="หมวก" options={GIANT_HATS} value={look.hat} onChange={(v) => setPart("hat", v)} />
@@ -402,7 +373,7 @@ export default function ExclusiveModal({
 
               <section className="xmas-sec" data-step="2" data-on={step === 2}>
                 <header className="xmas-sec-head">
-                  <span className="xmas-sup-num">4</span>
+                  <span className="xmas-sup-num">3</span>
                   <h3>ตกแต่ง · แขน ฐาน และป้าย</h3>
                 </header>
                 <PickRow title="แขน" options={GIANT_ARMS} value={look.arms} onChange={(v) => setPart("arms", v)} />
@@ -413,7 +384,7 @@ export default function ExclusiveModal({
 
               <section className="xmas-sec" data-step="3" data-on={step === 3}>
                 <header className="xmas-sec-head">
-                  <span className="xmas-sup-num">5</span>
+                  <span className="xmas-sup-num">4</span>
                   <h3>ชื่อและข้อความบนป้าย</h3>
                 </header>
                 <label className="xmas-sup-field">

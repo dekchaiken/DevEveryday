@@ -4,7 +4,7 @@ import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
 import type { DecorPick } from "@/lib/christmas/decor";
 import type { GiantLook } from "@/lib/christmas/giant";
-import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
+import { GIANT_CAPACITY } from "@/lib/christmas/slots";
 
 export type OrderStatus = "awaiting_payment" | "paid" | "cancelled";
 // giant = ตุ๊กตาหิมะยักษ์ (Exclusive ประจำห้อง) | support = สนับสนุนทีม DevEveryday
@@ -73,13 +73,12 @@ export async function markPaid(id: string, providerRef: string, now: number): Pr
   const paid: Order = { ...o, status: "paid", paidAt: now, providerRef: providerRef || o.providerRef };
   await saveOrder(paid);
   if (paid.kind === "giant") {
-    // ถ้าตำแหน่งที่เลือกถูกจองไปก่อน ให้ย้ายไปจุดว่างแรกที่เหลือ
-    const taken = new Set((await listGiants(paid.room)).map((g) => g.spot));
-    let spot = paid.spot ?? 0;
-    if (taken.has(spot)) spot = GIANT_SPOT_DEFS.findIndex((_, i) => !taken.has(i));
-    if (spot >= 0) {
-      const giant: Giant = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, spot, social: paid.social, look: paid.look };
-      await saveGiant(paid.room, giant);
+    // จองตำแหน่งว่างถัดไปให้ตุ๊กตาตัวนี้ (ไม่แทนที่ตัวที่ซื้อไว้แล้ว)
+    const base = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, social: paid.social, look: paid.look };
+    const start = (await listGiants(paid.room)).length;
+    for (let k = 0; k < GIANT_CAPACITY; k++) {
+      const spot = (start + k) % GIANT_CAPACITY;
+      if (await claimGiantSpot(paid.room, spot, { ...base, spot })) break;
     }
   }
   return paid;
@@ -96,14 +95,16 @@ export async function listGiants(room: string): Promise<Giant[]> {
   return out.sort((a, b) => a.paidAt - b.paidAt);
 }
 
-async function saveGiant(room: string, g: Giant) {
+// จองตำแหน่งนั้นให้ตุ๊กตาตัวนี้ คืน false ถ้ามีตัวอื่นอยู่แล้ว (ไม่ทับของเดิม)
+async function claimGiantSpot(room: string, spot: number, g: Giant): Promise<boolean> {
   if (!storeConfigured()) {
     const m = mem.giants.get(room) ?? new Map<number, Giant>();
-    m.set(g.spot, g);
+    if (m.has(spot)) return false;
+    m.set(spot, g);
     mem.giants.set(room, m);
-    return;
+    return true;
   }
-  await cmd("HSET", K.giants(room), String(g.spot), JSON.stringify(g));
+  return (await cmd<number>("HSETNX", K.giants(room), String(spot), JSON.stringify(g))) === 1;
 }
 
 // ข้อมูลที่แสดงให้ผู้ใช้เห็น (ไม่มีข้อมูลสำหรับใช้ภายใน)

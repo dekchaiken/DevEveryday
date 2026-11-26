@@ -6,7 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { GIANT_SPOT_DEFS, GIANT_SPOT_RADIUS, nearestSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
+import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
@@ -96,7 +96,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // หมอกบาง ๆ ทำให้พื้นหิมะไกลค่อย ๆ กลมกลืนกับท้องฟ้าค่ำ
     scene.fog = new THREE.Fog(0x0c251d, 14, 40);
 
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 220);
     camera.position.set(0, 2.6, 9.2);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -105,7 +105,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     controls.dampingFactor = 0.06;
     controls.minDistance = 4.5;
     // ซูมออกได้ไกลพอให้เห็นทั้งวงตุ๊กตาหิมะและตุ๊กตายักษ์ทั้ง 12 จุด
-    controls.maxDistance = 34;
+    controls.maxDistance = 60;
     controls.maxPolarAngle = Math.PI * 0.55;
     controls.enablePan = false;
     controls.autoRotate = false; // ไม่หมุนเอง ผู้ใช้หมุนดูได้เอง
@@ -921,7 +921,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       boardTex.needsUpdate = true;
       const board = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 0.83), new THREE.MeshBasicMaterial({ map: boardTex, transparent: true }));
       // ป้ายอยู่ฝั่งที่หันเข้าหาใจกลางฉาก เพื่อให้มองเห็นได้จากมุมกล้องหลัก
-      const side = (GIANT_SPOT_DEFS[g.spot] ? Math.cos(GIANT_SPOT_DEFS[g.spot].angle) : 1) > 0 ? -1 : 1;
+      const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
+      const side = def.x > 0 ? -1 : 1;
       board.position.set(side * 1.2, 1.3, 0.3);
       board.rotation.y = side * -0.3;
       // มือที่กุมขอบป้าย
@@ -932,9 +933,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       hand2.position.set(side * 1.84, 1.12, 0.4);
       grp.add(board, hand, hand2);
 
-      const def = GIANT_SPOT_DEFS[g.spot] ?? GIANT_SPOT_DEFS[0];
-      const gx = Math.cos(def.angle) * GIANT_SPOT_RADIUS;
-      const gz = Math.sin(def.angle) * GIANT_SPOT_RADIUS;
+      const gx = def.x;
+      const gz = def.z;
       grp.position.set(gx, 0, gz);
       // หันหน้าเข้าหาผู้ชม เพื่อให้เห็นป้ายที่ถืออยู่ (ตำแหน่งอื่นหมุนเล็กน้อยไปทางต้น)
       grp.rotation.y = -0.2 + (gx > 0 ? -0.15 : 0.15);

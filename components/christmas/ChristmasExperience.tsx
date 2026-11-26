@@ -537,7 +537,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <ExclusiveModal
           roomId={room.id}
           roomName={room.name}
-          takenSpots={(state?.giants ?? []).map((g) => g.spot)}
           onClose={() => setExclusiveOpen(false)}
           defaultName={profile?.name ?? ""}
           social={profile?.social}

@@ -8,7 +8,7 @@ import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { MESSAGE_THEMES, type MessageTheme } from "@/lib/christmas/types";
 import { maskIp, writeLog } from "@/lib/christmas/log";
-import { GIANT_SPOT_DEFS } from "@/lib/christmas/slots";
+import { GIANT_CAPACITY } from "@/lib/christmas/slots";
 import { listGiants } from "@/lib/christmas/orders";
 import { sanitizeSocial } from "@/lib/christmas/social";
 import { listDecor, parseDecorPick } from "@/lib/christmas/decor";
@@ -67,14 +67,8 @@ export async function POST(req: Request) {
     }
   }
 
-  const giantSpot = Number(body.spot);
-  if (kind === "giant") {
-    if (!Number.isInteger(giantSpot) || giantSpot < 0 || giantSpot >= GIANT_SPOT_DEFS.length) {
-      return NextResponse.json({ error: "เลือกตำแหน่งตุ๊กตายักษ์ให้ถูกต้อง" }, { status: 400 });
-    }
-    if ((await listGiants(room.id)).some((g) => g.spot === giantSpot)) {
-      return NextResponse.json({ error: "ตำแหน่งนี้มีตุ๊กตายักษ์แล้ว เลือกตำแหน่งอื่น" }, { status: 409 });
-    }
+  if (kind === "giant" && (await listGiants(room.id)).length >= GIANT_CAPACITY) {
+    return NextResponse.json({ error: "ตุ๊กตายักษ์ในห้องนี้เต็มพื้นที่แล้ว" }, { status: 409 });
   }
   let look: ReturnType<typeof parseGiantLook> = null;
   if (kind === "giant") {
@@ -91,7 +85,7 @@ export async function POST(req: Request) {
     name,
     message,
     social: sanitizeSocial(body.social, (s) => hasBlocked(s, config.blockedWords)),
-    spot: kind === "giant" ? giantSpot : 0,
+    spot: 0, // ตำแหน่งจริงจัดให้ตอนชำระเงิน
     theme: MESSAGE_THEMES.includes(body.theme as MessageTheme) ? (body.theme as MessageTheme) : "fireworks",
     mode: config.payMode,
     status: "awaiting_payment",
