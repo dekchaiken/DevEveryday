@@ -20,11 +20,20 @@ import { OrnamentPreview } from "./OrnamentPreview";
 import { useDecor } from "./useDecor";
 import { markInternalNav } from "./skipIntro";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
+import { ShareCardModal } from "./ShareCard";
 import { ProfileCard, SocialLinks } from "./ProfileCard";
 import { loadProfile, saveProfile, type Profile } from "./profile";
 import { isReservedSlot } from "@/lib/christmas/slots";
 import type { Decor } from "@/lib/christmas/decor";
 import "./christmas.css";
+
+// คำแนะนำครั้งแรกตามลำดับ ย้อนกลับได้
+const COACH_STEPS = [
+  { title: 'เริ่มจาก "แขวนคำอวยพร"', body: "เลือกสีและรูปทรงลูกบอล เขียนคำอวยพร แล้วแตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่งแขวน" },
+  { title: "ตกแต่งตุ๊กตาหิมะ", body: "สร้างตุ๊กตาหิมะของคุณแล้ววางรอบต้น แตะตุ๊กตาของคนอื่นเพื่อดูว่าใครวาง และกดถูกใจได้" },
+  { title: "เปลี่ยนห้องหรือภูมิภาค", body: 'แตะ "เปลี่ยนห้อง" ใต้ชื่อห้องด้านบนเพื่อไปดูต้นคริสต์มาสของภูมิภาคอื่น' },
+  { title: "แชร์คำอวยพรของคุณ", body: 'แตะคำอวยพรที่ต้นแล้วกด "แชร์เป็นการ์ด" เพื่อส่งไป Story IG หรือ Facebook' },
+] as const;
 
 // Three.js โหลดเฉพาะฝั่งเบราว์เซอร์ ไม่ให้กระทบเวลาเปิดหน้าแรก
 const TreeScene = dynamic(() => import("./TreeScene").then((m) => m.default), {
@@ -210,6 +219,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
   const [coach, setCoach] = useState(false); // คำแนะนำครั้งแรกใต้เมนู
   const [coachStep, setCoachStep] = useState(0);
+  const [shareOf, setShareOf] = useState<Ornament | null>(null); // การ์ดคำอวยพรที่กำลังแชร์
   useEffect(() => {
     try {
       if (!localStorage.getItem("xmas-coach-v1")) setCoach(true);
@@ -480,6 +490,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </div>
       )}
 
+      {shareOf && <ShareCardModal ornament={shareOf} roomName={room.name} onClose={() => setShareOf(null)} />}
+
       {/* โปรไฟล์: ถามครั้งแรกหลังเปิดของขวัญ และเปิดแก้ไขได้จากฟอร์ม */}
       {intro && profile === null && (
         <ProfileCard initial={null} editing={false} onSave={saveProfileAndClose} />
@@ -622,7 +634,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         >
           <Icon name="bauble" size={18} /> แขวนคำอวยพร
         </button>
-        <button className="xmas-action" data-tip="สร้างตุ๊กตาหิมะแล้ววางรอบต้น" onClick={() => setDecorOpen(true)}>
+        <button
+          className="xmas-action"
+          data-tip="สร้างตุ๊กตาหิมะแล้ววางรอบต้น"
+          onClick={() => {
+            setDecorSlot(null); // เปิดจากเมนูให้เริ่มช่องใหม่ ไม่ค้างช่องที่เพิ่งวาง
+            setDecorOpen(true);
+          }}
+        >
           <Icon name="snowman" size={18} /> ตกแต่งตุ๊กตาหิมะ
         </button>
         <button className="xmas-action" onClick={() => setInviteOpen(true)}>
@@ -658,28 +677,33 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <div className="xmas-coach" role="note">
           <span className="xmas-coach-orb" aria-hidden />
           <div className="xmas-coach-step">
-            <span className="xmas-coach-dots" aria-label={`ขั้นที่ ${coachStep + 1} จาก 2`}>
-              <i className={coachStep === 0 ? "is-on" : ""} />
-              <i className={coachStep === 1 ? "is-on" : ""} />
+            <span className="xmas-coach-dots" aria-label={`ขั้นที่ ${coachStep + 1} จาก ${COACH_STEPS.length}`}>
+              {COACH_STEPS.map((_, i) => (
+                <i key={i} className={i === coachStep ? "is-on" : ""} />
+              ))}
             </span>
             <button type="button" className="xmas-coach-x" onClick={dismissCoach} aria-label="ปิดคำแนะนำ">
               <Icon name="close" size={14} />
             </button>
           </div>
-          {coachStep === 0 ? (
-            <>
-              <b>เริ่มจาก "แขวนคำอวยพร"</b>
-              <span>เลือกสีและรูปทรงลูกบอล เขียนคำอวยพร แล้วแตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่งแขวน</span>
-            </>
-          ) : (
-            <>
-              <b>ตกแต่งตุ๊กตาหิมะ และกดถูกใจ</b>
-              <span>สร้างตุ๊กตาหิมะของคุณแล้ววางรอบต้น แตะตุ๊กตาของคนอื่นเพื่อดูว่าใครวาง และกดถูกใจได้</span>
-            </>
-          )}
-          <button type="button" className="xmas-coach-next" onClick={() => (coachStep === 0 ? setCoachStep(1) : dismissCoach())}>
-            {coachStep === 0 ? "ถัดไป" : "เข้าใจแล้ว"}
-          </button>
+          <b>{COACH_STEPS[coachStep].title}</b>
+          <span>{COACH_STEPS[coachStep].body}</span>
+          <div className="xmas-coach-actions">
+            {coachStep > 0 ? (
+              <button type="button" className="xmas-coach-back" onClick={() => setCoachStep(coachStep - 1)}>
+                ย้อนกลับ
+              </button>
+            ) : (
+              <span />
+            )}
+            <button
+              type="button"
+              className="xmas-coach-next"
+              onClick={() => (coachStep < COACH_STEPS.length - 1 ? setCoachStep(coachStep + 1) : dismissCoach())}
+            >
+              {coachStep < COACH_STEPS.length - 1 ? "ถัดไป" : "เข้าใจแล้ว"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -720,6 +744,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onPlaced={(d) => {
             setDecorOpen(false);
             setMarkerSlot(null);
+            setDecorSlot(null);
             refreshDecor();
             notify("ok", `วางตุ๊กตาหิมะของ ${d.name} รอบต้นแล้ว`);
           }}
@@ -781,6 +806,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             <Icon name="heart" size={15} />
             {likedWishes.has(focus.id) ? "ถูกใจแล้ว" : "ถูกใจคำอวยพรนี้"}
             <span>{(board.counts[focus.id] ?? 0) + (likedWishes.has(focus.id) && !board.counts[focus.id] ? 1 : 0)}</span>
+          </button>
+          <button type="button" className="xmas-chip-btn xmas-share-open" onClick={() => setShareOf(focus)}>
+            แชร์เป็นการ์ด
           </button>
           <div className="xmas-focus-foot">
             <small>แขวนเมื่อ {new Date(focus.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</small>
