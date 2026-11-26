@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import type { Ornament } from "@/lib/christmas/types";
 import type { Decor } from "@/lib/christmas/decor";
 import { Icon } from "./Icon";
-import type { Board } from "./useBoard";
 
 export type FeedEntry = { id: string; name: string; message: string; amount: number; paidAt: number | null };
 export type FeedData = { exclusive: FeedEntry[]; supporters: FeedEntry[] };
@@ -51,7 +50,6 @@ export function FeedPanel({
   wishes,
   decor,
   feed,
-  board,
   onWishClick,
   mobileOpen,
   onMobileClose,
@@ -59,7 +57,6 @@ export function FeedPanel({
   wishes: Ornament[];
   decor: Decor[];
   feed: FeedData;
-  board: Board;
   onWishClick: (o: Ornament) => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
@@ -72,8 +69,6 @@ export function FeedPanel({
   ]
     .sort((a, b) => b.at - a.at)
     .slice(0, 60);
-  const [rankTab, setRankTab] = useState<"wishes" | "snowmen">("wishes");
-  const [showAll, setShowAll] = useState(false);
   const tabs: { id: Tab; label: string; icon: "heart" | "star" | "gift" | "sparkle"; count: number }[] = [
     { id: "recent", label: "ล่าสุด", icon: "sparkle", count: recent.length },
     { id: "wishes", label: "คำอวยพร", icon: "heart", count: wishes.length },
@@ -84,7 +79,7 @@ export function FeedPanel({
   return (
     <aside className={`xmas-feed glass ${mobileOpen ? "is-open" : ""}`} aria-label="ประวัติล่าสุดของโซนนี้">
       <div className="xmas-sheet-head">
-        <b>ประวัติล่าสุดของโซนนี้</b>
+        <b>ประวัติล่าสุด</b>
         <button type="button" className="xmas-form-close xmas-feed-close" onClick={onMobileClose} aria-label="ปิดประวัติ">
           <Icon name="close" size={18} />
         </button>
@@ -185,54 +180,6 @@ export function FeedPanel({
         )}
       </div>
 
-      <section className="xmas-board" aria-label="อันดับที่มีคนชอบ">
-        <header className="xmas-board-head">
-          <div>
-            <p className="xmas-kicker">อันดับ · ถูกใจมากที่สุด</p>
-            <b>{rankTab === "wishes" ? "คำอวยพรยอดนิยม" : "ตุ๊กตาหิมะยอดนิยม"}</b>
-          </div>
-          <div className="xmas-seg" role="tablist" aria-label="เลือกอันดับ">
-            <button type="button" role="tab" aria-selected={rankTab === "wishes"} className={rankTab === "wishes" ? "is-on" : ""} onClick={() => setRankTab("wishes")}>
-              คำอวยพร
-            </button>
-            <button type="button" role="tab" aria-selected={rankTab === "snowmen"} className={rankTab === "snowmen" ? "is-on" : ""} onClick={() => setRankTab("snowmen")}>
-              ตุ๊กตา
-            </button>
-          </div>
-        </header>
-        <ol className="xmas-rank">
-          {(rankTab === "wishes" ? board.wishes : board.snowmen).slice(0, showAll ? 5 : 3).map((r, i) => (
-            <li key={r.id} className={`is-r${i + 1}`}>
-              <button
-                type="button"
-                disabled={rankTab === "snowmen"}
-                onClick={() => {
-                  const o = wishes.find((w) => w.id === r.id);
-                  if (rankTab === "wishes" && o) onWishClick(o);
-                }}
-              >
-                <span className="xmas-rank-no" aria-hidden>{i + 1}</span>
-                <span className="xmas-entry">
-                  <b>{r.name}</b>
-                  <em>{"wish" in r ? r.wish || "ขอให้มีความสุขในวันคริสต์มาส" : `ช่อง ${(r as { slot: number }).slot + 1}`}</em>
-                </span>
-                <span className="xmas-like-count" aria-label={`ถูกใจ ${r.likes} ครั้ง`}>
-                  <Icon name="heart" size={13} />
-                  {r.likes}
-                </span>
-              </button>
-            </li>
-          ))}
-          {(rankTab === "wishes" ? board.wishes : board.snowmen).length === 0 && (
-            <li className="xmas-empty xmas-empty-rank">ยังไม่มีการถูกใจ กดหัวใจที่คำอวยพรหรือตุ๊กตาที่คุณชอบได้เลย</li>
-          )}
-        </ol>
-        {(rankTab === "wishes" ? board.wishes : board.snowmen).length > 3 && (
-          <button type="button" className="xmas-board-more" onClick={() => setShowAll((v) => !v)}>
-            {showAll ? "ย่อรายการ" : "ดูอันดับทั้งหมด"}
-          </button>
-        )}
-      </section>
     </aside>
   );
 }
