@@ -71,7 +71,7 @@ export function InviteModal({ roomId, roomName, online, capacity, onClose }: { r
 
   return (
     <div className="xmas-modal-back" role="presentation" onClick={onClose}>
-      <div className="xmas-modal glass" role="dialog" aria-modal="true" aria-label="ชวนเพื่อน" onClick={(e) => e.stopPropagation()}>
+      <div className="xmas-modal xmas-invite" role="dialog" aria-modal="true" aria-label="ชวนเพื่อน" onClick={(e) => e.stopPropagation()}>
         <button className="xmas-x" onClick={onClose} aria-label="ปิด">
           <Icon name="close" size={18} />
         </button>
