@@ -5,7 +5,7 @@ import type { Decor } from "@/lib/christmas/decor";
 import { ACCESSORIES, HATS, SCARVES, NOSES, ARMS, BODY_COLORS, LEGS, SLOT_COUNT } from "@/lib/christmas/decor";
 import { isReservedSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
 import { SnowmanPreview } from "./SnowmanPreview";
-import type { DecorDraft } from "./DonateModal";
+import type { DecorDraft } from "./ExclusiveModal";
 import { getClientId } from "./clientId";
 import type { Social } from "@/lib/christmas/social";
 import { SocialLinks } from "./ProfileCard";

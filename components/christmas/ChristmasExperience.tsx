@@ -9,7 +9,8 @@ import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
 import { RoomSkyline } from "./RoomSkyline";
 import { Backdrop } from "./Crowd";
-import DonateModal, { type DecorDraft } from "./DonateModal";
+import ExclusiveModal, { type DecorDraft } from "./ExclusiveModal";
+import SupportModal from "./SupportModal";
 import { DecorInfoCard, DecorModal, InviteModal } from "./SocialModals";
 import { getClientId } from "./clientId";
 import { useBoard } from "./useBoard";
@@ -101,7 +102,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [feedOpen, setFeedOpen] = useState(false); // แผงประวัติล่าสุด (เปิดจากปุ่มมุมขวาหรือแถบเมนู)
   const [rankOpen, setRankOpen] = useState(false); // แผงอันดับถูกใจ
   const [local, setLocal] = useState<Ornament[]>([]);
-  const [donateOpen, setDonateOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false); // หน้าต่างสนับสนุนทีมงานอย่างเดียว
+  const [exclusiveOpen, setExclusiveOpen] = useState(false); // หน้าต่าง Exclusive (ป้ายยักษ์ / ข้อความขึ้นจอ)
   // นับถอยหลังถึงวันคริสต์มาส (เวลาท้องถิ่นของผู้ใช้) คำนวณหลังโหลดเพื่อไม่ให้ต่างกันตอน SSR
   const [xmasDays, setXmasDays] = useState<number | null>(null);
   useEffect(() => {
@@ -516,21 +518,39 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </div>
       )}
 
-      {donateOpen && (
-        <DonateModal
+      {supportOpen && (
+        <SupportModal
+          roomId={room.id}
+          onClose={() => setSupportOpen(false)}
+          defaultName={profile?.name ?? ""}
+          social={profile?.social}
+          onPaid={(name) => {
+            setSupportOpen(false);
+            notify("ok", `ขอบคุณ ${name} สำหรับการสนับสนุนทีมงาน`);
+          }}
+        />
+      )}
+
+      {exclusiveOpen && (
+        <ExclusiveModal
+          roomId={room.id}
+          roomName={room.name}
           onPreview={(p) => {
-            setDonateOpen(false);
+            setExclusiveOpen(false);
             treeRef.current?.previewGiant(p.spot, p.name, p.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส");
             treeRef.current?.skyMessage(p.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส", p.name, "gold", p.theme);
           }}
-          roomId={room.id}
-          roomName={room.name}
-          onClose={() => setDonateOpen(false)}
+          onClose={() => setExclusiveOpen(false)}
           defaultName={profile?.name ?? ""}
           social={profile?.social}
-          onPaid={(name) => notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว`)}
+          onPaid={(kind, name) => {
+            setExclusiveOpen(false);
+            if (kind === "giant") notify("ok", `ขอบคุณ ${name} ตุ๊กตาหิมะยักษ์ขึ้นป้ายแล้ว`);
+            if (kind === "message") notify("ok", `ขอบคุณ ${name} ข้อความของคุณกำลังขึ้นบนท้องฟ้า`);
+          }}
         />
       )}
+
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
       {toast && (
@@ -611,7 +631,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             </span>
             <span className="xmas-snow-label">หิมะ</span>
           </button>
-          <button type="button" className="xmas-switch is-donate" onClick={() => setDonateOpen(true)}>
+          <button type="button" className="xmas-switch is-donate" onClick={() => setSupportOpen(true)}>
             สนับสนุน
           </button>
         </div>
@@ -643,10 +663,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <button className="xmas-action" onClick={() => setInviteOpen(true)}>
           <Icon name="users" size={18} /> ชวนเพื่อน
         </button>
-        <button className="xmas-action is-exclusive" onClick={() => setDonateOpen(true)}>
+        <button className="xmas-action is-exclusive" onClick={() => setExclusiveOpen(true)}>
           <Icon name="crown" size={18} /> Exclusive
         </button>
-        <button className="xmas-action is-donate-phone xmas-action-phone" onClick={() => setDonateOpen(true)}>
+        <button className="xmas-action is-donate-phone xmas-action-phone" onClick={() => setSupportOpen(true)}>
           <Icon name="sparkle" size={18} /> สนับสนุน
         </button>
         <button className="xmas-action xmas-action-mobile" onClick={() => {
@@ -753,14 +773,17 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
 
       {exclusiveDraft && (
-        <DonateModal
+        <ExclusiveModal
           decor={exclusiveDraft}
           roomId={room.id}
           roomName={room.name}
           onClose={() => setExclusiveDraft(null)}
-          onPaid={(name) => {
-            refreshDecor();
-            notify("ok", `${name} วางตุ๊กตาหิมะ Exclusive บนต้นแล้ว`);
+          onPaid={(kind, name) => {
+            setExclusiveDraft(null);
+            if (kind === "decor") {
+              refreshDecor();
+              notify("ok", `${name} วางตุ๊กตาหิมะ Exclusive บนต้นแล้ว`);
+            }
           }}
           defaultName={profile?.name ?? ""}
           social={profile?.social}

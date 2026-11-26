@@ -9,7 +9,8 @@ export type ChristmasConfig = {
   presetPrices: number[]; // ราคาปุ่มเลือกเร็ว (บาท)
   customMin: number; // ยอดขั้นต่ำที่กรอกเอง (บาท)
   customMax: number; // ยอดสูงสุดที่กรอกเอง (บาท)
-  decorPrice: number; // ราคาตุ๊กตาหิมะ Exclusive ต่อตัว (บาท) วางได้ไม่จำกัด
+  decorPrice: number; // ราคาตุ๊กตาหิมะ Exclusive ต่อตัว (บาท) จ่ายทุกครั้งที่วาง 1 ตัว
+  messagePrice: number; // ราคาข้อความอวยพรขึ้นจอ (บาท)
   blockedWords: string[]; // คำต้องห้ามเพิ่มเติมที่แอดมินกำหนด
 };
 
@@ -20,6 +21,7 @@ export const DEFAULT_CONFIG: ChristmasConfig = {
   customMin: 19,
   customMax: 5000,
   decorPrice: 29,
+  messagePrice: 19,
   blockedWords: [],
 };
 
@@ -58,6 +60,8 @@ export function validateConfig(input: Record<string, unknown>): { value: Christm
   if (!Number.isInteger(customMax) || customMax < customMin || customMax > 100000) return { error: "ยอดสูงสุดไม่ถูกต้อง" };
   const decorPrice = input.decorPrice === undefined ? DEFAULT_CONFIG.decorPrice : Number(input.decorPrice);
   if (!Number.isInteger(decorPrice) || decorPrice < 1 || decorPrice > 10000) return { error: "ราคาตุ๊กตา Exclusive ต้องเป็นจำนวนเต็ม 1–10,000 บาท" };
+  const messagePrice = input.messagePrice === undefined ? DEFAULT_CONFIG.messagePrice : Number(input.messagePrice);
+  if (!Number.isInteger(messagePrice) || messagePrice < 1 || messagePrice > 10000) return { error: "ราคาข้อความขึ้นจอต้องเป็นจำนวนเต็ม 1–10,000 บาท" };
   const blockedWords = Array.isArray(input.blockedWords)
     ? [...new Set(input.blockedWords.map((w) => String(w).trim().slice(0, 30)).filter(Boolean))].slice(0, 200)
     : [];
@@ -69,6 +73,7 @@ export function validateConfig(input: Record<string, unknown>): { value: Christm
       customMin,
       customMax,
       decorPrice,
+      messagePrice,
       blockedWords,
     },
   };

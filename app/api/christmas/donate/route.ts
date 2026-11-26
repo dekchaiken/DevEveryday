@@ -34,11 +34,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "ทำรายการบ่อยเกินไป ลองใหม่ภายหลัง" }, { status: 429 });
   }
 
-  const kind: OrderKind = body.kind === "support" ? "support" : body.kind === "decor" ? "decor" : "giant";
+  const kind: OrderKind = body.kind === "support" ? "support" : body.kind === "decor" ? "decor" : body.kind === "message" ? "message" : "giant";
 
-  // ตุ๊กตา Exclusive: ราคาตั้งจากระบบเสมอ ไม่รับราคาจากหน้าเว็บ
-  let amount = config.decorPrice;
-  if (kind !== "decor") {
+  // ราคาของตุ๊กตา Exclusive และข้อความขึ้นจอตั้งจากระบบเสมอ ไม่รับราคาจากหน้าเว็บ
+  let amount = kind === "decor" ? config.decorPrice : kind === "message" ? config.messagePrice : 0;
+  if (kind !== "decor" && kind !== "message") {
     amount = Number(body.amount);
     const allowed = config.presetPrices.includes(amount) || (Number.isInteger(amount) && amount >= config.customMin && amount <= config.customMax);
     if (!Number.isInteger(amount) || !allowed) {
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
   const name = clean(body.name, 20);
   const message = kind === "decor" ? "" : clean(body.message, 80);
   if (!name) return NextResponse.json({ error: "กรุณาใส่ชื่อ" }, { status: 400 });
+  if (kind === "message" && !message) return NextResponse.json({ error: "กรุณาใส่ข้อความที่จะขึ้นจอ" }, { status: 400 });
   if (hasBlocked(name, config.blockedWords) || hasBlocked(message, config.blockedWords)) {
     await writeLog({ type: "blocked", room: room.id, actor: maskIp(ip), text: `สนับสนุน: ${name} / ${message}` });
     return NextResponse.json({ error: "ข้อความมีคำที่ไม่เหมาะสม" }, { status: 400 });
