@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRoom } from "@/lib/christmas/rooms";
-import { ACCESSORIES, ARMS, BODY_COLORS, claimDecor, HATS, LEGS, NOSES, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
+import { ACCESSORIES, ARMS, BODY_COLORS, claimDecor, claimFreeDecor, HATS, LEGS, NOSES, releaseFreeDecor, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { isReservedSlot } from "@/lib/christmas/slots";
@@ -47,8 +47,13 @@ export async function POST(req: Request) {
   if (isReservedSlot(slot)) return NextResponse.json({ error: "ช่องนี้สงวนไว้สำหรับป้ายประจำห้อง เลือกช่องอื่น" }, { status: 409 });
   if (!hat || !scarf || !nose || !arms || !bodyColor || !legs || !acc) return NextResponse.json({ error: "ชิ้นส่วนไม่ถูกต้อง" }, { status: 400 });
 
+  // ตุ๊กตาฟรี: วางได้คนละ 1 ตัวต่อห้อง เพื่อให้คนอื่นมีโอกาสวางด้วย
+  const clientId = typeof body.clientId === "string" ? body.clientId.slice(0, 80) : "";
+  if (!clientId) return NextResponse.json({ error: "ไม่พบตัวตนของผู้เล่น ลองรีเฟรชหน้าแล้วลองใหม่" }, { status: 400 });
+
+  const id = crypto.randomUUID();
   const decor: Decor = {
-    id: crypto.randomUUID(),
+    id,
     room: room.id,
     slot,
     name,
@@ -63,8 +68,14 @@ export async function POST(req: Request) {
     likes: 0,
     social: sanitizeSocial(body.social, (s) => hasBlocked(s, cfg.blockedWords)),
   };
+  if (!(await claimFreeDecor(room.id, clientId, id))) {
+    return NextResponse.json({ error: "คุณวางตุ๊กตาฟรีของห้องนี้ไปแล้ว 1 ตัว ให้โอกาสคนอื่นได้วางบ้าง" }, { status: 409 });
+  }
   const ok = await claimDecor(decor);
-  if (!ok) return NextResponse.json({ error: "ช่องนี้มีคนวางแล้ว เลือกช่องอื่น" }, { status: 409 });
+  if (!ok) {
+    await releaseFreeDecor(room.id, clientId);
+    return NextResponse.json({ error: "ช่องนี้มีคนวางแล้ว เลือกช่องอื่น" }, { status: 409 });
+  }
   await writeLog({ type: "decor", room: room.id, actor: maskIp(ip), text: `${name} วางตุ๊กตาช่อง ${slot + 1} (${hat}/${scarf}/${bodyColor})` });
   return NextResponse.json({ ok: true, decor });
 }
