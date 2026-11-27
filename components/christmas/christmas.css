@@ -6606,45 +6606,66 @@ a.xmas-social-chip:hover {
   height: 100%;
 }
 
-/* ---------- ตารางวางของบนฐาน Exclusive 4×4: ช่องว่างสีเขียว ช่องที่มีของสีชมพู ---------- */
+/* ---------- ฐาน Exclusive: ตัวจัดของบนฐานและปุ่มในตัวอย่าง ---------- */
 .xmas-dio {
   display: grid;
   gap: 10px;
   margin-top: 6px;
 }
-.xmas-dio-grid {
+.xmas-studio {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  max-width: 320px;
-  width: 100%;
+  gap: 10px;
 }
-.xmas-dio-cell {
-  aspect-ratio: 1 / 1;
-  min-width: 0;
-  border-radius: 10px;
-  border: 1.5px solid rgba(40, 110, 70, 0.35);
-  background: rgba(190, 240, 210, 0.55);
-  color: #1d4a33;
-  font-size: 11px;
+.xmas-studio-add .xmas-pick-chips button {
   font-weight: 600;
-  line-height: 1.1;
+}
+.xmas-studio-del {
+  justify-self: start;
+  background: none;
+  border: 1.5px solid rgba(190, 40, 90, 0.45);
+  color: #9b1d4a;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
   cursor: pointer;
-  padding: 2px;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.xmas-dio-cell.is-filled {
-  background: rgba(255, 190, 210, 0.75);
-  border-color: rgba(190, 40, 90, 0.45);
-  color: #7a1a3a;
+.xmas-rot {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
 }
-.xmas-dio-cell.is-on {
-  box-shadow: 0 0 0 3px rgba(220, 180, 60, 0.85);
-  transform: translateY(-1px);
+.xmas-rot input[type="range"] {
+  width: 100%;
+  accent-color: #c0392b;
 }
-.xmas-dio-cell:focus-visible {
-  outline: 3px solid #d9b45a;
-  outline-offset: 2px;
+.xmas-rot em {
+  font-style: normal;
+  font-weight: 700;
+}
+.xmas-viewer-box {
+  display: grid;
+  gap: 8px;
+}
+.xmas-viewer-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.xmas-viewer-tools button {
+  flex: 1 1 140px;
+  min-width: 0;
+  border-radius: 999px;
+  border: 1.5px solid rgba(40, 110, 70, 0.35);
+  background: #fff;
+  color: #1d4a33;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.xmas-viewer-tools button[aria-pressed="true"] {
+  background: #1d4a33;
+  color: #fff;
 }
 .xmas-dio-pick {
   display: grid;

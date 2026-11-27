@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
-import { colorOptionsFor, DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_GRID, DIORAMA_KINDS, SIGN_BOARDS, type DioramaItem, type GiantLook } from "@/lib/christmas/giant";
+import { colorOptionsFor, DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, MAX_ITEMS, SIGN_BOARDS, type DioramaItem, type GiantLook } from "@/lib/christmas/giant";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { DioramaViewer } from "./DioramaViewer";
@@ -114,58 +114,79 @@ function PickRow({ title, options, value, onChange }: { title: string; options: 
 // ชื่อบนปุ่มของแต่ละชนิด
 const KIND_LABEL: Record<string, string> = { snowman: "ตุ๊กตาหิมะ", tree: "ต้นสน", gift: "ของขวัญ", candy: "ไม้เท้าขนม" };
 
-// ตารางวางของบนฐาน 4×4: ช่องว่างเป็นพื้นเขียวให้วางได้ ช่องที่มีของเป็นพื้นชมพู แตะเพื่อเลือกชนิดและสี
-function DioramaEditor({ items, onChange }: { items: DioramaItem[]; onChange: (items: DioramaItem[]) => void }) {
-  const [active, setActive] = useState<number | null>(null);
-  const byCell = new Map(items.map((it) => [it.i, it]));
-  const current = active === null ? undefined : byCell.get(active);
-  const colors = current ? colorOptionsFor(current.kind) : [];
+// ตัวจัดของบนฐาน: เพิ่มชิ้นใหม่ เลือกชิ้น ปรับสี หมุน และเอาออก ส่วนตำแหน่งลากได้ในตัวอย่างด้านขวา
+function newItemId() {
+  return Math.random().toString(36).slice(2, 10);
+}
 
-  function place(i: number, kind: string) {
-    const rest = items.filter((x) => x.i !== i);
-    if (kind === "none") return onChange(rest);
+function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: DioramaItem[]; selectedId: string | null; onSelect: (id: string | null) => void; onChange: (items: DioramaItem[]) => void }) {
+  const [note, setNote] = useState("");
+  const selected = items.find((it) => it.id === selectedId) ?? null;
+  const colors = selected ? colorOptionsFor(selected.kind) : [];
+  const deg = selected ? Math.round((((selected.r % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) * (180 / Math.PI)) % 360 : 0;
+
+  function add(kind: string) {
+    if (items.length >= MAX_ITEMS) return setNote(`ใส่ได้สูงสุด ${MAX_ITEMS} ชิ้นต่อฐาน`);
+    const spot = freeSpot(items, kind);
+    if (!spot) return setNote("พื้นที่บนฐานเต็มแล้ว ลองย้ายหรือเอาชิ้นอื่นออกก่อน");
     const opts = colorOptionsFor(kind);
-    const keep = byCell.get(i);
-    const color = opts.length ? (keep && opts.includes(keep.color) && keep.kind === kind ? keep.color : opts[0]) : "";
-    onChange([...rest, { i, kind, color }].sort((a, b) => a.i - b.i));
+    const item: DioramaItem = { id: newItemId(), kind, color: opts[0] ?? "", x: spot.x, z: spot.z, r: 0 };
+    setNote("");
+    onChange([...items, item]);
+    onSelect(item.id);
   }
-  function paint(i: number, color: string) {
-    onChange(items.map((x) => (x.i === i ? { ...x, color } : x)));
+  function patch(p: Partial<DioramaItem>) {
+    if (!selected) return;
+    onChange(items.map((it) => (it.id === selected.id ? { ...it, ...p } : it)));
+  }
+  function remove() {
+    if (!selected) return;
+    onChange(items.filter((it) => it.id !== selected.id));
+    onSelect(null);
   }
 
   return (
-    <div className="xmas-dio">
-      <div className="xmas-dio-grid" role="grid" aria-label="ตารางวางของบนฐาน">
-        {Array.from({ length: DIORAMA_GRID * DIORAMA_GRID }, (_, i) => {
-          const it = byCell.get(i);
-          return (
-            <button
-              key={i}
-              type="button"
-              role="gridcell"
-              className={`xmas-dio-cell ${it ? "is-filled" : "is-empty"} ${active === i ? "is-on" : ""}`}
-              onClick={() => setActive(i)}
-              aria-label={`ช่อง ${Math.floor(i / DIORAMA_GRID) + 1}-${(i % DIORAMA_GRID) + 1}${it ? ` ${KIND_LABEL[it.kind]}` : " ว่าง"}`}
-            >
-              {it ? KIND_LABEL[it.kind] : ""}
+    <div className="xmas-studio">
+      <div className="xmas-studio-add">
+        <span className="xmas-pick-title">เพิ่มของลงบนฐาน</span>
+        <div className="xmas-pick-chips">
+          {DIORAMA_KINDS.map((k) => (
+            <button key={k} type="button" onClick={() => add(k)}>
+              + {KIND_LABEL[k]}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
-      {active !== null && (
-        <div className="xmas-dio-pick">
-          <PickRow
-            title={`ช่อง ${Math.floor(active / DIORAMA_GRID) + 1}-${(active % DIORAMA_GRID) + 1} · วางอะไร`}
-            options={["none", ...DIORAMA_KINDS]}
-            value={current?.kind ?? "none"}
-            onChange={(v) => place(active, v)}
-          />
-          {colors.length > 0 && current && (
-            <PickRow title="สี" options={colors} value={current.color} onChange={(v) => paint(active, v)} />
-          )}
+      {note && <p className="xmas-msg err">{note}</p>}
+      {items.length > 0 && (
+        <div className="xmas-studio-list">
+          <span className="xmas-pick-title">ของบนฐาน ({items.length})</span>
+          <div className="xmas-pick-chips" role="radiogroup" aria-label="ของบนฐาน">
+            {items.map((it, i) => (
+              <button key={it.id} type="button" role="radio" aria-checked={it.id === selectedId} className={it.id === selectedId ? "is-on" : ""} onClick={() => onSelect(it.id)}>
+                {i + 1}. {KIND_LABEL[it.kind]}
+                {it.color ? ` · ${LABEL[it.color] ?? it.color}` : ""}
+              </button>
+            ))}
+          </div>
         </div>
       )}
-      <p className="xmas-hint">แตะช่องเพื่อวางของ เลือก "ไม่มี" เพื่อเอาออก</p>
+      {selected ? (
+        <div className="xmas-dio-pick">
+          {colors.length > 0 && <PickRow title="สี" options={colors} value={selected.color} onChange={(v) => patch({ color: v })} />}
+          <label className="xmas-rot">
+            <span>
+              หมุนชิ้นนี้ <em>{deg}°</em>
+            </span>
+            <input type="range" min={0} max={359} step={1} value={deg} onChange={(e) => patch({ r: (Number(e.target.value) * Math.PI) / 180 })} />
+          </label>
+          <button type="button" className="xmas-studio-del" onClick={remove}>
+            เอาชิ้นนี้ออก
+          </button>
+        </div>
+      ) : (
+        <p className="xmas-hint">แตะชิ้นในรายการหรือแตะชิ้นบนฐานในตัวอย่างเพื่อเลือก แล้วลากชิ้นนั้นเพื่อย้ายไปวางตรงไหนก็ได้</p>
+      )}
     </div>
   );
 }
@@ -216,6 +237,7 @@ export default function ExclusiveModal({
   const [message, setMessage] = useState("");
   const [theme, setTheme] = useState<MessageTheme>("fireworks");
   const [look, setLook] = useState<GiantLook>(DEFAULT_GIANT_LOOK);
+  const [selId, setSelId] = useState<string | null>(null);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -414,7 +436,7 @@ export default function ExclusiveModal({
                   <h3>ตกแต่ง · ฐานและของบนฐาน</h3>
                 </header>
                 <PickRow title="ลายฐาน" options={DIORAMA_BASES} value={look.base} onChange={(v) => setPart("base", v)} />
-                <DioramaEditor items={look.items} onChange={setItems} />
+                <DioramaStudio items={look.items} selectedId={selId} onSelect={setSelId} onChange={setItems} />
               </section>
 
               <section className="xmas-sec" data-step="2" data-on={step === 2}>
@@ -452,9 +474,16 @@ export default function ExclusiveModal({
 
             <aside className="xmas-ex-col xmas-ex-side">
               <div className="xmas-sign-stage">
-                <DioramaViewer look={look} name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} />
+                <DioramaViewer
+                  look={look}
+                  name={name.trim() || "ชื่อของคุณ"}
+                  message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"}
+                  selectedId={selId}
+                  onSelect={setSelId}
+                  onMove={(id, x, z) => setLook((l) => ({ ...l, items: l.items.map((it) => (it.id === id ? { ...it, x, z } : it)) }))}
+                />
               </div>
-              <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ บ้านหลังนี้จะตั้งอยู่บนลานตรงตำแหน่งที่เลือก พร้อมป้ายนี้ข้างบ้าน</p>
+              <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ ลากชิ้นของบนฐานเพื่อจัดตำแหน่งได้อิสระ ลากพื้นที่ว่างเพื่อหมุนดู</p>
               <div className="xmas-ex-final" data-step="3" data-on={step === 3}>
                 {error && <p className="xmas-msg err">{error}</p>}
                 <button className="xmas-submit" disabled={busy}>
