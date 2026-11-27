@@ -13,7 +13,8 @@ import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme 
 import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
 import { buildYardScenery, candyStripes, giftBox, miniPine, shade, woodMaterial } from "./zoneScenery";
 import { buildGiantFigure, buildZoneSign, ZONE_SIGN_H } from "./giantSign";
-import { buildSleighFlight } from "./sleighFlight";
+import { buildSleighFlight, flightProgressAt } from "./sleighFlight";
+import { serverNowMs, startServerClock } from "./serverClock";
 
 // ตุ๊กตายักษ์ที่ตั้งป้ายไว้: ชื่อ ข้อความ ตำแหน่ง และลุค (ถ้าไม่มีจะใช้ลุคเริ่มต้น)
 type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook };
@@ -765,11 +766,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // ฉากที่มีการเคลื่อนไหว: ไฟ ควัน ต้นสนเรืองแสง และบ้านของ Exclusive
       sceneryUpdaters.forEach((u) => u(t, reduced));
       giantGroups.forEach(({ grp }) => (grp.userData.update as ((t: number, r: boolean) => void) | undefined)?.(t, reduced));
-      flight.update(now, reduced);
-      if (!reduced && !flight.isActive() && now > nextFlight) {
-        flight.start(now);
-        nextFlight = now + 24000 + Math.random() * 16000;
-      }
+      // ซานตาบินตามนาฬิกาเซิร์ฟเวอร์ ทุกคนในห้องจึงเห็นการบินเดียวกันในเวลาเดียวกัน
+      const flightDt = Math.min(0.05, (now - lastFlightFrame) / 1000);
+      lastFlightFrame = now;
+      const flightProgress = reduced ? null : flightProgressAt(serverNowMs());
+      flight.update(flightProgress, serverNowMs() / 1000, flightDt);
       if (!reduced && now - lastZoneBurst > 2600) {
         lastZoneBurst = now;
         zoneFirework();
@@ -1346,7 +1347,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ซานตากับกวางเรนเดียร์บินข้ามท้องฟ้าเป็นช่วง ๆ (ไม่แสดงเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว)
     const flight = buildSleighFlight();
     scene.add(flight.group);
-    let nextFlight = performance.now() + 6000;
+    let lastFlightFrame = performance.now();
+    startServerClock();
     const ZONE_FIREWORK_HEX = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
     function zoneFirework() {
       const origin = new THREE.Vector3(zx + (Math.random() - 0.5) * 9, 4.0 + Math.random() * 0.8, zz + (Math.random() - 0.5) * 8);
