@@ -31,14 +31,22 @@ export async function writeLog(e: Omit<LogEntry, "id" | "at">) {
   }
 }
 
-export async function listLogs(limit = 300, type?: string, room?: string): Promise<LogEntry[]> {
+export type LogFilter = { type?: string; room?: string; q?: string; actor?: string; from?: number; to?: number };
+
+export async function listLogs(limit = 300, filter: LogFilter = {}): Promise<LogEntry[]> {
   let all: LogEntry[] = mem;
   if (storeConfigured()) {
     const raw = (await cmd<string[]>("LRANGE", KEY, 0, LIMIT - 1)) ?? [];
     all = raw.map((s) => JSON.parse(s) as LogEntry);
   }
+  const q = (filter.q ?? "").trim().toLowerCase();
+  const actor = (filter.actor ?? "").trim().toLowerCase();
   return all
-    .filter((e) => (!type || type === "all" || e.type === type) && (!room || room === "all" || e.room === room))
+    .filter((e) => !filter.type || filter.type === "all" || e.type === filter.type)
+    .filter((e) => !filter.room || filter.room === "all" || e.room === filter.room)
+    .filter((e) => !q || `${e.text} ${e.actor}`.toLowerCase().includes(q))
+    .filter((e) => !actor || e.actor.toLowerCase().includes(actor))
+    .filter((e) => (filter.from === undefined || e.at >= filter.from) && (filter.to === undefined || e.at <= filter.to))
     .slice(0, limit);
 }
 

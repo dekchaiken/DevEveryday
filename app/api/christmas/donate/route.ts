@@ -13,6 +13,7 @@ import { GIANT_CAPACITY } from "@/lib/christmas/slots";
 import { sanitizeSocial } from "@/lib/christmas/social";
 import { listDecor, parseDecorPick } from "@/lib/christmas/decor";
 import { parseGiantLook } from "@/lib/christmas/giant";
+import { notifyAdmin } from "@/lib/christmas/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -137,5 +138,7 @@ export async function POST(req: Request) {
   await saveOrder(base);
   const label = kind === "giant" ? "Exclusive" : kind === "decor" ? `ตุ๊กตา Exclusive ช่อง ${decor!.slot + 1}` : "สนับสนุนทีม";
   await writeLog({ type: "order", room: room.id, actor: maskIp(ip), text: `${label} ฿${amount} · ${name} · ${config.payMode} · รอชำระ` });
+  // แจ้งแอดมินทันทีที่มีคนสั่ง (โหมด manual ต้องไปตรวจสลิปเอง)
+  await notifyAdmin(`🛒 มีคำสั่งใหม่ ${label} ฿${amount} · ${name} · ห้อง ${room.name} · ${config.payMode === "manual" ? "รอโอนและยืนยัน" : "รอชำระผ่าน Omise"}`);
   return NextResponse.json({ order: toPreview(base) });
 }
