@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
-import { colorOptionsFor, DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, MAX_ITEMS, SIGN_BOARDS, type DioramaItem, type GiantLook } from "@/lib/christmas/giant";
+import { DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { DioramaViewer } from "./DioramaViewer";
@@ -71,6 +71,13 @@ const LABEL: Record<string, string> = {
   forest: "เขียวเข้ม",
   frost: "เขียวหิมะ",
   tree: "ต้นสน",
+  navy: "น้ำเงินเข้ม",
+  orange: "ส้ม",
+  warm: "แสงอุ่น",
+  purple: "ม่วง",
+  silver: "เงิน",
+  black: "ดำ",
+  wood: "ไม้",
 };
 
 type View = "menu" | "giant" | "message" | "decor";
@@ -96,13 +103,18 @@ function WizardNav({ step, last, setStep }: { step: number; last: number; setSte
 type GiantKey = keyof GiantLook;
 
 // ปุ่มเลือกชิ้นส่วนแบบแถวเดียว ใช้ทั้งตุ๊กตายักษ์และข้อความ
-function PickRow({ title, options, value, onChange }: { title: string; options: readonly string[]; value: string; onChange: (v: string) => void }) {
+function hexOf(key: string): string | null {
+  return key in PALETTE ? `#${PALETTE[key as PaletteKey].toString(16).padStart(6, "0")}` : null;
+}
+
+function PickRow({ title, options, value, onChange, swatch = false }: { title: string; options: readonly string[]; value: string; onChange: (v: string) => void; swatch?: boolean }) {
   return (
     <div className="xmas-pick-row">
       <span className="xmas-pick-title">{title}</span>
       <div className="xmas-pick-chips" role="radiogroup" aria-label={title}>
         {options.map((o) => (
           <button type="button" key={o} role="radio" aria-checked={value === o} className={value === o ? "is-on" : ""} onClick={() => onChange(o)}>
+            {swatch && hexOf(o) && <i className="xmas-chip-dot" style={{ background: hexOf(o) ?? undefined }} aria-hidden />}
             {LABEL[o] ?? o}
           </button>
         ))}
@@ -111,10 +123,7 @@ function PickRow({ title, options, value, onChange }: { title: string; options: 
   );
 }
 
-// ชื่อบนปุ่มของแต่ละชนิด
-const KIND_LABEL: Record<string, string> = { snowman: "ตุ๊กตาหิมะ", tree: "ต้นสน", gift: "ของขวัญ", candy: "ไม้เท้าขนม" };
-
-// ตัวจัดของบนฐาน: เพิ่มชิ้นใหม่ เลือกชิ้น ปรับสี หมุน และเอาออก ส่วนตำแหน่งลากได้ในตัวอย่างด้านขวา
+// ตัวจัดของบนฐาน: เพิ่มชิ้นใหม่ เลือกชิ้น แต่งสีทีละส่วน หมุน และเอาออก ส่วนตำแหน่งลากได้ในตัวอย่างด้านขวา
 function newItemId() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -122,15 +131,13 @@ function newItemId() {
 function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: DioramaItem[]; selectedId: string | null; onSelect: (id: string | null) => void; onChange: (items: DioramaItem[]) => void }) {
   const [note, setNote] = useState("");
   const selected = items.find((it) => it.id === selectedId) ?? null;
-  const colors = selected ? colorOptionsFor(selected.kind) : [];
   const deg = selected ? Math.round((((selected.r % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) * (180 / Math.PI)) % 360 : 0;
 
   function add(kind: string) {
     if (items.length >= MAX_ITEMS) return setNote(`ใส่ได้สูงสุด ${MAX_ITEMS} ชิ้นต่อฐาน`);
     const spot = freeSpot(items, kind);
     if (!spot) return setNote("พื้นที่บนฐานเต็มแล้ว ลองย้ายหรือเอาชิ้นอื่นออกก่อน");
-    const opts = colorOptionsFor(kind);
-    const item: DioramaItem = { id: newItemId(), kind, color: opts[0] ?? "", x: spot.x, z: spot.z, r: 0 };
+    const item = makeItem(newItemId(), kind, spot.x, spot.z);
     setNote("");
     onChange([...items, item]);
     onSelect(item.id);
@@ -138,6 +145,10 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
   function patch(p: Partial<DioramaItem>) {
     if (!selected) return;
     onChange(items.map((it) => (it.id === selected.id ? { ...it, ...p } : it)));
+  }
+  function setPart(key: string, value: string) {
+    if (!selected) return;
+    patch({ parts: { ...selected.parts, [key]: value } });
   }
   function remove() {
     if (!selected) return;
@@ -152,7 +163,7 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
         <div className="xmas-pick-chips">
           {DIORAMA_KINDS.map((k) => (
             <button key={k} type="button" onClick={() => add(k)}>
-              + {KIND_LABEL[k]}
+              + {specFor(k)?.label ?? k}
             </button>
           ))}
         </div>
@@ -164,8 +175,7 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
           <div className="xmas-pick-chips" role="radiogroup" aria-label="ของบนฐาน">
             {items.map((it, i) => (
               <button key={it.id} type="button" role="radio" aria-checked={it.id === selectedId} className={it.id === selectedId ? "is-on" : ""} onClick={() => onSelect(it.id)}>
-                {i + 1}. {KIND_LABEL[it.kind]}
-                {it.color ? ` · ${LABEL[it.color] ?? it.color}` : ""}
+                {i + 1}. {specFor(it.kind)?.label ?? it.kind}
               </button>
             ))}
           </div>
@@ -173,7 +183,10 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
       )}
       {selected ? (
         <div className="xmas-dio-pick">
-          {colors.length > 0 && <PickRow title="สี" options={colors} value={selected.color} onChange={(v) => patch({ color: v })} />}
+          <span className="xmas-pick-title">แต่งสี {specFor(selected.kind)?.label}</span>
+          {partsFor(selected.kind).map((part) => (
+            <PickRow key={part.key} title={part.label} options={part.options} value={selected.parts[part.key] ?? part.options[0]} onChange={(v) => setPart(part.key, v)} swatch />
+          ))}
           <label className="xmas-rot">
             <span>
               หมุนชิ้นนี้ <em>{deg}°</em>

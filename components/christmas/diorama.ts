@@ -1,10 +1,11 @@
 // ตุ๊กตาหิมะ Exclusive แบบฐานกลมก้อน ๆ: ฐานลายแถบขนมหวาน หิมะบนหน้า และของตกแต่งที่วางอย่างอิสระบนฐาน
 // ตำแหน่ง (x, z) และการหมุน (r) ของแต่ละชิ้นมาจาก look.items โดยตรง ไม่มีตารางมาบังคับ
 import * as THREE from "three";
-import { BASE_HEX, BASE_R, GIFT_HEX, ITEM_R, TREE_HEX, type DioramaItem, type GiantLook } from "@/lib/christmas/giant";
+import { BASE_HEX, BASE_R, radiusOf, type DioramaItem, type GiantLook } from "@/lib/christmas/giant";
 import { buildBoard, makeCanvasTexture } from "./giantSign";
 import { drawGiantBoard, type BoardStyle } from "./skyArt";
-import { candyCane, giftBox, miniPine, shade, snowman, snowSurface, std, type Scenery } from "./zoneScenery";
+import { buildItemModel } from "./decorItems";
+import { shade, snowSurface, std, type Scenery } from "./zoneScenery";
 
 export const BASE_H = 0.3;
 // ระดับผิวหิมะบนฐานที่ของทุกชิ้นตั้งอยู่
@@ -28,14 +29,9 @@ function stripeTexture(a: number, b: number): THREE.CanvasTexture {
 export function buildItem(item: DioramaItem): THREE.Group {
   const g = new THREE.Group();
   g.userData.itemId = item.id;
-  let obj: THREE.Object3D | null = null;
-  if (item.kind === "snowman") obj = snowman();
-  else if (item.kind === "tree") obj = miniPine(0.85, 0.85, TREE_HEX[item.color] ?? TREE_HEX.forest);
-  else if (item.kind === "gift") obj = giftBox(0.36, GIFT_HEX[item.color] ?? GIFT_HEX.red, item.color === "gold" ? 0xdc2643 : 0xf5c542);
-  else if (item.kind === "candy") obj = candyCane();
-  if (obj) g.add(obj);
+  g.add(buildItemModel(item.kind, item.parts));
 
-  const r = ITEM_R[item.kind] ?? 0.2;
+  const r = radiusOf(item.kind);
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(r * 1.2, r * 1.42, 40),
     new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.95, depthWrite: false }),
