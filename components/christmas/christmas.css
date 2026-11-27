@@ -7026,3 +7026,46 @@ a.xmas-social-chip:hover {
     transform: translate(-50%, -10px);
   }
 }
+
+/* สีป้ายประจำบ้านตามที่เจ้าของเลือก: สปรูซ งาช้าง เบอร์รี่ ทอง */
+.xmas-giant-banner.board-ivory {
+  background: linear-gradient(180deg, #fffdf7, #f3ead2);
+  border-color: #b58a2e;
+  color: #0f3d2e;
+  text-shadow: none;
+}
+.xmas-giant-banner.board-berry {
+  background: linear-gradient(180deg, #8a2748, #4f1027);
+  border-color: #e3a0b4;
+  color: #fde7ef;
+}
+.xmas-giant-banner.board-gold {
+  background: linear-gradient(180deg, #f6dc8e, #c99a3e);
+  border-color: #fff1c2;
+  color: #2a1d05;
+}
+.xmas-giant-card.board-ivory {
+  background:
+    linear-gradient(#fffdf7, #f3ead2) padding-box,
+    linear-gradient(135deg, #0f3d2e, #2a6b52 50%, #0f3d2e) border-box;
+}
+.xmas-giant-card.board-berry {
+  background:
+    linear-gradient(#fbf1f4, #f1dde5) padding-box,
+    linear-gradient(135deg, #7a2146, #c46a88 50%, #7a2146) border-box;
+}
+.xmas-giant-card.board-gold {
+  background:
+    linear-gradient(#fffaea, #f6e7b8) padding-box,
+    linear-gradient(135deg, #fff1c2, #c99a3e 50%, #fff1c2) border-box;
+}
+.xmas-giant-card.board-ivory .xmas-giant-close,
+.xmas-giant-card.board-berry .xmas-giant-close {
+  background: linear-gradient(90deg, #0f3d2e, #1d5f49);
+  color: #f6e7bf;
+  box-shadow: 0 8px 20px rgba(15, 61, 46, 0.3);
+}
+.xmas-giant-card.board-berry .xmas-giant-close {
+  background: linear-gradient(90deg, #7a2146, #a8476c);
+  box-shadow: 0 8px 20px rgba(122, 33, 70, 0.3);
+}
