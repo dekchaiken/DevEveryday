@@ -523,6 +523,22 @@ function Orders({ dash, reload, toast }: { dash: Dash; reload: () => void; toast
                         ตรวจ paynoi
                       </button>
                     )}
+                    {checkable(o) && (
+                      <button
+                        type="button"
+                        className="adm-btn danger sm"
+                        disabled={working}
+                        onClick={async () => {
+                          if (!confirm(`ยืนยันด้วยมือ ฿${o.amount} ของ ${o.name}?\n\nทำเมื่อตรวจ SMS หรือสลิปแล้วว่าเงินเข้าบัญชีจริงและยอดตรง เท่านั้น ระบบจะบันทึกไว้ใน log`)) return;
+                          const res = await fetch(`/api/admin/christmas/orders/${o.id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "confirm_manual" }) });
+                          const data = (await res.json()) as { error?: string };
+                          toast(res.ok ? "ok" : "bad", res.ok ? "ยืนยันด้วยมือแล้ว" : data.error ?? "ยืนยันไม่สำเร็จ");
+                          reload();
+                        }}
+                      >
+                        ยืนยันด้วยมือ
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

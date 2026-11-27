@@ -31,6 +31,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
+  // ยืนยันด้วยมือสำหรับ paynoi: ใช้เมื่อแอดมินตรวจ SMS หรือสลิปแล้วว่าเงินเข้าบัญชีจริง แต่ paynoi ยังไม่จับคู่
+  if (body.action === "confirm_manual") {
+    if (order.mode !== "paynoi") return NextResponse.json({ error: "ใช้ได้เฉพาะคำสั่ง paynoi" }, { status: 400 });
+    if (order.status === "paid") return NextResponse.json({ ok: true, alreadyPaid: true });
+    try {
+      const paid = await confirmPayment(id, `manual-paynoi:${new Date().toISOString()}`);
+      await writeLog({ type: "paid", room: order.room, actor: "admin", text: `แอดมินยืนยันด้วยมือ (paynoi ยังไม่จับคู่) ${id.slice(0, 8)} ฿${order.amount}` });
+      return NextResponse.json({ ok: true, status: paid?.status });
+    } catch (err) {
+      if (err instanceof SpotLostError) return NextResponse.json({ error: err.message, code: "spot_lost" }, { status: 409 });
+      throw err;
+    }
+  }
+
   if (body.action !== "confirm") return NextResponse.json({ error: "คำสั่งไม่ถูกต้อง" }, { status: 400 });
   if (order.mode !== "manual") return NextResponse.json({ error: "คำสั่งนี้ยืนยันอัตโนมัติผ่าน Omise" }, { status: 400 });
   if (order.status === "paid") return NextResponse.json({ ok: true, alreadyPaid: true });
