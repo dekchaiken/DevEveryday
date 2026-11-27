@@ -57,7 +57,9 @@ export function buildDiorama(opts: { look: GiantLook; name: string; message: str
 
   // ของตกแต่งตามช่องที่ผู้ซื้อวาง
   const y = BASE_H + 0.04;
-  for (const item of opts.look.items) {
+  // ข้อมูลเก่าที่ไม่มีรายการของจะใช้รายการว่างแทน ไม่ให้หน้าเว็บพัง
+  const items = Array.isArray(opts.look.items) ? opts.look.items : [];
+  for (const item of items) {
     const p = subCellPos(item.i);
     const turn = ((item.i * 37) % 12) * 0.25;
     let obj: THREE.Object3D | null = null;
