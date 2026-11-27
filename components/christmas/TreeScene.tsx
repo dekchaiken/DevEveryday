@@ -2191,7 +2191,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     api.current?.setReduced(reducedMotion);
   }, [reducedMotion]);
 
-  return <div ref={mountRef} className="xmas-canvas" aria-label="ฉากต้นคริสต์มาสสามมิติ" role="img" />;
+  return <div ref={mountRef} className="xmas-canvas" data-tree-scene aria-label="ฉากต้นคริสต์มาสสามมิติ" role="img" />;
 }
 
 // การเด้งแบบลูกบอลตกพื้น ใช้กับลูกบอลที่เพิ่งแขวน

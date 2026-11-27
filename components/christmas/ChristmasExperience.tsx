@@ -33,7 +33,6 @@ import { CoachSpotlight, type SpotStep } from "./CoachSpotlight";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
 import { GIANT_POSITIONS, SLOT_POSITIONS, ZONE_CAPACITY } from "@/lib/christmas/slots";
-import { FirstVisitTour } from "./FirstVisitTour";
 import "./wishcards.css";
 import "./christmas.css";
 import { PendingOrdersWatch } from "./PendingOrdersWatch";
@@ -44,9 +43,11 @@ type TipState = { kicker: string; title: string; cta: string; x: number; y: numb
 
 // คำแนะนำครั้งแรก: สอนทีละปุ่ม ปุ่มอื่นจะเทาจนกว่าจะกดปุ่มที่สอนก่อน
 const SPOT_STEPS: SpotStep[] = [
-  { target: "[data-studio-btn]", title: "เริ่มที่ คำอวยพร", body: "แตะปุ่มนี้เพื่อทำการ์ดอวยพร หรือแขวนลูกบอลบนต้น" },
+  { target: "[data-tree-scene]", title: "แตะต้นคริสต์มาสเพื่อแขวนคำอวยพร", body: "แตะตรงไหนบนต้นก็ได้ หน้าแขวนจะเปิดที่จุดนั้น" },
+  { target: "[data-studio-btn]", title: "คำอวยพรและลูกบอล", body: "ทำการ์ดอวยพรหรือแขวนลูกบอลบนต้น" },
   { target: "[data-zone-btn]", title: "โซนคำอวยพร", body: "การ์ดที่ส่งไปจะขึ้นบนรั้วในโซนนี้ แตะเพื่อดูการ์ดของทุกคน" },
-  { target: "[data-decor-btn]", title: "ตกแต่งตุ๊กตาหิมะ", body: "สร้างตุ๊กตาหิมะของคุณแล้ววางรอบต้น" },
+  { target: "[data-decor-btn]", title: "ตกแต่งตุ๊กตาหิมะ", body: "สร้างตุ๊กตาหิมะแล้ววางรอบต้น แตะตุ๊กตาบนต้นเพื่อดูรายละเอียด" },
+  { target: "[data-exclusive-btn]", title: "บ้านหิมะ Exclusive", body: "ตั้งบ้านของคุณบนลาน แตะบ้านของทุกคนเพื่อดูป้ายและลิงก์" },
 ];
 
 // Three.js โหลดเฉพาะฝั่งเบราว์เซอร์ ไม่ให้กระทบเวลาเปิดหน้าแรก
@@ -315,7 +316,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [coachDone, setCoachDone] = useState(true); // ค่าเริ่มต้นซ่อนไว้จนอ่านค่าจากเครื่องเสร็จ
   useEffect(() => {
     try {
-      setCoachDone(localStorage.getItem("xmas-coach-v2") === "1");
+      const done = localStorage.getItem("xmas-coach-v2") === "1";
+      setCoachDone(done);
+      // ผู้เข้าชมครั้งแรกจะได้คำแนะนำทันที (ไม่ต้องรอส่งการ์ดก่อน)
+      if (!done) setCoachArmed(true);
     } catch {
       setCoachDone(true);
     }
@@ -810,7 +814,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           </div>
         </div>
       )}
-      <FirstVisitTour />
+
 
       {toast && (
         <div key={toast.id} className={`xmas-toast ${toast.kind}`} role="status">
@@ -918,7 +922,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <button className="xmas-action" onClick={() => setInviteOpen(true)}>
           <Icon name="users" size={18} /> ชวนเพื่อน
         </button>
-        <button className="xmas-action is-exclusive" onClick={() => setExclusiveOpen(true)}>
+        <button className="xmas-action is-exclusive" data-exclusive-btn onClick={() => setExclusiveOpen(true)}>
           <Icon name="crown" size={18} /> Exclusive
         </button>
         <button className="xmas-action is-donate-phone xmas-action-phone" onClick={() => setSupportOpen(true)}>
