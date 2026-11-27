@@ -26,6 +26,8 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
   const [rect, setRect] = useState<Box | null>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
+  const swallowRef = useRef(false);
+  const suppressClickRef = useRef(false);
 
   // วัดตำแหน่งของขั้นนี้ รอให้ส่วนนั้นโหลดเสร็จก่อน (ฉาก 3 มิติโหลดทีหลัง) ถ้ารอนานเกินไปค่อยข้ามไป
   useEffect(() => {
@@ -53,9 +55,8 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
     };
   }, [active, i, steps, onDone]);
 
-  // กดปุ่มที่ไฮไลท์ = ปุ่มนั้นทำงานจริง (เปิดโต๊ะ/โซน/ตุ๊กตา) แล้วไปขั้นถัดไป
-  // จับการกดตอน pointerdown: แตะต้นแล้วแผงแขวนจะเปิดตอน pointerup ทำให้ป้ายซ่อนก่อนถึง click
-  // ถ้ารอดูตอน click จะพลาดการนับขั้น จึงจำไว้ตั้งแต่ตอนกด
+  // แตะปุ่มที่ไฮไลท์ = จำลองให้ดูเฉย ๆ แล้วไปขั้นถัดไป ไม่เปิดแผงหรือทำงานของปุ่มนั้นจริง
+  // ดักที่ capture phase ของ window: ทั้ง pointerdown, pointerup และ click ไม่ไปถึงต้นไม้หรือปุ่มจริง
   useEffect(() => {
     if (i >= steps.length) return;
     const target = steps[i].target;
@@ -63,19 +64,34 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
       const el = document.querySelector(target);
       return !!el && node instanceof Node && el.contains(node);
     };
-    let pressed = false;
     const onDown = (e: PointerEvent) => {
-      pressed = activeRef.current && hits(e.target);
+      suppressClickRef.current = false;
+      if (!activeRef.current || !hits(e.target)) return;
+      swallowRef.current = true;
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!swallowRef.current) return;
+      swallowRef.current = false;
+      if (!hits(e.target)) return;
+      suppressClickRef.current = true;
+      e.stopPropagation();
+      e.preventDefault();
+      setI((n) => n + 1);
     };
     const onClick = (e: MouseEvent) => {
-      const was = pressed;
-      pressed = false;
-      if (was && hits(e.target)) setI((n) => n + 1);
+      if (!suppressClickRef.current) return;
+      suppressClickRef.current = false;
+      e.stopPropagation();
+      e.preventDefault();
     };
     window.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("pointerup", onUp, true);
     window.addEventListener("click", onClick, true);
     return () => {
       window.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("pointerup", onUp, true);
       window.removeEventListener("click", onClick, true);
     };
   }, [i, steps]);
@@ -107,7 +123,7 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
         </span>
         <b>{steps[i].title}</b>
         <p>{steps[i].body}</p>
-        <small>{steps[i].target === "[data-tree-scene]" ? "แตะต้นคริสต์มาสเพื่อทำต่อ" : "แตะปุ่มที่ไฮไลท์เพื่อทำต่อ"}</small>
+        <small>แตะเพื่อดูตัวอย่าง แล้วไปขั้นถัดไป</small>
       </div>
     </div>
   );
