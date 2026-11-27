@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { GIANT_MODEL_SCALE, GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
@@ -62,6 +63,72 @@ type Props = {
   crowd: { count: number; seed: string }; // จำนวนคนออนไลน์ในโซนนี้ และรหัสโซนสำหรับจัดตำแหน่ง
 };
 
+// รวมเมชที่ไม่เคลื่อนไหวภายในกลุ่มเป็นไม่กี่ชิ้นต่อวัสดุ
+// ทุกเมชเป็นคำสั่งวาดแยกกันบน GPU ของที่นิ่งหลายร้อยชิ้นจึงกินเฟรมไปมาก การรวมแล้วจำนวนคำสั่งวาดลดลงมาก
+// ข้ามเมชที่มี userData (ใช้เลือกบนหน้าจอ) และชิ้นที่อยู่ใน keep (ของที่ยังขยับอยู่)
+function mergeStaticMeshes(root: THREE.Group, keep: Set<THREE.Object3D>) {
+  root.updateMatrixWorld(true);
+  const toLocal = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const isKept = (o: THREE.Object3D) => {
+    for (let p: THREE.Object3D | null = o; p && p !== root; p = p.parent) if (keep.has(p) || p.userData.animated) return true;
+    return false;
+  };
+  // วัสดุมาตรฐานที่ไม่มีลาย/แสงในตัว รวมได้โดยเอาสีไปไว้ที่จุดยอด (vertex color) แล้วใช้วัสดุเดียวกันทั้งกลุ่ม
+  // ส่วนวัสดุอื่นรวมได้เฉพาะเมื่อใช้วัสดุตัวเดียวกันจริง ๆ
+  type Bucket = { mat: THREE.Material; geos: THREE.BufferGeometry[]; shadow: boolean; meshes: THREE.Mesh[] };
+  const buckets = new Map<string, Bucket>();
+  root.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh || Array.isArray(m.material) || isKept(m) || Object.keys(m.userData).length > 0) return;
+    const src = m.material as THREE.MeshStandardMaterial;
+    const plain = src.type === "MeshStandardMaterial" && !src.map && !src.emissiveMap && !src.transparent && !src.vertexColors && src.opacity === 1 && src.emissive.getHex() === 0;
+    const geo = m.geometry.clone();
+    geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(toLocal, m.matrixWorld));
+    let key: string;
+    if (plain) {
+      const c = src.color;
+      const n = geo.attributes.position.count;
+      const col = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        col[i * 3] = c.r;
+        col[i * 3 + 1] = c.g;
+        col[i * 3 + 2] = c.b;
+      }
+      geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+      key = `std|${src.roughness}|${src.metalness}|${src.side}|${src.flatShading}`;
+    } else {
+      key = `${src.uuid}`;
+    }
+    key += `|${Object.keys(geo.attributes).sort().join(",")}|${geo.index ? "i" : "n"}`;
+    let b = buckets.get(key);
+    if (!b) {
+      const mat = plain
+        ? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: src.roughness, metalness: src.metalness, side: src.side, flatShading: src.flatShading })
+        : src;
+      b = { mat, geos: [], shadow: false, meshes: [] };
+      buckets.set(key, b);
+    }
+    b.geos.push(geo);
+    b.shadow = b.shadow || m.castShadow;
+    b.meshes.push(m);
+  });
+  for (const b of buckets.values()) {
+    if (b.meshes.length < 2) continue;
+    let merged: THREE.BufferGeometry | null = null;
+    try {
+      merged = mergeGeometries(b.geos, false);
+    } catch {
+      merged = null;
+    }
+    if (!merged) continue;
+    for (const m of b.meshes) m.parent?.remove(m);
+    const out = new THREE.Mesh(merged, b.mat);
+    out.castShadow = b.shadow;
+    out.receiveShadow = true;
+    root.add(out);
+  }
+}
+
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
 export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange }: Props) {
   const snowingRef = useRef(snowing);
@@ -93,19 +160,23 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      // ขอบเรียบ (MSAA) กินแรงมากบนจอเล็ก จึงปิดเฉพาะมือถือ
+      renderer = new THREE.WebGLRenderer({ antialias: window.innerWidth >= 768, alpha: true, powerPreference: "high-performance" });
     } catch {
       onError();
       return;
     }
     const isSmall = window.matchMedia("(max-width: 767px)").matches;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmall ? 1.5 : 2));
+    // จำนวนพิกเซลที่วาดคือตัวกินเครื่องหลัก จึงจำกัดความละเอียดให้ต่ำลงกว่าเดิม
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmall ? 1.25 : 1.5));
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    let lastShadowAt = 0;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.touchAction = "none";
 
@@ -158,7 +229,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // พื้นหิมะ: ผิวเป็นลอนกองหิมะเบา ๆ รอบนอก โคนต้นเรียบ และมีเม็ดหิมะจากเท็กซ์เจอร์
     // พื้นหิมะครอบคลุมลานทั้งหมด (ขนาดตามรัศมีลาน) ส่วนขอบจะถูกหมอกบัง
     const groundSize = LAND_R * 2 + 8;
-    const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 260, 260);
+    const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 160, 160);
     groundGeo.rotateX(-Math.PI / 2);
     const gp = groundGeo.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < gp.count; i++) {
@@ -516,6 +587,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       m.receiveShadow = true;
       dressing.add(m);
     }
+    // ของประดับรอบลานทั้งหมดนิ่งอยู่แล้ว จึงรวมเมชเพื่อลดคำสั่งวาด
+    mergeStaticMeshes(dressing, new Set<THREE.Object3D>());
 
     // ---------- ฝูงชนเงาในโซนนี้: จำนวนตามคนออนไลน์ ตำแหน่งต่างกันในแต่ละโซน ----------
     const crowdGroup = new THREE.Group();
@@ -550,7 +623,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     scene.add(buildHills());
 
     // ---------- หิมะตก ----------
-    const SNOW = isSmall ? 500 : 1100;
+    const SNOW = isSmall ? 320 : 800;
     const snowPos = new Float32Array(SNOW * 3);
     const snowSpeed = new Float32Array(SNOW);
     for (let i = 0; i < SNOW; i++) {
@@ -950,6 +1023,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         (b.points.material as THREE.PointsMaterial).opacity = 1 - k * k;
       }
 
+      // เงาไม่ต้องวาดใหม่ทุกเฟรม (ของส่วนใหญ่อยู่นิ่ง) จึงอัปเดตทุก 0.25 วินาที เงาของชิ้นใหม่จะขึ้นช้าไม่กี่ร้อยมิลลิวินาที
+      if (now - lastShadowAt > 250) {
+        renderer.shadowMap.needsUpdate = true;
+        lastShadowAt = now;
+      }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(frame);
     }
@@ -1384,6 +1462,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const yard = buildYardScenery();
     yard.group.position.set(zx, 0, zz);
     zoneGroup.add(yard.group);
+    // รั้วและของประดับโซนที่ไม่ขยับ รวมเป็นชิ้นเดียวต่อวัสดุ (ไฟกะพริบและลานที่มีแอนิเมชันไม่รวม)
+    mergeStaticMeshes(zoneGroup, new Set<THREE.Object3D>(zoneLights));
     const sceneryUpdaters: ((t: number, reduced: boolean) => void)[] = [yard.update];
     // พลุในโซนเป็นจังหวะเบา ๆ เหนือลาน (ปิดเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว)
     let lastZoneBurst = 0;

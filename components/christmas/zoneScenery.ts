@@ -514,6 +514,7 @@ export function buildYardScenery(): Scenery {
   cottage.group.scale.setScalar(0.9);
   cottage.group.rotation.y = -0.18;
   group.add(cottage.group);
+  cottage.group.userData.animated = true; // มีแอนิเมชัน ไม่รวมเมชตอนสร้างฉาก
   updates.push(cottage.update);
 
   const trees: [number, number, number, number][] = [
@@ -526,6 +527,7 @@ export function buildYardScenery(): Scenery {
     const tree = buildGlowTree(c, h, `yard-tree-${i}`);
     tree.group.position.set(x, 0, z);
     group.add(tree.group);
+    tree.group.userData.animated = true;
     updates.push(tree.update);
   });
 
@@ -575,6 +577,7 @@ export function buildYardScenery(): Scenery {
       case "lantern": {
         const l = lantern();
         flames.push(l.flame);
+        l.flame.userData.animated = true;
         obj = l.group;
         break;
       }
@@ -584,6 +587,7 @@ export function buildYardScenery(): Scenery {
       default: {
         const s = starPost();
         spinners.push({ obj: s.star, base: 1.08, phase: pr() * 6 });
+        s.star.userData.animated = true;
         obj = s.group;
       }
     }

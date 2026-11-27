@@ -421,8 +421,7 @@
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
-}
-.xmas-live {
+}.xmas-live {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -434,8 +433,6 @@
   color: #f7f2e6;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 .xmas-live-dot {
   width: 8px;
@@ -471,8 +468,6 @@
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
   transition: background 0.25s ease, border-color 0.25s ease;
 }
 .xmas-music-toggle.is-on,
@@ -626,8 +621,7 @@
   .xmas-ticker-track {
     animation: none;
   }
-}
-.xmas-coach {
+}.xmas-coach {
   position: absolute;
   top: 146px;
   left: 50%;
@@ -642,8 +636,6 @@
   color: var(--ink);
   border: 1px solid rgba(184, 144, 74, 0.4);
   box-shadow: var(--shadow-md);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 .xmas-coach b {
   font-family: var(--serif);
@@ -736,8 +728,7 @@
 }
 .xmas-toast.err {
   color: var(--berry);
-}
-.xmas-banner {
+}.xmas-banner {
   position: absolute;
   left: 50%;
   top: 36%;
@@ -751,8 +742,6 @@
   background: linear-gradient(180deg, rgba(10, 36, 28, 0.82), rgba(15, 46, 36, 0.72));
   border: 1px solid rgba(232, 209, 154, 0.45);
   box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.6), inset 0 0 0 4px rgba(10, 36, 28, 0.6);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
   pointer-events: none;
   animation: xmas-banner 6.5s ease both;
 }
@@ -805,8 +794,6 @@
   background: var(--glass-dark);
   border: 1px solid rgba(232, 209, 154, 0.3);
   box-shadow: 0 24px 50px -22px rgba(0, 0, 0, 0.65);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
   pointer-events: auto;
   white-space: nowrap;
 }
@@ -868,8 +855,6 @@
   border-radius: 999px;
   background: var(--glass-dark);
   border: 1px solid rgba(232, 209, 154, 0.3);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 .xmas-zoom button {
   display: grid;
@@ -901,8 +886,6 @@
   border: 1px solid rgba(232, 209, 154, 0.35);
   border-radius: 26px;
   box-shadow: var(--shadow-lg);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
   overflow: hidden;
 }
 .xmas-panel {
@@ -2662,8 +2645,6 @@
   border-radius: 999px;
   background: var(--glass-dark);
   border: 1px solid rgba(232, 209, 154, 0.3);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
   box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.6);
   -webkit-mask-image: none;
   mask-image: none;
@@ -3894,8 +3875,6 @@
   border-radius: 999px;
   background: var(--glass-dark);
   border: 1px solid rgba(232, 209, 154, 0.3);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
 }
 .xmas-tool {
   display: inline-flex;
