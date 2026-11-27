@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getConfig } from "@/lib/christmas/config";
 import { getRoom } from "@/lib/christmas/rooms";
-import { saveOrder, toPreview, type Order, type OrderKind } from "@/lib/christmas/orders";
+import { releaseGiantSpot, reserveGiantSpot, saveOrder, toPreview, type Order, type OrderKind } from "@/lib/christmas/orders";
 import { createPromptPayCharge } from "@/lib/christmas/omise";
 import { promptPayPayload } from "@/lib/christmas/promptpay";
 import { rateOk } from "@/lib/christmas/store";
@@ -9,7 +9,6 @@ import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { MESSAGE_THEMES, type MessageTheme } from "@/lib/christmas/types";
 import { maskIp, writeLog } from "@/lib/christmas/log";
 import { GIANT_CAPACITY } from "@/lib/christmas/slots";
-import { listGiants } from "@/lib/christmas/orders";
 import { sanitizeSocial } from "@/lib/christmas/social";
 import { listDecor, parseDecorPick } from "@/lib/christmas/decor";
 import { parseGiantLook } from "@/lib/christmas/giant";
@@ -67,23 +66,14 @@ export async function POST(req: Request) {
     }
   }
 
-  // จุดที่ผู้ซื้อเลือกเอง (ไม่ส่งมาก็ได้ ระบบจะจัดให้ตอนชำระเงิน)
-  let chosenSpot = -1;
-  if (kind === "giant") {
-    const taken = await listGiants(room.id);
-    if (taken.length >= GIANT_CAPACITY) {
-      return NextResponse.json({ error: "ตุ๊กตายักษ์ในห้องนี้เต็มพื้นที่แล้ว" }, { status: 409 });
+  // จุดที่ผู้ซื้อเลือกเอง (ไม่ส่งมาก็ได้ ระบบจะหาจุดว่างให้) ตรวจรูปแบบไว้ก่อน แล้วค่อยจองจริงหลังผ่านการตรวจอื่นทั้งหมด
+  let wantedSpot: number | null = null;
+  if (kind === "giant" && body.spot !== undefined && body.spot !== null) {
+    const s = Number(body.spot);
+    if (!Number.isInteger(s) || s < 0 || s >= GIANT_CAPACITY) {
+      return NextResponse.json({ error: "จุดที่เลือกไม่ถูกต้อง" }, { status: 400 });
     }
-    if (body.spot !== undefined && body.spot !== null) {
-      const s = Number(body.spot);
-      if (!Number.isInteger(s) || s < 0 || s >= GIANT_CAPACITY) {
-        return NextResponse.json({ error: "จุดที่เลือกไม่ถูกต้อง" }, { status: 400 });
-      }
-      if (taken.some((g) => g.spot === s)) {
-        return NextResponse.json({ error: "จุดนี้มีคนจองแล้ว เลือกจุดอื่น" }, { status: 409 });
-      }
-      chosenSpot = s;
-    }
+    wantedSpot = s;
   }
   let look: ReturnType<typeof parseGiantLook> = null;
   if (kind === "giant") {
@@ -92,6 +82,18 @@ export async function POST(req: Request) {
   }
 
   const id = crypto.randomUUID();
+  // จองจุดตั้งแต่ตอนนี้ ถ้าคนอื่นได้จุดนี้ไปแล้วจะแจ้งให้ผู้ซื้อเลือกใหม่ (ก่อนจ่ายเงิน)
+  let spot = -1;
+  if (kind === "giant") {
+    const r = await reserveGiantSpot(room.id, id, wantedSpot);
+    if ("error" in r) {
+      if (r.error === "taken") {
+        return NextResponse.json({ code: "spot_taken", error: "จุดนี้มีคนเอาไปแล้ว เลือกจุดใหม่นะ" }, { status: 409 });
+      }
+      return NextResponse.json({ error: "ตุ๊กตายักษ์ในห้องนี้เต็มพื้นที่แล้ว" }, { status: 409 });
+    }
+    spot = r.spot;
+  }
   const base: Order = {
     id,
     room: room.id,
@@ -100,7 +102,7 @@ export async function POST(req: Request) {
     name,
     message,
     social: sanitizeSocial(body.social, (s) => hasBlocked(s, config.blockedWords)),
-    spot: chosenSpot, // -1 = ระบบจัดให้ตอนชำระเงิน
+    spot: Math.max(0, spot),
     theme: MESSAGE_THEMES.includes(body.theme as MessageTheme) ? (body.theme as MessageTheme) : "fireworks",
     mode: config.payMode,
     status: "awaiting_payment",
@@ -116,7 +118,10 @@ export async function POST(req: Request) {
   try {
     if (config.payMode === "manual") {
       const payload = promptPayPayload(amount, id.slice(0, 8));
-      if (!payload) return NextResponse.json({ error: "ยังไม่ได้ตั้งค่าบัญชี PromptPay" }, { status: 503 });
+      if (!payload) {
+        if (spot >= 0) await releaseGiantSpot(room.id, spot, id);
+        return NextResponse.json({ error: "ยังไม่ได้ตั้งค่าบัญชี PromptPay" }, { status: 503 });
+      }
       base.qrPayload = payload;
     } else {
       const charge = await createPromptPayCharge(amount, id);
@@ -124,6 +129,7 @@ export async function POST(req: Request) {
       base.qrImage = charge.source?.scannable_code?.image?.download_uri ?? "";
     }
   } catch (err) {
+    if (spot >= 0) await releaseGiantSpot(room.id, spot, id);
     return NextResponse.json({ error: err instanceof Error ? err.message : "สร้างรายการไม่สำเร็จ" }, { status: 502 });
   }
 

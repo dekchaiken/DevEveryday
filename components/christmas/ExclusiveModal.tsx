@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
 import { DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
@@ -333,6 +333,7 @@ export default function ExclusiveModal({
   const [selId, setSelId] = useState<string | null>(null);
   const [spotPick, setSpotPick] = useState<number | null>(null);
   const [taken, setTaken] = useState<Set<number>>(new Set());
+  const [spotPopup, setSpotPopup] = useState(false);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -354,20 +355,22 @@ export default function ExclusiveModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [locked, onClose]);
 
-  // โหลดจุดที่มีคนจองแล้วเมื่อเปิดฟอร์มตุ๊กตายักษ์
-  useEffect(() => {
-    if (view !== "giant") return;
-    let alive = true;
+  // โหลดจุดที่มีคนจองแล้ว: ตอนเปิดฟอร์มตุ๊กตายักษ์ และตอนที่ผู้ซื้อต้องเลือกจุดใหม่
+  const loadTaken = useCallback(() => {
     fetch(`/api/christmas/state?room=${encodeURIComponent(roomId)}`)
       .then((r) => r.json())
-      .then((d: { giants?: { spot: number }[] }) => {
-        if (alive) setTaken(new Set((d.giants ?? []).map((g) => g.spot)));
-      })
+      .then((d: { giants?: { spot: number }[] }) => setTaken(new Set((d.giants ?? []).map((g) => g.spot))))
       .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [view, roomId]);
+  }, [roomId]);
+  useEffect(() => {
+    if (view === "giant") loadTaken();
+  }, [view, loadTaken]);
+
+  function closeSpotPopup() {
+    setSpotPopup(false);
+    setSpotPick(null);
+    loadTaken();
+  }
 
   function goView(v: View) {
     setStep(0);
@@ -390,7 +393,13 @@ export default function ExclusiveModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ room: roomId, kind, social: social ?? {}, ...body }),
       });
-      const data = (await res.json()) as { order?: OrderPreview; error?: string };
+      const data = (await res.json()) as { order?: OrderPreview; error?: string; code?: string };
+      // จุดที่เลือกถูกคนอื่นไปก่อน: เด้งให้เลือกใหม่ (ยังไม่ได้ตัดเงิน)
+      if (res.status === 409 && data.code === "spot_taken") {
+        setSpotPopup(true);
+        loadTaken();
+        return;
+      }
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
       setOrderKind(kind);
       setOrder(data.order);
@@ -460,6 +469,18 @@ export default function ExclusiveModal({
         {disabled && <p className="xmas-msg err">ตอนนี้ปิดรับการสนับสนุนชั่วคราว</p>}
 
         {order && <PaymentPanel order={order} onUpdate={setOrder} onClose={() => onPaid(orderKind, name.trim())} />}
+
+        {spotPopup && (
+          <div className="xmas-spot-popup" role="alertdialog" aria-modal="true" aria-labelledby="xmas-spot-popup-title">
+            <div className="xmas-spot-popup-card">
+              <p id="xmas-spot-popup-title" className="xmas-spot-popup-title">น่าเสียดายจัง</p>
+              <p>ช่องนี้มีคนเอาไปแล้ว เลือกช่องใหม่นะ</p>
+              <button type="button" className="xmas-submit" onClick={closeSpotPopup}>
+                เลือกช่องใหม่
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* เมนู: สองฟีเจอร์แยกการ์ด */}
         {!order && cfg && !disabled && view === "menu" && (

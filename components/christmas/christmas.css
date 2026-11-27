@@ -6697,3 +6697,40 @@ a.xmas-social-chip:hover {
   touch-action: manipulation;
   background: #f4f8fc;
 }
+
+.xmas-spot-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(10, 24, 18, 0.6);
+}
+.xmas-spot-popup-card {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
+  padding: 24px 22px;
+  border-radius: 18px;
+  background: #fffdf7;
+  color: #1d2a22;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+.xmas-spot-popup-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.xmas-spot-popup-card .xmas-submit {
+  color: #fff;
+  background: #1d4a33;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
