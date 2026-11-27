@@ -11,11 +11,17 @@ import type { GiantLook } from "@/lib/christmas/giant";
 
 export type GiantInfo = { name: string; message: string; spot: number; social?: Social; look?: GiantLook };
 
+// สีป้ายที่เจ้าของเลือกตอนตกแต่ง (ตรงกับตัวเลือกในฟอร์ม) ใช้กับแบนเนอร์และการ์ด
+export function boardOf(info: GiantInfo): string {
+  const b = info.look?.board;
+  return b === "ivory" || b === "berry" || b === "gold" ? b : "spruce";
+}
+
 export function GiantCard({ info, onClose }: { info: GiantInfo; onClose: () => void }) {
   const turnRef = useRef<((rad: number) => void) | null>(null);
   const look: GiantLook = info.look ?? { base: "pink", items: [], board: "spruce" };
   return (
-    <div className="xmas-focus glass xmas-decor-card xmas-giant-card" role="dialog" aria-label={`บ้านของ ${info.name}`}>
+    <div className={`xmas-focus glass xmas-decor-card xmas-giant-card board-${boardOf(info)}`} role="dialog" aria-label={`บ้านของ ${info.name}`}>
       <button className="xmas-x" onClick={onClose} aria-label="ปิด">
         <Icon name="close" size={18} />
       </button>
@@ -52,7 +58,7 @@ export function GiantCard({ info, onClose }: { info: GiantInfo; onClose: () => v
 // แบนเนอร์ป้ายประจำบ้านด้านบนกลางจอ: ข้อความบนป้ายและชื่อเจ้าของ กรอบฟอยล์ทอง
 export function GiantBanner({ info }: { info: GiantInfo }) {
   return (
-    <div className="xmas-giant-banner" role="status" aria-label="ป้ายประจำบ้าน">
+    <div className={`xmas-giant-banner board-${boardOf(info)}`} role="status" aria-label="ป้ายประจำบ้าน">
       <span className="xmas-giant-banner-kicker">ป้ายประจำบ้าน · {info.name}</span>
       <p>{info.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส"}</p>
     </div>
