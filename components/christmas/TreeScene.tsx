@@ -35,6 +35,8 @@ export type TreeSceneHandle = {
   focusDecor: (d: Decor | null) => void;
   focusGiant: (spot: number | null) => void; // กล้องบินไปหาบ้านหิมะ Exclusive และกลับมุมเดิมเมื่อส่ง null
   project: (x: number, y: number, z: number) => { x: number; y: number; visible: boolean }; // พิกัดจอของจุดในโลก (ใช้วางคำอธิบายข้างโมเดล)
+  zoneSlots: () => { id: string; x: number; y: number; visible: boolean; angle: number }[]; // จุดของการ์ดแต่ละใบในโซนบนจอ (ใช้วางป้ายชี้)
+  focusZoneCard: (id: string) => void; // กล้องบินไปหาการ์ดใบนั้น
   flyToZone: () => void; // ซูมออกเป็นแผนที่ แล้วไปที่โซนคำอวยพร
   returnView: () => void; // กลับไปมุมกล้องเดิมก่อนไปดูตุ๊กตาหรือโซน
   zoomBy: (factor: number) => void;
@@ -1453,6 +1455,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         card.position.set(0, -0.27, 0.1);
         card.userData.cardId = c.id;
         pivot.userData.phase = i * 0.7;
+        pivot.userData.cardId = c.id;
         pivot.userData.halo = halo;
         pivot.add(hook, chainMesh(), halo, card);
         zoneCardGroup.add(pivot);
@@ -2189,6 +2192,57 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const w = renderer.domElement.clientWidth;
         const h = renderer.domElement.clientHeight;
         return { x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, visible: v.z < 1 && Math.abs(v.x) < 1.15 && Math.abs(v.y) < 1.15 };
+      },
+      // จุดของการ์ดแต่ละใบบนจอ ถ้าอยู่นอกจอจะถูกดันไปที่ขอบจอ พร้อมมุมชี้ไปหาการ์ดนั้น
+      zoneSlots: () => {
+        const w = renderer.domElement.clientWidth;
+        const h = renderer.domElement.clientHeight;
+        const cx = w / 2;
+        const cy = h / 2;
+        const m = 40;
+        const out: { id: string; x: number; y: number; visible: boolean; angle: number }[] = [];
+        const p = new THREE.Vector3();
+        for (const pivot of zoneCardGroup.children) {
+          const id = pivot.userData.cardId as string | undefined;
+          if (!id) continue;
+          pivot.getWorldPosition(p);
+          p.y -= 0.3; // ป้ายอยู่เหนือซองเล็กน้อย
+          const v = p.clone().project(camera);
+          const inFront = v.z < 1;
+          let sx = ((v.x + 1) / 2) * w;
+          let sy = ((1 - v.y) / 2) * h;
+          const visible = inFront && sx >= m && sx <= w - m && sy >= m && sy <= h - m;
+          let angle = 0;
+          if (!visible) {
+            let dx = sx - cx;
+            let dy = sy - cy;
+            if (!inFront) {
+              dx = -dx;
+              dy = -dy;
+            }
+            if (dx === 0 && dy === 0) dy = -1;
+            const k = Math.min(Math.abs(dx) > 0 ? (cx - m) / Math.abs(dx) : Infinity, Math.abs(dy) > 0 ? (cy - m) / Math.abs(dy) : Infinity);
+            sx = cx + dx * k;
+            sy = cy + dy * k;
+            angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+          }
+          out.push({ id, x: sx, y: sy, visible, angle });
+        }
+        return out;
+      },
+      // กล้องบินไปหาการ์ดใบนั้น (ใช้กับป้ายที่อยู่นอกจอ)
+      focusZoneCard: (id: string) => {
+        for (const pivot of zoneCardGroup.children) {
+          if (pivot.userData.cardId !== id) continue;
+          const target = new THREE.Vector3();
+          pivot.getWorldPosition(target);
+          target.y -= 0.3;
+          const dir = camera.position.clone().sub(target);
+          if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+          dir.normalize().multiplyScalar(3.2);
+          animateCam(target.clone().add(dir), target.clone(), reduced ? 1 : 900);
+          return;
+        }
       },
       flyToZone: () => flyToZone(),
       returnView: () => returnView(),

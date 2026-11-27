@@ -1680,3 +1680,139 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+/* ---------- ประตูเปลี่ยนห้อง (DoorTransition) ---------- */
+.xdoor {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: radial-gradient(70% 50% at 50% 60%, rgba(232, 209, 154, 0.22), transparent 70%), linear-gradient(180deg, #0b2a21 0%, #1f4d3c 100%);
+  overflow: hidden;
+}
+.xdoor-canvas {
+  position: absolute;
+  inset: 0;
+}
+.xdoor-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff8e8;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- ป้ายชี้การ์ดในโซนคำอวยพร (XzPins) ---------- */
+.xz-pins {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+.xz-pin {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  border: 2px solid #f2d98c;
+  background: rgba(242, 217, 140, 0.35);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: xz-pin-pulse 1.8s ease-out infinite;
+}
+.xz-pin.is-mine {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  background: #f2d98c;
+  border-color: #fff8e8;
+  box-shadow: 0 0 0 4px rgba(242, 217, 140, 0.35);
+}
+.xz-pin-label {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fbf6e9;
+  color: #0f3d2e;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+.xz-pin-label::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-top-color: #fbf6e9;
+}
+@keyframes xz-pin-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(242, 217, 140, 0.6); }
+  100% { box-shadow: 0 0 0 14px rgba(242, 217, 140, 0); }
+}
+/* ปุ่มดูรายการในแถบโซนกระพริบช่วงแรก เพื่อให้เห็นว่าอยู่ตรงนี้ */
+.xz-hud-btn.is-hint {
+  animation: xz-hud-hint 1.2s ease-in-out 4;
+}
+@keyframes xz-hud-hint {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 217, 140, 0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(242, 217, 140, 0); }
+}
+.xz-hud-hint-text {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* ป้ายการ์ดของเราที่อยู่นอกจอ: ลูกศรที่ขอบจอชี้ไปหาการ์ด */
+.xz-pin.is-edge {
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  display: grid;
+  place-items: center;
+  background: rgba(12, 40, 30, 0.8);
+  border-color: #f2d98c;
+  animation: none;
+}
+.xz-pin-arrow {
+  display: inline-block;
+  color: #f2d98c;
+  font-size: 20px;
+  line-height: 1;
+}
+.xz-pin-label-edge {
+  top: calc(100% + 10px);
+  bottom: auto;
+}
+.xz-pin-label-edge::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: #fbf6e9;
+}
+.xz-pin-label-edge.at-left {
+  left: 0;
+  transform: none;
+}
+.xz-pin-label-edge.at-right {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+/* มือถือ: แถบโซนขึ้นบรรทัดใหม่ได้ และซ่อนข้อความแนะนำที่ยาวเกินจอ */
+@media (max-width: 759px) {
+  .xz-hud {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100vw - 32px);
+  }
+  .xz-hud-hint-text {
+    display: none;
+  }
+}

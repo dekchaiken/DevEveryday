@@ -30,6 +30,7 @@ import type { CardRecord, CardSpec, PropKind } from "@/lib/christmas/cardSpec";
 import { CardStudio } from "./CardStudio";
 import { CardReveal, WishZone } from "./WishZone";
 import { GuideSpotlight } from "./GuideSpotlight";
+import { myCardIds, rememberMyCard } from "./myCards";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
 import { GIANT_POSITIONS, SLOT_POSITIONS, ZONE_CAPACITY } from "@/lib/christmas/slots";
@@ -46,6 +47,9 @@ const TreeScene = dynamic(() => import("./TreeScene").then((m) => m.default), {
   ssr: false,
   loading: () => <div className="xmas-loading">กำลังจุดไฟต้นคริสต์มาส…</div>,
 });
+
+// ประตูเปลี่ยนห้อง: โหลดเฉพาะตอนกด ไม่กระทบเวลาเปิดหน้า
+const DoorTransition = dynamic(() => import("./DoorTransition").then((m) => m.default), { ssr: false });
 
 const POLL_MS = 3000;
 const COLOR_LABEL: Record<OrnamentColor, string> = { gold: "ทอง", red: "แดง", blue: "น้ำเงิน", pink: "ชมพู", white: "ขาว", green: "เขียว" };
@@ -143,6 +147,12 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [zoneAll, setZoneAll] = useState<CardRecord[]>([]);
   const [zonePage, setZonePage] = useState(0);
   const [zoneTotal, setZoneTotal] = useState(0);
+  const [doorGo, setDoorGo] = useState(false); // กำลังเล่นประตูเปลี่ยนห้อง
+  const [mineIds, setMineIds] = useState<Set<string>>(() => new Set()); // การ์ดที่เครื่องนี้ส่ง
+  const [zonePins, setZonePins] = useState<{ id: string; x: number; y: number; visible: boolean; angle: number }[]>([]);
+  useEffect(() => {
+    setMineIds(myCardIds());
+  }, []);
   const [zoneBusy, setZoneBusy] = useState(false);
   const [studioEnter, setStudioEnter] = useState(false); // เล่นแอนิเมชันเข้าโต๊ะ
   const [studioMandatory, setStudioMandatory] = useState(false); // ครั้งแรก: ต้องออกแบบการ์ดก่อน
@@ -300,6 +310,26 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   useEffect(() => {
     if (zoneOpen || studioOpen) setSheetOpen(false);
   }, [zoneOpen, studioOpen]);
+  // ป้ายชี้การ์ดในโซนตามตำแหน่งบนจอ อัปเดตระหว่างกล้องบินไปที่โซน
+  useEffect(() => {
+    if (!zoneOpen) {
+      setZonePins([]);
+      return;
+    }
+    let raf = 0;
+    let lastKey = "";
+    const tick = () => {
+      const list = treeRef.current?.zoneSlots() ?? [];
+      const key = list.map((p) => `${Math.round(p.x)},${Math.round(p.y)},${p.visible ? 1 : 0}`).join("|");
+      if (key !== lastKey) {
+        lastKey = key;
+        setZonePins(list);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [zoneOpen, cards]);
   const [exclusiveDraft, setExclusiveDraft] = useState<DecorDraft | null>(null); // ตุ๊กตา Exclusive ที่รอชำระเงิน
   const [shareOf, setShareOf] = useState<Ornament | null>(null); // การ์ดคำอวยพรที่กำลังแชร์
   // คู่มือการใช้งาน: เปิดอัตโนมัติครั้งแรกหลังของขวัญเปิดและตั้งชื่อแล้ว เปิดซ้ำได้จากปุ่ม "?"
@@ -816,7 +846,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
                 <span className="xmas-countdown">{xmasDays > 0 ? ` · อีก ${xmasDays} วันถึงคริสต์มาส` : xmasDays === 0 ? " · สุขสันต์วันคริสต์มาส" : ""}</span>
               )}{" "}
               ·{" "}
-              <a href="/Christmas?pick=1" className="xmas-switch-link" onClick={() => markInternalNav()}>
+              <a href="/Christmas?pick=1" className="xmas-switch-link" onClick={(e) => { e.preventDefault(); markInternalNav(); setDoorGo(true); }}>
                 เปลี่ยนห้อง
               </a>
             </small>
@@ -929,6 +959,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             : []),
         ]}
       />
+
+      {doorGo && <DoorTransition onDone={() => window.location.assign("/Christmas?pick=1")} />}
 
       <GuideSpotlight
         active={guideOn && giftDone && !!profile && !studioOpen && !chooseOpen && !sheetOpen && !zoneOpen && !inviteOpen && !decorOpen && !exclusiveOpen && !supportOpen && !profileEdit && !feedOpen && !rankOpen && !focus && !shareOf && !sharedCard && !exclusiveDraft}
@@ -1138,6 +1170,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setStudioMandatory(false);
             setStudioEnter(false);
             setCards((list) => [card, ...list.filter((c) => c.id !== card.id)]);
+            rememberMyCard(card.id);
+            setMineIds(myCardIds());
             notify("ok", "การ์ดของคุณถูกส่งไปโซนคำอวยพรแล้ว");
             refreshCards();
           }}
@@ -1147,10 +1181,25 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {/* โซนคำอวยพรอยู่บนแผนที่: แถบควบคุมด้านล่างเมื่อกล้องไปที่โซน */}
       {zoneOpen && !zoneList && (
         <div className="xz-hud" role="toolbar" aria-label="โซนคำอวยพร">
-          <span className="xz-hud-count">โซนคำอวยพร · {zoneTotal} ใบ</span>
-          <button type="button" className="xz-hud-btn" onClick={() => setZoneList(true)}>
+          <span className="xz-hud-count">
+            โซนคำอวยพร · {zoneTotal} ใบ
+            <span className="xz-hud-hint-text">{zoneTotal === 0 ? " · ยังไม่มีการ์ดในโซนนี้" : " · แตะป้ายทองบนรั้วเพื่อเปิดการ์ด"}</span>
+          </span>
+          <button type="button" className={`xz-hud-btn ${zoneTotal > 0 ? "is-hint" : ""}`} onClick={() => setZoneList(true)} disabled={zoneTotal === 0}>
             ดูรายการ
           </button>
+          {zonePins.some((p) => mineIds.has(p.id)) && (
+            <button
+              type="button"
+              className="xz-hud-btn"
+              onClick={() => {
+                const mine = zonePins.find((p) => mineIds.has(p.id));
+                if (mine) treeRef.current?.focusZoneCard(mine.id);
+              }}
+            >
+              การ์ดของฉัน
+            </button>
+          )}
           <button
             type="button"
             className="xz-hud-btn is-ghost"
@@ -1162,6 +1211,48 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           >
             กลับมุมเดิม
           </button>
+        </div>
+      )}
+      {zoneOpen && !zoneList && zonePins.length > 0 && (
+        <div className="xz-pins">
+          {zonePins.map((p) => {
+            const mine = mineIds.has(p.id);
+            // การ์ดนอกจอ: แสดงเฉพาะการ์ดของเราเป็นลูกศรที่ขอบจอ แตะแล้วกล้องบินไปหา
+            if (!p.visible) {
+              if (!mine) return null;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className="xz-pin is-mine is-edge"
+                  style={{ left: p.x, top: p.y }}
+                  aria-label="การ์ดของคุณอยู่นอกจอ แตะเพื่อไป"
+                  onClick={() => treeRef.current?.focusZoneCard(p.id)}
+                >
+                  <span className="xz-pin-arrow" style={{ transform: `rotate(${p.angle}deg)` }} aria-hidden>
+                    ➜
+                  </span>
+                  <span className={`xz-pin-label xz-pin-label-edge ${p.x < window.innerWidth / 2 ? "at-left" : "at-right"}`}>การ์ดของคุณ</span>
+                </button>
+              );
+            }
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={`xz-pin ${mine ? "is-mine" : ""}`}
+                style={{ left: p.x, top: p.y }}
+                aria-label={mine ? "การ์ดของคุณ" : "ซองคำอวยพร"}
+                title={mine ? "การ์ดของคุณ" : "ดูคำอวยพร"}
+                onClick={() => {
+                  const c = cards.find((x) => x.id === p.id);
+                  if (c) setZoneReveal(c);
+                }}
+              >
+                {mine && <span className="xz-pin-label">การ์ดของคุณ</span>}
+              </button>
+            );
+          })}
         </div>
       )}
       {zoneOpen && zoneList && (
