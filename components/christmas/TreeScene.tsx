@@ -10,7 +10,7 @@ import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
-import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
+import { DEFAULT_GIANT_LOOK, parseGiantLook, type GiantLook } from "@/lib/christmas/giant";
 import { buildYardScenery, candyStripes, giftBox, miniPine, shade, woodMaterial } from "./zoneScenery";
 import { buildZoneSign, ZONE_SIGN_H } from "./giantSign";
 import { buildDiorama } from "./diorama";
@@ -938,7 +938,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ---------- ตุ๊กตาหิมะยักษ์ของห้อง พร้อมป้ายห้อย ----------
     // ตุ๊กตาหิมะ Exclusive: ฐานกลมลายขนม ของตกแต่งตามที่ผู้ซื้อวางบนตาราง 4×4 ตั้งอยู่กึ่งกลางจุด 2×2
     function buildGiant(g: GiantSpec) {
-      const look = g.look ?? DEFAULT_GIANT_LOOK;
+      // ข้อมูลที่บันทึกไว้ก่อนหน้านี้ถูกตรวจและเติมค่าเริ่มต้นก่อนใช้
+      const look = parseGiantLook(g.look) ?? DEFAULT_GIANT_LOOK;
       const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
       const d = buildDiorama({ look, name: g.name, message: g.message });
       const grp = d.group;
