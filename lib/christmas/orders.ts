@@ -19,7 +19,7 @@ export type Order = {
   name: string;
   message: string;
   theme: MessageTheme; // ธีมการแสดงบนท้องฟ้า (เฉพาะ giant)
-  spot: number; // ตำแหน่งป้ายประจำห้อง 0–3 (เฉพาะ giant)
+  spot: number; // จุดตั้ง Exclusive (เฉพาะ giant): -1 = ระบบจัดให้ตอนชำระเงิน, 0–N = จุดที่ผู้ซื้อเลือก
   social?: Social; // ลิงก์โซเชียลของผู้สนับสนุน
   decor?: DecorPick; // ชิ้นส่วนตุ๊กตา (เฉพาะ decor)
   look?: GiantLook; // ลุคตุ๊กตายักษ์ (เฉพาะ giant)
@@ -75,6 +75,9 @@ export async function markPaid(id: string, providerRef: string, now: number): Pr
   if (paid.kind === "giant") {
     // จองตำแหน่งว่างถัดไปให้ตุ๊กตาตัวนี้ (ไม่แทนที่ตัวที่ซื้อไว้แล้ว)
     const base = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, social: paid.social, look: paid.look };
+    // ถ้าผู้ซื้อเลือกจุดไว้และจุดนั้นยังว่างตอนจ่าย ให้ใช้จุดนั้น
+    if (paid.spot >= 0 && paid.spot < GIANT_CAPACITY && (await claimGiantSpot(paid.room, paid.spot, { ...base, spot: paid.spot }))) return paid;
+    // ไม่งั้นจัดจุดว่างถัดไปให้ (กรณีจุดที่เลือกไว้ถูกจองไปก่อนแล้ว)
     const start = (await listGiants(paid.room)).length;
     for (let k = 0; k < GIANT_CAPACITY; k++) {
       const spot = (start + k) % GIANT_CAPACITY;

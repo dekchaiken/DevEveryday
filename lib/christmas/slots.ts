@@ -1,7 +1,7 @@
 // ตำแหน่งวางบนลานคริสต์มาส: ตุ๊กตาธรรมดาใช้ช่อง 1×1 ตุ๊กตายักษ์ใช้จุด 2×2 (ผังมาจาก layout.ts)
 // ชื่อเดิมยังคงไว้เพื่อให้โค้ดอื่นทำงานต่อได้ ค่าทั้งหมดมาจากผังเดียวกัน
 import { DOLL_CELLS, DOLL_POSITIONS } from "@/lib/christmas/layout";
-export { GIANT_CAPACITY, GIANT_POSITIONS, GIANT_RING_START, GIANT_STEP, ZONE, ZONE_GATE, distToPath, inPath, inZone } from "@/lib/christmas/layout";
+export { GIANT_CAPACITY, GIANT_MODEL_SCALE, GIANT_POSITIONS, GIANT_RING_START, GIANT_STEP, ZONE, ZONE_GATE, distToPath, inPath, inZone } from "@/lib/christmas/layout";
 
 // จำนวนช่องตุ๊กตาหิมะธรรมดาทั้งหมด (ลำดับช่องคงที่ตามผัง)
 export const SLOT_COUNT = DOLL_CELLS.length;

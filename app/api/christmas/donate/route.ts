@@ -67,8 +67,23 @@ export async function POST(req: Request) {
     }
   }
 
-  if (kind === "giant" && (await listGiants(room.id)).length >= GIANT_CAPACITY) {
-    return NextResponse.json({ error: "ตุ๊กตายักษ์ในห้องนี้เต็มพื้นที่แล้ว" }, { status: 409 });
+  // จุดที่ผู้ซื้อเลือกเอง (ไม่ส่งมาก็ได้ ระบบจะจัดให้ตอนชำระเงิน)
+  let chosenSpot = -1;
+  if (kind === "giant") {
+    const taken = await listGiants(room.id);
+    if (taken.length >= GIANT_CAPACITY) {
+      return NextResponse.json({ error: "ตุ๊กตายักษ์ในห้องนี้เต็มพื้นที่แล้ว" }, { status: 409 });
+    }
+    if (body.spot !== undefined && body.spot !== null) {
+      const s = Number(body.spot);
+      if (!Number.isInteger(s) || s < 0 || s >= GIANT_CAPACITY) {
+        return NextResponse.json({ error: "จุดที่เลือกไม่ถูกต้อง" }, { status: 400 });
+      }
+      if (taken.some((g) => g.spot === s)) {
+        return NextResponse.json({ error: "จุดนี้มีคนจองแล้ว เลือกจุดอื่น" }, { status: 409 });
+      }
+      chosenSpot = s;
+    }
   }
   let look: ReturnType<typeof parseGiantLook> = null;
   if (kind === "giant") {
@@ -85,7 +100,7 @@ export async function POST(req: Request) {
     name,
     message,
     social: sanitizeSocial(body.social, (s) => hasBlocked(s, config.blockedWords)),
-    spot: 0, // ตำแหน่งจริงจัดให้ตอนชำระเงิน
+    spot: chosenSpot, // -1 = ระบบจัดให้ตอนชำระเงิน
     theme: MESSAGE_THEMES.includes(body.theme as MessageTheme) ? (body.theme as MessageTheme) : "fireworks",
     mode: config.payMode,
     status: "awaiting_payment",

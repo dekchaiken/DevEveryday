@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
 import { DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
+import { CELL, LAND_R, TREE_CORE_R } from "@/lib/christmas/grid";
+import { GIANT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { DioramaViewer } from "./DioramaViewer";
@@ -119,6 +121,84 @@ function PickRow({ title, options, value, onChange, swatch = false }: { title: s
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+// แผนที่ลานมองจากด้านบน: จุดเขียวว่าง จุดแดงมีคนจองแล้ว จุดทองคือที่ที่คุณเลือก (ไม่เลือกก็ได้ ระบบจัดให้)
+const MAP_PX = 360;
+function SpotMap({ taken, value, onPick }: { taken: Set<number>; value: number | null; onPick: (i: number) => void }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const scale = MAP_PX / (LAND_R * 2 + 4);
+  const toPx = (x: number, z: number) => [MAP_PX / 2 + x * scale, MAP_PX / 2 + z * scale] as const;
+
+  useEffect(() => {
+    const cv = ref.current;
+    const g = cv?.getContext("2d");
+    if (!cv || !g) return;
+    g.clearRect(0, 0, MAP_PX, MAP_PX);
+    // ลาน
+    g.beginPath();
+    g.arc(...toPx(0, 0), LAND_R * scale, 0, Math.PI * 2);
+    g.fillStyle = "#f4f8fc";
+    g.fill();
+    g.strokeStyle = "rgba(40,110,70,0.35)";
+    g.lineWidth = 2;
+    g.stroke();
+    // ทางเดินไปโซนและโซนคำอวยพร
+    const [gx, gz] = toPx(ZONE_GATE.x, ZONE_GATE.z);
+    g.beginPath();
+    g.moveTo(...toPx(0, 0));
+    g.lineTo(gx, gz);
+    g.strokeStyle = "rgba(120,110,100,0.6)";
+    g.lineWidth = 4;
+    g.stroke();
+    const [zx, zz] = toPx(ZONE.x - ZONE.half, ZONE.z - ZONE.half);
+    g.fillStyle = "rgba(20,90,60,0.18)";
+    g.fillRect(zx, zz, ZONE.half * 2 * scale, ZONE.half * 2 * scale);
+    g.fillStyle = "rgba(20,70,50,0.7)";
+    g.font = "600 11px sans-serif";
+    g.textAlign = "center";
+    g.fillText("โซนคำอวยพร", ...toPx(ZONE.x, ZONE.z));
+    // ต้นคริสต์มาส
+    g.beginPath();
+    g.arc(...toPx(0, 0), TREE_CORE_R * scale, 0, Math.PI * 2);
+    g.fillStyle = "#14532d";
+    g.fill();
+    // จุดตั้ง Exclusive: ขนาด 2×2 ช่อง
+    const side = 2 * CELL * scale;
+    GIANT_POSITIONS.forEach((p, i) => {
+      const [px, pz] = toPx(p.x, p.z);
+      g.fillStyle = i === value ? "#facc15" : taken.has(i) ? "#ef4444" : "#22c55e";
+      g.fillRect(px - side / 2, pz - side / 2, side, side);
+    });
+  }, [taken, value, scale]);
+
+  function pick(e: React.MouseEvent<HTMLCanvasElement>) {
+    const cv = ref.current;
+    if (!cv) return;
+    const rect = cv.getBoundingClientRect();
+    const wx = ((e.clientX - rect.left) * MAP_PX) / rect.width;
+    const wz = ((e.clientY - rect.top) * MAP_PX) / rect.height;
+    const x = (wx - MAP_PX / 2) / scale;
+    const z = (wz - MAP_PX / 2) / scale;
+    let best = -1;
+    let bestD = Infinity;
+    GIANT_POSITIONS.forEach((p, i) => {
+      const d = (p.x - x) ** 2 + (p.z - z) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    });
+    if (best < 0 || bestD > (CELL * 1.6) ** 2 || taken.has(best)) return;
+    onPick(best);
+  }
+
+  return (
+    <div className="xmas-spot-map">
+      <canvas ref={ref} width={MAP_PX} height={MAP_PX} onClick={pick} role="img" aria-label="แผนที่ลาน เลือกจุดตั้งบ้านหิมะ" />
+      <p className="xmas-hint">เขียว = ว่าง · แดง = มีคนจองแล้ว · ทอง = ที่คุณเลือก{value === null ? " · ยังไม่ได้เลือก ระบบจะจัดให้ตอนชำระเงิน" : ""}</p>
     </div>
   );
 }
@@ -251,6 +331,8 @@ export default function ExclusiveModal({
   const [theme, setTheme] = useState<MessageTheme>("fireworks");
   const [look, setLook] = useState<GiantLook>(DEFAULT_GIANT_LOOK);
   const [selId, setSelId] = useState<string | null>(null);
+  const [spotPick, setSpotPick] = useState<number | null>(null);
+  const [taken, setTaken] = useState<Set<number>>(new Set());
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -271,6 +353,21 @@ export default function ExclusiveModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [locked, onClose]);
+
+  // โหลดจุดที่มีคนจองแล้วเมื่อเปิดฟอร์มตุ๊กตายักษ์
+  useEffect(() => {
+    if (view !== "giant") return;
+    let alive = true;
+    fetch(`/api/christmas/state?room=${encodeURIComponent(roomId)}`)
+      .then((r) => r.json())
+      .then((d: { giants?: { spot: number }[] }) => {
+        if (alive) setTaken(new Set((d.giants ?? []).map((g) => g.spot)));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [view, roomId]);
 
   function goView(v: View) {
     setStep(0);
@@ -308,7 +405,7 @@ export default function ExclusiveModal({
     e.preventDefault();
     if (!giantChosen) return setError("เลือกหรือกรอกยอดก่อน");
     if (!name.trim()) return setError("กรุณาใส่ชื่อที่จะแสดงบนป้าย");
-    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), look });
+    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), look, spot: spotPick });
   }
 
   function submitMessage(e: FormEvent) {
@@ -441,6 +538,15 @@ export default function ExclusiveModal({
                     />
                   </div>
                 </label>
+                <div className="xmas-sup-field">
+                  <span>ตำแหน่งบนลาน</span>
+                  <SpotMap taken={taken} value={spotPick} onPick={(i) => setSpotPick(i)} />
+                  {spotPick !== null && (
+                    <button type="button" className="xmas-studio-del" onClick={() => setSpotPick(null)}>
+                      ให้ระบบเลือกให้
+                    </button>
+                  )}
+                </div>
               </section>
 
               <section className="xmas-sec" data-step="1" data-on={step === 1}>
