@@ -739,7 +739,15 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
       <PendingOrdersWatch roomId={room.id} notify={notify} />
-      {giantCard && <GiantCard info={giantCard} onClose={() => setGiantCard(null)} />}
+      {giantCard && (
+        <GiantCard
+          info={giantCard}
+          onClose={() => {
+            setGiantCard(null);
+            treeRef.current?.focusGiant(null);
+          }}
+        />
+      )}
 
       {toast && (
         <div key={toast.id} className={`xmas-toast ${toast.kind}`} role="status">
