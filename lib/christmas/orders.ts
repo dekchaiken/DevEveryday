@@ -23,7 +23,8 @@ export type Order = {
   social?: Social; // ลิงก์โซเชียลของผู้สนับสนุน
   decor?: DecorPick; // ชิ้นส่วนตุ๊กตา (เฉพาะ decor)
   look?: GiantLook; // ลุคตุ๊กตายักษ์ (เฉพาะ giant)
-  mode: "manual" | "gateway";
+  mode: "manual" | "gateway" | "paynoi";
+  payAmountSatang?: number; // ยอดที่ต้องโอนเป็นสตางค์ (paynoi) เช่น 10024 = 100.24 บาท
   status: OrderStatus;
   createdAt: number;
   paidAt: number | null;
@@ -170,5 +171,6 @@ export async function removeGiant(room: string, spot: number): Promise<boolean> 
 
 // ข้อมูลที่แสดงให้ผู้ใช้เห็น (ไม่มีข้อมูลสำหรับใช้ภายใน)
 export function toPreview(o: Order): OrderPreview {
-  return { id: o.id, status: o.status, amount: o.amount, mode: o.mode, qrPayload: o.qrPayload, qrImage: o.qrImage };
+  const payAmount = o.payAmountSatang !== undefined ? (o.payAmountSatang / 100).toFixed(2) : undefined;
+  return { id: o.id, status: o.status, amount: o.amount, payAmount, mode: o.mode, qrPayload: o.qrPayload, qrImage: o.qrImage };
 }

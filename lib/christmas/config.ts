@@ -1,7 +1,7 @@
 // การตั้งค่าระบบคริสต์มาส (โหมดชำระเงิน ราคา ฯลฯ) เก็บใน Redis และแก้ได้จากหน้า admin
 import { cmd, storeConfigured } from "@/lib/redis";
 
-export type PayMode = "manual" | "gateway";
+export type PayMode = "manual" | "gateway" | "paynoi";
 
 export type ChristmasConfig = {
   enabled: boolean; // เปิดรับการสนับสนุนหรือไม่
@@ -48,7 +48,7 @@ export async function setConfig(next: ChristmasConfig) {
 
 // ตรวจค่าที่ส่งมาจากหน้า admin ให้อยู่ในช่วงที่ยอมรับได้
 export function validateConfig(input: Record<string, unknown>): { value: ChristmasConfig } | { error: string } {
-  const payMode = input.payMode === "gateway" ? "gateway" : input.payMode === "manual" ? "manual" : null;
+  const payMode = input.payMode === "gateway" ? "gateway" : input.payMode === "paynoi" ? "paynoi" : input.payMode === "manual" ? "manual" : null;
   if (!payMode) return { error: "โหมดชำระเงินไม่ถูกต้อง" };
   const presets = Array.isArray(input.presetPrices) ? input.presetPrices.map(Number) : [];
   if (presets.length < 1 || presets.length > 6 || presets.some((p) => !Number.isInteger(p) || p < 1 || p > 100000)) {

@@ -19,7 +19,7 @@ export async function confirmPayment(orderId: string, providerRef: string) {
   const paid = await markPaid(orderId, providerRef, now);
   if (paid) await writeLog({ type: "paid", room: paid.room, actor: paid.mode, text: `ชำระแล้ว ฿${paid.amount} · ${paid.name} (${paid.kind})` });
   // การชำระอัตโนมัติจาก Omise แจ้งเตือนทันที (การยืนยันด้วยมือแอดมินรู้อยู่แล้วจึงไม่แจ้ง)
-  if (paid && paid.mode === "gateway") await notifyAdmin(`💰 ชำระแล้วผ่าน Omise ฿${paid.amount} · ${paid.name} (${paid.kind}) · ห้อง ${paid.room}`);
+  if (paid && paid.mode !== "manual") await notifyAdmin(`💰 ชำระแล้วผ่าน Omise ฿${paid.amount} · ${paid.name} (${paid.kind}) · ห้อง ${paid.room}`);
   if (paid && paid.kind === "decor" && paid.decor) {
     const placed = await placePaidDecor(paid.room, paid.id, paid.name, paid.social ?? {}, paid.decor);
     await writeLog({
