@@ -6734,3 +6734,32 @@ a.xmas-social-chip:hover {
   font-weight: 700;
   cursor: pointer;
 }
+
+.xmas-pending {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  max-width: calc(100vw - 24px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 252, 244, 0.96);
+  color: #1d2a22;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+}
+.xmas-pending button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(29, 74, 51, 0.3);
+  background: #fff;
+  color: #1d4a33;
+  font-weight: 600;
+  cursor: pointer;
+}

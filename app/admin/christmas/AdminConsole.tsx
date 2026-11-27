@@ -366,6 +366,22 @@ function Orders({ dash, reload, toast }: { dash: Dash; reload: () => void; toast
   }, [dash.orders, status, kind, room, q]);
 
   const confirmable = (o: Order) => o.status === "awaiting_payment" && o.mode === "manual";
+  const checkable = (o: Order) => o.status === "awaiting_payment" && o.mode === "paynoi";
+
+  async function checkPaynoi(ids: string[]) {
+    setWorking(true);
+    let paid = 0;
+    let failed = 0;
+    for (const id of ids) {
+      const res = await fetch(`/api/admin/christmas/orders/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "check_paynoi" }) });
+      const data = (await res.json()) as { status?: string; error?: string };
+      if (!res.ok) failed++;
+      else if (data.status === "paid") paid++;
+    }
+    setWorking(false);
+    toast(failed === 0 ? "ok" : "bad", `ตรวจ paynoi ${ids.length} รายการ · ยืนยันแล้ว ${paid}${failed ? ` · ผิดพลาด ${failed}` : ""}`);
+    reload();
+  }
 
   async function confirmOne(id: string) {
     const res = await fetch(`/api/admin/christmas/orders/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "confirm" }) });
@@ -429,6 +445,14 @@ function Orders({ dash, reload, toast }: { dash: Dash; reload: () => void; toast
           </a>
         </div>
 
+        {dash.orders.some(checkable) && (
+          <div className="adm-bulk">
+            <span>มีรายการ paynoi ที่รอชำระ {dash.orders.filter(checkable).length} รายการ</span>
+            <button type="button" className="adm-btn primary" onClick={() => checkPaynoi(dash.orders.filter(checkable).map((o) => o.id))} disabled={working}>
+              ตรวจทั้งหมดกับ paynoi
+            </button>
+          </div>
+        )}
         {picked.size > 0 && (
           <div className="adm-bulk">
             <span>เลือกแล้ว {picked.size} รายการ</span>
@@ -482,7 +506,18 @@ function Orders({ dash, reload, toast }: { dash: Dash; reload: () => void; toast
                   <td>
                     <span className={`adm-tag ${o.status}`}>{STATUS_TH[o.status] ?? o.status}</span>
                   </td>
-                  <td>{confirmable(o) && <button type="button" className="adm-btn primary sm" onClick={() => confirmOne(o.id)}>ยืนยัน</button>}</td>
+                  <td>
+                    {confirmable(o) && (
+                      <button type="button" className="adm-btn primary sm" onClick={() => confirmOne(o.id)}>
+                        ยืนยัน
+                      </button>
+                    )}
+                    {checkable(o) && (
+                      <button type="button" className="adm-btn sm" onClick={() => checkPaynoi([o.id])} disabled={working}>
+                        ตรวจ paynoi
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
