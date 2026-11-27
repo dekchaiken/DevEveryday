@@ -11,8 +11,9 @@ import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
-import { buildYardScenery, candyStripes, giftBox, miniPine, shade } from "./zoneScenery";
+import { buildYardScenery, candyStripes, giftBox, miniPine, shade, woodMaterial } from "./zoneScenery";
 import { buildGiantFigure, buildZoneSign, ZONE_SIGN_H } from "./giantSign";
+import { buildSleighFlight } from "./sleighFlight";
 
 // ตุ๊กตายักษ์ที่ตั้งป้ายไว้: ชื่อ ข้อความ ตำแหน่ง และลุค (ถ้าไม่มีจะใช้ลุคเริ่มต้น)
 type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook };
@@ -764,6 +765,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // ฉากที่มีการเคลื่อนไหว: ไฟ ควัน ต้นสนเรืองแสง และบ้านของ Exclusive
       sceneryUpdaters.forEach((u) => u(t, reduced));
       giantGroups.forEach(({ grp }) => (grp.userData.update as ((t: number, r: boolean) => void) | undefined)?.(t, reduced));
+      flight.update(now, reduced);
+      if (!reduced && !flight.isActive() && now > nextFlight) {
+        flight.start(now);
+        nextFlight = now + 24000 + Math.random() * 16000;
+      }
       if (!reduced && now - lastZoneBurst > 2600) {
         lastZoneBurst = now;
         zoneFirework();
@@ -1003,35 +1009,60 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const zh = ZONE.half;
     const gx = ZONE_GATE.x;
     const gz = ZONE_GATE.z;
-    const RAIL_Y = [2.0, 1.5, 1.0, 0.5]; // 4 ชั้น ชั้นละ 0.5 หน่วย ให้การ์ดแขวนไม่ทับกัน
-    const POST_H = 2.2;
+    const RAIL_Y = [2.25, 1.7, 1.15, 0.6]; // 4 ชั้น ห่างกัน 0.55 หน่วย ให้ซองแขวนใต้ราวได้โดยไม่ทับราวชั้นล่าง
+    const POST_H = 2.45;
     const zBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
       m.position.set(x, y, z);
       zoneGroup.add(m);
       return m;
     };
+    // ไม้ของรั้วและเสา: ลายไม้จริง หัวเสาเป็นหลังคาปิรามิดมีหิมะเกาะ
+    const fenceWood = woodMaterial();
+    const zSnowMat = new THREE.MeshStandardMaterial({ color: 0xf8fbff, roughness: 0.6 });
+    const fenceIron = new THREE.MeshStandardMaterial({ color: 0x2b2b2b, roughness: 0.5, metalness: 0.6 });
     const zPost = (x: number, z: number, h: number) => {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, h, 8), zWood);
-      post.position.set(x, h / 2, z);
-      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }));
-      cap.position.set(x, h + 0.1, z);
-      zoneGroup.add(post, cap);
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, h, 12), fenceWood);
+      shaft.position.set(x, h / 2, z);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.2, 4), fenceWood);
+      roof.rotation.y = Math.PI / 4;
+      roof.position.set(x, h + 0.1, z);
+      const snowCap = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8), zSnowMat);
+      snowCap.scale.set(1.1, 0.45, 1.1);
+      snowCap.position.set(x, h + 0.22, z);
+      shaft.castShadow = true;
+      roof.castShadow = true;
+      zoneGroup.add(shaft, roof, snowCap);
     };
     // ลานหิมะของโซน
     zBox(zh * 2 + 1.2, 0.05, zh * 2 + 1.2, zStone, zx, 0.03, zz).receiveShadow = true;
     // รั้ว 4 ชั้น: ด้านหน้าเว้นประตูกว้าง 2.4 หน่วยตรงกลาง
-    const rail = (x0: number, x1: number, z0: number, z1: number, y: number) => {
+    // ราวไม้กลมแท่งยาว มีหิมะบาง ๆ เกาะด้านบน
+    const logRail = (x0: number, x1: number, z0: number, z1: number, y: number) => {
       const horizontal = Math.abs(x1 - x0) > Math.abs(z1 - z0);
       const len = horizontal ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
-      zBox(horizontal ? len : 0.12, 0.12, horizontal ? 0.12 : len, zRail, (x0 + x1) / 2, y, (z0 + z1) / 2);
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, len, 12), fenceWood);
+      log.position.set((x0 + x1) / 2, y, (z0 + z1) / 2);
+      if (horizontal) log.rotation.z = Math.PI / 2;
+      else log.rotation.x = Math.PI / 2;
+      const snow = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? len * 0.98 : 0.11, 0.035, horizontal ? 0.11 : len * 0.98), zSnowMat);
+      snow.position.set(log.position.x, y + 0.075, log.position.z);
+      log.castShadow = true;
+      zoneGroup.add(log, snow);
+      // เหล็กรัดรอยต่อที่หัวราวทั้งสองข้าง ให้ดูเป็นงานไม้จริง
+      for (const sgn of [-1, 1]) {
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? 0.05 : 0.2, 0.2, horizontal ? 0.2 : 0.05), fenceIron);
+        const off = len / 2 - 0.18;
+        plate.position.set(log.position.x + (horizontal ? sgn * off : 0), y, log.position.z + (horizontal ? 0 : sgn * off));
+        zoneGroup.add(plate);
+      }
     };
     for (const y of RAIL_Y) {
-      rail(zx - zh, gx - 1.2, gz, gz, y);
-      rail(gx + 1.2, zx + zh, gz, gz, y);
-      rail(zx - zh, zx + zh, zz - zh, zz - zh, y);
-      rail(zx - zh, zx - zh, zz - zh, zz + zh, y);
-      rail(zx + zh, zx + zh, zz - zh, zz + zh, y);
+      logRail(zx - zh, gx - 1.2, gz, gz, y);
+      logRail(gx + 1.2, zx + zh, gz, gz, y);
+      logRail(zx - zh, zx + zh, zz - zh, zz - zh, y);
+      logRail(zx - zh, zx - zh, zz - zh, zz + zh, y);
+      logRail(zx + zh, zx + zh, zz - zh, zz + zh, y);
     }
     // เสาทุก 4 หน่วย ด้านหน้าไม่มีเสาตรงประตู
     [-zh, -zh / 2, 0, zh / 2, zh].forEach((t) => {
@@ -1046,6 +1077,29 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     zPost(zx + zh, gz, POST_H);
     zPost(gx - 1.2, gz, POST_H);
     zPost(gx + 1.2, gz, POST_H);
+    // กองหิมะเล็ก ๆ เกาะตามแนวรั้วด้านนอก ให้ดูเป็นฉากจริง
+    const fenceMoundGeo = new THREE.SphereGeometry(0.42, 14, 10);
+    const fenceMoundMat = new THREE.MeshStandardMaterial({ color: 0xf6fafe, roughness: 0.9 });
+    const fenceEdges: [number, number, number, number][] = [
+      [zx - zh, zz - zh, zx - zh, zz + zh],
+      [zx + zh, zz - zh, zx + zh, zz + zh],
+      [zx - zh, zz - zh, zx + zh, zz - zh],
+      [zx - zh, gz, gx - 1.2, gz],
+      [gx + 1.2, gz, zx + zh, gz],
+    ];
+    for (const [ax, az, bx, bz] of fenceEdges) {
+      const len = Math.hypot(bx - ax, bz - az);
+      for (let d = 0.9; d < len - 0.5; d += 2.1 + ((d * 7) % 0.9)) {
+        const px = ax + ((bx - ax) * d) / len;
+        const pz = az + ((bz - az) * d) / len;
+        const out = Math.abs(bx - ax) > Math.abs(bz - az) ? (az < zz ? -1 : 1) * 0.34 : (ax < zx ? -1 : 1) * 0.34;
+        const m = new THREE.Mesh(fenceMoundGeo, fenceMoundMat);
+        m.position.set(px + (Math.abs(bx - ax) > Math.abs(bz - az) ? 0 : out), 0.06, pz + (Math.abs(bx - ax) > Math.abs(bz - az) ? out : 0));
+        m.scale.set(1.2 + (d % 0.6), 0.3, 0.9);
+        m.receiveShadow = true;
+        zoneGroup.add(m);
+      }
+    }
     // ซุ้มประตูลายไม้เท้าขนม มีพวงมาลัย ลูกประดับ สายไฟ และโบว์แดง
     // ป้ายชื่อโซนแขวนด้วยโซ่จากเสาสองข้างประตู
     const ARCH_R = 1.2;
@@ -1223,20 +1277,34 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     for (let t = -zh + 0.8; t <= zh - 0.8 + 0.001; t += step) sideTs.push(Math.round(t * 100) / 100);
     for (const y of RAIL_Y) {
       sideTs.forEach((t) => {
-        if (Math.abs(zx + t - gx) > 1.8) ZONE_SLOTS.push({ x: zx + t, z: gz + 0.09, ry: 0, y: y - 0.3 });
+        if (Math.abs(zx + t - gx) > 1.8) ZONE_SLOTS.push({ x: zx + t, z: gz + 0.1, ry: 0, y });
       });
     }
     for (const y of RAIL_Y) {
       sideTs.forEach((t) => {
-        ZONE_SLOTS.push({ x: zx - zh - 0.09, z: zz + t, ry: -Math.PI / 2, y: y - 0.3 });
-        ZONE_SLOTS.push({ x: zx + zh + 0.09, z: zz + t, ry: Math.PI / 2, y: y - 0.3 });
+        ZONE_SLOTS.push({ x: zx - zh - 0.1, z: zz + t, ry: -Math.PI / 2, y });
+        ZONE_SLOTS.push({ x: zx + zh + 0.1, z: zz + t, ry: Math.PI / 2, y });
       });
     }
     for (const y of RAIL_Y) {
       sideTs.forEach((t) => {
-        ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.09, ry: Math.PI, y: y - 0.3 });
+        ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.1, ry: Math.PI, y });
       });
     }
+    const zHookGeo = new THREE.TorusGeometry(0.085, 0.01, 6, 18);
+    const zHookMat = new THREE.MeshStandardMaterial({ color: 0xd9b45a, roughness: 0.3, metalness: 0.8 });
+    // โซ่สั้นจากตะขอลงไปยังมุมบนของซอง
+    const chainA = new THREE.Vector3(0, -0.085, 0);
+    const chainB = new THREE.Vector3(0, -0.135, 0.1);
+    const chainGeo = new THREE.CylinderGeometry(0.006, 0.006, chainA.distanceTo(chainB), 6);
+    const chainQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), chainB.clone().sub(chainA).normalize());
+    const chainPos = chainA.clone().add(chainB).multiplyScalar(0.5);
+    const chainMesh = () => {
+      const m = new THREE.Mesh(chainGeo, zHookMat);
+      m.position.copy(chainPos);
+      m.quaternion.copy(chainQuat);
+      return m;
+    };
     function api_setZoneCards(list: CardRecord[]) {
       while (zoneCardGroup.children.length) {
         const c = zoneCardGroup.children.pop()!;
@@ -1252,22 +1320,19 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       shown.forEach((c, i) => {
         const slot = ZONE_SLOTS[i];
         const pivot = new THREE.Group();
-        pivot.position.set(slot.x, RAIL_Y[0], slot.z);
-        pivot.position.y = slot.y + 0.3;
+        pivot.position.set(slot.x, slot.y, slot.z);
         pivot.rotation.y = slot.ry;
-        const string = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.2, 6), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
-        string.position.set(0, 0.1 - 0.02, 0);
+        // ตะขอทองคล้องรอบราว โซ่สั้นลงมาถึงซองที่แขวนอยู่หน้ารั้ว
+        const hook = new THREE.Mesh(zHookGeo, zHookMat);
+        hook.rotation.y = Math.PI / 2;
         const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.52), new THREE.MeshBasicMaterial({ map: haloTex, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
-        halo.position.set(0, -0.3, -0.02);
-        const card = new THREE.Mesh(
-          new THREE.PlaneGeometry(0.5, 0.32),
-          new THREE.MeshStandardMaterial({ map: envelopeTexture(c.envelope, c.name), roughness: 0.6, side: THREE.DoubleSide }),
-        );
-        card.position.set(0, -0.3, 0.01);
+        halo.position.set(0, -0.27, 0.06);
+        const card = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.27), new THREE.MeshStandardMaterial({ map: envelopeTexture(c.envelope, c.name), roughness: 0.6, side: THREE.DoubleSide }));
+        card.position.set(0, -0.27, 0.1);
         card.userData.cardId = c.id;
         pivot.userData.phase = i * 0.7;
         pivot.userData.halo = halo;
-        pivot.add(string, halo, card);
+        pivot.add(hook, chainMesh(), halo, card);
         zoneCardGroup.add(pivot);
       });
     }
@@ -1278,6 +1343,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const sceneryUpdaters: ((t: number, reduced: boolean) => void)[] = [yard.update];
     // พลุในโซนเป็นจังหวะเบา ๆ เหนือลาน (ปิดเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว)
     let lastZoneBurst = 0;
+    // ซานตากับกวางเรนเดียร์บินข้ามท้องฟ้าเป็นช่วง ๆ (ไม่แสดงเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว)
+    const flight = buildSleighFlight();
+    scene.add(flight.group);
+    let nextFlight = performance.now() + 6000;
     const ZONE_FIREWORK_HEX = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
     function zoneFirework() {
       const origin = new THREE.Vector3(zx + (Math.random() - 0.5) * 9, 4.0 + Math.random() * 0.8, zz + (Math.random() - 0.5) * 8);
