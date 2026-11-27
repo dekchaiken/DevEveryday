@@ -1,74 +1,44 @@
 "use client";
 
-// การ์ดบ้านหิมะ Exclusive: โครงเดียวกับการ์ดตุ๊กตาหิมะที่ตกแต่งเอง (โทนครีมกระจก) เพิ่มขอบฟอยล์และกรอบทอง
-// ดูบ้าน 3 มิติได้ หมุนได้ด้วยการลากหรือปุ่มหมุน ป้ายและข้อความอยู่ในแบนเนอร์ด้านบน
-import { useRef } from "react";
-import { DioramaViewer } from "./DioramaViewer";
-import { Icon } from "./Icon";
+// ป้ายประจำบ้านด้านบนกลางจอ: แสดงเฉพาะเมื่อผู้ใช้กด "ดูป้าย" จากคำอธิบายข้างบ้าน
+// ไม่มีโมเดล 3 มิติในการ์ด เพื่อไม่ให้บังบ้านที่อยากดูอยู่
 import { SocialLinks } from "./ProfileCard";
 import type { Social } from "@/lib/christmas/social";
-import { BASE_HEX, type GiantLook } from "@/lib/christmas/giant";
+import type { GiantLook } from "@/lib/christmas/giant";
 
 export type GiantInfo = { name: string; message: string; spot: number; social?: Social; look?: GiantLook };
 
-// สีป้ายที่เจ้าของเลือกตอนตกแต่ง (ตรงกับตัวเลือกในฟอร์ม) ใช้กับแบนเนอร์และการ์ด
+// สีป้ายที่เจ้าของเลือกตอนตกแต่ง (ตรงกับตัวเลือกในฟอร์ม)
 export function boardOf(info: GiantInfo): string {
   const b = info.look?.board;
   return b === "ivory" || b === "berry" || b === "gold" ? b : "spruce";
 }
 
-// สีลายของฐาน (ใช้เป็นสีแถบและสีพื้นหลังของพรีวิว)
+// สีลายของฐาน (ใช้เป็นแถบสีที่ขอบล่างของป้าย)
 export function baseColorOf(info: GiantInfo): string {
   const key = info.look?.base ?? "pink";
-  const hex = (BASE_HEX[key] ?? BASE_HEX.pink).a;
-  return `#${hex.toString(16).padStart(6, "0")}`;
+  const colors: Record<string, string> = { pink: "#f9a8c4", mint: "#86e0b8", red: "#e0465a", blue: "#8ec5ff" };
+  return colors[key] ?? colors.pink;
 }
 
-export function GiantCard({ info, onClose }: { info: GiantInfo; onClose: () => void }) {
-  const turnRef = useRef<((rad: number) => void) | null>(null);
-  const look: GiantLook = info.look ?? { base: "pink", items: [], board: "spruce" };
-  const base = baseColorOf(info);
+export function GiantBanner({ info, onClose }: { info: GiantInfo; onClose: () => void }) {
   return (
-    <div className={`xmas-focus glass xmas-decor-card xmas-giant-card board-${boardOf(info)}`} style={{ ["--base" as string]: base }} role="dialog" aria-label={`บ้านของ ${info.name}`}>
-      <button className="xmas-x" onClick={onClose} aria-label="ปิด">
-        <Icon name="close" size={18} />
+    <div
+      className={`xmas-giant-banner board-${boardOf(info)}`}
+      style={{ ["--base" as string]: baseColorOf(info) }}
+      role="dialog"
+      aria-label={`ป้ายประจำบ้านของ ${info.name}`}
+    >
+      <button type="button" className="xmas-giant-banner-x" onClick={onClose} aria-label="ปิดป้าย">
+        ×
       </button>
-      <span className="xmas-giant-badge">EXCLUSIVE · จุดที่ {info.spot + 1}</span>
-      <div className="xmas-giant-art">
-        <DioramaViewer
-          look={look}
-          name={info.name}
-          message={info.message}
-          selectedId={null}
-          onSelect={() => {}}
-          onMove={() => {}}
-          readOnly
-          turnRef={turnRef}
-        />
-      </div>
-      <div className="xmas-giant-turn">
-        <button type="button" onClick={() => turnRef.current?.(-Math.PI / 4)}>
-          หมุนซ้าย
-        </button>
-        <button type="button" onClick={() => turnRef.current?.(Math.PI / 4)}>
-          หมุนขวา
-        </button>
-      </div>
-      <b className="xmas-decor-card-name xmas-giant-name">{info.name}</b>
+      <span className="xmas-giant-banner-kicker">ป้ายประจำบ้าน · จุดที่ {info.spot + 1}</span>
+      <b className="xmas-giant-banner-name">{info.name}</b>
+      <p>{info.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส"}</p>
       <SocialLinks social={info.social} />
       <button type="button" className="xmas-giant-close" onClick={onClose}>
         กลับมุมหลัก
       </button>
-    </div>
-  );
-}
-
-// แบนเนอร์ป้ายประจำบ้านด้านบนกลางจอ: ข้อความบนป้ายและชื่อเจ้าของ กรอบฟอยล์ทอง
-export function GiantBanner({ info }: { info: GiantInfo }) {
-  return (
-    <div className={`xmas-giant-banner board-${boardOf(info)}`} style={{ ["--base" as string]: baseColorOf(info) }} role="status" aria-label="ป้ายประจำบ้าน">
-      <span className="xmas-giant-banner-kicker">ป้ายประจำบ้าน · {info.name}</span>
-      <p>{info.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส"}</p>
     </div>
   );
 }
