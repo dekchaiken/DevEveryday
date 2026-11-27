@@ -231,7 +231,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // พื้นหิมะ: ผิวเป็นลอนกองหิมะเบา ๆ รอบนอก โคนต้นเรียบ และมีเม็ดหิมะจากเท็กซ์เจอร์
     // พื้นหิมะครอบคลุมลานทั้งหมด (ขนาดตามรัศมีลาน) ส่วนขอบจะถูกหมอกบัง
     const groundSize = LAND_R * 2 + 8;
-    const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 160, 160);
+    // ลานเป็นวงกลม (ไม่ใช่สี่เหลี่ยม) เพื่อไม่ให้มุมลอยเห็นทะลุ และมีขอบดินหนาอยู่ด้านล่างด้วย
+    const groundRadius = groundSize / 2 + 4;
+    const groundGeo = new THREE.CircleGeometry(groundRadius, 160);
     groundGeo.rotateX(-Math.PI / 2);
     const gp = groundGeo.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < gp.count; i++) {
@@ -252,6 +254,15 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     ground.receiveShadow = true;
     ground.position.y = -0.02;
     scene.add(ground);
+    // ขอบดินหนาใต้ลาน: เวลามองจากมุมต่ำจะเห็นเป็นชั้นดินหิมะ ไม่ทะลุเป็นช่องว่าง
+    const soil = new THREE.MeshStandardMaterial({ color: 0x23423a, roughness: 1, side: THREE.DoubleSide });
+    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(groundRadius, groundRadius * 0.92, 4.2, 160, 1, true), soil);
+    skirt.position.y = -2.1;
+    scene.add(skirt);
+    const underside = new THREE.Mesh(new THREE.CircleGeometry(groundRadius * 0.92, 160), new THREE.MeshBasicMaterial({ color: 0x0c251d }));
+    underside.rotation.x = Math.PI / 2;
+    underside.position.y = -4.2;
+    scene.add(underside);
 
     // ---------- ลำต้น ----------
     const trunk = new THREE.Mesh(
