@@ -5,11 +5,25 @@ import "./wishcards.css";
 
 export type SpotStep = { target: string; title: string; body: string };
 
+type Box = { top: number; bottom: number; left: number; right: number };
+
+// กรอบไฮไลท์: ต้นคริสต์มาสคือฉาก 3 มิติทั้งจอ จึงไฮไลท์เฉพาะคอลัมน์กลางที่มีต้นไม้ยืนอยู่
+function highlightOf(el: HTMLElement, target: string): Box {
+  const r = el.getBoundingClientRect();
+  if (target !== "[data-tree-scene]") return { top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+  return {
+    left: r.left + r.width * 0.3,
+    right: r.left + r.width * 0.7,
+    top: r.top + r.height * 0.08,
+    bottom: r.top + r.height * 0.9,
+  };
+}
+
 // คำแนะนำครั้งแรก: ทำให้ทั้งหน้าจอเป็นสีเทาดำ เหลือแค่ปุ่มที่กำลังสอนให้สว่าง
 // กดได้เฉพาะปุ่มที่ไฮไลท์ และเมื่อกดแล้วจึงไปขั้นถัดไป
 export function CoachSpotlight({ steps, active, onDone }: { steps: readonly SpotStep[]; active: boolean; onDone: () => void }) {
   const [i, setI] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
+  const [rect, setRect] = useState<Box | null>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
 
@@ -29,7 +43,7 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
         else setI((n) => n + 1);
         return;
       }
-      setRect(el.getBoundingClientRect());
+      setRect(highlightOf(el, steps[i].target));
     };
     measure();
     window.addEventListener("resize", measure);
@@ -77,16 +91,8 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
   const tipW = Math.min(vw * 0.86, 300);
   const tipLeft = Math.max(12, Math.min(vw - tipW - 12, (l + r) / 2 - tipW / 2));
-  // เป้าที่คลุมทั้งจอ (ขั้นต้นไม้) ไม่มีกรอบให้ไฮไลท์ และป้ายต้องไม่หลุดออกนอกจอ
-  const fullScreen = t <= 0 && b >= vh;
-  // วางป้ายเหนือเป้าถ้ามีที่ ไม่งั้นวางใต้เป้า ถ้าเป้าคลุมทั้งจอให้ลอยเหนือแถบปุ่มล่าง
-  const tipPos: CSSProperties = fullScreen
-    ? { bottom: 110 }
-    : t >= 170
-      ? { bottom: vh - t + 14 }
-      : b <= vh - 170
-        ? { top: b + 14 }
-        : { bottom: 110 };
+  // วางป้ายเหนือเป้าถ้ามีที่ ไม่งั้นวางใต้เป้า ถ้าไม่มีที่ทั้งสองด้านให้ลอยเหนือแถบปุ่มล่าง
+  const tipPos: CSSProperties = t >= 170 ? { bottom: vh - t + 14 } : b <= vh - 170 ? { top: b + 14 } : { bottom: 110 };
 
   return (
     <div className="xc-spot" aria-live="polite">
@@ -94,7 +100,7 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
       <div className="xc-spot-block" style={{ top: b, left: 0, right: 0, bottom: 0 }} />
       <div className="xc-spot-block" style={{ top: t, left: 0, width: Math.max(0, l), height: b - t }} />
       <div className="xc-spot-block" style={{ top: t, left: r, right: 0, height: b - t }} />
-      {!fullScreen && <div className="xc-spot-ring" style={{ top: t, left: l, width: r - l, height: b - t }} />}
+      <div className="xc-spot-ring" style={{ top: t, left: l, width: r - l, height: b - t }} />
       <div key={i} className="xc-spot-tip" style={{ left: tipLeft, width: tipW, ...tipPos }}>
         <span className="xc-kicker">
           ขั้นที่ {i + 1} จาก {steps.length}
