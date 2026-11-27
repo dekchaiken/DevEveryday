@@ -61,6 +61,21 @@ export async function pageCards(room: string, page: number, size: number): Promi
   return { items, total };
 }
 
+// ลบการ์ดหนึ่งใบ (แอดมินใช้ตอนเนื้อหาไม่เหมาะสม) คืนการ์ดที่ถูกลบ หรือ null ถ้าไม่พบ
+export async function removeCard(room: string, id: string): Promise<StoredCard | null> {
+  const card = await findCard(room, id);
+  if (!card) return null;
+  if (!storeConfigured()) {
+    mem.get(room)?.delete(id);
+    return card;
+  }
+  await txn([
+    ["HDEL", K(room), id],
+    ["ZREM", IDX(room), id],
+  ]);
+  return card;
+}
+
 export async function findCard(room: string, id: string): Promise<StoredCard | null> {
   if (!storeConfigured()) return mem.get(room)?.get(id) ?? null;
   const raw = await cmd<string | null>("HGET", K(room), id);

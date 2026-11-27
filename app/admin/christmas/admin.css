@@ -1,188 +1,204 @@
-/* หน้าหลังบ้านคริสต์มาส: ธีมเข้มอ่านง่าย รองรับจอเล็ก */
+/* หลังบ้านคริสต์มาส: ธีมเข้มเรียบ (minimal) เมนูด้านข้างแบ่งหมวด รองรับจอเล็ก */
 .adm {
-  --bg: #0b1620;
-  --panel: #12222e;
-  --line: rgba(186, 230, 253, 0.14);
-  --ink: #e6f3fb;
-  --muted: #8aa3b4;
-  --gold: #f5c542;
-  --ok: #34d399;
-  --bad: #f87171;
+  --bg: #0c1110;
+  --side: #0f1614;
+  --card: #141c19;
+  --card-2: #18231f;
+  --line: rgba(220, 245, 230, 0.08);
+  --line-2: rgba(220, 245, 230, 0.14);
+  --ink: #e8f2ec;
+  --muted: #8a9a91;
+  --gold: #e7c170;
+  --ok: #4fd1a0;
+  --warn: #f2b84b;
+  --bad: #f2726a;
+  --radius: 14px;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
   min-height: 100dvh;
-  padding: 20px clamp(12px, 3vw, 32px) 48px;
-  background: radial-gradient(900px 400px at 20% -10%, rgba(245, 197, 66, 0.08), transparent 60%), var(--bg);
+  background: var(--bg);
   color: var(--ink);
   font-size: 14px;
+  line-height: 1.5;
 }
-.adm * {
+.adm *,
+.adm *::before,
+.adm *::after {
   box-sizing: border-box;
 }
-.adm-head {
+.adm button,
+.adm input,
+.adm select,
+.adm textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* เมนูด้านข้าง */
+.adm-side {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 14px;
+  background: var(--side);
+  border-right: 1px solid var(--line);
+}
+.adm-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+}
+.adm-brand b {
+  display: block;
+  font-size: 15px;
+}
+.adm-brand small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.adm-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 4px rgba(231, 193, 112, 0.15);
+}
+.adm-nav {
+  display: grid;
+  gap: 2px;
+}
+.adm-nav button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+}
+.adm-nav button:hover {
+  color: var(--ink);
+  background: var(--card);
+}
+.adm-nav button.is-on {
+  color: var(--ink);
+  background: var(--card-2);
+  box-shadow: inset 2px 0 0 var(--gold);
+}
+.adm-badge {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #1b1408;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+.adm-logout {
+  margin-top: auto;
+  padding: 9px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.adm-logout:hover {
+  color: var(--ink);
+}
+
+/* พื้นที่หลัก */
+.adm-main {
+  min-width: 0;
+  padding: 24px clamp(14px, 3vw, 36px) 56px;
+}
+.adm-top {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
-.adm-head h1 {
-  margin: 0;
-  font-size: clamp(20px, 3vw, 26px);
+.adm-top h1 {
+  margin: 2px 0 0;
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 .adm-kicker {
   margin: 0;
-  color: var(--gold);
+  color: var(--muted);
   font-size: 12px;
-  letter-spacing: 0.08em;
 }
-.adm-head-right {
+.adm-status {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
   align-items: center;
 }
-.adm-live {
-  color: var(--ok);
-  font-size: 12px;
-}
-.adm-live.is-off {
-  color: var(--bad);
-}
-.adm-link {
+.adm-busy {
   color: var(--gold);
-  text-decoration: underline;
-}
-.adm-tabs,
-.adm-seg {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-.adm-tabs button,
-.adm-seg button {
-  flex: 0 0 auto;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  cursor: pointer;
-}
-.adm-tabs button.is-on,
-.adm-seg button.is-on {
-  color: #1d1302;
-  background: var(--gold);
-  border-color: var(--gold);
-  font-weight: 600;
-}
-.adm-note {
-  margin: 12px 0;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-}
-.adm-note.ok {
-  border-color: rgba(52, 211, 153, 0.5);
-  color: var(--ok);
-}
-.adm-note.err {
-  border-color: rgba(248, 113, 113, 0.5);
-  color: var(--bad);
-}
-.adm-card {
-  margin-top: 14px;
-  padding: 16px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-}
-.adm-card h2 {
-  margin: 0 0 10px;
-  font-size: 16px;
-}
-.adm-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-top: 14px;
-}
-.adm-stat {
-  display: grid;
-  gap: 4px;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-}
-.adm-stat small {
-  color: var(--muted);
-}
-.adm-stat b {
-  font-size: 22px;
-}
-.adm-stat em {
-  font-style: normal;
-  color: var(--muted);
   font-size: 12px;
 }
-.adm-toolbar {
+.adm-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+.adm-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+.adm-pill.ok::before {
+  background: var(--ok);
+}
+.adm-pill.ok {
+  color: var(--ink);
+}
+
+/* การ์ดแต่ละหมวด */
+.adm-card {
+  margin-bottom: 16px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.adm-card-head {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
-.adm-toolbar h2 {
-  margin: 0 auto 0 0;
-}
-.adm input,
-.adm select,
-.adm textarea {
-  min-height: 38px;
-  padding: 0 10px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #0b1a24;
-  color: var(--ink);
-  font: inherit;
-}
-.adm-search {
-  flex: 1 1 200px;
-  min-width: 0;
-}
-.adm-btn {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--ink);
-  font: inherit;
-  cursor: pointer;
-}
-.adm-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.adm-btn.primary {
-  background: var(--gold);
-  color: #1d1302;
-  border-color: var(--gold);
-  font-weight: 600;
-}
-.adm-btn.danger {
-  border-color: rgba(248, 113, 113, 0.5);
-  color: #fecaca;
-}
-.adm-btn.small {
-  min-height: 30px;
-  padding: 0 10px;
-  font-size: 12px;
+.adm-card h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
 }
 .adm-hint {
-  margin: 4px 0 10px;
+  margin: 0 0 10px;
   color: var(--muted);
   font-size: 13px;
 }
@@ -190,187 +206,441 @@
   color: var(--muted);
 }
 .adm-empty {
-  padding: 24px;
+  margin: 12px 0;
+  color: var(--muted);
   text-align: center;
-  color: var(--muted);
 }
-.adm-table-wrap {
-  overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-}
-.adm-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 560px;
-}
-.adm-table th,
-.adm-table td {
-  padding: 10px 12px;
-  text-align: left;
-  border-bottom: 1px solid var(--line);
-  vertical-align: top;
-}
-.adm-table th {
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 12px;
-  background: rgba(0, 0, 0, 0.2);
-}
-.adm-table td small {
-  color: var(--muted);
-}
-.adm-table code {
-  font-size: 12px;
-}
-.adm-bar {
-  height: 6px;
-  width: 120px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-.adm-bar span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #38bdf8, var(--gold));
-}
-.adm-status,
-.adm-tag {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 12px;
-  border: 1px solid var(--line);
-}
-.adm-status.paid,
-.adm-tag.t-paid {
+.adm-ok {
   color: var(--ok);
-  border-color: rgba(52, 211, 153, 0.5);
 }
-.adm-status.awaiting_payment {
-  color: var(--gold);
-  border-color: rgba(245, 197, 66, 0.5);
-}
-.adm-status.cancelled {
+.adm-bad {
   color: var(--bad);
 }
-.adm-tag.t-moderation,
-.adm-tag.t-blocked {
-  color: #fecaca;
-  border-color: rgba(248, 113, 113, 0.5);
+.adm-block {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
 }
-.adm-tag.t-config,
-.adm-tag.t-event {
-  color: #bae6fd;
+.adm-block-cell {
+  max-width: 340px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
-.adm-pills {
+.adm-nowrap {
+  white-space: nowrap;
+}
+
+/* ตัวเลขสรุป */
+.adm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.adm-stat {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.adm-stat small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.adm-stat b {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.adm-stat span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.adm-stat.gold b {
+  color: var(--gold);
+}
+.adm-stat.warn b {
+  color: var(--warn);
+}
+
+/* รายการแนวตั้ง */
+.adm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.adm-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.adm-list li:first-child {
+  border-top: 0;
+}
+.adm-list small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ปุ่มและช่องกรอก */
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.adm-btn:hover {
+  border-color: rgba(220, 245, 230, 0.28);
+}
+.adm-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.adm-btn.sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.adm-btn.primary {
+  background: var(--gold);
+  border-color: transparent;
+  color: #1b1408;
+  font-weight: 650;
+}
+.adm-btn.danger {
+  border-color: rgba(242, 114, 106, 0.4);
+  color: var(--bad);
+  background: transparent;
+}
+.adm-link {
+  border: 0;
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 13px;
+}
+.adm input[type="text"],
+.adm input:not([type]),
+.adm input[type="number"],
+.adm input[type="date"],
+.adm select,
+.adm textarea {
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line-2);
+  background: var(--card-2);
+}
+.adm input:focus,
+.adm select:focus,
+.adm textarea:focus,
+.adm button:focus-visible {
+  outline: 2px solid rgba(231, 193, 112, 0.6);
+  outline-offset: 1px;
+}
+.adm input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+}
+
+/* แถบเครื่องมือ: ค้นหา กรอง และเลือกหลายรายการ */
+.adm-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 10px 0;
-}
-.adm-pill {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
+  margin-bottom: 12px;
+}
+.adm-toolbar input {
+  flex: 1 1 200px;
+}
+.adm-toolbar select {
+  flex: 0 1 auto;
+}
+.adm-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(231, 193, 112, 0.08);
+  border: 1px solid rgba(231, 193, 112, 0.25);
+}
+.adm-seg {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--card-2);
   border: 1px solid var(--line);
-  font-size: 13px;
+  flex-wrap: wrap;
 }
-.adm-pill i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--bad);
-}
-.adm-pill.ok i {
-  background: var(--ok);
-}
-.adm-pill.warn small {
+.adm-seg button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--muted);
+  cursor: pointer;
+}
+.adm-seg button.is-on {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 0 var(--line-2);
 }
 .adm-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
-.adm-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 6px 4px 12px;
+.adm-chips button {
+  padding: 5px 11px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
-}
-.adm-chip button {
-  border: 0;
+  border: 1px solid var(--line-2);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 16px;
+  font-size: 13px;
 }
-.adm-row {
+.adm-chips button.is-on {
+  background: var(--gold);
+  border-color: transparent;
+  color: #1b1408;
+}
+.adm-chips .chip-x:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+.adm-pager {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  color: var(--muted);
+  font-size: 13px;
 }
-.adm-row input {
-  flex: 1 1 240px;
-}
-.adm-form {
-  display: grid;
-  gap: 12px;
-  max-width: 560px;
-}
-.adm-form label {
-  display: grid;
+.adm-date {
+  display: inline-flex;
   gap: 6px;
-}
-.adm-form .adm-check {
-  display: flex;
   align-items: center;
-  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
 }
-.adm-form .adm-row label {
-  flex: 1 1 160px;
-}
-.adm-steps {
-  margin: 8px 0;
-  padding-left: 20px;
-  display: grid;
-  gap: 6px;
-  color: var(--ink);
-}
-.adm-steps code {
-  font-size: 12px;
-  color: var(--gold);
-}
-@media (max-width: 759px) {
-  .adm {
-    font-size: 13px;
-  }
-  .adm-table {
-    min-width: 480px;
-  }
-}
-
 .adm-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 8px 0 12px;
+  margin-bottom: 12px;
 }
-.adm-filters select,
 .adm-filters input {
-  min-width: 0;
   flex: 1 1 180px;
-  padding: 8px 10px;
+}
+
+/* ตาราง */
+.adm-table-wrap {
+  overflow-x: auto;
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  font: inherit;
+  border: 1px solid var(--line);
+}
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+.adm-table th,
+.adm-table td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+.adm-table th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--card-2);
+}
+.adm-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.adm-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.adm-table small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.adm-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--card-2);
+  overflow: hidden;
+  min-width: 90px;
+}
+.adm-bar span {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
+.adm-tag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--card-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.adm-tag.awaiting_payment {
+  color: var(--warn);
+  border-color: rgba(242, 184, 75, 0.35);
+}
+.adm-tag.paid {
+  color: var(--ok);
+  border-color: rgba(79, 209, 160, 0.35);
+}
+.adm-tag.cancelled {
+  color: var(--bad);
+}
+.adm-tag.log-moderation,
+.adm-tag.log-blocked {
+  color: var(--bad);
+}
+.adm-tag.log-paid,
+.adm-tag.log-order {
+  color: var(--gold);
+}
+
+/* ฟอร์มตั้งค่า */
+.adm-form {
+  display: grid;
+  gap: 14px;
+  max-width: 640px;
+}
+.adm-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.adm-form label.adm-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+.adm-form input:not([type="checkbox"]),
+.adm-form select {
+  width: 100%;
+}
+.adm-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.adm-conn {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.adm-conn small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* กล่องแจ้งเตือนมุมจอ */
+.adm-toasts {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  gap: 8px;
+  z-index: 50;
+  max-width: min(380px, calc(100vw - 36px));
+}
+.adm-toast {
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: var(--card-2);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  animation: adm-in 0.2s ease-out;
+}
+.adm-toast.gold {
+  border-color: rgba(231, 193, 112, 0.5);
+}
+.adm-toast.ok {
+  border-color: rgba(79, 209, 160, 0.5);
+}
+.adm-toast.bad {
+  border-color: rgba(242, 114, 106, 0.6);
+}
+@keyframes adm-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* จอเล็ก: เมนูกลายเป็นแถบเลื่อนแนวนอนด้านบน */
+@media (max-width: 860px) {
+  .adm {
+    grid-template-columns: 1fr;
+  }
+  .adm-side {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    overflow-x: auto;
+  }
+  .adm-brand {
+    flex: 0 0 auto;
+  }
+  .adm-nav {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .adm-nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .adm-logout {
+    margin-top: 0;
+    flex: 0 0 auto;
+  }
+}
+@media (max-width: 520px) {
+  .adm-main {
+    padding: 16px 12px 48px;
+  }
+  .adm-card {
+    padding: 14px;
+  }
 }

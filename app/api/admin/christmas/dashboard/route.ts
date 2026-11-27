@@ -4,6 +4,7 @@ import { ROOMS, ROOM_CAPACITY } from "@/lib/christmas/rooms";
 import { listOrders } from "@/lib/christmas/orders";
 import { persistent, readState, roomCounts } from "@/lib/christmas/store";
 import { GIANT_CAPACITY } from "@/lib/christmas/slots";
+import { alertsConfigured } from "@/lib/christmas/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ export async function GET() {
     storage: persistent(),
     omise: Boolean(process.env.OMISE_SECRET_KEY),
     promptpay: Boolean(process.env.XMAS_PROMPTPAY_ID),
+    alerts: alertsConfigured(),
   };
   return NextResponse.json({
     config,

@@ -5,6 +5,7 @@ import { getOrder, markPaid } from "@/lib/christmas/orders";
 import type { OmiseCharge } from "@/lib/christmas/omise";
 import { writeLog } from "@/lib/christmas/log";
 import { placePaidDecor } from "@/lib/christmas/decor";
+import { notifyAdmin } from "@/lib/christmas/notify";
 
 // ตรวจว่าใบเรียกเก็บเงินจาก Omise ตรงกับคำสั่งซื้อจริง ทั้งสถานะ ยอด (สตางค์) และสกุลเงิน
 export function chargeMatches(order: { amount: number }, charge: OmiseCharge): boolean {
@@ -17,6 +18,8 @@ export async function confirmPayment(orderId: string, providerRef: string) {
   const now = Date.now();
   const paid = await markPaid(orderId, providerRef, now);
   if (paid) await writeLog({ type: "paid", room: paid.room, actor: paid.mode, text: `ชำระแล้ว ฿${paid.amount} · ${paid.name} (${paid.kind})` });
+  // การชำระอัตโนมัติจาก Omise แจ้งเตือนทันที (การยืนยันด้วยมือแอดมินรู้อยู่แล้วจึงไม่แจ้ง)
+  if (paid && paid.mode === "gateway") await notifyAdmin(`💰 ชำระแล้วผ่าน Omise ฿${paid.amount} · ${paid.name} (${paid.kind}) · ห้อง ${paid.room}`);
   if (paid && paid.kind === "decor" && paid.decor) {
     const placed = await placePaidDecor(paid.room, paid.id, paid.name, paid.social ?? {}, paid.decor);
     await writeLog({
