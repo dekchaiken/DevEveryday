@@ -1766,10 +1766,12 @@
 .xc-spot-block {
   position: fixed;
   z-index: 70;
-  background: rgba(0, 0, 0, 0.42);
-  -webkit-backdrop-filter: grayscale(1) brightness(0.6);
-  backdrop-filter: grayscale(1) brightness(0.6);
+  background: rgba(6, 16, 12, 0.5);
   pointer-events: auto;
+  animation: xc-spot-fade 0.35s ease-out both;
+}
+@keyframes xc-spot-fade {
+  from { opacity: 0; }
 }
 .xc-spot-ring {
   position: fixed;
@@ -1778,6 +1780,7 @@
   border-radius: 18px;
   box-shadow: 0 0 0 6px rgba(255, 215, 106, 0.25), 0 0 26px rgba(255, 215, 106, 0.6);
   pointer-events: none;
+  transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease;
   animation: xc-spot-pulse 1.4s ease-in-out infinite;
 }
 @keyframes xc-spot-pulse {
@@ -1786,6 +1789,7 @@
   }
 }
 .xc-spot-tip {
+  animation: xc-spot-tip-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   position: fixed;
   z-index: 72;
   display: grid;
@@ -1988,4 +1992,11 @@
   .xz-open .xz-env-reveal {
     transition: none;
   }
+}
+
+@keyframes xc-spot-tip-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xc-spot-block, .xc-spot-tip, .xc-spot-ring { animation: none; transition: none; }
 }
