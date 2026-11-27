@@ -1,7 +1,9 @@
 // ฉากประกอบของโซนคำอวยพรและ Exclusive: บ้านหิมะ ต้นสนเรืองแสง และของตกแต่งแบบ 3 มิติ
 // ทุกชิ้นสร้างจากรูปทรงจริงด้วยโค้ด (ไม่มีสติ๊กเกอร์แบน ๆ และไม่หันตามกล้อง) และมีเงาตกกระทบบนหิมะ
 import * as THREE from "three";
-import { GIANT_BODY_HEX, GIANT_LIGHT_HEX } from "@/lib/christmas/giant";
+// สีของบ้านหิมะในฉากคงที่ (ผนัง และไฟประดับ) ไม่ขึ้นกับการเลือกของ Exclusive
+const GIANT_BODY_HEX: Record<string, number> = { cream: 0xf6e3c0, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3, pearl: 0xfff6e6, ice: 0xd6f3ff };
+const GIANT_LIGHT_HEX: Record<string, number[]> = { red: [0xff3b5c], gold: [0xffd76a], blue: [0x7dd3fc], multi: [0xff3b5c, 0xffd76a, 0x7dd3fc, 0x86efac] };
 
 export type Updater = (t: number, reduced: boolean) => void;
 export type Scenery = { group: THREE.Group; update: Updater };
@@ -322,7 +324,7 @@ export function giftBox(size: number, color: number, ribbon: number): THREE.Grou
   return g;
 }
 
-function candyCane(): THREE.Group {
+export function candyCane(): THREE.Group {
   const g = new THREE.Group();
   const curve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(0, 0, 0),
@@ -337,7 +339,7 @@ function candyCane(): THREE.Group {
   return g;
 }
 
-function snowman(): THREE.Group {
+export function snowman(): THREE.Group {
   const g = new THREE.Group();
   const snow = snowSurface();
   put(g, new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 14), snow), 0, 0.2, 0);
@@ -355,9 +357,9 @@ function snowman(): THREE.Group {
   return g;
 }
 
-export function miniPine(h: number, sc: number): THREE.Group {
+export function miniPine(h: number, sc: number, foliage = 0x0f3d24): THREE.Group {
   const g = new THREE.Group();
-  const green = std(0x0f3d24, 0.85);
+  const green = std(foliage, 0.85);
   const white = std(0xeef5fb, 0.7);
   put(g, new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.14, 8), std(0x5b3a1e, 0.9)), 0, 0.07, 0);
   for (let t = 0; t < 3; t++) {

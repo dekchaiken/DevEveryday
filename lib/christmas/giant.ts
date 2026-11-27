@@ -1,59 +1,70 @@
-// ลุคของ Exclusive: บ้านหิมะโมเดลที่สร้างเองในโค้ด พร้อมป้ายห้อยข้างบ้าน
-// ผู้ซื้อเลือกสีผนัง สีสายไฟประดับ และสีป้าย ใช้ร่วมกันทั้งฝั่งเซิร์ฟเวอร์และเบราว์เซอร์
+// ลุคของ Exclusive: ฐานกลมลายขนมหวาน มีตาราง 4×4 ให้วางของตกแต่งอิสระ (ตุ๊กตาหิมะ ต้นสน กล่องของขวัญ ไม้เท้าขนม)
+// ใช้ร่วมกันทั้งฝั่งเซิร์ฟเวอร์และเบราว์เซอร์ จึงไม่มี Three.js หรือ Redis ในไฟล์นี้
 
-export const GIANT_BODY = ["cream", "mint", "sky", "blush", "pearl", "ice"] as const; // สีผนังบ้าน
-export const GIANT_LIGHTS = ["red", "gold", "blue", "multi"] as const; // สีสายไฟรอบประตูและหน้าต่าง
-export const SIGN_BOARDS = ["spruce", "ivory", "berry", "gold"] as const;
-// ของตกแต่งหน้าบ้าน: ผู้ซื้อเลือกได้ที่จุดคงที่ 5 จุด (4 จุดหน้าบ้านบนลาน และ 1 จุดยอดหลังคา)
-export const DECO_GROUND = ["gift", "snowman", "pine", "candy", "lantern"] as const;
-export const DECO_ROOF = ["star"] as const;
-export const DECO_SLOTS = 5;
+export const DIORAMA_GRID = 4; // ตารางย่อยบนฐาน 4×4 ช่อง
+export const DIORAMA_KINDS = ["snowman", "tree", "gift", "candy"] as const;
+export const DIORAMA_BASES = ["pink", "mint", "red", "blue"] as const; // ลายแถบของฐาน
+export const GIFT_COLORS = ["red", "green", "blue", "pink", "gold"] as const; // สีกล่องของขวัญ (สีริบบิ้นสลับอัตโนมัติ)
+export const TREE_COLORS = ["forest", "mint", "frost"] as const; // สีต้นสน
+export const SIGN_BOARDS = ["spruce", "ivory", "berry", "gold"] as const; // สีป้ายชื่อเล็กที่ปักข้างฐาน
 
-// เลขสีของแต่ละตัวเลือก (ใช้ทั้งบนฉาก 3 มิติและภาพตัวอย่าง)
-export const GIANT_BODY_HEX: Record<string, number> = { cream: 0xf6e3c0, mint: 0xd1fae5, sky: 0xdbeafe, blush: 0xfce7f3, pearl: 0xfff6e6, ice: 0xd6f3ff };
-export const GIANT_LIGHT_HEX: Record<string, number[]> = {
-  red: [0xff3b5c],
-  gold: [0xffd76a],
-  blue: [0x7dd3fc],
-  multi: [0xff3b5c, 0xffd76a, 0x7dd3fc, 0x86efac],
+// สีจริงของแต่ละตัวเลือก (ใช้ทั้งบนฉากและในหน้าตัวอย่าง)
+export const BASE_HEX: Record<string, { a: number; b: number }> = {
+  pink: { a: 0xf9a8c4, b: 0xffffff },
+  mint: { a: 0x86e0b8, b: 0xffffff },
+  red: { a: 0xe0465a, b: 0xffffff },
+  blue: { a: 0x8ec5ff, b: 0xffffff },
 };
+export const GIFT_HEX: Record<string, number> = { red: 0xdc2643, green: 0x22a35a, blue: 0x3b82f6, pink: 0xf472b6, gold: 0xf5c542 };
+export const TREE_HEX: Record<string, number> = { forest: 0x1f7a4d, mint: 0x52c293, frost: 0x2f8f6b };
 
+export type DioramaItem = { i: number; kind: string; color: string }; // i = ช่องบนตาราง 0..15
 export type GiantLook = {
-  body: string;
-  lights: string;
-  board: string;
-  deco: string[]; // ของตกแต่งตามจุดที่ 0..DECO_SLOTS-1 ("none" = ไม่วาง)
+  base: string;
+  items: DioramaItem[];
+  board: string; // สีป้ายชื่อเล็ก
 };
 
-export const DEFAULT_GIANT_LOOK: GiantLook = {
-  body: "cream",
-  lights: "red",
-  board: "spruce",
-  deco: ["none", "none", "none", "none", "none"],
-};
+export const DEFAULT_GIANT_LOOK: GiantLook = { base: "pink", items: [], board: "spruce" };
 
 function pick(v: unknown, list: readonly string[], fallback: string): string {
   return typeof v === "string" && list.includes(v) ? v : fallback;
 }
 
-// ของตกแต่งแต่ละจุด: จุดยอดหลังคาเลือกได้เฉพาะดาว จุดหน้าบ้านเลือกได้จากชุดของวาง
-function parseDeco(v: unknown): string[] {
-  const list = Array.isArray(v) ? v : [];
-  return Array.from({ length: DECO_SLOTS }, (_, i) => {
-    const x = list[i];
-    const allowed: readonly string[] = i === DECO_SLOTS - 1 ? ["none", ...DECO_ROOF] : ["none", ...DECO_GROUND];
-    return typeof x === "string" && allowed.includes(x) ? x : "none";
-  });
+// สีที่ใช้ได้ของแต่ละชนิด (ชนิดที่ไม่มีสีให้ค่าว่าง)
+export function colorOptionsFor(kind: string): readonly string[] {
+  if (kind === "gift") return GIFT_COLORS;
+  if (kind === "tree") return TREE_COLORS;
+  return [];
 }
 
-// ตรวจลุคที่ส่งมาจากหน้าเว็บ ค่าที่ไม่รู้จักใช้ค่าเริ่มต้นของชิ้นนั้น
+// ตรวจของตกแต่งทั้งหมดที่ส่งมาจากหน้าเว็บ: ช่องซ้ำ ช่องนอกตาราง ชนิดหรือสีที่ไม่รู้จักจะถูกตัดทิ้ง
+export function parseItems(v: unknown): DioramaItem[] {
+  if (!Array.isArray(v)) return [];
+  const seen = new Set<number>();
+  const out: DioramaItem[] = [];
+  for (const raw of v) {
+    if (!raw || typeof raw !== "object") continue;
+    const o = raw as Record<string, unknown>;
+    const i = Number(o.i);
+    if (!Number.isInteger(i) || i < 0 || i >= DIORAMA_GRID * DIORAMA_GRID || seen.has(i)) continue;
+    const kind = pick(o.kind, DIORAMA_KINDS, "");
+    if (!kind) continue;
+    const opts = colorOptionsFor(kind);
+    const color = opts.length ? pick(o.color, opts, opts[0]) : "";
+    seen.add(i);
+    out.push({ i, kind, color });
+  }
+  return out.sort((a, b) => a.i - b.i);
+}
+
+// ตรวจลุคที่ส่งมาจากหน้าเว็บ ค่าที่ไม่รู้จักใช้ค่าเริ่มต้น
 export function parseGiantLook(v: unknown): GiantLook | null {
   if (!v || typeof v !== "object") return null;
   const o = v as Record<string, unknown>;
   return {
-    body: pick(o.body, GIANT_BODY, DEFAULT_GIANT_LOOK.body),
-    lights: pick(o.lights, GIANT_LIGHTS, DEFAULT_GIANT_LOOK.lights),
+    base: pick(o.base, DIORAMA_BASES, DEFAULT_GIANT_LOOK.base),
+    items: parseItems(o.items),
     board: pick(o.board, SIGN_BOARDS, DEFAULT_GIANT_LOOK.board),
-    deco: parseDeco(o.deco),
   };
 }

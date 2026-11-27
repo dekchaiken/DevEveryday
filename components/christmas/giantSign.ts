@@ -1,9 +1,8 @@
 // ป้ายและบ้านของ Exclusive แบบ 3 มิติ ใช้ร่วมกันทั้งบนฉากจริงและในหน้าต่างตัวอย่าง
 // ป้ายเป็นแผ่นไม้โค้งมุมมีขอบ มีหิมะเกาะด้านบน ห้อยจากแขนไม้ด้วยโซ่ทองและโบว์แดง
 import * as THREE from "three";
-import { drawGiantBoard, fonts, type BoardStyle } from "./skyArt";
-import { buildCottage, snowSurface, std, type Scenery } from "./zoneScenery";
-import type { GiantLook } from "@/lib/christmas/giant";
+import { fonts } from "./skyArt";
+import { snowSurface, std } from "./zoneScenery";
 
 // ขนาดบ้านทั้งหลังบนฉาก (ย่อจากขนาดจริงเล็กน้อย เพื่อให้วงบ้านไม่ทับกัน)
 export const GIANT_SCALE = 0.95;
@@ -79,14 +78,6 @@ export function buildBoard(tex: THREE.Texture, w: number, h: number, wood: numbe
   return g;
 }
 
-// โซ่โลหะที่เชื่อมจุด a ไปจุด b
-function chain(a: THREE.Vector3, b: THREE.Vector3, r = 0.011): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, a.distanceTo(b), 6), std(GOLD, 0.3, 0.8));
-  m.position.copy(a).add(b).multiplyScalar(0.5);
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
-  return m;
-}
-
 // โบว์ริบบิ้นแดงสองปีกกับหาง
 function bow(size: number): THREE.Group {
   const g = new THREE.Group();
@@ -106,63 +97,6 @@ function bow(size: number): THREE.Group {
     g.add(tail);
   }
   return g;
-}
-
-// ป้ายข้างบ้าน: เสาไม้ แขนไม้ โซ่ และแผ่นป้ายที่ห้อยลงมา
-// side = +1 ถ้าบ้านอยู่ทางซ้ายของป้าย (ป้ายอยู่ด้านขวา) และ -1 ถ้ากลับกัน
-function buildSignArm(tex: THREE.Texture, side: number): THREE.Group {
-  const g = new THREE.Group();
-  const poleX = side * 2.05;
-  const armY = 1.74;
-  const boardX = side * 1.52;
-  const boardY = 1.16;
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, armY + 0.02, 10), std(WOOD, 0.8));
-  pole.position.set(poleX, (armY + 0.02) / 2, 0.3);
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.05, 0.05), std(WOOD, 0.8));
-  arm.position.set(poleX - side * 0.31, armY, 0.3);
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), std(0xffffff, 0.4));
-  cap.position.set(poleX, armY + 0.04, 0.3);
-  g.add(pole, arm, cap);
-
-  const board = buildBoard(tex, BOARD_W, BOARD_H, WOOD);
-  board.position.set(boardX, boardY, 0.3);
-  board.rotation.y = side * -0.18;
-  g.add(board);
-  const topY = boardY + BOARD_H / 2 + 0.02;
-  const ax = poleX - side * 0.12;
-  for (const dx of [-0.32, 0.32]) {
-    const bx = boardX + dx;
-    const from = new THREE.Vector3(ax - side * (dx > 0 ? 0.1 : 0.22), armY - 0.03, 0.3);
-    const to = new THREE.Vector3(bx, topY, 0.3);
-    g.add(chain(from, to));
-  }
-  const bw = bow(0.1);
-  bw.position.set(boardX, topY + 0.02, 0.36);
-  g.add(bw);
-  return g;
-}
-
-// ตัวป้ายของ Exclusive: ชื่อและข้อความขึ้นบนแผ่นไม้ 3 มิติ
-function giantBoardTexture(name: string, message: string, style: BoardStyle): THREE.CanvasTexture {
-  return makeCanvasTexture(1024, Math.round((1024 * BOARD_H) / BOARD_W), (g, w, h) => {
-    drawGiantBoard(g, 16, 16, w - 32, h - 32, { name, message, style });
-  });
-}
-
-// ตั้งบ้านหิมะพร้อมป้ายตามลุคที่เลือก ทั้งบนฉากและในหน้าตัวอย่าง
-export function buildGiantFigure(opts: { look: GiantLook; name: string; message: string; side: number }): Scenery {
-  const group = new THREE.Group();
-  const body = new THREE.Group();
-  body.scale.setScalar(GIANT_SCALE);
-  group.add(body);
-  const cottage = buildCottage({ body: opts.look.body, lights: opts.look.lights, deco: opts.look.deco });
-  body.add(cottage.group);
-  const tex = giantBoardTexture(opts.name, opts.message, (opts.look.board as BoardStyle) ?? "spruce");
-  body.add(buildSignArm(tex, opts.side));
-  return {
-    group,
-    update: (t, reduced) => cottage.update(t, reduced),
-  };
 }
 
 // ---------- ป้ายชื่อโซนคำอวยพร: แผ่นไม้เขียวเข้มขอบทอง วางบนยอดซุ้มประตู ----------
