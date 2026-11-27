@@ -32,6 +32,7 @@ export type TreeSceneHandle = {
   highlightDecor: (slot: number) => void;
   focusOrnament: (id: string | null) => void;
   focusDecor: (d: Decor | null) => void;
+  focusGiant: (spot: number | null) => void; // กล้องบินไปหาบ้านหิมะ Exclusive และกลับมุมเดิมเมื่อส่ง null
   flyToZone: () => void; // ซูมออกเป็นแผนที่ แล้วไปที่โซนคำอวยพร
   returnView: () => void; // กลับไปมุมกล้องเดิมก่อนไปดูตุ๊กตาหรือโซน
   zoomBy: (factor: number) => void;
@@ -711,13 +712,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         while (obj && obj.userData.giantSpot === undefined) obj = obj.parent;
         const spec = obj ? giantSpecs.get(obj.userData.giantSpot as number) : undefined;
         if (spec) {
-          const def = GIANT_POSITIONS[spec.spot] ?? GIANT_POSITIONS[0];
-          const tgt = new THREE.Vector3(def.x, 0.9, def.z);
-          const dir = new THREE.Vector3(camera.position.x - def.x, 0, camera.position.z - def.z);
-          if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
-          dir.normalize().multiplyScalar(4.8);
-          const toPos = new THREE.Vector3(def.x + dir.x, 2.4, def.z + dir.z);
-          camFlight = { start: performance.now(), dur: reduced ? 1 : 900, fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt: tgt };
+          focusGiant(spec.spot);
           callbacks.current.onGiantClick?.(spec);
           return;
         }
@@ -774,13 +769,6 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         focusDecorGroup.position.y = Math.abs(Math.sin(t * 2.6)) * 0.1;
       }
       const now = performance.now();
-      if (camFlight) {
-        const k = Math.min(1, (now - camFlight.start) / camFlight.dur);
-        const e = k * k * (3 - 2 * k); // ค่อย ๆ เร่งแล้วชะลอ
-        camera.position.lerpVectors(camFlight.fromPos, camFlight.toPos, e);
-        controls.target.lerpVectors(camFlight.fromTgt, camFlight.toTgt, e);
-        if (k >= 1) camFlight = null;
-      }
       if (beacon) {
         const age = (now - beacon.start) / 1000;
         const b = beacon;
@@ -982,7 +970,25 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const giantGroups = new Map<number, { key: string; grp: THREE.Group }>();
     const giantSpecs = new Map<number, GiantSpec>();
     // กล้องบินไปหาบ้านที่แตะ (ค่าเป็นจุดเริ่มและจุดหมายของการเคลื่อนกล้อง)
-    let camFlight: { start: number; dur: number; fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3 } | null = null;
+    // บ้านหิมะ Exclusive: บินเข้าหาเหมือนตุ๊กตาที่ผู้ใช้ตกแต่ง และจำมุมเดิมไว้ให้กลับมาได้
+    function focusGiant(spot: number | null) {
+      if (spot === null) {
+        if (savedView) {
+          animateCam(savedView.pos, savedView.tgt, 1000);
+          controls.minDistance = savedView.min;
+          savedView = null;
+        }
+        return;
+      }
+      const def = GIANT_POSITIONS[spot] ?? GIANT_POSITIONS[0];
+      rememberView();
+      const tgt = new THREE.Vector3(def.x, 0.9, def.z);
+      const dir = new THREE.Vector3(camera.position.x - def.x, 0, camera.position.z - def.z);
+      if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+      dir.normalize().multiplyScalar(4.8);
+      controls.minDistance = 3;
+      animateCam(new THREE.Vector3(def.x + dir.x, 2.4, def.z + dir.z), tgt, reduced ? 1 : 900);
+    }
     function disposeGroup(grp: THREE.Group) {
       scene.remove(grp);
       grp.traverse((o) => {
@@ -2094,6 +2100,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       highlightDecor: (slot: number) => highlightDecor(slot),
       focusOrnament: (id: string | null) => focusOrnament(id),
       focusDecor: (d: Decor | null) => focusDecor(d),
+      focusGiant: (spot: number | null) => focusGiant(spot),
       flyToZone: () => flyToZone(),
       returnView: () => returnView(),
       locate: (target: LocateTarget) => locate(target),
