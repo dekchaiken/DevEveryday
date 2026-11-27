@@ -34,16 +34,14 @@
   --serif: var(--font-mono), var(--font-thai), ui-monospace, monospace;
   --sans: var(--font-mono), var(--font-thai), ui-monospace, monospace;
   color: var(--ink);
-  font-family: var(--sans);
-}
+  font-family: var(--sans);}
 
 /* ---------- ฉาก ---------- */
 .xmas-stage {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: var(--spruce);
-}
+  background: var(--spruce);}
 .xmas-sky {
   position: absolute;
   inset: 0;
@@ -51,16 +49,14 @@
   background:
     radial-gradient(70% 45% at 50% 100%, rgba(232, 209, 154, 0.32), transparent 70%),
     radial-gradient(60% 40% at 90% 0%, rgba(192, 53, 76, 0.14), transparent 70%),
-    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 72%, #2c5b48 100%);
-}
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 72%, #2c5b48 100%);}
 .xmas-sky::after {
   content: "";
   position: absolute;
   inset: 0;
   background-image: var(--crystal);
   background-size: 160px 160px;
-  opacity: 0.7;
-}
+  opacity: 0.7;}
 .xmas-moon {
   position: absolute;
   top: 14%;
@@ -70,11 +66,9 @@
   border-radius: 50%;
   background: radial-gradient(circle at 36% 34%, #fff8e6 0%, #efe2b8 48%, #cdb274 78%, transparent 80%);
   box-shadow: 0 0 70px 20px rgba(232, 209, 154, 0.22);
-  opacity: 0.85;
-}
+  opacity: 0.85;}
 .xmas-aurora {
-  display: none;
-}
+  display: none;}
 .xmas-fairy {
   position: absolute;
   left: 0;
@@ -82,20 +76,17 @@
   top: 0;
   height: 64px;
   z-index: 1;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-fairy-wire {
   position: absolute;
   inset: 0;
   width: 100%;
-  height: 100%;
-}
+  height: 100%;}
 .xmas-fairy-wire path {
   fill: none;
   stroke: rgba(232, 209, 154, 0.35);
   stroke-width: 0.8;
-  vector-effect: non-scaling-stroke;
-}
+  vector-effect: non-scaling-stroke;}
 .xmas-fairy i {
   position: absolute;
   width: 6px;
@@ -104,12 +95,10 @@
   border-radius: 50% 50% 45% 45%;
   background: #f4dca0;
   box-shadow: 0 0 10px 2px rgba(244, 220, 160, 0.6);
-  animation: xmas-twinkle 3s ease-in-out infinite;
-}
+  animation: xmas-twinkle 3s ease-in-out infinite;}
 @keyframes xmas-twinkle {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
+  0%, 100% { opacity: 0.4;}
+  50% { opacity: 1;}}
 .xmas-frost {
   position: absolute;
   inset: 0;
@@ -118,36 +107,29 @@
   background:
     radial-gradient(ellipse at 50% 55%, transparent 60%, rgba(232, 240, 236, 0.08) 100%),
     radial-gradient(circle at 0 0, rgba(240, 248, 245, 0.16), transparent 24%),
-    radial-gradient(circle at 100% 100%, rgba(240, 248, 245, 0.14), transparent 26%);
-}
+    radial-gradient(circle at 100% 100%, rgba(240, 248, 245, 0.14), transparent 26%);}
 .xmas-atmos {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-hills,
 .xmas-crowd {
-  display: none;
-}
+  display: none;}
 .xmas-skyline {
-  display: none;
-}
+  display: none;}
 .xmas-canvas {
   position: absolute;
   inset: 0;
-  z-index: 1;
-}
+  z-index: 1;}
 .xmas-canvas canvas {
   display: block;
   width: 100% !important;
   height: 100% !important;
-  cursor: grab;
-}
+  cursor: grab;}
 .xmas-canvas canvas:active {
-  cursor: grabbing;
-}
+  cursor: grabbing;}
 .xmas-fallback {
   position: absolute;
   inset: 0;
@@ -156,14 +138,12 @@
   padding: 24px;
   text-align: center;
   color: var(--paper);
-  z-index: 1;
-}
+  z-index: 1;}
 /* หน้าหลักไม่มีแอนิเมชันเข้าของตัวเอง: ฉากทั้งหมดจางเข้าพร้อมกันผ่าน .xmas-gift-under ตอนวาบ */
 /* ใช้คุณสมบัติ translate แยกจาก transform เพื่อไม่ทับการจัดกึ่งกลางหรือการเลื่อนชีต */
 @keyframes xmas-rise {
-  from { opacity: 0; translate: 0 8px; }
-  to { opacity: 1; translate: 0 0; }
-}
+  from { opacity: 0; translate: 0 8px;}
+  to { opacity: 1; translate: 0 0;}}
 
 /* ---------- ตัวอักษรและบล็อกทั่วไป ---------- */
 .xmas-stage h1,
@@ -174,42 +154,36 @@
   font-weight: 600;
   letter-spacing: -0.005em;
   margin: 0;
-  text-wrap: balance;
-}
+  text-wrap: balance;}
 .xmas-kicker {
   margin: 0 0 6px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-hint {
   margin: 0;
   font-size: 13.5px;
   color: var(--ink-2);
-  line-height: 1.6;
-}
+  line-height: 1.6;}
 .xmas-msg {
   margin: 0;
   font-size: 13.5px;
   padding: 10px 12px;
   border-radius: 12px;
   background: rgba(155, 28, 49, 0.08);
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-msg.ok {
   background: rgba(47, 106, 85, 0.1);
-  color: var(--spruce-3);
-}
+  color: var(--spruce-3);}
 .xmas-chip {
   display: inline-block;
   width: 12px;
   height: 12px;
   border-radius: 50%;
   flex: 0 0 12px;
-  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.5);
-}
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.5);}
 .xmas-dot {
   display: inline-block;
   width: 14px;
@@ -217,8 +191,7 @@
   margin-right: 8px;
   vertical-align: -2px;
   border-radius: 50%;
-  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.5);
-}
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.5);}
 .xmas-x {
   position: absolute;
   top: 10px;
@@ -231,19 +204,16 @@
   border-radius: 50%;
   background: transparent;
   color: var(--ink-2);
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-x:hover {
   background: rgba(15, 46, 36, 0.07);
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-x:focus-visible,
 .xmas-stage button:focus-visible,
 .xmas-stage a:focus-visible,
 .xmas-picker a:focus-visible {
   outline: 2px solid var(--foil);
-  outline-offset: 2px;
-}
+  outline-offset: 2px;}
 .xmas-chip-btn {
   min-height: 42px;
   padding: 0 16px;
@@ -255,11 +225,9 @@
   font-size: 13.5px;
   font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-chip-btn:hover {
-  background: rgba(184, 144, 74, 0.18);
-}
+  background: rgba(184, 144, 74, 0.18);}
 .xmas-link-btn {
   border: 0;
   background: transparent;
@@ -268,8 +236,7 @@
   font-size: 13px;
   color: var(--berry);
   text-decoration: underline;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-submit {
   width: 100%;
   min-height: 50px;
@@ -283,32 +250,26 @@
   letter-spacing: 0.01em;
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 14px 26px -16px rgba(155, 28, 49, 0.95);
-  transition: transform 0.15s ease, background 0.2s ease;
-}
+  transition: transform 0.15s ease, background 0.2s ease;}
 .xmas-submit:hover:not(:disabled) {
   background: var(--berry-2);
-  transform: translateY(-1px);
-}
+  transform: translateY(-1px);}
 .xmas-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  box-shadow: none;
-}
+  box-shadow: none;}
 .xmas-field {
   display: grid;
   gap: 6px;
   font-size: 13px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-field-label {
   font-weight: 600;
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-field-label em {
   font-style: normal;
   font-weight: 500;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-field input,
 .xmas-field textarea,
 .xmas-copy-row input,
@@ -322,40 +283,32 @@
   color: var(--ink);
   font: inherit;
   font-size: 15px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;}
 .xmas-field textarea {
   resize: none;
-  line-height: 1.6;
-}
+  line-height: 1.6;}
 .xmas-field input:focus,
 .xmas-field textarea:focus,
 .xmas-slot-input input:focus {
   outline: none;
   border-color: var(--foil);
-  box-shadow: 0 0 0 3px rgba(184, 144, 74, 0.18);
-}
+  box-shadow: 0 0 0 3px rgba(184, 144, 74, 0.18);}
 .xmas-field input::placeholder,
 .xmas-field textarea::placeholder,
 .xmas-slot-input input::placeholder {
-  color: #9aa69f;
-}
+  color: #9aa69f;}
 .xmas-form {
   display: grid;
-  gap: 12px;
-}
+  gap: 12px;}
 .xmas-copy-row {
   display: flex;
   gap: 8px;
-  align-items: center;
-}
+  align-items: center;}
 .xmas-copy-row input {
   flex: 1;
-  min-width: 0;
-}
+  min-width: 0;}
 .xmas-copy-row .xmas-chip-btn {
-  min-height: 44px;
-}
+  min-height: 44px;}
 
 /* ---------- แถบบน ---------- */
 .xmas-top {
@@ -369,18 +322,15 @@
   justify-content: space-between;
   gap: 14px;
   padding: 18px 22px 0;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-top > * {
-  pointer-events: auto;
-}
+  pointer-events: auto;}
 .xmas-brand {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 .xmas-brand-star {
   display: grid;
   place-items: center;
@@ -390,38 +340,32 @@
   border-radius: 50%;
   border: 1px solid rgba(232, 209, 154, 0.5);
   color: var(--foil-soft);
-  background: rgba(10, 36, 28, 0.5);
-}
+  background: rgba(10, 36, 28, 0.5);}
 .xmas-brand b {
   display: block;
   font-family: var(--serif);
   font-size: 22px;
   font-weight: 600;
   line-height: 1.1;
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 .xmas-brand small {
   display: block;
   margin-top: 3px;
   font-size: 12.5px;
   color: #c5d3c9;
-  letter-spacing: 0.01em;
-}
+  letter-spacing: 0.01em;}
 .xmas-brand .xmas-countdown {
-  color: var(--foil-soft);
-}
+  color: var(--foil-soft);}
 .xmas-switch-link {
   color: var(--foil-soft);
   text-decoration: underline;
-  text-underline-offset: 3px;
-}
+  text-underline-offset: 3px;}
 .xmas-top-right {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-end;
-}.xmas-live {
+  justify-content: flex-end;}.xmas-live {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -432,28 +376,23 @@
   border: 1px solid rgba(232, 209, 154, 0.3);
   color: #f7f2e6;
   font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
+  font-variant-numeric: tabular-nums;}
 .xmas-live-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #6fd3a0;
   box-shadow: 0 0 0 4px rgba(111, 211, 160, 0.2);
-  animation: xmas-pulse 2.4s ease-in-out infinite;
-}
+  animation: xmas-pulse 2.4s ease-in-out infinite;}
 .xmas-live.is-off .xmas-live-dot {
   background: #e7b25a;
-  box-shadow: 0 0 0 4px rgba(231, 178, 90, 0.2);
-}
+  box-shadow: 0 0 0 4px rgba(231, 178, 90, 0.2);}
 @keyframes xmas-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(111, 211, 160, 0.2); }
-  50% { box-shadow: 0 0 0 7px rgba(111, 211, 160, 0.05); }
-}
+  0%, 100% { box-shadow: 0 0 0 4px rgba(111, 211, 160, 0.2);}
+  50% { box-shadow: 0 0 0 7px rgba(111, 211, 160, 0.05);}}
 .xmas-online {
   color: var(--foil-soft);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-music-toggle,
 .xmas-snow-toggle {
   display: inline-flex;
@@ -468,57 +407,45 @@
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.25s ease, border-color 0.25s ease;
-}
+  transition: background 0.25s ease, border-color 0.25s ease;}
 .xmas-music-toggle.is-on,
 .xmas-snow-toggle.is-on {
   border-color: rgba(232, 209, 154, 0.7);
-  background: rgba(232, 209, 154, 0.16);
-}
+  background: rgba(232, 209, 154, 0.16);}
 .xmas-music-toggle:hover,
 .xmas-snow-toggle:hover {
-  border-color: rgba(232, 209, 154, 0.6);
-}
+  border-color: rgba(232, 209, 154, 0.6);}
 .xmas-music-toggle svg,
 .xmas-snow-toggle svg {
-  flex: 0 0 auto;
-}
+  flex: 0 0 auto;}
 .xmas-music-bars {
   display: none;
   align-items: flex-end;
   gap: 2px;
-  height: 12px;
-}
+  height: 12px;}
 .xmas-music-bars i {
   width: 3px;
   height: 4px;
   border-radius: 2px;
-  background: var(--foil-soft);
-}
+  background: var(--foil-soft);}
 .xmas-music-toggle.is-on .xmas-music-bars {
-  display: inline-flex;
-}
+  display: inline-flex;}
 .xmas-music-toggle.is-on .xmas-music-bars i {
-  animation: xmas-eq 0.9s ease-in-out infinite alternate;
-}
+  animation: xmas-eq 0.9s ease-in-out infinite alternate;}
 .xmas-music-toggle.is-on .xmas-music-bars i:nth-child(2) {
-  animation-delay: 0.2s;
-}
+  animation-delay: 0.2s;}
 .xmas-music-toggle.is-on .xmas-music-bars i:nth-child(3) {
-  animation-delay: 0.4s;
-}
+  animation-delay: 0.4s;}
 @keyframes xmas-eq {
-  from { height: 3px; }
-  to { height: 12px; }
-}
+  from { height: 3px;}
+  to { height: 12px;}}
 .xmas-snow-track {
   position: relative;
   width: 36px;
   height: 20px;
   border-radius: 999px;
   background: rgba(247, 242, 230, 0.18);
-  transition: background 0.3s ease;
-}
+  transition: background 0.3s ease;}
 .xmas-snow-knob {
   position: absolute;
   top: 2px;
@@ -530,21 +457,16 @@
   border-radius: 50%;
   background: #f7f2e6;
   color: var(--spruce-2);
-  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-}
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);}
 .xmas-snow-toggle.is-on .xmas-snow-track {
-  background: var(--berry);
-}
+  background: var(--berry);}
 .xmas-snow-toggle.is-on .xmas-snow-knob {
   transform: translateX(16px);
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-snow-toggle.is-on .xmas-snow-knob .xicon {
-  animation: xmas-spin 8s linear infinite;
-}
+  animation: xmas-spin 8s linear infinite;}
 @keyframes xmas-spin {
-  to { transform: rotate(360deg); }
-}
+  to { transform: rotate(360deg);}}
 .xmas-switch.is-donate {
   display: inline-flex;
   align-items: center;
@@ -558,11 +480,9 @@
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 10px 22px -12px rgba(155, 28, 49, 0.95);
-}
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 10px 22px -12px rgba(155, 28, 49, 0.95);}
 .xmas-switch.is-donate:hover {
-  background: var(--berry-2);
-}
+  background: var(--berry-2);}
 
 /* ---------- ข้อความวิ่งและคำแนะนำ ---------- */
 .xmas-ticker {
@@ -575,21 +495,18 @@
   overflow: hidden;
   pointer-events: none;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-}
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);}
 .xmas-ticker-track {
   display: flex;
   width: max-content;
   height: 100%;
   align-items: center;
-  animation: xmas-ticker 60s linear infinite;
-}
+  animation: xmas-ticker 60s linear infinite;}
 .xmas-ticker-group {
   display: flex;
   align-items: center;
   gap: 36px;
-  padding-right: 36px;
-}
+  padding-right: 36px;}
 .xmas-tick-item {
   display: inline-flex;
   align-items: center;
@@ -598,115 +515,26 @@
   font-style: italic;
   font-size: 16px;
   color: #efe7d0;
-  white-space: nowrap;
-}
+  white-space: nowrap;}
 .xmas-tick-item::before {
   content: "";
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--berry-2);
-}
+  background: var(--berry-2);}
 .xmas-tick-item.is-exclusive {
-  color: var(--foil-soft);
-}
+  color: var(--foil-soft);}
 .xmas-tick-item .xicon {
-  color: var(--foil-soft);
-}
+  color: var(--foil-soft);}
 @keyframes xmas-ticker {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
+  from { transform: translateX(0);}
+  to { transform: translateX(-50%);}}
 @media (prefers-reduced-motion: reduce) {
   .xmas-ticker-track {
-    animation: none;
-  }
-}.xmas-coach {
-  position: absolute;
-  top: 146px;
-  left: 50%;
-  z-index: 9;
-  width: min(92vw, 360px);
-  transform: translateX(-50%);
-  display: grid;
-  gap: 6px;
-  padding: 18px 20px 16px;
-  border-radius: 22px;
-  background: var(--glass-paper);
-  color: var(--ink);
-  border: 1px solid rgba(184, 144, 74, 0.4);
-  box-shadow: var(--shadow-md);
-}
-.xmas-coach b {
-  font-family: var(--serif);
-  font-size: 19px;
-  font-weight: 600;
-}
-.xmas-coach span {
-  font-size: 14px;
-  color: var(--ink-2);
-  line-height: 1.6;
-}
-.xmas-coach-step {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  color: var(--foil);
-}
-.xmas-coach-x {
-  border: 0;
-  background: transparent;
-  color: var(--ink-2);
-  cursor: pointer;
-  padding: 4px;
-}
-.xmas-coach-next {
-  justify-self: end;
-  min-height: 40px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--spruce-2);
-  color: #f7f2e6;
-  font: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.xmas-tap-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 118px;
-  z-index: 6;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: var(--glass-paper);
-  color: var(--ink);
-  font-size: 13.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  animation: xmas-rise 0.5s ease both;
-}
-.xmas-tap-ring {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--berry);
-  box-shadow: 0 0 0 0 rgba(155, 28, 49, 0.5);
-  animation: xmas-ring 1.8s ease-out infinite;
-}
+    animation: none;}}
 @keyframes xmas-ring {
-  0% { box-shadow: 0 0 0 0 rgba(155, 28, 49, 0.45); }
-  100% { box-shadow: 0 0 0 14px rgba(155, 28, 49, 0); }
-}
+  0% { box-shadow: 0 0 0 0 rgba(155, 28, 49, 0.45);}
+  100% { box-shadow: 0 0 0 14px rgba(155, 28, 49, 0);}}
 .xmas-toast {
   position: absolute;
   top: 142px;
@@ -724,11 +552,9 @@
   max-width: 92vw;
   overflow: hidden;
   text-overflow: ellipsis;
-  animation: xmas-rise 0.4s ease both;
-}
+  animation: xmas-rise 0.4s ease both;}
 .xmas-toast.err {
-  color: var(--berry);
-}.xmas-banner {
+  color: var(--berry);}.xmas-banner {
   position: absolute;
   left: 50%;
   top: 36%;
@@ -743,15 +569,13 @@
   border: 1px solid rgba(232, 209, 154, 0.45);
   box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.6), inset 0 0 0 4px rgba(10, 36, 28, 0.6);
   pointer-events: none;
-  animation: xmas-banner 6.5s ease both;
-}
+  animation: xmas-banner 6.5s ease both;}
 .xmas-banner-by {
   display: block;
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--foil-soft);
-}
+  color: var(--foil-soft);}
 .xmas-banner p {
   margin: 8px 0 0;
   font-family: var(--serif);
@@ -759,8 +583,7 @@
   font-weight: 600;
   line-height: 1.3;
   color: #fffaf0;
-  text-wrap: balance;
-}
+  text-wrap: balance;}
 .xmas-banner::after {
   content: "";
   position: absolute;
@@ -771,13 +594,11 @@
   transform: translateX(-50%) rotate(45deg);
   background: rgba(15, 46, 36, 0.9);
   border-right: 1px solid rgba(232, 209, 154, 0.45);
-  border-bottom: 1px solid rgba(232, 209, 154, 0.45);
-}
+  border-bottom: 1px solid rgba(232, 209, 154, 0.45);}
 @keyframes xmas-banner {
-  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.96); }
-  8%, 88% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -54%) scale(1); }
-}
+  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.96);}
+  8%, 88% { opacity: 1; transform: translate(-50%, -50%) scale(1);}
+  100% { opacity: 0; transform: translate(-50%, -54%) scale(1);}}
 
 /* ---------- เมนูหลัก: แถบลอยด้านล่าง (เว็บ) ---------- */
 .xmas-actions {
@@ -795,8 +616,7 @@
   border: 1px solid rgba(232, 209, 154, 0.3);
   box-shadow: 0 24px 50px -22px rgba(0, 0, 0, 0.65);
   pointer-events: auto;
-  white-space: nowrap;
-}
+  white-space: nowrap;}
 .xmas-action {
   display: inline-flex;
   align-items: center;
@@ -811,36 +631,28 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-}
+  transition: background 0.2s ease, color 0.2s ease;}
 .xmas-action:hover {
   background: rgba(247, 242, 230, 0.1);
-  color: #fff;
-}
+  color: #fff;}
 .xmas-action .xicon {
   color: var(--foil-soft);
-  flex: 0 0 auto;
-}
+  flex: 0 0 auto;}
 .xmas-action.is-exclusive {
   background: linear-gradient(180deg, #efd99d, #c9a24a);
   color: #2a1d06;
   font-weight: 600;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 10px 22px -12px rgba(201, 162, 74, 0.9);
-}
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 10px 22px -12px rgba(201, 162, 74, 0.9);}
 .xmas-action.is-exclusive .xicon {
-  color: #7a4f0f;
-}
+  color: #7a4f0f;}
 .xmas-action.is-exclusive:hover {
   background: linear-gradient(180deg, #f5e3ab, #d4ac55);
-  color: #2a1d06;
-}
+  color: #2a1d06;}
 .xmas-action-phone,
 .xmas-action-mobile {
-  display: none;
-}
+  display: none;}
 .xmas-action-mobile[hidden] {
-  display: none;
-}
+  display: none;}
 
 /* ---------- ซูม: แถบกลมแนวตั้งด้านขวา ---------- */
 .xmas-zoom {
@@ -854,8 +666,7 @@
   padding: 6px;
   border-radius: 999px;
   background: var(--glass-dark);
-  border: 1px solid rgba(232, 209, 154, 0.3);
-}
+  border: 1px solid rgba(232, 209, 154, 0.3);}
 .xmas-zoom button {
   display: grid;
   place-items: center;
@@ -866,14 +677,11 @@
   background: transparent;
   color: #f7f2e6;
   cursor: pointer;
-  transition: background 0.2s ease;
-}
+  transition: background 0.2s ease;}
 .xmas-zoom button:hover {
-  background: rgba(247, 242, 230, 0.12);
-}
+  background: rgba(247, 242, 230, 0.12);}
 .xmas-zoom .xicon {
-  color: inherit;
-}
+  color: inherit;}
 
 /* ---------- แผงแขวนคำอวยพร (ซ้าย) และรายการ (ขวา) ---------- */
 .xmas-panel,
@@ -886,33 +694,27 @@
   border: 1px solid rgba(232, 209, 154, 0.35);
   border-radius: 26px;
   box-shadow: var(--shadow-lg);
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-panel {
   left: 22px;
   width: 310px;
   max-height: calc(100dvh - 330px);
   display: flex;
-  flex-direction: column;
-}
+  flex-direction: column;}
 .xmas-sheet-toggle {
-  display: none;
-}
+  display: none;}
 .xmas-wish-form {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  flex: 1;
-}
+  flex: 1;}
 .xmas-wish .xmas-build-top {
   position: relative;
   padding: 22px 22px 8px;
   text-align: center;
-  flex: 0 0 auto;
-}
+  flex: 0 0 auto;}
 .xmas-wish .xmas-build-top .xmas-kicker {
-  margin-bottom: 4px;
-}
+  margin-bottom: 4px;}
 /* ปุ่มปิดแผงแขวนคำอวยพร: แสดงทั้งคอมและมือถือ ไม่ให้ค้างจนต้องกดแผงอื่นก่อน */
 .xmas-wish .xmas-form-close {
   display: grid;
@@ -927,8 +729,7 @@
   border-radius: 50%;
   background: rgba(15, 61, 46, 0.08);
   color: var(--spruce-2);
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-build-preview {
   display: grid;
   place-items: center;
@@ -936,27 +737,22 @@
   margin: 8px 0 4px;
   border-radius: 20px;
   background: radial-gradient(circle at 50% 38%, #fffdf7 0%, #efe7d3 70%);
-  box-shadow: inset 0 0 0 1px rgba(184, 144, 74, 0.25);
-}
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 74, 0.25);}
 .xmas-build-preview .xmas-snowman,
 .xmas-ornament-art {
   height: 100%;
   width: auto;
   max-width: 100%;
-  filter: drop-shadow(0 12px 16px rgba(15, 46, 36, 0.28));
-}
+  filter: drop-shadow(0 12px 16px rgba(15, 46, 36, 0.28));}
 .xmas-ornament-preview {
-  padding: 6px 0;
-}
+  padding: 6px 0;}
 .xmas-build-slot {
   margin: 10px 0 0;
   font-size: 13px;
   color: var(--ink-2);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-build-slot.is-set {
-  color: var(--spruce-3);
-}
+  color: var(--spruce-3);}
 .xmas-part-tabs {
   display: flex;
   gap: 4px;
@@ -964,11 +760,9 @@
   overflow-x: auto;
   scrollbar-width: none;
   border-top: 1px solid var(--line);
-  flex: 0 0 auto;
-}
+  flex: 0 0 auto;}
 .xmas-part-tabs::-webkit-scrollbar {
-  display: none;
-}
+  display: none;}
 .xmas-part-tabs button,
 .xmas-tab {
   flex: 0 0 auto;
@@ -982,21 +776,17 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-}
+  transition: background 0.2s ease, color 0.2s ease;}
 .xmas-part-tabs button:hover {
-  background: rgba(15, 46, 36, 0.06);
-}
+  background: rgba(15, 46, 36, 0.06);}
 .xmas-part-tabs button.is-on {
   background: var(--spruce-2);
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 .xmas-part-body {
   flex: 1 1 auto;
   min-height: 150px;
   overflow-y: auto;
-  padding: 12px 16px 16px;
-}
+  padding: 12px 16px 16px;}
 .xmas-part-title {
   margin: 0 0 10px;
   font-size: 13px;
@@ -1004,19 +794,16 @@
   color: var(--ink);
   display: flex;
   align-items: baseline;
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-part-hint {
   font-style: normal;
   font-size: 12px;
   font-weight: 500;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-part-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-part-grid button {
   display: flex;
   align-items: center;
@@ -1031,79 +818,62 @@
   font: inherit;
   font-size: 13.5px;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
+  transition: border-color 0.2s ease, background 0.2s ease;}
 .xmas-part-grid button:hover {
-  border-color: rgba(184, 144, 74, 0.6);
-}
+  border-color: rgba(184, 144, 74, 0.6);}
 .xmas-part-grid button.is-on {
   border-color: var(--berry);
   background: #fff3f1;
   color: var(--berry);
   font-weight: 600;
-  box-shadow: inset 0 0 0 1px var(--berry);
-}
+  box-shadow: inset 0 0 0 1px var(--berry);}
 .xmas-part-grid button.is-used {
   opacity: 0.45;
-  cursor: not-allowed;
-}
+  cursor: not-allowed;}
 .xmas-part-grid button small {
   display: block;
   font-size: 11px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-part-grid button:disabled {
   opacity: 0.45;
-  cursor: not-allowed;
-}
+  cursor: not-allowed;}
 .xmas-build-foot {
   display: grid;
   gap: 10px;
   padding: 12px 16px 16px;
   border-top: 1px solid var(--line);
   background: rgba(247, 242, 230, 0.7);
-  flex: 0 0 auto;
-}
+  flex: 0 0 auto;}
 .xmas-foot-slot {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 8px;
-  align-items: end;
-}
+  align-items: end;}
 .xmas-slot-input {
   display: grid;
   gap: 4px;
   font-size: 12px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-slot-input span {
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-slot-status {
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-slot-status.is-warn {
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-slot-status.is-ok {
-  color: var(--spruce-3);
-}
+  color: var(--spruce-3);}
 .xmas-slot-status .xmas-link-btn {
-  margin-left: 6px;
-}
+  margin-left: 6px;}
 .xmas-wish .xmas-msg {
-  text-align: center;
-}
+  text-align: center;}
 .xmas-wish-text {
   display: grid;
-  gap: 12px;
-}
+  gap: 12px;}
 .xmas-wish-text .xmas-field textarea {
-  min-height: 110px;
-}
+  min-height: 110px;}
 .xmas-preview-btn {
   min-height: 42px;
   padding: 0 16px;
@@ -1115,8 +885,7 @@
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  justify-self: start;
-}
+  justify-self: start;}
 
 /* ---------- ฟีด: คำอวยพร / Exclusive / สนับสนุนทีม ---------- */
 .xmas-feed {
@@ -1124,19 +893,16 @@
   width: 340px;
   max-height: calc(100dvh - 330px);
   display: flex;
-  flex-direction: column;
-}
+  flex-direction: column;}
 .xmas-sheet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 18px 6px 22px;
-}
+  padding: 18px 18px 6px 22px;}
 .xmas-sheet-head b {
   font-family: var(--serif);
   font-size: 20px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-sheet-head .xmas-form-close {
   display: grid;
   place-items: center;
@@ -1146,52 +912,43 @@
   border-radius: 50%;
   background: transparent;
   color: var(--ink-2);
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-tabs {
   display: flex;
   gap: 4px;
   padding: 6px 12px 10px;
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
-  scrollbar-width: none;
-}
+  scrollbar-width: none;}
 .xmas-tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-tab em {
   font-style: normal;
   font-size: 11.5px;
   padding: 1px 7px;
   border-radius: 999px;
   background: rgba(15, 46, 36, 0.08);
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-tab.is-on em {
   background: rgba(255, 255, 255, 0.2);
-  color: inherit;
-}
+  color: inherit;}
 .xmas-tab.is-exclusive.is-on {
   background: linear-gradient(180deg, #efd99d, #c9a24a);
-  color: #2a1d06;
-}
+  color: #2a1d06;}
 .xmas-tab-panel {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
-  padding: 4px 0 10px;
-}
+  padding: 4px 0 10px;}
 .xmas-tab-panel ul {
   list-style: none;
   margin: 0;
-  padding: 0;
-}
+  padding: 0;}
 .xmas-tab-panel li + li {
-  border-top: 1px solid var(--line);
-}
+  border-top: 1px solid var(--line);}
 .xmas-tab-panel li > button {
   display: flex;
   align-items: flex-start;
@@ -1204,59 +961,48 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s ease;
-}
+  transition: background 0.2s ease;}
 .xmas-tab-panel li > button:hover {
-  background: rgba(15, 46, 36, 0.04);
-}
+  background: rgba(15, 46, 36, 0.04);}
 .xmas-tab-panel li > button > .xmas-chip {
-  margin-top: 6px;
-}
+  margin-top: 6px;}
 .xmas-entry-row {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 13px 20px;
-}
+  padding: 13px 20px;}
 .xmas-entry-row > .xicon {
   margin-top: 2px;
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-entry {
   display: grid;
   gap: 2px;
-  min-width: 0;
-}
+  min-width: 0;}
 .xmas-entry b {
   font-family: var(--serif);
   font-size: 17px;
   font-weight: 600;
-  line-height: 1.2;
-}
+  line-height: 1.2;}
 .xmas-entry b small {
   font-family: var(--sans);
   font-size: 12px;
   font-weight: 600;
   color: var(--foil);
-  margin-left: 4px;
-}
+  margin-left: 4px;}
 .xmas-entry em {
   font-style: normal;
   font-size: 14px;
   color: var(--ink-2);
   line-height: 1.55;
-  overflow-wrap: anywhere;
-}
+  overflow-wrap: anywhere;}
 .xmas-tab-panel li.is-exclusive-item .xmas-entry-row {
-  background: linear-gradient(90deg, rgba(232, 209, 154, 0.22), transparent);
-}
+  background: linear-gradient(90deg, rgba(232, 209, 154, 0.22), transparent);}
 .xmas-empty {
   padding: 26px 22px;
   text-align: center;
   color: var(--ink-2);
   font-size: 14px;
-  line-height: 1.6;
-}
+  line-height: 1.6;}
 
 /* ---------- การ์ดคำอวยพรที่เลือก (กระดาษพร้อมตรา) ---------- */
 .xmas-focus {
@@ -1271,20 +1017,17 @@
   background: linear-gradient(180deg, #fbf7ec, #f1eadb);
   color: var(--ink);
   box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(184, 144, 74, 0.35);
-  animation: xmas-rise 0.4s ease both;
-}
+  animation: xmas-rise 0.4s ease both;}
 .xmas-focus::before {
   content: "";
   position: absolute;
   inset: 8px;
   border-radius: 17px;
   border: 1px solid rgba(184, 144, 74, 0.32);
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-focus .xmas-x {
   top: 6px;
-  right: 6px;
-}
+  right: 6px;}
 .xmas-focus-tag {
   display: inline-flex;
   align-items: center;
@@ -1293,16 +1036,14 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--foil);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-focus > b {
   display: block;
   margin: 8px 0 0;
   font-family: var(--serif);
   font-size: 26px;
   font-weight: 600;
-  line-height: 1.1;
-}
+  line-height: 1.1;}
 .xmas-focus-wish {
   margin: 10px 0 0;
   font-family: var(--serif);
@@ -1310,8 +1051,7 @@
   font-size: 19px;
   line-height: 1.55;
   color: var(--ink);
-  text-wrap: pretty;
-}
+  text-wrap: pretty;}
 .xmas-focus-foot {
   display: flex;
   align-items: center;
@@ -1320,12 +1060,10 @@
   flex-wrap: wrap;
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
+  border-top: 1px solid var(--line);}
 .xmas-focus-foot small {
   font-size: 12.5px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 
 /* ---------- หน้าต่างซ้อน (modal) และฟอร์ม ---------- */
 .xmas-modal-back {
@@ -1338,12 +1076,10 @@
   background: rgba(6, 24, 18, 0.55);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
-  animation: xmas-fade 0.3s ease both;
-}
+  animation: xmas-fade 0.3s ease both;}
 @keyframes xmas-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+  from { opacity: 0;}
+  to { opacity: 1;}}
 .xmas-modal {
   position: relative;
   width: min(100%, 420px);
@@ -1356,34 +1092,26 @@
   color: var(--ink);
   border: 1px solid rgba(184, 144, 74, 0.3);
   box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.7);
-  animation: xmas-pop 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.1) both;
-}
+  animation: xmas-pop 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.1) both;}
 @keyframes xmas-pop {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to { opacity: 1; transform: none; }
-}
+  from { opacity: 0; transform: translateY(12px) scale(0.98);}
+  to { opacity: 1; transform: none;}}
 .xmas-modal h2 {
   margin: 0 0 6px;
   font-size: 26px;
-  line-height: 1.15;
-}
+  line-height: 1.15;}
 .xmas-modal .xmas-x {
   top: 12px;
-  right: 12px;
-}
+  right: 12px;}
 .xmas-modal .xmas-kicker {
-  padding-right: 40px;
-}
+  padding-right: 40px;}
 .xmas-modal .xmas-hint {
-  margin-top: 4px;
-}
+  margin-top: 4px;}
 .xmas-modal .xmas-form input,
 .xmas-modal .xmas-form textarea {
-  width: 100%;
-}
+  width: 100%;}
 .xmas-modal-back .xmas-build-foot {
-  background: transparent;
-}
+  background: transparent;}
 
 /* ---------- ตกแต่งตุ๊กตาหิมะ: ตัวอย่างซ้ายและตัวเลือกขวาบนเดสก์ท็อป ---------- */
 .xmas-build {
@@ -1394,59 +1122,48 @@
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-columns: 1fr;
   padding: 0;
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-build-top,
 .xmas-build-main,
 .xmas-build-foot {
-  min-width: 0;
-}
+  min-width: 0;}
 .xmas-build-top {
-  padding: 24px 24px 12px;
-}
+  padding: 24px 24px 12px;}
 .xmas-build-main {
-  display: contents;
-}
+  display: contents;}
 .xmas-build-main .xmas-part-tabs {
-  display: none;
-}
+  display: none;}
 
 /* ---------- Exclusive: หน้าต่างสนับสนุน ---------- */
 .xmas-donate {
   text-align: left;
-  padding-top: 22px;
-}
+  padding-top: 22px;}
 .xmas-donate-hero {
   position: relative;
   display: grid;
   place-items: center;
   height: 150px;
-  margin: 0 0 6px;
-}
+  margin: 0 0 6px;}
 .xmas-donate-glow {
   position: absolute;
   inset: -6px 22%;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(232, 209, 154, 0.7), rgba(232, 209, 154, 0.12) 55%, transparent 70%);
   animation: xmas-breathe 4s ease-in-out infinite;
-  pointer-events: none;
-}
+  pointer-events: none;}
 @keyframes xmas-breathe {
-  0%, 100% { opacity: 0.75; }
-  50% { opacity: 1; }
-}
+  0%, 100% { opacity: 0.75;}
+  50% { opacity: 1;}}
 .xmas-donate-snow {
   position: relative;
   height: 150px;
   width: auto;
   max-width: 100%;
-  filter: drop-shadow(0 14px 18px rgba(15, 46, 36, 0.3));
-}
+  filter: drop-shadow(0 14px 18px rgba(15, 46, 36, 0.3));}
 .xmas-donate .xmas-kicker,
 .xmas-donate h2,
 .xmas-donate .xmas-hint {
-  text-align: center;
-}
+  text-align: center;}
 .xmas-kind {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1454,8 +1171,7 @@
   padding: 4px;
   margin: 14px 0 6px;
   border-radius: 999px;
-  background: rgba(15, 46, 36, 0.07);
-}
+  background: rgba(15, 46, 36, 0.07);}
 .xmas-kind button {
   display: inline-flex;
   align-items: center;
@@ -1469,29 +1185,24 @@
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-kind button.is-on {
   background: var(--paper-3);
   color: var(--ink);
-  box-shadow: var(--shadow-sm);
-}
+  box-shadow: var(--shadow-sm);}
 .xmas-donate fieldset {
   margin: 12px 0 0;
   padding: 0;
-  border: 0;
-}
+  border: 0;}
 .xmas-donate legend {
   padding: 0;
   margin-bottom: 8px;
   font-size: 13px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-shapes {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-shapes button {
   display: grid;
   justify-items: center;
@@ -1503,45 +1214,36 @@
   background: var(--paper-3);
   color: var(--ink);
   font: inherit;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-shapes button b {
   font-family: var(--serif);
   font-size: 19px;
   font-weight: 600;
-  line-height: 1.1;
-}
+  line-height: 1.1;}
 .xmas-shapes button small {
   font-size: 11.5px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-shapes button.is-on,
 .xmas-shapes button[aria-pressed="true"] {
   border-color: var(--berry);
   box-shadow: inset 0 0 0 1px var(--berry);
-  background: #fff3f1;
-}
+  background: #fff3f1;}
 .xmas-theme-pick legend,
 .xmas-spot-pick legend {
-  margin-bottom: 8px;
-}
+  margin-bottom: 8px;}
 .xmas-theme-grid,
 .xmas-spot-grid {
   display: grid;
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-theme-grid {
-  grid-template-columns: 1fr 1fr;
-}
+  grid-template-columns: 1fr 1fr;}
 .xmas-spot-grid {
-  grid-template-columns: repeat(4, 1fr);
-}
+  grid-template-columns: repeat(4, 1fr);}
 .xmas-theme-pick,
 .xmas-spot-pick {
   margin: 12px 0 0;
   padding: 0;
-  border: 0;
-}
+  border: 0;}
 .xmas-theme-grid button {
   display: grid;
   justify-items: start;
@@ -1553,24 +1255,19 @@
   color: var(--ink);
   font: inherit;
   text-align: left;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-theme-grid button .xicon {
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-theme-grid button b {
-  font-size: 13.5px;
-}
+  font-size: 13.5px;}
 .xmas-theme-grid button small {
   font-size: 11.5px;
   color: var(--ink-2);
-  line-height: 1.35;
-}
+  line-height: 1.35;}
 .xmas-theme-grid button.is-on {
   border-color: var(--berry);
   background: #fff3f1;
-  box-shadow: inset 0 0 0 1px var(--berry);
-}
+  box-shadow: inset 0 0 0 1px var(--berry);}
 .xmas-spot-grid button {
   min-height: 42px;
   padding: 0 6px;
@@ -1580,46 +1277,37 @@
   color: var(--ink);
   font: inherit;
   font-size: 13px;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-spot-grid button.is-on {
   border-color: var(--berry);
   background: #fff3f1;
   color: var(--berry);
   font-weight: 600;
-  box-shadow: inset 0 0 0 1px var(--berry);
-}
+  box-shadow: inset 0 0 0 1px var(--berry);}
 .xmas-spot-pick .xmas-hint {
   margin-top: 8px;
-  font-size: 12.5px;
-}
+  font-size: 12.5px;}
 .xmas-thanks-input {
-  margin-top: 14px;
-}
+  margin-top: 14px;}
 .xmas-thanks-input label {
   display: grid;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-thanks-input label > span {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-thanks-input label > span em {
   font-style: normal;
   color: var(--ink-2);
-  font-weight: 500;
-}
+  font-weight: 500;}
 .xmas-thanks-input textarea {
-  width: 100%;
-}
+  width: 100%;}
 .xmas-thanks-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
-}
+  margin-top: 8px;}
 .xmas-thanks-chips button {
   min-height: 32px;
   padding: 0 12px;
@@ -1629,15 +1317,13 @@
   color: var(--spruce-2);
   font: inherit;
   font-size: 12.5px;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-pay {
   display: grid;
   justify-items: center;
   gap: 12px;
   text-align: center;
-  padding: 6px 0;
-}
+  padding: 6px 0;}
 .xmas-qr {
   width: 240px;
   height: 240px;
@@ -1645,24 +1331,21 @@
   border-radius: 18px;
   background: #fff;
   padding: 10px;
-  box-shadow: var(--shadow-sm);
-}
+  box-shadow: var(--shadow-sm);}
 .xmas-thanks-card {
   position: relative;
   display: grid;
   justify-items: center;
   gap: 10px;
   padding: 6px 0 2px;
-  text-align: center;
-}
+  text-align: center;}
 .xmas-thanks-kicker {
   margin: 0;
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--foil);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-thanks-card blockquote {
   margin: 0;
   padding: 6px 10px;
@@ -1671,23 +1354,19 @@
   font-style: italic;
   font-size: 21px;
   line-height: 1.5;
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-thanks-by {
   margin: 0;
   font-weight: 600;
-  color: var(--spruce-2);
-}
+  color: var(--spruce-2);}
 
 /* ---------- ฟอร์มชวนเพื่อน ---------- */
 .xmas-live-count {
   margin: 6px 0 0;
   font-size: 14px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-live-count b {
-  color: var(--berry);
-}
+  color: var(--berry);}
 
 /* ---------- การ์ดตุ๊กตาหิมะที่วางแล้ว ---------- */
 .xmas-decor-info {
@@ -1704,13 +1383,11 @@
   box-shadow: var(--shadow-lg);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  animation: xmas-rise 0.35s ease both;
-}
+  animation: xmas-rise 0.35s ease both;}
 .xmas-decor-info-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
+  gap: 12px;}
 .xmas-decor-thumb {
   width: 54px;
   height: 66px;
@@ -1719,22 +1396,18 @@
   background: radial-gradient(circle at 50% 40%, #fffdf7, #efe7d3);
   box-shadow: inset 0 0 0 1px rgba(184, 144, 74, 0.25);
   display: grid;
-  place-items: center;
-}
+  place-items: center;}
 .xmas-decor-thumb svg {
   width: 42px;
-  height: 54px;
-}
+  height: 54px;}
 .xmas-decor-info b {
   display: block;
   font-family: var(--serif);
   font-size: 20px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-decor-info small {
   font-size: 12.5px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-like {
   margin-top: 14px;
   width: 100%;
@@ -1745,21 +1418,17 @@
   color: var(--berry);
   font: inherit;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-like[aria-pressed="true"] {
   background: var(--berry);
-  color: #fff;
-}
+  color: #fff;}
 
 /* ---------- ปุ่มเชิญ / สถานะกลาง ---------- */
 .xmas-loading {
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-enter {
   color: var(--spruce-2);
-  font-weight: 600;
-}
+  font-weight: 600;}
 
 /* ---------- ป๊อปอัปเชิญเข้าร่วม ---------- */
 .xmas-intro {
@@ -1772,8 +1441,7 @@
   background: rgba(6, 24, 18, 0.6);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
-  animation: xmas-fade 0.4s ease both;
-}
+  animation: xmas-fade 0.4s ease both;}
 .xmas-intro-card {
   position: relative;
   width: min(100%, 380px);
@@ -1784,55 +1452,28 @@
   background-image: var(--crystal);
   color: var(--ink);
   box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(184, 144, 74, 0.35);
-  animation: xmas-pop 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.1) both;
-}
-.xmas-intro-orb {
-  position: relative;
-  width: 84px;
-  height: 84px;
-  margin: 0 auto 16px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 36% 32%, #fff8e6, #e8d19a 55%, #b8904a 100%);
-  box-shadow: 0 14px 30px -12px rgba(184, 144, 74, 0.8);
-}
-.xmas-intro-orb span {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(184, 144, 74, 0.35);
-  animation: xmas-orbit 3.6s ease-out infinite;
-}
-.xmas-intro-orb span:nth-child(2) {
-  animation-delay: 1.2s;
-}
-.xmas-intro-orb span:nth-child(3) {
-  animation-delay: 2.4s;
-}
+  animation: xmas-pop 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.1) both;}
 @keyframes xmas-orbit {
-  from { transform: scale(1); opacity: 0.8; }
-  to { transform: scale(1.7); opacity: 0; }
-}
+  from { transform: scale(1); opacity: 0.8;}
+  to { transform: scale(1.7); opacity: 0;}}
 .xmas-intro-kicker {
   margin: 0;
   font-size: 11px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--foil);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-intro-card h1 {
   margin: 8px 0 10px;
   font-family: var(--serif);
   font-size: 30px;
   font-weight: 600;
-  line-height: 1.15;
-}
+  line-height: 1.15;}
 .xmas-intro-text {
   margin: 0 0 22px;
   font-size: 14.5px;
   line-height: 1.65;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-intro-btn {
   width: 100%;
   min-height: 52px;
@@ -1844,11 +1485,9 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 14px 26px -16px rgba(155, 28, 49, 0.95);
-}
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 14px 26px -16px rgba(155, 28, 49, 0.95);}
 .xmas-intro-btn:hover {
-  background: var(--berry-2);
-}
+  background: var(--berry-2);}
 
 /* ---------- ของขวัญเปิดตัว (GiftIntro) ---------- */
 .xmas-gift {
@@ -1865,37 +1504,31 @@
     radial-gradient(70% 50% at 50% 60%, rgba(232, 209, 154, 0.3), transparent 70%),
     linear-gradient(180deg, #0b2a21 0%, #1f4d3c 100%);
   color: #f7f2e6;
-  animation: xmas-fade 0.5s ease both;
-}
+  animation: xmas-fade 0.5s ease both;}
 .xmas-gift-stars,
 .xmas-gift-burst {
   position: absolute;
   inset: 0;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-gift-title {
   position: relative;
   text-align: center;
-  z-index: 2;
-}
+  z-index: 2;}
 .xmas-gift-thai {
   margin: 0;
   font-size: 13px;
   letter-spacing: 0.22em;
   color: var(--foil-soft);
-  text-transform: uppercase;
-}
+  text-transform: uppercase;}
 .xmas-gift-title h1 {
   margin-top: 8px;
   font-family: var(--serif);
   font-size: clamp(34px, 7vw, 56px);
   font-style: italic;
   font-weight: 500;
-  color: #fffaf0;
-}
+  color: #fffaf0;}
 .xmas-gift-title h1 span {
-  display: inline-block;
-}
+  display: inline-block;}
 .xmas-gift-box {
   position: relative;
   width: 160px;
@@ -1903,8 +1536,7 @@
   border: 0;
   background: transparent;
   cursor: pointer;
-  z-index: 2;
-}
+  z-index: 2;}
 .xmas-gift-body {
   position: absolute;
   left: 0;
@@ -1913,8 +1545,7 @@
   height: 110px;
   border-radius: 10px;
   background: linear-gradient(180deg, #9b1c31, #7a1526);
-  box-shadow: inset 0 0 0 1px rgba(232, 209, 154, 0.4);
-}
+  box-shadow: inset 0 0 0 1px rgba(232, 209, 154, 0.4);}
 .xmas-gift-lid {
   position: absolute;
   left: -6px;
@@ -1923,26 +1554,22 @@
   height: 34px;
   border-radius: 8px;
   background: linear-gradient(180deg, #b8284a, #9b1c31);
-  box-shadow: inset 0 0 0 1px rgba(232, 209, 154, 0.5);
-}
+  box-shadow: inset 0 0 0 1px rgba(232, 209, 154, 0.5);}
 .xmas-gift-ribbon-v,
 .xmas-gift-ribbon-h {
   position: absolute;
-  background: var(--foil-soft);
-}
+  background: var(--foil-soft);}
 .xmas-gift-ribbon-v {
   left: 50%;
   top: 0;
   bottom: 0;
   width: 12px;
-  margin-left: -6px;
-}
+  margin-left: -6px;}
 .xmas-gift-ribbon-h {
   left: 0;
   right: 0;
   top: 50%;
-  height: 0;
-}
+  height: 0;}
 .xmas-gift-bow,
 .xmas-gift-bow-l,
 .xmas-gift-bow-r {
@@ -1951,31 +1578,25 @@
   width: 26px;
   height: 22px;
   border-radius: 50%;
-  border: 3px solid var(--foil-soft);
-}
+  border: 3px solid var(--foil-soft);}
 .xmas-gift-bow {
   left: 50%;
   margin-left: -13px;
-  width: 26px;
-}
+  width: 26px;}
 .xmas-gift-bow-l {
   left: calc(50% - 34px);
-  transform: rotate(-30deg);
-}
+  transform: rotate(-30deg);}
 .xmas-gift-bow-r {
   left: calc(50% + 8px);
-  transform: rotate(30deg);
-}
+  transform: rotate(30deg);}
 .xmas-gift-inner {
   position: absolute;
-  inset: 0;
-}
+  inset: 0;}
 .xmas-gift-hint {
   margin: 0;
   font-size: 14px;
   color: #d9e4da;
-  z-index: 2;
-}
+  z-index: 2;}
 .xmas-gift-spark {
   position: absolute;
   left: 50%;
@@ -1985,15 +1606,12 @@
   border-radius: 50%;
   background: var(--c, #e8d19a);
   opacity: 0;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-gift.is-opening .xmas-gift-spark {
-  animation: xmas-spark 1.1s ease-out var(--d, 0ms) both;
-}
+  animation: xmas-spark 1.1s ease-out var(--d, 0ms) both;}
 @keyframes xmas-spark {
-  0% { opacity: 1; transform: translate(0, 0) scale(1); }
-  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.4); }
-}
+  0% { opacity: 1; transform: translate(0, 0) scale(1);}
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.4);}}
 .xmas-gift-skip {
   position: absolute;
   right: 20px;
@@ -2007,23 +1625,14 @@
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  z-index: 3;
-}
+  z-index: 3;}
 /* หน้าหลักค่อยๆ ปรากฏใต้ฉากของขวัญตอนเริ่มวาบ ให้สองฉากซ้อนกันแล้วเปลี่ยนต่อเนื่องกัน */
 .xmas-gift-under {
   opacity: 0;
-  transition: opacity 0.2s ease;
-}
+  transition: opacity 0.2s ease;}
 .xmas-gift-under.is-shown {
-  opacity: 1;
-}
-@media (prefers-reduced-motion: reduce) {
-  .xmas-gift-spark,
-  .xmas-intro-orb span,
-  .xmas-donate-glow {
-    animation: none;
-  }
-}
+  opacity: 1;}
+@media (prefers-reduced-motion: reduce) {}
 
 /* ---------- หน้าเลือกห้อง ---------- */
 .xmas-picker {
@@ -2031,27 +1640,22 @@
   padding: 56px 20px 64px;
   background-color: var(--paper);
   background-image: var(--crystal);
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-picker-inner {
   max-width: 1080px;
-  margin: 0 auto;
-}
+  margin: 0 auto;}
 .xmas-picker h1 {
   font-size: clamp(34px, 5vw, 52px);
   line-height: 1.08;
-  margin-top: 4px;
-}
+  margin-top: 4px;}
 .xmas-picker .xmas-kicker {
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-picker-lead {
   margin: 14px 0 0;
   max-width: 60ch;
   font-size: 16px;
   line-height: 1.7;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-picker-note {
   margin: 16px 0 0;
   padding: 10px 14px;
@@ -2059,14 +1663,12 @@
   background: rgba(155, 28, 49, 0.08);
   color: var(--berry);
   font-size: 14px;
-  display: inline-block;
-}
+  display: inline-block;}
 .xmas-room-grid {
   display: grid;
   gap: 20px;
   margin-top: 34px;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-}
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));}
 .xmas-room-card {
   position: relative;
   display: flex;
@@ -2078,23 +1680,19 @@
   text-decoration: none;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--line);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
+  transition: transform 0.25s ease, box-shadow 0.25s ease;}
 .xmas-room-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 28px 50px -24px rgba(8, 30, 22, 0.55);
-}
+  box-shadow: 0 28px 50px -24px rgba(8, 30, 22, 0.55);}
 .xmas-room-card.is-full {
   opacity: 0.6;
   pointer-events: none;
-  filter: grayscale(0.4);
-}
+  filter: grayscale(0.4);}
 .xmas-room-art {
   position: relative;
   height: 150px;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--sky-top, #0b2a21), var(--sky-bottom, #1f4d3c));
-}
+  background: linear-gradient(180deg, var(--sky-top, #0b2a21), var(--sky-bottom, #1f4d3c));}
 .xmas-room-glow {
   position: absolute;
   left: 50%;
@@ -2103,8 +1701,7 @@
   height: 180px;
   margin: -90px 0 0 -90px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(232, 209, 154, 0.55), transparent 65%);
-}
+  background: radial-gradient(circle, rgba(232, 209, 154, 0.55), transparent 65%);}
 .xmas-room-art .xmas-skyline {
   display: block;
   position: absolute;
@@ -2113,59 +1710,49 @@
   bottom: 0;
   width: 100%;
   height: 70%;
-  fill: rgba(8, 30, 22, 0.7);
-}
+  fill: rgba(8, 30, 22, 0.7);}
 .xmas-room-body {
   display: grid;
   gap: 10px;
-  padding: 18px 20px 20px;
-}
+  padding: 18px 20px 20px;}
 .xmas-room-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-room-head b {
   font-family: var(--serif);
   font-size: 26px;
   font-weight: 600;
-  line-height: 1;
-}
+  line-height: 1;}
 .xmas-room-head span {
   font-size: 12.5px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-room-body p {
   margin: 0;
   font-size: 14px;
   color: var(--ink-2);
   line-height: 1.6;
-  min-height: 46px;
-}
+  min-height: 46px;}
 .xmas-room-meter {
   height: 6px;
   border-radius: 999px;
   background: rgba(15, 46, 36, 0.09);
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-room-meter span {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--spruce-3), var(--foil));
-}
+  background: linear-gradient(90deg, var(--spruce-3), var(--foil));}
 .xmas-room-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   font-size: 13px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-room-foot .xmas-enter {
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-room-foot em {
   font-style: normal;
   font-size: 12px;
@@ -2173,37 +1760,30 @@
   padding: 3px 10px;
   border-radius: 999px;
   background: rgba(15, 46, 36, 0.08);
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-room-foot em.is-hot {
   background: rgba(47, 106, 85, 0.14);
-  color: var(--spruce-3);
-}
+  color: var(--spruce-3);}
 
 /* ==========================================================================
    เดสก์ท็อป (จอ 760px ขึ้นไป)
    ========================================================================== */
 @media (min-width: 760px) {
   .xmas-top {
-    padding: 22px 28px 0;
-  }
+    padding: 22px 28px 0;}
   .xmas-brand b {
-    font-size: 24px;
-  }
+    font-size: 24px;}
   .xmas-panel {
-    left: 28px;
-  }
+    left: 28px;}
   .xmas-feed {
-    right: 28px;
-  }
+    right: 28px;}
   .xmas-build {
     grid-template-rows: minmax(0, 1fr);
     grid-template-columns: 300px minmax(0, 1fr);
     grid-template-areas:
       "top main"
       "foot main";
-    grid-template-rows: minmax(0, 1fr) auto;
-  }
+    grid-template-rows: minmax(0, 1fr) auto;}
   .xmas-build .xmas-build-top {
     grid-area: top;
     display: flex;
@@ -2211,60 +1791,46 @@
     min-height: 0;
     padding: 26px 22px 14px;
     background: linear-gradient(180deg, rgba(232, 209, 154, 0.18), transparent 60%);
-    border-right: 1px solid var(--line);
-  }
+    border-right: 1px solid var(--line);}
   .xmas-build .xmas-build-preview {
     flex: 1 1 0;
     min-height: 180px;
     height: auto;
-    margin: 6px 0 0;
-  }
+    margin: 6px 0 0;}
   .xmas-build .xmas-build-main {
     grid-area: main;
     display: flex;
     flex-direction: column;
-    min-height: 0;
-  }
+    min-height: 0;}
   .xmas-build .xmas-build-main .xmas-part-tabs {
     display: flex;
     border-top: 0;
-    padding: 18px 22px 12px;
-  }
+    padding: 18px 22px 12px;}
   .xmas-build .xmas-part-body {
     padding: 14px 22px 22px;
-    min-height: 0;
-  }
+    min-height: 0;}
   .xmas-build .xmas-part-grid {
     grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-    gap: 10px;
-  }
+    gap: 10px;}
   .xmas-build .xmas-build-foot {
     grid-area: foot;
     align-content: end;
     padding: 18px 22px 22px;
     border-top: 0;
     border-right: 1px solid var(--line);
-    background: rgba(247, 242, 230, 0.6);
-  }
+    background: rgba(247, 242, 230, 0.6);}
   .xmas-build .xmas-foot-slot {
-    grid-template-columns: 1fr 1fr;
-  }
+    grid-template-columns: 1fr 1fr;}
   .xmas-build .xmas-foot-slot .xmas-slot-input {
-    grid-column: 1 / -1;
-  }
+    grid-column: 1 / -1;}
   .xmas-build .xmas-foot-slot .xmas-chip-btn {
-    width: 100%;
-  }
+    width: 100%;}
   .xmas-build .xmas-part-title {
-    font-size: 14px;
-  }
+    font-size: 14px;}
   .xmas-donate-hero {
-    height: 170px;
-  }
+    height: 170px;}
   .xmas-donate-snow {
-    height: 170px;
-  }
-}
+    height: 170px;}}
 
 /* ==========================================================================
    มือถือ (จอต่ำกว่า 760px)
@@ -2272,66 +1838,52 @@
 @media (max-width: 759px) {
   .xmas-top {
     padding: 14px 14px 0;
-    gap: 8px;
-  }
+    gap: 8px;}
   .xmas-brand {
     flex: 1 1 auto;
-    gap: 9px;
-  }
+    gap: 9px;}
   .xmas-brand-star {
     width: 32px;
     height: 32px;
-    flex-basis: 32px;
-  }
+    flex-basis: 32px;}
   .xmas-brand > div {
-    min-width: 0;
-  }
+    min-width: 0;}
   .xmas-brand b {
     font-size: 17px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    line-height: 1.15;
-  }
+    line-height: 1.15;}
   .xmas-brand small {
     font-size: 11.5px;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    text-overflow: ellipsis;}
   .xmas-region,
   .xmas-countdown {
-    display: none;
-  }
+    display: none;}
   .xmas-top-right {
     flex: 0 0 auto;
     gap: 6px;
-    flex-wrap: nowrap;
-  }
+    flex-wrap: nowrap;}
   .xmas-live {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
-  }
+    font-size: 12px;}
   .xmas-music-toggle,
   .xmas-snow-toggle {
     height: 32px;
-    padding: 0 9px;
-  }
+    padding: 0 9px;}
   .xmas-snow-label {
-    display: none;
-  }
+    display: none;}
   .xmas-switch.is-donate {
-    display: none;
-  }
+    display: none;}
   .xmas-ticker {
     top: 74px;
-    height: 26px;
-  }
+    height: 26px;}
   .xmas-tick-item {
-    font-size: 14px;
-  }
+    font-size: 14px;}
 
   /* เมนูเป็นแถบด้านล่างเต็มความกว้าง */
   .xmas-actions {
@@ -2342,8 +1894,7 @@
     justify-content: space-between;
     gap: 0;
     padding: 6px;
-    border-radius: 24px;
-  }
+    border-radius: 24px;}
   .xmas-action {
     flex: 1 1 0;
     min-width: 0;
@@ -2356,40 +1907,32 @@
     font-size: 10.5px;
     line-height: 1.15;
     text-align: center;
-    white-space: normal;
-  }
+    white-space: normal;}
   .xmas-action .xicon {
     width: 20px;
-    height: 20px;
-  }
+    height: 20px;}
   .xmas-action-phone,
   .xmas-action-mobile {
-    display: inline-flex;
-  }
+    display: inline-flex;}
   .xmas-action-phone {
     background: var(--berry);
     color: #fff;
-    font-weight: 600;
-  }
+    font-weight: 600;}
   .xmas-action-phone .xicon {
-    color: #fff;
-  }
+    color: #fff;}
   .xmas-action-phone:hover {
     background: var(--berry-2);
-    color: #fff;
-  }
+    color: #fff;}
 
   .xmas-zoom {
     right: 12px;
     top: auto;
     bottom: 96px;
     transform: none;
-    padding: 4px;
-  }
+    padding: 4px;}
   .xmas-zoom button {
     width: 36px;
-    height: 36px;
-  }
+    height: 36px;}
 
   /* แผงแขวนและรายการเป็นชีตด้านล่าง */
   .xmas-panel,
@@ -2406,19 +1949,15 @@
     transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 9;
-    visibility: hidden;
-  }
+    visibility: hidden;}
   .xmas-panel.is-open,
   .xmas-feed.is-open {
-    visibility: visible;
-  }
+    visibility: visible;}
   .xmas-panel.is-open,
   .xmas-feed.is-open {
-    transform: translateY(0);
-  }
+    transform: translateY(0);}
   .xmas-feed {
-    display: flex;
-  }
+    display: flex;}
   .xmas-sheet-toggle {
     display: flex;
     align-items: center;
@@ -2434,8 +1973,7 @@
     font-weight: 600;
     cursor: pointer;
     position: relative;
-    flex: 0 0 auto;
-  }
+    flex: 0 0 auto;}
   .xmas-sheet-toggle::before {
     content: "";
     position: absolute;
@@ -2445,41 +1983,32 @@
     height: 4px;
     margin-left: -21px;
     border-radius: 4px;
-    background: rgba(15, 46, 36, 0.25);
-  }
+    background: rgba(15, 46, 36, 0.25);}
   .xmas-panel.is-open .xmas-sheet-toggle,
   .xmas-feed.is-open .xmas-sheet-head {
-    padding-top: 14px;
-  }
+    padding-top: 14px;}
   .xmas-panel .xmas-wish-form {
-    min-height: 0;
-  }
+    min-height: 0;}
   .xmas-panel .xmas-build-top {
-    padding: 10px 18px 4px;
-  }
+    padding: 10px 18px 4px;}
   .xmas-panel .xmas-build-preview {
-    height: clamp(96px, 16dvh, 140px);
-  }
+    height: clamp(96px, 16dvh, 140px);}
   .xmas-panel .xmas-part-body {
-    min-height: 130px;
-  }
+    min-height: 130px;}
   .xmas-sheet-head {
-    padding-top: 12px;
-  }
+    padding-top: 12px;}
 
   /* หน้าต่างซ้อนบนมือถือเป็นชีตด้านล่าง */
   .xmas-modal-back {
     place-items: end center;
-    padding: 0;
-  }
+    padding: 0;}
   .xmas-modal {
     width: 100%;
     max-width: none;
     border-radius: 28px 28px 0 0;
     max-height: 90dvh;
     padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
-    animation: xmas-sheet 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
+    animation: xmas-sheet 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;}
   .xmas-modal::before {
     content: "";
     display: block;
@@ -2487,8 +2016,7 @@
     height: 4px;
     margin: -8px auto 14px;
     border-radius: 4px;
-    background: rgba(15, 46, 36, 0.22);
-  }
+    background: rgba(15, 46, 36, 0.22);}
   .xmas-build {
     width: 100%;
     height: min(90dvh, 720px);
@@ -2496,139 +2024,87 @@
     border-radius: 28px 28px 0 0;
     grid-template-columns: 1fr;
     grid-template-rows: auto auto minmax(0, 1fr) auto;
-    grid-template-areas: none;
-  }
+    grid-template-areas: none;}
   .xmas-build .xmas-build-top {
-    padding: 14px 18px 4px;
-  }
+    padding: 14px 18px 4px;}
   .xmas-build .xmas-build-preview {
     height: clamp(96px, 15dvh, 130px);
-    margin: 0;
-  }
+    margin: 0;}
   .xmas-build .xmas-build-main {
-    display: contents;
-  }
+    display: contents;}
   .xmas-build .xmas-part-tabs {
     display: flex;
     padding: 6px 12px;
-    border-top: 1px solid var(--line);
-  }
+    border-top: 1px solid var(--line);}
   .xmas-build .xmas-part-body {
-    padding: 12px 14px;
-  }
+    padding: 12px 14px;}
   .xmas-build .xmas-build-foot {
     padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
     gap: 8px;
     grid-area: auto;
-    border-right: 0;
-  }
+    border-right: 0;}
   .xmas-build .xmas-foot-slot {
-    grid-template-columns: minmax(0, 1fr) auto auto;
-  }
+    grid-template-columns: minmax(0, 1fr) auto auto;}
   .xmas-build .xmas-foot-slot .xmas-chip-btn {
     min-height: 42px;
     padding: 0 12px;
-    font-size: 13px;
-  }
+    font-size: 13px;}
   .xmas-build .xmas-build-slot {
-    display: none;
-  }
+    display: none;}
   .xmas-part-grid {
-    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  }
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));}
   .xmas-spot-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+    grid-template-columns: repeat(2, 1fr);}
 
   .xmas-focus {
     bottom: 96px;
     width: calc(100% - 28px);
-    padding: 22px 20px 18px;
-  }
+    padding: 22px 20px 18px;}
   .xmas-focus > b {
-    font-size: 23px;
-  }
+    font-size: 23px;}
   .xmas-focus-wish {
-    font-size: 17px;
-  }
-  .xmas-tap-hint {
-    bottom: 96px;
-    font-size: 13px;
-  }
-  .xmas-coach {
-    top: 124px;
-  }
+    font-size: 17px;}
   .xmas-banner {
     top: 40%;
-    padding: 20px 22px 18px;
-  }
+    padding: 20px 22px 18px;}
   .xmas-banner p {
-    font-size: 22px;
-  }
+    font-size: 22px;}
   .xmas-donate-hero,
   .xmas-donate-snow {
-    height: 120px;
-  }
+    height: 120px;}
   .xmas-shapes {
-    grid-template-columns: repeat(3, 1fr);
-  }
+    grid-template-columns: repeat(3, 1fr);}
   .xmas-theme-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+    grid-template-columns: 1fr 1fr;}
   .xmas-picker {
-    padding: 36px 18px 48px;
-  }
+    padding: 36px 18px 48px;}
   .xmas-room-grid {
-    grid-template-columns: 1fr;
-  }
+    grid-template-columns: 1fr;}
   .xmas-gift-box {
     width: 130px;
-    height: 116px;
-  }
-}
+    height: 116px;}}
 
 @keyframes xmas-sheet {
-  from { transform: translateY(100%); }
-  to { transform: none; }
-}
+  from { transform: translateY(100%);}
+  to { transform: none;}}
 
-@media (prefers-reduced-motion: reduce) {
-  .xmas-modal,
-  .xmas-focus,
-  .xmas-tap-hint,
-  .xmas-toast,
-  .xmas-banner,
-  .xmas-modal-back,
-  .xmas-intro,
-  .xmas-intro-card,
-  .xmas-music-toggle.is-on .xmas-music-bars i,
-  .xmas-snow-toggle.is-on .xmas-snow-knob .xicon,
-  .xmas-live-dot,
-  .xmas-tap-ring {
-    animation: none;
-  }
-}
+@media (prefers-reduced-motion: reduce) {}
 
 /* แท็บเล็ตและจอแคบ (760–1099px): เมนูแสดงเฉพาะไอคอนเพื่อไม่ชนแผง */
 @media (min-width: 760px) and (max-width: 1099px) {
   .xmas-panel,
   .xmas-feed {
-    width: 282px;
-  }
+    width: 282px;}
   .xmas-action {
     font-size: 0;
     gap: 0;
     min-height: 48px;
-    padding: 0 14px;
-  }
+    padding: 0 14px;}
   .xmas-action .xicon {
     width: 20px;
-    height: 20px;
-  }
+    height: 20px;}
   .xmas-action.is-exclusive {
-    padding: 0 18px;
-  }
-}
+    padding: 0 18px;}}
 
 /* ==========================================================================
    รอบปรับปรุง 2: ticker กลางจอ ป๊อปอัปแนะนำ ประวัติ ปุ่มปิด ของขวัญ และหิมะเกาะปุ่ม
@@ -2647,70 +2123,16 @@
   border: 1px solid rgba(232, 209, 154, 0.3);
   box-shadow: 0 14px 30px -18px rgba(0, 0, 0, 0.6);
   -webkit-mask-image: none;
-  mask-image: none;
-}
+  mask-image: none;}
 .xmas-ticker-track {
-  animation-duration: 48s;
-}
-
-/* ป๊อปอัปแนะนำ: ลูกแก้วแขวนแกว่งและจุดบอกขั้นตอน */
-.xmas-coach {
-  padding-top: 24px;
-  overflow: visible;
-}
-.xmas-coach-orb {
-  position: absolute;
-  top: -22px;
-  left: 50%;
-  width: 40px;
-  height: 40px;
-  margin-left: -20px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 36% 32%, #fff8e6, #e8d19a 55%, #b8904a 100%);
-  box-shadow: 0 10px 22px -8px rgba(184, 144, 74, 0.9);
-  transform-origin: 50% -26px;
-  animation: xmas-swing 2.6s ease-in-out infinite;
-}
-.xmas-coach-orb::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: -18px;
-  width: 1px;
-  height: 18px;
-  background: rgba(184, 144, 74, 0.8);
-}
+  animation-duration: 48s;}
 @keyframes xmas-swing {
-  0%, 100% { transform: rotate(-7deg); }
-  50% { transform: rotate(7deg); }
-}
-.xmas-coach-dots {
-  display: inline-flex;
-  gap: 6px;
-}
-.xmas-coach-dots i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(184, 144, 74, 0.35);
-  transition: width 0.3s ease, background 0.3s ease;
-}
-.xmas-coach-dots i.is-on {
-  width: 22px;
-  border-radius: 999px;
-  background: var(--berry);
-}
-.xmas-coach-next {
-  box-shadow: 0 10px 20px -12px rgba(8, 30, 22, 0.8);
-}
-.xmas-coach-next:hover {
-  background: var(--spruce);
-}
+  0%, 100% { transform: rotate(-7deg);}
+  50% { transform: rotate(7deg);}}
 
 /* ประวัติ: ไอคอนวงกลมสีบอกชนิด แถวเต็มความกว้าง */
 .xmas-feed .xmas-feed-close {
-  display: none;
-}
+  display: none;}
 .xmas-timeline-dot {
   display: grid;
   place-items: center;
@@ -2718,35 +2140,27 @@
   height: 30px;
   flex: 0 0 30px;
   border-radius: 50%;
-  margin-top: 1px;
-}
+  margin-top: 1px;}
 .xmas-timeline-dot.is-wish {
   background: rgba(184, 144, 74, 0.16);
-  color: #8a6a2e;
-}
+  color: #8a6a2e;}
 .xmas-timeline-dot.is-snowman {
   background: rgba(47, 106, 85, 0.14);
-  color: var(--spruce-3);
-}
+  color: var(--spruce-3);}
 .xmas-tab-panel li > button:disabled {
-  cursor: default;
-}
+  cursor: default;}
 .xmas-tab-panel li > button:disabled:hover {
-  background: transparent;
-}
+  background: transparent;}
 .xmas-entry b small {
   font-family: var(--sans);
   font-size: 11.5px;
   font-weight: 500;
   color: var(--ink-2);
-  margin-left: 6px;
-}
+  margin-left: 6px;}
 .xmas-tabs {
-  padding-inline: 14px;
-}
+  padding-inline: 14px;}
 .xmas-feed {
-  width: 350px;
-}
+  width: 350px;}
 
 /* ปุ่มปิด: พื้นที่กดใหญ่ อยู่บนสุดของเลเยอร์ ไม่ถูกเนื้อหาบัง */
 .xmas-x {
@@ -2756,16 +2170,13 @@
   top: 8px;
   right: 8px;
   cursor: pointer;
-  pointer-events: auto;
-}
+  pointer-events: auto;}
 .xmas-x .xicon {
-  pointer-events: none;
-}
+  pointer-events: none;}
 
 /* ป๊อปอัป Exclusive: แสงกระพริบรอบป้าย ตัวเลือกมีการเด้งเล็กน้อยเมื่อเลือก */
 .xmas-donate {
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-donate::before {
   content: "";
   position: absolute;
@@ -2774,12 +2185,10 @@
   background: linear-gradient(100deg, transparent 30%, rgba(232, 209, 154, 0.28) 50%, transparent 70%);
   transform: translateX(-100%);
   animation: xmas-sheen 3.6s ease-in-out 0.6s infinite;
-  pointer-events: none;
-}
+  pointer-events: none;}
 @keyframes xmas-sheen {
-  0% { transform: translateX(-100%); }
-  55%, 100% { transform: translateX(100%); }
-}
+  0% { transform: translateX(-100%);}
+  55%, 100% { transform: translateX(100%);}}
 .xmas-donate-hero::before {
   content: "";
   position: absolute;
@@ -2787,95 +2196,74 @@
   height: 170px;
   border-radius: 50%;
   border: 1px dashed rgba(184, 144, 74, 0.55);
-  animation: xmas-spin 22s linear infinite;
-}
+  animation: xmas-spin 22s linear infinite;}
 .xmas-donate-hero .xmas-donate-glow {
-  z-index: 0;
-}
+  z-index: 0;}
 .xmas-donate-snow {
-  z-index: 1;
-}
+  z-index: 1;}
 .xmas-shapes button,
 .xmas-spot-grid button,
 .xmas-theme-grid button,
 .xmas-kind button {
-  transition: transform 0.18s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
+  transition: transform 0.18s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;}
 .xmas-shapes button:active,
 .xmas-spot-grid button:active,
 .xmas-theme-grid button:active {
-  transform: scale(0.97);
-}
+  transform: scale(0.97);}
 .xmas-shapes button[aria-pressed="true"],
 .xmas-spot-grid button.is-on,
 .xmas-theme-grid button.is-on {
-  animation: xmas-pick 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.4);
-}
+  animation: xmas-pick 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.4);}
 @keyframes xmas-pick {
-  from { transform: scale(0.94); }
-  to { transform: scale(1); }
-}
+  from { transform: scale(0.94);}
+  to { transform: scale(1);}}
 @keyframes xmas-spin {
-  to { transform: rotate(360deg); }
-}
+  to { transform: rotate(360deg);}}
 
 /* ของขวัญเปิดตัว: กล่องสั่นรอ ฝาเด้งเมื่อแกะ ตัวอักษรค่อย ๆ ขึ้น แล้วฉากจางเข้าหน้าหลัก */
 .xmas-gift-title h1 span {
   display: inline-block;
-  animation: xmas-letter 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
+  animation: xmas-letter 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;}
 @keyframes xmas-letter {
-  from { opacity: 0; translate: 0 16px; filter: blur(4px); }
-  to { opacity: 1; translate: 0 0; filter: blur(0); }
-}
+  from { opacity: 0; translate: 0 16px; filter: blur(4px);}
+  to { opacity: 1; translate: 0 0; filter: blur(0);}}
 .xmas-gift:not(.is-opening) .xmas-gift-box {
-  animation: xmas-shake 2.6s ease-in-out infinite;
-}
+  animation: xmas-shake 2.6s ease-in-out infinite;}
 @keyframes xmas-shake {
-  0%, 86%, 100% { rotate: 0deg; }
-  89% { rotate: -4deg; }
-  92% { rotate: 4deg; }
-  95% { rotate: -2deg; }
-}
+  0%, 86%, 100% { rotate: 0deg;}
+  89% { rotate: -4deg;}
+  92% { rotate: 4deg;}
+  95% { rotate: -2deg;}}
 .xmas-gift.is-opening .xmas-gift-lid {
-  animation: xmas-lid 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
+  animation: xmas-lid 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;}
 @keyframes xmas-lid {
-  0% { transform: translateY(0) rotate(0deg); }
-  30% { transform: translateY(-14px) rotate(-8deg); }
-  100% { transform: translate(-46px, -150px) rotate(-30deg); opacity: 0; }
-}
+  0% { transform: translateY(0) rotate(0deg);}
+  30% { transform: translateY(-14px) rotate(-8deg);}
+  100% { transform: translate(-46px, -150px) rotate(-30deg); opacity: 0;}}
 .xmas-gift.is-opening .xmas-gift-body {
-  animation: xmas-body 0.9s ease both;
-}
+  animation: xmas-body 0.9s ease both;}
 @keyframes xmas-body {
-  0% { filter: brightness(1); }
-  40% { filter: brightness(1.35); }
-  100% { filter: brightness(1.1); }
-}
+  0% { filter: brightness(1);}
+  40% { filter: brightness(1.35);}
+  100% { filter: brightness(1.1);}}
 @keyframes xmas-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
+  from { opacity: 1;}
+  to { opacity: 0;}}
 .xmas-gift-burst {
   background: radial-gradient(circle at 50% 46%, rgba(232, 209, 154, 0.55), transparent 42%);
-  opacity: 0;
-}
+  opacity: 0;}
 .xmas-gift.is-opening .xmas-gift-burst {
-  animation: xmas-burst 1.1s ease-out both;
-}
+  animation: xmas-burst 1.1s ease-out both;}
 @keyframes xmas-burst {
-  0% { opacity: 0; transform: scale(0.4); }
-  35% { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.8); }
-}
+  0% { opacity: 0; transform: scale(0.4);}
+  35% { opacity: 1;}
+  100% { opacity: 0; transform: scale(1.8);}}
 
 /* หิมะเกาะที่ปุ่มและสวิตช์: เกล็ดเล็กติดมุม ค่อย ๆ หมุน */
 .xmas-snow-toggle,
 .xmas-music-toggle,
 .xmas-switch.is-donate {
-  position: relative;
-}
+  position: relative;}
 .xmas-snow-toggle::after,
 .xmas-music-toggle::after,
 .xmas-switch.is-donate::after {
@@ -2890,8 +2278,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbf4df' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M12 2v20M3.5 7l17 10M3.5 17l17-10'/%3E%3C/svg%3E");
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
   animation: xmas-spin 12s linear infinite;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-music-toggle::after {
   top: -10px;
   right: auto;
@@ -2899,46 +2286,25 @@
   width: 14px;
   height: 14px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fbf4df'%3E%3Cpath d='M12 1l2.2 7.8L22 12l-7.8 2.2L12 23l-2.2-8.8L2 12l7.8-3.2z'/%3E%3C/svg%3E");
-  animation: xmas-twinkle 2.8s ease-in-out infinite;
-}
+  animation: xmas-twinkle 2.8s ease-in-out infinite;}
 .xmas-switch.is-donate::after {
   top: -8px;
   right: -6px;
   width: 16px;
   height: 16px;
-  animation-duration: 16s;
-}
-@media (prefers-reduced-motion: reduce) {
-  .xmas-donate::before,
-  .xmas-donate-hero::before,
-  .xmas-coach-orb,
-  .xmas-snow-toggle::after,
-  .xmas-music-toggle::after,
-  .xmas-switch.is-donate::after,
-  .xmas-gift:not(.is-opening) .xmas-gift-box,
-  .xmas-gift.is-opening .xmas-gift-lid,
-  .xmas-gift.is-opening {
-    animation: none;
-  }
-}
+  animation-duration: 16s;}
+@media (prefers-reduced-motion: reduce) {}
 
 /* มือถือ: ประวัติเป็นชีตด้านล่าง ปุ่มปิดแสดง และ ticker เต็มความกว้าง */
 @media (max-width: 759px) {
   .xmas-feed .xmas-feed-close {
-    display: grid;
-  }
+    display: grid;}
   .xmas-ticker {
     top: 76px;
     width: calc(100vw - 28px);
-    height: 30px;
-  }
+    height: 30px;}
   .xmas-feed {
-    width: auto;
-  }
-  .xmas-coach {
-    top: 128px;
-  }
-}
+    width: auto;}}
 
 /* เดสก์ท็อป: ซูมเป็นแถวเล็กเหนือแถบเมนู ไม่ทับแผงประวัติด้านขวา */
 @media (min-width: 760px) {
@@ -2947,18 +2313,13 @@
     bottom: 96px;
     right: 28px;
     transform: none;
-    grid-auto-flow: column;
-  }
+    grid-auto-flow: column;}
   .xmas-panel,
   .xmas-feed {
-    max-height: calc(100dvh - 330px);
-  }
-}
+    max-height: calc(100dvh - 330px);}}
 @media (max-width: 759px) {
   .xmas-zoom {
-    grid-auto-flow: row;
-  }
-}
+    grid-auto-flow: row;}}
 
 /* ==========================================================================
    รอบ 3: ประวัติ แถบแท็บ แขวนคำอวยพร ชวนเพื่อน และป๊อปอัปเข้าร่วม
@@ -2973,8 +2334,7 @@
     linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 242, 230, 0.94)),
     var(--crystal);
   border: 1px solid rgba(184, 144, 74, 0.32);
-  box-shadow: 0 30px 70px -28px rgba(6, 24, 18, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
+  box-shadow: 0 30px 70px -28px rgba(6, 24, 18, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.8);}
 .xmas-feed .xmas-sheet-head {
   position: relative;
   display: grid;
@@ -2982,8 +2342,7 @@
   align-items: start;
   gap: 4px 12px;
   padding: 22px 22px 14px;
-  border-bottom: 1px solid var(--line);
-}
+  border-bottom: 1px solid var(--line);}
 .xmas-feed .xmas-sheet-head::before {
   content: "โซนนี้ · สด";
   grid-column: 1 / -1;
@@ -2991,28 +2350,24 @@
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-feed .xmas-sheet-head b {
   font-family: var(--serif);
   font-size: 26px;
   font-weight: 600;
   line-height: 1.05;
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-feed .xmas-sheet-head .xmas-feed-close {
   width: 34px;
   height: 34px;
   border-radius: 50%;
   background: rgba(15, 46, 36, 0.06);
   color: var(--ink-2);
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;}
 .xmas-feed .xmas-sheet-head .xmas-feed-close:hover {
   background: var(--berry);
   color: #fff;
-  transform: rotate(90deg);
-}
+  transform: rotate(90deg);}
 
 /* แท็บแบบแถบเลื่อนเหลื่อมและมีเส้นทองใต้แท็บที่เลือก */
 .xmas-feed .xmas-tabs {
@@ -3020,8 +2375,7 @@
   gap: 2px;
   padding: 0 12px;
   border-bottom: 1px solid var(--line);
-  background: transparent;
-}
+  background: transparent;}
 .xmas-feed .xmas-tab {
   position: relative;
   flex: 1 1 0;
@@ -3035,19 +2389,15 @@
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
-  transition: color 0.25s ease, transform 0.25s ease;
-}
+  transition: color 0.25s ease, transform 0.25s ease;}
 .xmas-feed .xmas-tab .xicon {
   color: var(--foil);
-  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.4), color 0.25s ease;
-}
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.4), color 0.25s ease;}
 .xmas-feed .xmas-tab span {
-  white-space: nowrap;
-}
+  white-space: nowrap;}
 .xmas-feed .xmas-tab em {
   background: rgba(15, 46, 36, 0.07);
-  transition: background 0.25s ease, color 0.25s ease;
-}
+  transition: background 0.25s ease, color 0.25s ease;}
 .xmas-feed .xmas-tab::after {
   content: "";
   position: absolute;
@@ -3058,57 +2408,42 @@
   border-radius: 2px;
   background: linear-gradient(90deg, transparent, var(--foil), transparent);
   transform: scaleX(0);
-  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);}
 .xmas-feed .xmas-tab:hover {
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-feed .xmas-tab:hover .xicon {
-  transform: translateY(-2px) rotate(-8deg);
-}
+  transform: translateY(-2px) rotate(-8deg);}
 .xmas-feed .xmas-tab:hover::after {
-  transform: scaleX(0.6);
-}
+  transform: scaleX(0.6);}
 .xmas-feed .xmas-tab.is-on {
   color: var(--spruce);
-  background: transparent;
-}
+  background: transparent;}
 .xmas-feed .xmas-tab.is-on .xicon {
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-feed .xmas-tab.is-on em {
   background: var(--berry);
-  color: #fff;
-}
+  color: #fff;}
 .xmas-feed .xmas-tab.is-on::after {
-  transform: scaleX(1);
-}
+  transform: scaleX(1);}
 .xmas-feed .xmas-tab.is-exclusive.is-on {
   background: transparent;
-  color: #7a4f0f;
-}
+  color: #7a4f0f;}
 .xmas-feed .xmas-tab.is-exclusive.is-on .xicon {
-  color: #b8860b;
-}
+  color: #b8860b;}
 .xmas-feed .xmas-tab.is-exclusive.is-on em {
   background: linear-gradient(180deg, #efd99d, #c9a24a);
-  color: #2a1d06;
-}
+  color: #2a1d06;}
 .xmas-feed .xmas-tab.is-exclusive:hover .xicon {
-  color: #b8860b;
-}
+  color: #b8860b;}
 
 /* รายการ: แถวกระจกขาว ขอบซ้ายเป็นเส้นทองที่ยืดตอนชี้ ตัวอักษรเซอริฟ */
 .xmas-feed .xmas-tab-panel {
-  padding: 10px 12px 16px;
-}
+  padding: 10px 12px 16px;}
 .xmas-feed .xmas-tab-panel ul {
   display: grid;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-feed .xmas-tab-panel li + li {
-  border-top: 0;
-}
+  border-top: 0;}
 .xmas-feed .xmas-tab-panel li > button,
 .xmas-feed .xmas-entry-row {
   position: relative;
@@ -3125,8 +2460,7 @@
   text-align: left;
   cursor: pointer;
   overflow: hidden;
-  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
-}
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;}
 .xmas-feed .xmas-tab-panel li > button::before,
 .xmas-feed .xmas-entry-row::before {
   content: "";
@@ -3138,66 +2472,53 @@
   border-radius: 3px;
   background: var(--foil);
   transform: scaleY(0);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);}
 .xmas-feed .xmas-tab-panel li > button:hover,
 .xmas-feed .xmas-tab-panel li > button:focus-visible {
   background: #fffdf7;
   border-color: rgba(184, 144, 74, 0.35);
   box-shadow: 0 12px 24px -18px rgba(6, 24, 18, 0.6);
   transform: translateX(2px);
-  outline: none;
-}
+  outline: none;}
 .xmas-feed .xmas-tab-panel li > button:hover::before,
 .xmas-feed .xmas-tab-panel li > button:focus-visible::before {
-  transform: scaleY(1);
-}
+  transform: scaleY(1);}
 .xmas-feed .xmas-tab-panel li > button:disabled:hover {
   transform: none;
   box-shadow: none;
   border-color: transparent;
-  background: rgba(255, 255, 255, 0.55);
-}
+  background: rgba(255, 255, 255, 0.55);}
 .xmas-feed .xmas-tab-panel li > button:disabled:hover::before {
-  transform: scaleY(0);
-}
+  transform: scaleY(0);}
 .xmas-feed .is-exclusive-item .xmas-entry-row {
   background: linear-gradient(120deg, rgba(232, 209, 154, 0.32), rgba(255, 253, 247, 0.6));
-  border-color: rgba(184, 144, 74, 0.3);
-}
+  border-color: rgba(184, 144, 74, 0.3);}
 .xmas-feed .is-exclusive-item .xmas-entry-row::before {
   background: linear-gradient(180deg, #efd99d, #b8860b);
-  transform: scaleY(1);
-}
+  transform: scaleY(1);}
 .xmas-feed .xmas-entry b {
   font-size: 17px;
-  line-height: 1.2;
-}
+  line-height: 1.2;}
 .xmas-feed .xmas-entry em {
   font-size: 13.5px;
-  line-height: 1.55;
-}
+  line-height: 1.55;}
 .xmas-feed .xmas-timeline-dot {
   box-shadow: inset 0 0 0 1px rgba(184, 144, 74, 0.25);
-  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.4);
-}
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.4);}
 .xmas-feed .xmas-tab-panel li > button:hover .xmas-timeline-dot {
-  transform: scale(1.08) rotate(-6deg);
-}
+  transform: scale(1.08) rotate(-6deg);}
 .xmas-feed .xmas-empty {
   display: grid;
   justify-items: center;
   gap: 10px;
-  padding: 34px 20px;
-}
+  padding: 34px 20px;}
 .xmas-feed .xmas-empty::before {
   content: "";
   width: 46px;
   height: 46px;
   border-radius: 50%;
   background: radial-gradient(circle at 36% 32%, #fff8e6, #e8d19a 55%, #b8904a 100%);
-  box-shadow: 0 10px 20px -10px rgba(184, 144, 74, 0.9);
-}
+  box-shadow: 0 10px 20px -10px rgba(184, 144, 74, 0.9);}
 
 /* ---------- แขวนคำอวยพร: ตัวอย่างลูกบอลในแท่นแก้ว มีขั้นตอนชัดเจน ---------- */
 .xmas-panel.xmas-wish {
@@ -3205,15 +2526,12 @@
   border-radius: 28px;
   background:
     linear-gradient(180deg, rgba(255, 253, 247, 0.97), rgba(247, 242, 230, 0.95)),
-    var(--crystal);
-}
+    var(--crystal);}
 .xmas-wish .xmas-build-top {
   padding: 22px 22px 0;
-  text-align: left;
-}
+  text-align: left;}
 .xmas-wish .xmas-build-top .xmas-kicker {
-  margin: 0;
-}
+  margin: 0;}
 .xmas-wish .xmas-build-top::before {
   content: "แขวนคำอวยพร";
   display: block;
@@ -3222,11 +2540,9 @@
   font-weight: 600;
   line-height: 1.05;
   color: var(--ink);
-  margin-bottom: 4px;
-}
+  margin-bottom: 4px;}
 .xmas-wish .xmas-build-top .xmas-kicker {
-  display: none;
-}
+  display: none;}
 .xmas-wish .xmas-build-preview {
   position: relative;
   height: 168px;
@@ -3236,8 +2552,7 @@
     radial-gradient(circle at 50% 40%, rgba(232, 209, 154, 0.45), transparent 62%),
     linear-gradient(180deg, #14392e, #0c251d);
   box-shadow: inset 0 0 0 1px rgba(232, 209, 154, 0.25), 0 18px 30px -22px rgba(6, 24, 18, 0.9);
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-wish .xmas-build-preview::after {
   content: "";
   position: absolute;
@@ -3245,15 +2560,12 @@
   background-image: var(--crystal);
   background-size: 120px 120px;
   opacity: 0.6;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-wish .xmas-ornament-art {
-  animation: xmas-float 4.2s ease-in-out infinite;
-}
+  animation: xmas-float 4.2s ease-in-out infinite;}
 @keyframes xmas-float {
-  0%, 100% { translate: 0 0; }
-  50% { translate: 0 -6px; }
-}
+  0%, 100% { translate: 0 0;}
+  50% { translate: 0 -6px;}}
 .xmas-wish .xmas-build-slot {
   margin: 10px 0 0;
   padding: 8px 12px;
@@ -3262,12 +2574,10 @@
   font-size: 12.5px;
   font-weight: 600;
   text-align: center;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-wish .xmas-build-slot.is-set {
   background: rgba(47, 106, 85, 0.14);
-  color: var(--spruce-3);
-}
+  color: var(--spruce-3);}
 .xmas-wish .xmas-part-tabs {
   display: flex;
   gap: 4px;
@@ -3275,41 +2585,34 @@
   padding: 4px;
   border: 0;
   border-radius: 999px;
-  background: rgba(15, 46, 36, 0.07);
-}
+  background: rgba(15, 46, 36, 0.07);}
 .xmas-wish .xmas-part-tabs button {
   flex: 1 1 0;
   min-height: 38px;
   padding: 0 8px;
   border-radius: 999px;
   color: var(--ink-2);
-  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
-}
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;}
 .xmas-wish .xmas-part-tabs button:hover:not(.is-on) {
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.6);
-}
+  background: rgba(255, 255, 255, 0.6);}
 .xmas-wish .xmas-part-tabs button.is-on {
   background: #fffdf7;
   color: var(--spruce);
-  box-shadow: 0 6px 14px -8px rgba(6, 24, 18, 0.6);
-}
+  box-shadow: 0 6px 14px -8px rgba(6, 24, 18, 0.6);}
 .xmas-wish .xmas-part-body {
   padding: 16px 16px 18px;
-  min-height: 0;
-}
+  min-height: 0;}
 .xmas-wish .xmas-part-title {
   margin-bottom: 12px;
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--foil);
-}
+  color: var(--foil);}
 /* สีเป็นวงกลมใหญ่ มีชื่อใต้วง */
 .xmas-wish .xmas-part-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-wish .xmas-part-grid button {
   flex-direction: column;
   gap: 6px;
@@ -3318,42 +2621,33 @@
   border-radius: 18px;
   font-size: 12.5px;
   background: #fffdf7;
-  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 0.25s ease, border-color 0.25s ease;
-}
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 0.25s ease, border-color 0.25s ease;}
 .xmas-wish .xmas-part-grid button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 22px -14px rgba(6, 24, 18, 0.6);
-}
+  box-shadow: 0 14px 22px -14px rgba(6, 24, 18, 0.6);}
 .xmas-wish .xmas-part-grid button.is-on {
-  box-shadow: inset 0 0 0 1px var(--berry), 0 10px 20px -14px rgba(155, 28, 49, 0.7);
-}
+  box-shadow: inset 0 0 0 1px var(--berry), 0 10px 20px -14px rgba(155, 28, 49, 0.7);}
 .xmas-wish .xmas-part-grid .xmas-dot {
   width: 30px;
   height: 30px;
-  margin: 0;
-}
+  margin: 0;}
 .xmas-wish .xmas-wish-text .xmas-field input,
 .xmas-wish .xmas-wish-text .xmas-field textarea {
-  background: #fffdf7;
-}
+  background: #fffdf7;}
 .xmas-wish .xmas-wish-text .xmas-field textarea {
-  min-height: 112px;
-}
+  min-height: 112px;}
 .xmas-wish .xmas-wish-text .xmas-field:focus-within > span {
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-wish .xmas-build-foot {
   padding: 14px 16px 16px;
   background: linear-gradient(180deg, rgba(247, 242, 230, 0.2), rgba(232, 209, 154, 0.22));
-  border-top: 1px solid rgba(184, 144, 74, 0.25);
-}
+  border-top: 1px solid rgba(184, 144, 74, 0.25);}
 .xmas-wish .xmas-submit {
   min-height: 52px;
   border-radius: 999px;
   letter-spacing: 0.01em;
   position: relative;
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-wish .xmas-submit::after {
   content: "";
   position: absolute;
@@ -3364,29 +2658,23 @@
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
   transform: skewX(-18deg);
   animation: xmas-shine 3.8s ease-in-out infinite;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-wish .xmas-submit:disabled::after {
-  display: none;
-}
+  display: none;}
 @keyframes xmas-shine {
-  0%, 55% { left: -60%; }
-  100% { left: 130%; }
-}
+  0%, 55% { left: -60%;}
+  100% { left: 130%;}}
 .xmas-wish .xmas-msg {
-  border-radius: 14px;
-}
+  border-radius: 14px;}
 .xmas-wish .xmas-sheet-toggle {
-  color: var(--spruce-2);
-}
+  color: var(--spruce-2);}
 
 /* ---------- ชวนเพื่อน ---------- */
 .xmas-invite {
   width: min(100%, 400px);
   padding: 0 0 22px;
   text-align: center;
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-invite::before {
   content: "";
   display: block;
@@ -3397,8 +2685,7 @@
     linear-gradient(180deg, #14392e, #0c251d);
   -webkit-mask: none;
   mask: none;
-  position: relative;
-}
+  position: relative;}
 .xmas-invite::after {
   content: "";
   position: absolute;
@@ -3411,17 +2698,14 @@
   background: radial-gradient(circle at 36% 32%, #fff8e6, #e8d19a 55%, #b8904a 100%);
   box-shadow: 0 0 0 6px rgba(232, 209, 154, 0.18), 0 0 40px 6px rgba(232, 209, 154, 0.4);
   animation: xmas-breathe 3.6s ease-in-out infinite;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-invite .xmas-x {
   top: 10px;
   right: 10px;
-  color: #e8d19a;
-}
+  color: #e8d19a;}
 .xmas-invite .xmas-x:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
+  color: #fff;}
 .xmas-invite .xmas-kicker,
 .xmas-invite h2,
 .xmas-invite .xmas-hint,
@@ -3429,18 +2713,14 @@
 .xmas-invite .xmas-copy-row,
 .xmas-invite .xmas-submit {
   margin-left: 22px;
-  margin-right: 22px;
-}
+  margin-right: 22px;}
 .xmas-invite .xmas-kicker {
-  margin-top: 26px;
-}
+  margin-top: 26px;}
 .xmas-invite h2 {
   font-size: 28px;
-  margin-top: 6px;
-}
+  margin-top: 6px;}
 .xmas-invite .xmas-hint {
-  margin-top: 8px;
-}
+  margin-top: 8px;}
 .xmas-invite .xmas-live-count {
   display: inline-flex;
   align-items: center;
@@ -3453,8 +2733,7 @@
   font-size: 13px;
   margin-left: auto;
   margin-right: auto;
-  width: fit-content;
-}
+  width: fit-content;}
 .xmas-invite .xmas-live-count::before {
   content: "";
   width: 8px;
@@ -3462,19 +2741,16 @@
   border-radius: 50%;
   background: #3fb37f;
   box-shadow: 0 0 0 0 rgba(63, 179, 127, 0.5);
-  animation: xmas-ping 1.8s ease-out infinite;
-}
+  animation: xmas-ping 1.8s ease-out infinite;}
 @keyframes xmas-ping {
-  0% { box-shadow: 0 0 0 0 rgba(63, 179, 127, 0.5); }
-  100% { box-shadow: 0 0 0 10px rgba(63, 179, 127, 0); }
-}
+  0% { box-shadow: 0 0 0 0 rgba(63, 179, 127, 0.5);}
+  100% { box-shadow: 0 0 0 10px rgba(63, 179, 127, 0);}}
 .xmas-invite .xmas-copy-row {
   margin-top: 18px;
   padding: 6px;
   border-radius: 999px;
   background: #fffdf7;
-  box-shadow: inset 0 0 0 1px var(--line);
-}
+  box-shadow: inset 0 0 0 1px var(--line);}
 .xmas-invite .xmas-copy-row input {
   min-height: 40px;
   border: 0;
@@ -3482,36 +2758,30 @@
   box-shadow: none;
   font-size: 13.5px;
   padding-left: 12px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-invite .xmas-copy-row .xmas-chip-btn {
   min-height: 40px;
   border-radius: 999px;
   background: var(--spruce-2);
   color: #f7f2e6;
-  border-color: transparent;
-}
+  border-color: transparent;}
 .xmas-invite .xmas-copy-row .xmas-chip-btn:hover {
-  background: var(--spruce);
-}
+  background: var(--spruce);}
 .xmas-invite .xmas-submit {
   margin-top: 14px;
   width: auto;
-  padding: 0 28px;
-}
+  padding: 0 28px;}
 .xmas-invite .xmas-submit {
   display: block;
   margin-left: 22px;
   margin-right: 22px;
-  width: calc(100% - 44px);
-}
+  width: calc(100% - 44px);}
 
 /* ---------- ป๊อปอัป "มาแขวนคำอวยพรด้วยกัน" ---------- */
 .xmas-intro-card {
   width: min(100%, 390px);
   padding: 46px 28px 26px;
-  overflow: visible;
-}
+  overflow: visible;}
 .xmas-intro-card::before {
   content: "";
   position: absolute;
@@ -3519,8 +2789,7 @@
   top: -40px;
   width: 1px;
   height: 40px;
-  background: linear-gradient(180deg, transparent, rgba(184, 144, 74, 0.9));
-}
+  background: linear-gradient(180deg, transparent, rgba(184, 144, 74, 0.9));}
 .xmas-intro-card::after {
   content: "";
   position: absolute;
@@ -3533,42 +2802,32 @@
   background: radial-gradient(circle at 36% 32%, #fff8e6, #e8d19a 55%, #b8904a 100%);
   box-shadow: 0 10px 22px -8px rgba(184, 144, 74, 0.9);
   transform-origin: 50% -32px;
-  animation: xmas-swing 3s ease-in-out infinite;
-}
+  animation: xmas-swing 3s ease-in-out infinite;}
 .xmas-intro-card {
-  position: relative;
-}
-.xmas-intro-orb {
-  display: none;
-}
+  position: relative;}
 .xmas-intro-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-intro-kicker::before,
 .xmas-intro-kicker::after {
   content: "";
   width: 22px;
   height: 1px;
-  background: var(--foil);
-}
+  background: var(--foil);}
 .xmas-intro-card h1 {
   font-size: 32px;
   line-height: 1.1;
   margin: 10px 0 12px;
-  text-wrap: balance;
-}
+  text-wrap: balance;}
 .xmas-intro-text {
-  margin: 0 0 24px;
-}
+  margin: 0 0 24px;}
 .xmas-intro-btn {
   position: relative;
   overflow: hidden;
   min-height: 54px;
   font-size: 15.5px;
-  letter-spacing: 0.01em;
-}
+  letter-spacing: 0.01em;}
 .xmas-intro-btn::after {
   content: "";
   position: absolute;
@@ -3579,14 +2838,9 @@
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   transform: skewX(-18deg);
   animation: xmas-shine 3.4s ease-in-out infinite;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-intro-btn:active {
-  transform: scale(0.98);
-}
-.xmas-intro-card .xmas-intro-orb {
-  display: none;
-}
+  transform: scale(0.98);}
 
 /* ==========================================================================
    รอบ 4: แท็บเรียงสี่ช่องไม่ต้องเลื่อน แถบข้อความเต็มจอ อันดับถูกใจ และปุ่มถูกใจคำอวยพร
@@ -3597,8 +2851,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: visible;
-  padding: 6px 8px 0;
-}
+  padding: 6px 8px 0;}
 .xmas-feed .xmas-tab {
   flex-direction: column;
   justify-content: center;
@@ -3610,12 +2863,10 @@
   line-height: 1.15;
   text-align: center;
   border-radius: 14px 14px 0 0;
-  white-space: normal;
-}
+  white-space: normal;}
 .xmas-feed .xmas-tab span {
   white-space: normal;
-  overflow-wrap: anywhere;
-}
+  overflow-wrap: anywhere;}
 .xmas-feed .xmas-tab em {
   position: absolute;
   top: 6px;
@@ -3624,18 +2875,14 @@
   padding: 0 5px;
   font-size: 10.5px;
   line-height: 17px;
-  text-align: center;
-}
+  text-align: center;}
 .xmas-feed .xmas-tab:hover {
   background: rgba(15, 46, 36, 0.04);
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-feed .xmas-tab.is-on {
-  background: linear-gradient(180deg, rgba(232, 209, 154, 0.22), transparent);
-}
+  background: linear-gradient(180deg, rgba(232, 209, 154, 0.22), transparent);}
 .xmas-feed .xmas-tab.is-exclusive:hover {
-  background: rgba(232, 209, 154, 0.2);
-}
+  background: rgba(232, 209, 154, 0.2);}
 
 /* แถบข้อความวิ่ง: เต็มความกว้างของจอ เป็นริบบิ้นบาง ๆ ใต้แถบบน */
 .xmas-ticker {
@@ -3652,8 +2899,7 @@
   background: linear-gradient(90deg, rgba(6, 24, 18, 0.7), rgba(15, 46, 36, 0.55), rgba(6, 24, 18, 0.7));
   box-shadow: none;
   -webkit-mask-image: none;
-  mask-image: none;
-}
+  mask-image: none;}
 @media (max-width: 759px) {
   .xmas-ticker {
     top: 74px;
@@ -3661,41 +2907,34 @@
     left: 0;
     right: 0;
     transform: none;
-    height: 30px;
-  }
-}
+    height: 30px;}}
 
 /* อันดับที่มีคนชอบ: แผงด้านล่างของประวัติ */
 .xmas-board {
   flex: 0 0 auto;
   padding: 14px 14px 16px;
   border-top: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(247, 242, 230, 0.6), rgba(232, 209, 154, 0.22));
-}
+  background: linear-gradient(180deg, rgba(247, 242, 230, 0.6), rgba(232, 209, 154, 0.22));}
 .xmas-board-head {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 10px;
-}
+  margin-bottom: 10px;}
 .xmas-board-head .xmas-kicker {
   margin: 0 0 2px;
-  font-size: 10px;
-}
+  font-size: 10px;}
 .xmas-board-head b {
   font-family: var(--serif);
   font-size: 19px;
   font-weight: 600;
-  line-height: 1.1;
-}
+  line-height: 1.1;}
 .xmas-seg {
   display: inline-flex;
   padding: 3px;
   border-radius: 999px;
   background: rgba(15, 46, 36, 0.08);
-  flex: 0 0 auto;
-}
+  flex: 0 0 auto;}
 .xmas-seg button {
   min-height: 30px;
   padding: 0 11px;
@@ -3707,22 +2946,18 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-}
+  transition: background 0.2s ease, color 0.2s ease;}
 .xmas-seg button:hover:not(.is-on) {
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-seg button.is-on {
   background: var(--spruce-2);
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 .xmas-rank {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-rank li > button {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr) auto;
@@ -3738,17 +2973,14 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4), background 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease;
-}
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4), background 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease;}
 .xmas-rank li > button:hover:not(:disabled) {
   transform: translateY(-2px);
   background: #fffdf7;
   border-color: rgba(184, 144, 74, 0.35);
-  box-shadow: 0 12px 20px -14px rgba(6, 24, 18, 0.6);
-}
+  box-shadow: 0 12px 20px -14px rgba(6, 24, 18, 0.6);}
 .xmas-rank li > button:disabled {
-  cursor: default;
-}
+  cursor: default;}
 .xmas-rank-no {
   display: grid;
   place-items: center;
@@ -3759,33 +2991,27 @@
   font-size: 16px;
   font-weight: 600;
   background: rgba(15, 46, 36, 0.08);
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-rank .is-r1 .xmas-rank-no {
   background: radial-gradient(circle at 36% 32%, #fff8e6, #e8d19a 55%, #b8904a 100%);
   color: #3b2a0c;
-  box-shadow: 0 6px 14px -6px rgba(184, 144, 74, 0.9);
-}
+  box-shadow: 0 6px 14px -6px rgba(184, 144, 74, 0.9);}
 .xmas-rank .is-r2 .xmas-rank-no {
   background: radial-gradient(circle at 36% 32%, #ffffff, #d6dde3 60%, #9aa7b3 100%);
-  color: #26323b;
-}
+  color: #26323b;}
 .xmas-rank .is-r3 .xmas-rank-no {
   background: radial-gradient(circle at 36% 32%, #f7d4b7, #c98a57 60%, #8a5330 100%);
-  color: #fff7ee;
-}
+  color: #fff7ee;}
 .xmas-rank .xmas-entry b {
   font-size: 15.5px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
+  text-overflow: ellipsis;}
 .xmas-rank .xmas-entry em {
   font-size: 12.5px;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
+  text-overflow: ellipsis;}
 .xmas-like-count {
   display: inline-flex;
   align-items: center;
@@ -3796,12 +3022,10 @@
   color: var(--berry);
   font-size: 12.5px;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
+  font-variant-numeric: tabular-nums;}
 .xmas-empty-rank {
   padding: 14px 6px;
-  font-size: 13px;
-}
+  font-size: 13px;}
 .xmas-board-more {
   width: 100%;
   margin-top: 8px;
@@ -3814,8 +3038,7 @@
   font-weight: 600;
   cursor: pointer;
   text-decoration: underline;
-  text-underline-offset: 3px;
-}
+  text-underline-offset: 3px;}
 
 /* ปุ่มถูกใจบนการ์ดคำอวยพร */
 .xmas-like-wish {
@@ -3833,34 +3056,27 @@
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.4), background 0.2s ease, color 0.2s ease;
-}
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.4), background 0.2s ease, color 0.2s ease;}
 .xmas-like-wish:hover:not(:disabled) {
   background: var(--berry);
   color: #fff;
-  transform: translateY(-1px);
-}
+  transform: translateY(-1px);}
 .xmas-like-wish:active:not(:disabled) {
-  transform: scale(0.96);
-}
+  transform: scale(0.96);}
 .xmas-like-wish.is-on {
   background: var(--berry);
   color: #fff;
-  cursor: default;
-}
+  cursor: default;}
 .xmas-like-wish span {
   font-variant-numeric: tabular-nums;
   padding-left: 8px;
   border-left: 1px solid currentColor;
-  opacity: 0.85;
-}
+  opacity: 0.85;}
 .xmas-like-wish.is-on .xicon {
-  animation: xmas-beat 0.6s ease;
-}
+  animation: xmas-beat 0.6s ease;}
 @keyframes xmas-beat {
-  0%, 100% { transform: scale(1); }
-  40% { transform: scale(1.35); }
-}
+  0%, 100% { transform: scale(1);}
+  40% { transform: scale(1.35);}}
 
 /* ==========================================================================
    รอบ 5 (มินิมอล): ปุ่มประวัติ/อันดับมุมขวา แผงเปิดเมื่อกด แยกออกจากกัน
@@ -3874,8 +3090,7 @@
   padding: 3px;
   border-radius: 999px;
   background: var(--glass-dark);
-  border: 1px solid rgba(232, 209, 154, 0.3);
-}
+  border: 1px solid rgba(232, 209, 154, 0.3);}
 .xmas-tool {
   display: inline-flex;
   align-items: center;
@@ -3890,23 +3105,18 @@
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-}
+  transition: background 0.2s ease, color 0.2s ease;}
 .xmas-tool:hover {
   background: rgba(247, 242, 230, 0.12);
-  color: #fff;
-}
+  color: #fff;}
 .xmas-tool.is-on {
   background: #f7f2e6;
-  color: var(--spruce);
-}
+  color: var(--spruce);}
 .xmas-tool .xicon {
-  color: inherit;
-}
+  color: inherit;}
 .xmas-tool:focus-visible {
   outline: 2px solid var(--foil-soft);
-  outline-offset: 2px;
-}
+  outline-offset: 2px;}
 
 /* แผงประวัติและอันดับ: ซ่อนไว้จนกว่าจะเปิด */
 .xmas-feed,
@@ -3918,33 +3128,27 @@
   border-radius: 22px;
   box-shadow: 0 24px 50px -28px rgba(6, 24, 18, 0.65);
   overflow: hidden;
-  flex-direction: column;
-}
+  flex-direction: column;}
 .xmas-feed.is-open,
 .xmas-rank-panel.is-open {
-  display: flex;
-}
+  display: flex;}
 .xmas-feed {
   top: 146px;
   right: 28px;
   width: 340px;
-  max-height: calc(100dvh - 330px);
-}
+  max-height: calc(100dvh - 330px);}
 .xmas-feed .xmas-sheet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px 16px 12px 20px;
-  border-bottom: 1px solid var(--line);
-}
+  border-bottom: 1px solid var(--line);}
 .xmas-feed .xmas-sheet-head::before {
-  content: none;
-}
+  content: none;}
 .xmas-feed .xmas-sheet-head b {
   font-family: var(--serif);
   font-size: 22px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-feed .xmas-feed-close {
   display: grid;
   place-items: center;
@@ -3955,19 +3159,16 @@
   background: transparent;
   color: var(--ink-2);
   cursor: pointer;
-  transform: none;
-}
+  transform: none;}
 .xmas-feed .xmas-feed-close:hover {
   background: rgba(15, 46, 36, 0.07);
   color: var(--ink);
-  transform: none;
-}
+  transform: none;}
 .xmas-feed .xmas-tabs {
   padding: 0 12px;
   gap: 0;
   border-bottom: 1px solid var(--line);
-  background: none;
-}
+  background: none;}
 .xmas-feed .xmas-tab {
   min-height: 46px;
   padding: 0 4px;
@@ -3975,28 +3176,23 @@
   font-size: 12px;
   flex-direction: row;
   gap: 5px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-feed .xmas-tab .xicon {
   width: 14px;
-  height: 14px;
-}
+  height: 14px;}
 .xmas-feed .xmas-tab em {
   position: static;
   min-width: 0;
   padding: 0 5px;
   font-size: 10.5px;
-  line-height: 17px;
-}
+  line-height: 17px;}
 .xmas-feed .xmas-tab::after {
   bottom: 0;
   left: 14%;
   right: 14%;
-  height: 1.5px;
-}
+  height: 1.5px;}
 .xmas-feed .xmas-tab-panel {
-  padding: 6px 0 10px;
-}
+  padding: 6px 0 10px;}
 .xmas-feed .xmas-tab-panel li > button,
 .xmas-feed .xmas-entry-row {
   padding: 12px 20px;
@@ -4004,35 +3200,28 @@
   border: 0;
   background: transparent;
   box-shadow: none;
-  transform: none;
-}
+  transform: none;}
 .xmas-feed .xmas-tab-panel li > button:hover,
 .xmas-feed .xmas-tab-panel li > button:focus-visible {
   background: rgba(15, 46, 36, 0.035);
   border: 0;
   box-shadow: none;
-  transform: none;
-}
+  transform: none;}
 .xmas-feed .xmas-tab-panel li > button::before,
 .xmas-feed .xmas-entry-row::before {
-  display: none;
-}
+  display: none;}
 .xmas-feed .is-exclusive-item .xmas-entry-row {
   background: rgba(232, 209, 154, 0.14);
-  border: 0;
-}
+  border: 0;}
 .xmas-feed .xmas-tab-panel li + li {
-  border-top: 1px solid rgba(15, 46, 36, 0.06);
-}
+  border-top: 1px solid rgba(15, 46, 36, 0.06);}
 .xmas-feed .xmas-timeline-dot {
   width: 26px;
   height: 26px;
   flex-basis: 26px;
-  box-shadow: none;
-}
+  box-shadow: none;}
 .xmas-feed .xmas-tab-panel li > button:hover .xmas-timeline-dot {
-  transform: none;
-}
+  transform: none;}
 
 /* แผงอันดับ */
 .xmas-rank-panel {
@@ -4040,29 +3229,25 @@
   right: 28px;
   width: 320px;
   max-height: calc(100dvh - 330px);
-  z-index: 6;
-}
+  z-index: 6;}
 .xmas-rank-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px 16px 12px 20px;
-  border-bottom: 1px solid var(--line);
-}
+  border-bottom: 1px solid var(--line);}
 .xmas-rank-eyebrow {
   margin: 0 0 2px;
   font-size: 10.5px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--foil);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-rank-head b {
   font-family: var(--serif);
   font-size: 22px;
   font-weight: 600;
-  line-height: 1;
-}
+  line-height: 1;}
 .xmas-rank-close {
   display: grid;
   place-items: center;
@@ -4072,18 +3257,15 @@
   border-radius: 50%;
   background: transparent;
   color: var(--ink-2);
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-rank-close:hover {
   background: rgba(15, 46, 36, 0.07);
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-rank-tabs {
   display: flex;
   gap: 18px;
   padding: 0 20px;
-  border-bottom: 1px solid var(--line);
-}
+  border-bottom: 1px solid var(--line);}
 .xmas-rank-tabs button {
   position: relative;
   min-height: 44px;
@@ -4094,14 +3276,11 @@
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-rank-tabs button:hover {
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-rank-tabs button.is-on {
-  color: var(--spruce);
-}
+  color: var(--spruce);}
 .xmas-rank-tabs button.is-on::after {
   content: "";
   position: absolute;
@@ -4110,15 +3289,13 @@
   bottom: -1px;
   height: 2px;
   background: var(--berry);
-  border-radius: 2px;
-}
+  border-radius: 2px;}
 .xmas-rank-list {
   list-style: none;
   margin: 0;
   padding: 6px 0 10px;
   overflow-y: auto;
-  scrollbar-width: thin;
-}
+  scrollbar-width: thin;}
 .xmas-rank-list li > button {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr) auto;
@@ -4132,44 +3309,36 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s ease;
-}
+  transition: background 0.2s ease;}
 .xmas-rank-list li > button:hover:not(:disabled) {
-  background: rgba(15, 46, 36, 0.035);
-}
+  background: rgba(15, 46, 36, 0.035);}
 .xmas-rank-list li > button:disabled {
-  cursor: default;
-}
+  cursor: default;}
 .xmas-rank-pos {
   font-family: var(--serif);
   font-size: 17px;
   font-weight: 600;
   color: var(--ink-2);
-  text-align: center;
-}
+  text-align: center;}
 .xmas-rank-list .is-top .xmas-rank-pos {
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-rank-text {
   display: grid;
   gap: 1px;
-  min-width: 0;
-}
+  min-width: 0;}
 .xmas-rank-text b {
   font-size: 14.5px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
+  text-overflow: ellipsis;}
 .xmas-rank-text em {
   font-style: normal;
   font-size: 12.5px;
   color: var(--ink-2);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
+  text-overflow: ellipsis;}
 .xmas-rank-likes {
   display: inline-flex;
   align-items: center;
@@ -4177,22 +3346,19 @@
   font-size: 12.5px;
   font-weight: 600;
   color: var(--berry);
-  font-variant-numeric: tabular-nums;
-}
+  font-variant-numeric: tabular-nums;}
 .xmas-rank-empty {
   margin: 0;
   padding: 24px 20px 28px;
   font-size: 13px;
   color: var(--ink-2);
   text-align: center;
-  line-height: 1.6;
-}
+  line-height: 1.6;}
 
 /* มือถือ: แผงประวัติและอันดับเป็นชีตด้านล่าง */
 @media (max-width: 759px) {
   .xmas-tools {
-    display: none;
-  }
+    display: none;}
   .xmas-rank-panel {
     top: auto;
     left: 0;
@@ -4204,41 +3370,31 @@
     border-bottom: 0;
     transform: translateY(100%);
     transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    visibility: hidden;
-  }
+    visibility: hidden;}
   .xmas-rank-panel.is-open {
     display: flex;
     transform: translateY(0);
-    visibility: visible;
-  }
+    visibility: visible;}
   .xmas-feed {
     right: 0;
     left: 0;
     width: auto;
-    max-height: 78dvh;
-  }
+    max-height: 78dvh;}
   .xmas-feed .xmas-feed-close {
-    display: grid;
-  }
-}
+    display: grid;}}
 /* แท็บประวัติไม่ตัดคำ */
 .xmas-feed {
-  width: 370px;
-}
+  width: 370px;}
 .xmas-feed .xmas-tab span {
-  white-space: nowrap;
-}
+  white-space: nowrap;}
 .xmas-feed .xmas-tab {
   font-size: 11.5px;
-  gap: 4px;
-}
+  gap: 4px;}
 .xmas-feed .xmas-tabs {
-  padding: 0 8px;
-}
+  padding: 0 8px;}
 .xmas-rank-panel {
   position: absolute;
-  z-index: 6;
-}
+  z-index: 6;}
 
 /* ==========================================================================
    กล่องของขวัญ 3 มิติ (Three.js): พื้นที่แตะ และช่วงจางออกเข้าหน้าหลัก
@@ -4254,33 +3410,27 @@
   background: transparent;
   cursor: pointer;
   z-index: 0;
-  -webkit-tap-highlight-color: transparent;
-}
+  -webkit-tap-highlight-color: transparent;}
 .gift3d:focus-visible {
   outline: 2px solid var(--foil-soft);
-  outline-offset: 6px;
-}
+  outline-offset: 6px;}
 .gift3d-canvas {
   position: absolute;
   inset: 0;
   display: block;
   width: 100%;
-  height: 100%;
-}
+  height: 100%;}
 /* จบการแกะ: วงกลมของฉากของขวัญหดลงไปที่ตำแหน่งต้นคริสต์มาส เผยหน้าหลักที่อยู่ข้างใต้ (ไม่มีพื้นขาวทับ) */
 .xmas-gift.is-leaving {
-  animation: xmas-iris 0.95s cubic-bezier(0.65, 0, 0.25, 1) both;
-}
+  animation: xmas-iris 0.95s cubic-bezier(0.65, 0, 0.25, 1) both;}
 @keyframes xmas-iris {
-  from { clip-path: circle(150% at 50% 42%); }
-  to { clip-path: circle(0% at 50% 42%); }
-}
+  from { clip-path: circle(150% at 50% 42%);}
+  to { clip-path: circle(0% at 50% 42%);}}
 .xmas-gift.is-opening .xmas-gift-hint,
 .xmas-gift.is-opening .xmas-gift-skip,
 .xmas-gift.is-opening .xmas-gift-title {
   opacity: 0;
-  transition: opacity 0.3s ease;
-}
+  transition: opacity 0.3s ease;}
 .xmas-gift-hint {
   transition: opacity 0.3s ease;
   position: absolute;
@@ -4289,52 +3439,42 @@
   bottom: 12%;
   text-align: center;
   z-index: 2;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-gift-title {
   position: absolute;
   top: 9%;
   left: 0;
   right: 0;
   z-index: 2;
-  pointer-events: none;
-}
-@media (max-width: 759px) {
-}
+  pointer-events: none;}
+@media (max-width: 759px) {}
 
 .xmas-gift.is-opening {
-  animation: none;
-}
+  animation: none;}
 
 /* ---------- โปรไฟล์ผู้เยี่ยมชมและลิงก์โซเชียล ---------- */
 .xmas-profile-card {
   display: grid;
   gap: 12px;
-  text-align: left;
-}
+  text-align: left;}
 .xmas-profile-card h1,
 .xmas-profile-card .xmas-intro-kicker,
 .xmas-profile-card .xmas-intro-text {
-  text-align: center;
-}
+  text-align: center;}
 .xmas-profile-preview {
   margin: 0;
   font-size: 13px;
   text-align: center;
-  opacity: 0.8;
-}
+  opacity: 0.8;}
 .xmas-profile-skip {
-  justify-self: center;
-}
+  justify-self: center;}
 .xmas-profile-edit {
-  margin-top: 4px;
-}
+  margin-top: 4px;}
 .xmas-social-links {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 6px;
-}
+  margin-top: 6px;}
 .xmas-social-chip {
   display: inline-flex;
   align-items: center;
@@ -4348,39 +3488,16 @@
   text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  white-space: nowrap;}
 a.xmas-social-chip:hover {
-  text-decoration: underline;
-}
+  text-decoration: underline;}
 .xmas-social-chip.is-text {
-  border-style: dashed;
-}
+  border-style: dashed;}
 .xmas-intro-tip {
   margin: 0;
   font-size: 13px;
   opacity: 0.8;
-  text-align: center;
-}
-
-/* ---------- คำแนะนำย้อนกลับได้ ---------- */
-.xmas-coach-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.xmas-coach-back {
-  min-height: 40px;
-  padding: 0 14px;
-  border: 0;
-  background: transparent;
-  color: var(--ink-2);
-  font: inherit;
-  font-size: 13.5px;
-  text-decoration: underline;
-  cursor: pointer;
-}
+  text-align: center;}
 
 /* ---------- การ์ดแชร์ ---------- */
 .xmas-share-card {
@@ -4388,26 +3505,22 @@ a.xmas-social-chip:hover {
   gap: 12px;
   max-height: 92vh;
   overflow: auto;
-  text-align: center;
-}
+  text-align: center;}
 .xmas-share-img {
   width: 100%;
   max-height: 58vh;
   object-fit: contain;
   border-radius: 16px;
-  justify-self: center;
-}
+  justify-self: center;}
 .xmas-share-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: center;
-}
+  justify-content: center;}
 .xmas-build-note {
   margin: 0;
   font-size: 12.5px;
-  opacity: 0.8;
-}
+  opacity: 0.8;}
 
 /* ---------- หน้าต่างสนับสนุนทีมงาน และ Exclusive (แยกหน้าต่าง ใช้โทนเดียวกับหน้าเว็บ) ---------- */
 .xmas-support,
@@ -4420,29 +3533,25 @@ a.xmas-social-chip:hover {
   color: var(--ink);
   background: linear-gradient(180deg, var(--paper-3), var(--paper));
   border: 1px solid rgba(184, 144, 74, 0.35);
-  box-shadow: var(--shadow-lg);
-}
+  box-shadow: var(--shadow-lg);}
 .xmas-support h2,
 .xmas-exclusive h2 {
   margin: 2px 0 0;
   font-family: var(--serif);
   font-size: 30px;
   line-height: 1.15;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-support .xmas-kicker,
 .xmas-exclusive .xmas-kicker {
   margin: 0;
   font-size: 12px;
   letter-spacing: 0.14em;
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-sup-head {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding-right: 40px;
-}
+  padding-right: 40px;}
 .xmas-sup-badge {
   display: grid;
   place-items: center;
@@ -4452,19 +3561,16 @@ a.xmas-social-chip:hover {
   color: var(--paper-3);
   background: linear-gradient(145deg, var(--berry-2), var(--berry));
   box-shadow: 0 10px 22px -12px rgba(155, 28, 49, 0.8);
-  flex: none;
-}
+  flex: none;}
 .xmas-sup-lead {
   margin: 10px 0 16px;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-sup-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
+  gap: 14px;}
 .xmas-sup-card {
   display: grid;
   gap: 12px;
@@ -4474,19 +3580,16 @@ a.xmas-social-chip:hover {
   background: var(--paper-3);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
-  min-width: 0;
-}
+  min-width: 0;}
 .xmas-sup-wide {
-  grid-column: 1 / -1;
-}
+  grid-column: 1 / -1;}
 .xmas-sup-card h3 {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 0;
   font-size: 15px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-sup-num {
   display: grid;
   place-items: center;
@@ -4497,13 +3600,11 @@ a.xmas-social-chip:hover {
   color: var(--paper-3);
   font-size: 12px;
   font-weight: 700;
-  flex: none;
-}
+  flex: none;}
 .xmas-sup-prices {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-sup-prices button,
 .xmas-spot-grid button,
 .xmas-sup-chips button {
@@ -4513,8 +3614,7 @@ a.xmas-social-chip:hover {
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink);
-  transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
-}
+  transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;}
 .xmas-sup-prices button {
   display: grid;
   gap: 2px;
@@ -4522,33 +3622,28 @@ a.xmas-social-chip:hover {
   min-height: 58px;
   font-size: 22px;
   font-weight: 700;
-  font-family: var(--serif);
-}
+  font-family: var(--serif);}
 .xmas-sup-prices button small {
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 500;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-sup-prices button:hover,
 .xmas-spot-grid button:hover,
 .xmas-sup-chips button:hover {
   transform: translateY(-1px);
-  border-color: var(--foil);
-}
+  border-color: var(--foil);}
 .xmas-sup-prices button.is-on,
 .xmas-spot-grid button.is-on {
   background: var(--spruce);
   color: var(--paper-3);
   border-color: var(--spruce);
-  box-shadow: 0 12px 22px -14px rgba(15, 46, 36, 0.9);
-}
+  box-shadow: 0 12px 22px -14px rgba(15, 46, 36, 0.9);}
 .xmas-sup-custom {
   display: grid;
   gap: 6px;
   font-size: 13px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-sup-custom > div {
   display: flex;
   align-items: center;
@@ -4556,13 +3651,11 @@ a.xmas-social-chip:hover {
   padding: 0 14px;
   border-radius: 14px;
   background: #fff;
-  border: 1px solid var(--line);
-}
+  border: 1px solid var(--line);}
 .xmas-sup-custom b {
   font-family: var(--serif);
   font-size: 20px;
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-sup-custom input,
 .xmas-sup-field input,
 .xmas-sup-field textarea {
@@ -4573,56 +3666,46 @@ a.xmas-social-chip:hover {
   background: transparent;
   font: inherit;
   font-size: 15px;
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-sup-field {
   display: grid;
   gap: 6px;
   font-size: 13px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-sup-field > span {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
+  align-items: center;}
 .xmas-sup-field > span em {
   font-style: normal;
   font-size: 12px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-sup-field > input,
 .xmas-sup-field > textarea {
   padding: 10px 14px;
   border-radius: 14px;
   background: #fff;
   border: 1px solid var(--line);
-  resize: vertical;
-}
+  resize: vertical;}
 .xmas-sup-field > input:focus,
 .xmas-sup-field > textarea:focus,
 .xmas-sup-custom > div:focus-within {
   border-color: var(--foil);
-  box-shadow: 0 0 0 3px rgba(184, 144, 74, 0.18);
-}
+  box-shadow: 0 0 0 3px rgba(184, 144, 74, 0.18);}
 .xmas-sup-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-sup-chips button {
   padding: 6px 11px;
   font-size: 12px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-sup-foot {
   grid-column: 1 / -1;
   display: grid;
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-sup-foot .xmas-submit {
-  width: 100%;
-}
+  width: 100%;}
 .xmas-ghost-btn {
   justify-self: center;
   padding: 10px 16px;
@@ -4632,8 +3715,7 @@ a.xmas-social-chip:hover {
   font: inherit;
   font-weight: 600;
   text-decoration: underline;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-ex-back {
   grid-column: 1 / -1;
   justify-self: start;
@@ -4644,14 +3726,12 @@ a.xmas-social-chip:hover {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
-}
+  padding: 0;}
 
 /* เมนู Exclusive: สองฟีเจอร์แยกการ์ด */
 .xmas-ex-menu {
   display: grid;
-  gap: 12px;
-}
+  gap: 12px;}
 .xmas-ex-card {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -4667,12 +3747,10 @@ a.xmas-social-chip:hover {
   background: #fff;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
-  transition: transform 0.15s ease, border-color 0.2s ease;
-}
+  transition: transform 0.15s ease, border-color 0.2s ease;}
 .xmas-ex-card:hover {
   transform: translateY(-2px);
-  border-color: var(--foil);
-}
+  border-color: var(--foil);}
 .xmas-ex-icon {
   display: grid;
   place-items: center;
@@ -4680,37 +3758,31 @@ a.xmas-social-chip:hover {
   height: 56px;
   border-radius: 18px;
   color: var(--foil-soft);
-  background: linear-gradient(145deg, var(--spruce-2), var(--spruce));
-}
+  background: linear-gradient(145deg, var(--spruce-2), var(--spruce));}
 .xmas-ex-body {
   display: grid;
   gap: 4px;
-  min-width: 0;
-}
+  min-width: 0;}
 .xmas-ex-body b {
   font-family: var(--serif);
   font-size: 20px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-ex-body small {
   font-size: 13px;
   line-height: 1.5;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-ex-body em {
   font-style: normal;
   font-size: 13px;
   font-weight: 700;
-  color: var(--berry);
-}
+  color: var(--berry);}
 
 /* ตุ๊กตา Exclusive ที่วางจากฟอร์มตกแต่ง */
 .xmas-decor-pay {
   display: grid;
   grid-template-columns: 180px 1fr;
   gap: 18px;
-  align-items: center;
-}
+  align-items: center;}
 .xmas-decor-pay-preview {
   display: grid;
   justify-items: center;
@@ -4720,12 +3792,10 @@ a.xmas-social-chip:hover {
   background: radial-gradient(circle at 50% 35%, rgba(232, 209, 154, 0.35), transparent 70%), #fff;
   border: 1px solid var(--line);
   font-size: 13px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-decor-pay-form {
   display: grid;
-  gap: 12px;
-}
+  gap: 12px;}
 
 /* แผงชำระเงิน: รอแบบเรียลไทม์ */
 .xmas-pay-panel {
@@ -4737,8 +3807,7 @@ a.xmas-social-chip:hover {
   border-radius: 22px;
   background: #fff;
   border: 1px solid var(--line);
-  box-shadow: var(--shadow-sm);
-}
+  box-shadow: var(--shadow-sm);}
 .xmas-pay-head {
   display: inline-flex;
   align-items: center;
@@ -4748,39 +3817,32 @@ a.xmas-social-chip:hover {
   background: rgba(15, 46, 36, 0.06);
   font-size: 13.5px;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
+  font-variant-numeric: tabular-nums;}
 .xmas-pay-pulse {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: var(--berry-2);
   box-shadow: 0 0 0 0 rgba(192, 53, 76, 0.6);
-  animation: xmas-pay-pulse 1.4s ease-out infinite;
-}
+  animation: xmas-pay-pulse 1.4s ease-out infinite;}
 @keyframes xmas-pay-pulse {
   to {
-    box-shadow: 0 0 0 12px rgba(192, 53, 76, 0);
-  }
-}
+    box-shadow: 0 0 0 12px rgba(192, 53, 76, 0);}}
 .xmas-pay-qr {
   display: grid;
   place-items: center;
   min-height: 228px;
   padding: 10px;
   border-radius: 18px;
-  background: #fff;
-}
+  background: #fff;}
 .xmas-pay-qr img {
   max-width: 100%;
-  height: auto;
-}
+  height: auto;}
 .xmas-pay-amount {
   margin: 0;
   font-family: var(--serif);
   font-size: 26px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-pay-steps {
   display: grid;
   gap: 6px;
@@ -4789,13 +3851,11 @@ a.xmas-social-chip:hover {
   text-align: left;
   font-size: 13.5px;
   line-height: 1.5;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-pay-note {
   margin: 0;
   font-size: 12.5px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-pay-warn {
   display: flex;
   align-items: flex-start;
@@ -4808,14 +3868,11 @@ a.xmas-social-chip:hover {
   line-height: 1.5;
   color: #6b1424;
   background: #fff1f2;
-  border: 1px solid rgba(192, 53, 76, 0.3);
-}
+  border: 1px solid rgba(192, 53, 76, 0.3);}
 .xmas-pay-warn b {
-  color: var(--berry);
-}
+  color: var(--berry);}
 .xmas-pay-panel.is-done {
-  padding: 28px 20px;
-}
+  padding: 28px 20px;}
 .xmas-pay-check {
   display: grid;
   place-items: center;
@@ -4824,56 +3881,45 @@ a.xmas-social-chip:hover {
   border-radius: 50%;
   color: #fff;
   background: linear-gradient(145deg, #3f9a6a, #2f6a55);
-  box-shadow: 0 12px 24px -12px rgba(47, 106, 85, 0.9);
-}
+  box-shadow: 0 12px 24px -12px rgba(47, 106, 85, 0.9);}
 .xmas-pay-panel.is-done b {
   font-family: var(--serif);
   font-size: 22px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 
 /* มือถือ: คอลัมน์เดียว */
 @media (max-width: 759px) {
   .xmas-support,
   .xmas-exclusive {
     padding: 22px 18px 18px;
-    border-radius: 24px;
-  }
+    border-radius: 24px;}
   .xmas-sup-grid,
   .xmas-decor-pay {
-    grid-template-columns: 1fr;
-  }
+    grid-template-columns: 1fr;}
   .xmas-sup-prices {
-    grid-template-columns: repeat(3, 1fr);
-  }
+    grid-template-columns: repeat(3, 1fr);}
   .xmas-support h2,
   .xmas-exclusive h2 {
-    font-size: 26px;
-  }
-}
+    font-size: 26px;}}
 
 /* หน้ากล่องของขวัญคงฟอนต์เดิมไว้ */
 .xmas-gift {
   --serif: "Cormorant Garamond", "Noto Serif Thai", Georgia, serif;
-  --sans: "Sarabun", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
+  --sans: "Sarabun", system-ui, -apple-system, "Segoe UI", sans-serif;}
 
 /* ---------- Exclusive: ซ้ายเลือกและพิมพ์ ขวาดูตัวอย่าง ---------- */
 .xmas-ex-split {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 16px;
-  align-items: start;
-}
+  align-items: start;}
 .xmas-ex-split > .xmas-ex-back {
-  grid-column: 1 / -1;
-}
+  grid-column: 1 / -1;}
 .xmas-ex-col {
   display: grid;
   gap: 14px;
   min-width: 0;
-  align-content: start;
-}
+  align-content: start;}
 .xmas-sec {
   display: grid;
   gap: 12px;
@@ -4881,34 +3927,28 @@ a.xmas-social-chip:hover {
   border-radius: 20px;
   background: #fff;
   border: 1px solid var(--line);
-  min-width: 0;
-}
+  min-width: 0;}
 .xmas-sec-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-sec-head h3 {
   margin: 0;
   font-size: 15px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-spot-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-spot-grid button {
   min-height: 44px;
   padding: 8px 10px;
   font-size: 14px;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-tier-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-tier-grid button {
   display: grid;
   gap: 2px;
@@ -4921,34 +3961,27 @@ a.xmas-social-chip:hover {
   color: var(--ink);
   font: inherit;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
-}
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;}
 .xmas-tier-grid button b {
   font-size: 18px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-tier-grid button small {
   font-size: 11px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-tier-grid button:hover {
   transform: translateY(-1px);
-  border-color: var(--foil);
-}
+  border-color: var(--foil);}
 .xmas-tier-grid button.is-on {
   background: var(--spruce);
   color: var(--paper-3);
-  border-color: var(--spruce);
-}
+  border-color: var(--spruce);}
 .xmas-tier-grid button.is-on small {
-  color: var(--foil-soft);
-}
+  color: var(--foil-soft);}
 
 /* ธีมการแสดงแบบรายการ */
 .xmas-theme-list {
   display: grid;
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-theme-opt {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -4963,18 +3996,15 @@ a.xmas-social-chip:hover {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
-}
+  transition: background 0.2s ease, border-color 0.2s ease;}
 .xmas-theme-opt b {
   display: block;
   font-size: 14px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-theme-opt small {
   display: block;
   font-size: 12px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-theme-ico {
   display: grid;
   place-items: center;
@@ -4982,26 +4012,21 @@ a.xmas-social-chip:hover {
   height: 38px;
   border-radius: 12px;
   background: #fff;
-  border: 1px solid var(--line);
-}
+  border: 1px solid var(--line);}
 .xmas-theme-opt.is-on {
   border-color: var(--berry-2);
   background: #fff5f6;
-  box-shadow: 0 0 0 2px rgba(192, 53, 76, 0.15);
-}
+  box-shadow: 0 0 0 2px rgba(192, 53, 76, 0.15);}
 .xmas-theme-opt.is-on .xmas-theme-ico {
   background: var(--berry-2);
-  border-color: var(--berry-2);
-}
+  border-color: var(--berry-2);}
 .xmas-theme-opt.is-on .xmas-theme-ico .xicon {
-  color: #fff;
-}
+  color: #fff;}
 
 /* ด้านขวา: ตัวอย่างแบบเรียลไทม์ */
 .xmas-ex-side {
   position: sticky;
-  top: 0;
-}
+  top: 0;}
 .xmas-sign-stage {
   display: grid;
   justify-items: center;
@@ -5009,12 +4034,10 @@ a.xmas-social-chip:hover {
   padding: 18px 14px 14px;
   border-radius: 22px;
   background: radial-gradient(circle at 50% 30%, rgba(232, 209, 154, 0.4), transparent 70%), #fff;
-  border: 1px solid var(--line);
-}
+  border: 1px solid var(--line);}
 .xmas-sign-snow {
   width: 150px;
-  height: auto;
-}
+  height: auto;}
 .xmas-sign-board {
   display: grid;
   justify-items: center;
@@ -5026,24 +4049,20 @@ a.xmas-social-chip:hover {
   color: #f6e7b8;
   background: linear-gradient(180deg, #123f2e, #0b2a21);
   border: 2px solid var(--foil);
-  box-shadow: 0 12px 24px -16px rgba(8, 30, 22, 0.9);
-}
+  box-shadow: 0 12px 24px -16px rgba(8, 30, 22, 0.9);}
 .xmas-sign-board small {
   font-size: 11px;
   letter-spacing: 0.12em;
-  color: var(--foil-soft);
-}
+  color: var(--foil-soft);}
 .xmas-sign-board b {
   font-size: 18px;
   font-weight: 700;
-  overflow-wrap: anywhere;
-}
+  overflow-wrap: anywhere;}
 .xmas-sign-board p {
   margin: 0;
   font-size: 13.5px;
   line-height: 1.5;
-  overflow-wrap: anywhere;
-}
+  overflow-wrap: anywhere;}
 
 /* ตัวอย่างท้องฟ้าของข้อความขึ้นจอ */
 .xmas-sky-preview {
@@ -5057,61 +4076,51 @@ a.xmas-social-chip:hover {
   text-align: center;
   color: #fff8e6;
   background: radial-gradient(circle at 50% 100%, rgba(232, 209, 154, 0.3), transparent 70%), linear-gradient(180deg, #0b2a21, #1f4d3c);
-  box-shadow: var(--shadow-sm);
-}
+  box-shadow: var(--shadow-sm);}
 .xmas-sky-fx {
   position: absolute;
   inset: 0;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-sky-fx i {
   position: absolute;
   display: block;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  opacity: 0;
-}
+  opacity: 0;}
 .xmas-sky-text {
   position: relative;
   display: grid;
   gap: 8px;
-  max-width: 92%;
-}
+  max-width: 92%;}
 .xmas-sky-text p {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   line-height: 1.5;
-  overflow-wrap: anywhere;
-}
+  overflow-wrap: anywhere;}
 .xmas-sky-text small {
   font-size: 13px;
-  color: var(--foil-soft);
-}
+  color: var(--foil-soft);}
 .xmas-sky-preview.is-fireworks .xmas-sky-fx i {
   background: #f5c542;
-  animation: xmas-sky-burst 1.8s ease-out infinite;
-}
+  animation: xmas-sky-burst 1.8s ease-out infinite;}
 .xmas-sky-preview.is-snow .xmas-sky-fx i {
   width: 5px;
   height: 5px;
   background: #fff;
-  animation: xmas-sky-fall 3.2s linear infinite;
-}
+  animation: xmas-sky-fall 3.2s linear infinite;}
 .xmas-sky-preview.is-sparkle .xmas-sky-fx i {
   width: 4px;
   height: 4px;
   background: #e8d19a;
-  animation: xmas-sky-twinkle 1.6s ease-in-out infinite;
-}
+  animation: xmas-sky-twinkle 1.6s ease-in-out infinite;}
 .xmas-sky-frame {
   position: absolute;
   inset: 12px;
   border: 2px solid rgba(232, 209, 154, 0.7);
   border-radius: 16px;
-  animation: xmas-sky-twinkle 2.2s ease-in-out infinite;
-}
+  animation: xmas-sky-twinkle 2.2s ease-in-out infinite;}
 .xmas-sky-sleigh {
   position: absolute;
   bottom: 14px;
@@ -5120,88 +4129,64 @@ a.xmas-social-chip:hover {
   height: 22px;
   border-radius: 12px 12px 4px 4px;
   background: linear-gradient(90deg, #c0354c, #f5c542);
-  animation: xmas-sky-sleigh 4.4s linear infinite;
-}
+  animation: xmas-sky-sleigh 4.4s linear infinite;}
 @keyframes xmas-sky-burst {
   0% {
     opacity: 0;
-    transform: scale(0.3);
-  }
+    transform: scale(0.3);}
   30% {
-    opacity: 1;
-  }
+    opacity: 1;}
   100% {
     opacity: 0;
-    transform: scale(1.6);
-  }
-}
+    transform: scale(1.6);}}
 @keyframes xmas-sky-fall {
   0% {
     opacity: 0.9;
-    transform: translateY(-10px);
-  }
+    transform: translateY(-10px);}
   100% {
     opacity: 0.2;
-    transform: translateY(240px);
-  }
-}
+    transform: translateY(240px);}}
 @keyframes xmas-sky-twinkle {
   0%,
   100% {
-    opacity: 0.2;
-  }
+    opacity: 0.2;}
   50% {
-    opacity: 1;
-  }
-}
+    opacity: 1;}}
 @keyframes xmas-sky-sleigh {
   to {
-    transform: translateX(420px);
-  }
-}
+    transform: translateX(420px);}}
 @media (prefers-reduced-motion: reduce) {
   .xmas-sky-fx i,
   .xmas-sky-frame,
   .xmas-sky-sleigh {
-    animation: none;
-  }
-}
+    animation: none;}}
 
 /* มือถือ: คอลัมน์เดียว ตัวอย่างอยู่ท้ายฟอร์ม */
 @media (max-width: 759px) {
   .xmas-ex-split {
-    grid-template-columns: 1fr;
-  }
+    grid-template-columns: 1fr;}
   .xmas-ex-side {
-    position: static;
-  }
+    position: static;}
   .xmas-sign-snow {
-    width: 120px;
-  }
+    width: 120px;}
   .xmas-sky-preview {
-    min-height: 180px;
-  }
+    min-height: 180px;}
   .xmas-tier-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
+    grid-template-columns: repeat(3, minmax(0, 1fr));}}
 
 /* ---------- ตัวเลือกชิ้นส่วนตุ๊กตายักษ์ และตัวอย่างป้าย/ท้องฟ้า ---------- */
 .xmas-pick-row {
   display: grid;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-pick-title {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-pick-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-pick-chips button {
   min-height: 34px;
   padding: 6px 12px;
@@ -5212,35 +4197,29 @@ a.xmas-social-chip:hover {
   font: inherit;
   font-size: 12.5px;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
-}
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;}
 .xmas-pick-chips button:hover {
   transform: translateY(-1px);
-  border-color: var(--foil);
-}
+  border-color: var(--foil);}
 .xmas-pick-chips button.is-on {
   background: var(--spruce);
   color: var(--paper-3);
-  border-color: var(--spruce);
-}
+  border-color: var(--spruce);}
 .xmas-board-canvas {
   width: 100%;
   height: auto;
   aspect-ratio: 1024 / 640;
   border-radius: 14px;
-  box-shadow: 0 14px 26px -18px rgba(8, 30, 22, 0.8);
-}
+  box-shadow: 0 14px 26px -18px rgba(8, 30, 22, 0.8);}
 .xmas-sky-canvas {
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
   border-radius: 22px;
-  box-shadow: var(--shadow-md);
-}
+  box-shadow: var(--shadow-md);}
 .xmas-sign-stage .xmas-snowman {
   width: 170px;
-  height: auto;
-}
+  height: auto;}
 
 /* ---------- ตกแต่งตุ๊กตาหิมะ: จัดวางใหม่ซ้าย (ตัวอย่างและช่อง) ขวา (ชิ้นส่วน) ---------- */
 .xmas-mk {
@@ -5254,48 +4233,41 @@ a.xmas-social-chip:hover {
   background: linear-gradient(180deg, var(--paper-3), var(--paper));
   border: 1px solid rgba(184, 144, 74, 0.35);
   box-shadow: var(--shadow-lg);
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xmas-mk-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--line);
-}
+  border-bottom: 1px solid var(--line);}
 .xmas-mk-head h2 {
   margin: 2px 0 0;
   font-family: var(--serif);
   font-size: 26px;
   font-weight: 600;
-  line-height: 1.15;
-}
+  line-height: 1.15;}
 .xmas-mk-head .xmas-kicker {
   margin: 0;
   font-size: 12px;
   letter-spacing: 0.12em;
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-mk-head .xmas-x {
   position: static;
-  flex: none;
-}
+  flex: none;}
 .xmas-mk-body {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   gap: 18px;
   min-height: 0;
-  padding: 16px 0;
-}
+  padding: 16px 0;}
 .xmas-mk-side {
   display: grid;
   gap: 12px;
   align-content: start;
   min-width: 0;
   min-height: 0;
-  overflow: visible;
-}
+  overflow: visible;}
 .xmas-mk-stage {
   display: grid;
   justify-items: center;
@@ -5303,39 +4275,33 @@ a.xmas-social-chip:hover {
   padding: 10px 10px 8px;
   border-radius: 22px;
   background: radial-gradient(circle at 50% 35%, rgba(232, 209, 154, 0.38), transparent 70%), #fff;
-  border: 1px solid var(--line);
-}
+  border: 1px solid var(--line);}
 .xmas-mk-snow {
   width: 150px;
-  height: auto;
-}
+  height: auto;}
 .xmas-mk-name {
   font-size: 13px;
   font-weight: 700;
   color: var(--ink-2);
   overflow-wrap: anywhere;
-  text-align: center;
-}
+  text-align: center;}
 .xmas-mk-card {
   display: grid;
   gap: 8px;
   padding: 14px;
   border-radius: 18px;
   background: #fff;
-  border: 1px solid var(--line);
-}
+  border: 1px solid var(--line);}
 .xmas-mk-label,
 .xmas-mk-field > span {
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-mk-slot-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-mk-slot-row input,
 .xmas-mk-field input {
   min-width: 0;
@@ -5347,13 +4313,11 @@ a.xmas-social-chip:hover {
   color: var(--ink);
   font: inherit;
   font-size: 15px;
-  outline: none;
-}
+  outline: none;}
 .xmas-mk-slot-row input:focus,
 .xmas-mk-field input:focus {
   border-color: var(--foil);
-  box-shadow: 0 0 0 3px rgba(184, 144, 74, 0.18);
-}
+  box-shadow: 0 0 0 3px rgba(184, 144, 74, 0.18);}
 .xmas-mk-chip {
   min-height: 40px;
   padding: 0 12px;
@@ -5365,38 +4329,30 @@ a.xmas-social-chip:hover {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-}
+  white-space: nowrap;}
 .xmas-mk-chip:hover {
-  border-color: var(--foil);
-}
+  border-color: var(--foil);}
 .xmas-mk-chip.is-wide {
-  width: 100%;
-}
+  width: 100%;}
 .xmas-mk-status {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
   font-size: 13px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-mk-status i {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--ink-2);
-  flex: none;
-}
+  flex: none;}
 .xmas-mk-status.is-ok i {
-  background: #2f9a64;
-}
+  background: #2f9a64;}
 .xmas-mk-status.is-warn {
-  color: #8f1a2d;
-}
+  color: #8f1a2d;}
 .xmas-mk-status.is-warn i {
-  background: var(--berry-2);
-}
+  background: var(--berry-2);}
 .xmas-mk-link {
   border: 0;
   padding: 0;
@@ -5405,17 +4361,14 @@ a.xmas-social-chip:hover {
   font: inherit;
   font-weight: 700;
   text-decoration: underline;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-mk-field {
   display: grid;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-mk-note {
   margin: 0;
   font-size: 12px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 
 /* ขวา: หมวดชิ้นส่วนแบบแท็บ และตัวเลือกแบบตาราง */
 .xmas-mk-main {
@@ -5423,18 +4376,15 @@ a.xmas-social-chip:hover {
   grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
   min-width: 0;
-  min-height: 0;
-}
+  min-height: 0;}
 .xmas-mk-tabs {
   display: flex;
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 2px;
-  scrollbar-width: none;
-}
+  scrollbar-width: none;}
 .xmas-mk-tabs::-webkit-scrollbar {
-  display: none;
-}
+  display: none;}
 .xmas-mk-tabs button {
   flex: none;
   min-height: 38px;
@@ -5446,13 +4396,11 @@ a.xmas-social-chip:hover {
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-mk-tabs button.is-on {
   background: var(--spruce);
   border-color: var(--spruce);
-  color: var(--paper-3);
-}
+  color: var(--paper-3);}
 .xmas-mk-options {
   min-height: 0;
   overflow: visible;
@@ -5460,8 +4408,7 @@ a.xmas-social-chip:hover {
   border-radius: 20px;
   background: linear-gradient(180deg, #fff, #fbf6ea);
   border: 1px solid rgba(184, 144, 74, 0.28);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);}
 .xmas-mk-options h3 {
   display: flex;
   align-items: baseline;
@@ -5469,18 +4416,15 @@ a.xmas-social-chip:hover {
   gap: 8px;
   margin: 0 0 10px;
   font-size: 15px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-mk-options h3 small {
   font-size: 12px;
   font-weight: 600;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-mk-group + .xmas-mk-group {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px dashed rgba(184, 144, 74, 0.35);
-}
+  border-top: 1px dashed rgba(184, 144, 74, 0.35);}
 .xmas-mk-tab-num {
   display: inline-grid;
   place-items: center;
@@ -5491,20 +4435,16 @@ a.xmas-social-chip:hover {
   font-size: 11px;
   font-weight: 700;
   background: rgba(184, 144, 74, 0.2);
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-mk-tabs button.is-on .xmas-mk-tab-num {
   background: rgba(232, 209, 154, 0.28);
-  color: #f6e7bf;
-}
+  color: #f6e7bf;}
 .xmas-mk-tab-short {
-  display: none;
-}
+  display: none;}
 .xmas-mk-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-mk-grid button {
   min-height: 46px;
   padding: 8px 10px;
@@ -5516,30 +4456,25 @@ a.xmas-social-chip:hover {
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
-}
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;}
 .xmas-mk-grid button:hover {
   transform: translateY(-1px);
-  border-color: var(--foil);
-}
+  border-color: var(--foil);}
 .xmas-mk-grid button.is-on {
   background: linear-gradient(180deg, var(--spruce-2), var(--spruce));
   color: var(--paper-3);
   border-color: var(--spruce);
-  box-shadow: 0 0 0 2px rgba(232, 209, 154, 0.55), 0 10px 18px -12px rgba(15, 46, 36, 0.9);
-}
+  box-shadow: 0 0 0 2px rgba(232, 209, 154, 0.55), 0 10px 18px -12px rgba(15, 46, 36, 0.9);}
 
 /* Exclusive บนคอม: แสดงทีละหมวดเหมือนมือถือ จึงไม่ต้องเลื่อนหน้า */
 .xmas-ex-split [data-step]:not([data-on="true"]) {
-  display: none;
-}
+  display: none;}
 .xmas-ex-split > .xmas-wiz-nav {
   display: grid;
   grid-column: 1;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-ex-split > .xmas-wiz-nav .xmas-wiz-back,
 .xmas-ex-split > .xmas-wiz-nav .xmas-wiz-next {
   min-height: 44px;
@@ -5548,55 +4483,43 @@ a.xmas-social-chip:hover {
   font: inherit;
   font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-ex-split > .xmas-wiz-nav .xmas-wiz-back {
   border: 1px solid var(--line);
   background: #fff;
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-ex-split > .xmas-wiz-nav .xmas-wiz-back:disabled {
   opacity: 0.4;
-  cursor: default;
-}
+  cursor: default;}
 .xmas-ex-split > .xmas-wiz-nav .xmas-wiz-next {
   border: 0;
   background: linear-gradient(180deg, var(--spruce-2), var(--spruce));
-  color: var(--paper-3);
-}
+  color: var(--paper-3);}
 .xmas-ex-split > .xmas-wiz-nav .xmas-wiz-count {
   justify-self: center;
   font-size: 12px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-ex-split > .xmas-wiz-nav .xmas-wiz-spacer {
-  width: 1px;
-}
+  width: 1px;}
 /* หน้าจอคอมที่สูงไม่มาก: ย่อตัวอย่างให้พอดีโดยไม่ต้องเลื่อน */
 @media (min-width: 760px) and (max-height: 820px) {
   .xmas-ex-side .xmas-sign-snow {
-    width: 96px;
-  }
+    width: 96px;}
   .xmas-ex-side .xmas-sign-stage {
-    padding: 10px 14px;
-  }
+    padding: 10px 14px;}
   .xmas-ex-side .xmas-board-canvas {
-    width: 84%;
-  }
-}
+    width: 84%;}}
 
 /* ท้าย: ปุ่มสองแบบชัดเจน */
 .xmas-mk-foot {
   display: grid;
   gap: 8px;
   padding-top: 14px;
-  border-top: 1px solid var(--line);
-}
+  border-top: 1px solid var(--line);}
 .xmas-mk-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-mk-primary,
 .xmas-mk-exclusive {
   display: grid;
@@ -5607,35 +4530,29 @@ a.xmas-social-chip:hover {
   border-radius: 18px;
   font: inherit;
   cursor: pointer;
-  text-align: center;
-}
+  text-align: center;}
 .xmas-mk-primary {
   border: 0;
   background: linear-gradient(180deg, var(--spruce-2), var(--spruce));
   color: var(--paper-3);
   font-size: 15px;
   font-weight: 700;
-  box-shadow: 0 14px 24px -16px rgba(15, 46, 36, 0.9);
-}
+  box-shadow: 0 14px 24px -16px rgba(15, 46, 36, 0.9);}
 .xmas-mk-exclusive {
   border: 1px solid rgba(184, 144, 74, 0.55);
   background: linear-gradient(180deg, #fff8e6, #f3e3b8);
-  color: var(--ink);
-}
+  color: var(--ink);}
 .xmas-mk-exclusive span {
   font-size: 15px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-mk-exclusive small {
   font-size: 11.5px;
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-mk-primary:disabled,
 .xmas-mk-exclusive:disabled,
 .xmas-mk-chip:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
-}
+  cursor: not-allowed;}
 
 @media (max-width: 759px) {
   .xmas-mk {
@@ -5643,38 +4560,28 @@ a.xmas-social-chip:hover {
     height: 100dvh;
     max-height: none;
     border-radius: 0;
-    padding: 14px 14px 12px;
-  }
+    padding: 14px 14px 12px;}
   .xmas-mk-body {
     grid-template-columns: 1fr;
     gap: 12px;
-    overflow-y: auto;
-  }
+    overflow-y: auto;}
   .xmas-mk-side {
     overflow: visible;
-    padding-right: 0;
-  }
+    padding-right: 0;}
   .xmas-mk-stage {
     grid-template-columns: auto 1fr;
     align-items: center;
-    justify-items: start;
-  }
+    justify-items: start;}
   .xmas-mk-snow {
-    width: 110px;
-  }
+    width: 110px;}
   .xmas-mk-main {
-    grid-template-rows: auto auto;
-  }
+    grid-template-rows: auto auto;}
   .xmas-mk-options {
-    overflow: visible;
-  }
+    overflow: visible;}
   .xmas-mk-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+    grid-template-columns: repeat(2, minmax(0, 1fr));}
   .xmas-mk-actions {
-    grid-template-columns: 1fr;
-  }
-}
+    grid-template-columns: 1fr;}}
 
 /* ---------- การ์ดตุ๊กตาหิมะที่คลิก ---------- */
 .xmas-decor-card {
@@ -5689,27 +4596,22 @@ a.xmas-social-chip:hover {
   border: 1px solid rgba(184, 144, 74, 0.4);
   border-radius: 26px;
   box-shadow: var(--shadow-lg);
-  animation: xmas-decor-card-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
+  animation: xmas-decor-card-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;}
 @keyframes xmas-decor-card-in {
   from {
     opacity: 0;
     translate: 0 12px;
-    scale: 0.96;
-  }
+    scale: 0.96;}
   to {
     opacity: 1;
     translate: 0 0;
-    scale: 1;
-  }
-}
+    scale: 1;}}
 .xmas-decor-card-art {
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
-  padding: 10px 0 4px;
-}
+  padding: 10px 0 4px;}
 .xmas-decor-card-glow {
   position: absolute;
   inset: 0;
@@ -5717,48 +4619,39 @@ a.xmas-social-chip:hover {
   width: 70%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(232, 209, 154, 0.55), transparent 70%);
-}
+  background: radial-gradient(circle, rgba(232, 209, 154, 0.55), transparent 70%);}
 .xmas-decor-card-snow {
   position: relative;
   width: 150px;
   height: auto;
-  animation: xmas-decor-bob 2.6s ease-in-out infinite;
-}
+  animation: xmas-decor-bob 2.6s ease-in-out infinite;}
 @keyframes xmas-decor-bob {
   0%,
   100% {
-    transform: translateY(0) rotate(-1.5deg);
-  }
+    transform: translateY(0) rotate(-1.5deg);}
   50% {
-    transform: translateY(-6px) rotate(1.5deg);
-  }
-}
+    transform: translateY(-6px) rotate(1.5deg);}}
 .xmas-decor-card-tag {
   font-size: 12px;
   letter-spacing: 0.06em;
-  color: var(--foil);
-}
+  color: var(--foil);}
 .xmas-decor-card-name {
   font-family: var(--serif);
   font-size: 24px;
   font-weight: 600;
-  overflow-wrap: anywhere;
-}
+  overflow-wrap: anywhere;}
 .xmas-decor-card-parts {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
-}
+  gap: 6px;}
 .xmas-decor-card-parts span {
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
   background: #fff;
   border: 1px solid var(--line);
-  color: var(--ink-2);
-}
+  color: var(--ink-2);}
 .xmas-decor-card-like {
   display: inline-flex;
   align-items: center;
@@ -5772,15 +4665,12 @@ a.xmas-social-chip:hover {
   color: var(--berry);
   font: inherit;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-decor-card-like.is-liked {
   background: var(--berry-2);
-  color: #fff;
-}
+  color: #fff;}
 .xmas-decor-card-like:disabled {
-  cursor: default;
-}
+  cursor: default;}
 
 
 /* ---------- เมนูล่างบนมือถือ: แถบกระจกสีสปรูซ ปุ่ม Exclusive ยกขึ้นเป็นทอง ---------- */
@@ -5795,8 +4685,7 @@ a.xmas-social-chip:hover {
     border-radius: 26px;
     background: linear-gradient(180deg, rgba(20, 64, 50, 0.94), rgba(9, 34, 27, 0.97));
     border: 1px solid rgba(232, 209, 154, 0.32);
-    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  }
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);}
   .xmas-action {
     flex: 1 1 0;
     min-width: 0;
@@ -5810,16 +4699,13 @@ a.xmas-social-chip:hover {
     font-size: 10.5px;
     font-weight: 600;
     letter-spacing: 0.01em;
-    transition: transform 0.18s ease, color 0.2s ease, background 0.2s ease;
-  }
+    transition: transform 0.18s ease, color 0.2s ease, background 0.2s ease;}
   .xmas-action:active {
-    transform: scale(0.94);
-  }
+    transform: scale(0.94);}
   .xmas-action .xicon {
     width: 22px;
     height: 22px;
-    color: var(--foil-soft);
-  }
+    color: var(--foil-soft);}
   .xmas-action.is-exclusive {
     flex: 1.2 1 0;
     min-height: 64px;
@@ -5828,146 +4714,114 @@ a.xmas-social-chip:hover {
     background: linear-gradient(180deg, #f7dc8a, #b8864a);
     color: #2a1a08;
     font-weight: 700;
-    box-shadow: 0 14px 26px -12px rgba(184, 134, 74, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
+    box-shadow: 0 14px 26px -12px rgba(184, 134, 74, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.5);}
   .xmas-action.is-exclusive .xicon {
-    color: #2a1a08;
-  }
+    color: #2a1a08;}
   .xmas-action-phone {
     min-height: 56px;
     border-radius: 18px;
     background: linear-gradient(180deg, #c0354c, #8f1028);
     color: #fff;
-    font-weight: 700;
-  }
+    font-weight: 700;}
   .xmas-action-phone .xicon,
   .xmas-action-phone:hover .xicon {
-    color: #fff;
-  }
+    color: #fff;}
   .xmas-action-phone:hover {
     background: linear-gradient(180deg, #c0354c, #8f1028);
-    color: #fff;
-  }
-}
+    color: #fff;}}
 
 /* ---------- ขั้นตอนบนมือถือ: ทีละหน้าจอ ไม่ต้องเลื่อน ---------- */
 .xmas-wiz-nav {
-  display: none;
-}
+  display: none;}
 @media (max-width: 759px) {
   .xmas-mk [data-step]:not([data-on="true"]) {
-    display: none !important;
-  }
+    display: none !important;}
   .xmas-mk {
     width: 100vw;
     height: 100dvh;
     max-height: none;
     padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
     border-radius: 0;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-  }
+    grid-template-rows: auto minmax(0, 1fr) auto;}
   .xmas-mk-head {
-    padding-bottom: 10px;
-  }
+    padding-bottom: 10px;}
   .xmas-mk-head h2 {
-    font-size: 22px;
-  }
+    font-size: 22px;}
   .xmas-mk-body {
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 10px 0;
     overflow: hidden;
-    min-height: 0;
-  }
+    min-height: 0;}
   .xmas-mk-side {
     display: flex;
     flex-direction: column;
     gap: 10px;
     overflow: visible;
-    padding-right: 0;
-  }
+    padding-right: 0;}
   .xmas-mk-stage {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 12px;
     padding: 6px 12px;
-    justify-items: unset;
-  }
+    justify-items: unset;}
   .xmas-mk-snow {
-    width: 96px;
-  }
+    width: 96px;}
   .xmas-mk-name {
     font-size: 15px;
-    text-align: left;
-  }
+    text-align: left;}
   .xmas-mk-card {
-    padding: 12px;
-  }
+    padding: 12px;}
   .xmas-mk-main {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    min-height: 0;
-  }
+    min-height: 0;}
   .xmas-mk-tabs {
     flex-wrap: nowrap;
     overflow: visible;
-    gap: 5px;
-  }
+    gap: 5px;}
   .xmas-mk-tabs button {
     min-height: 34px;
     padding: 0 9px;
     font-size: 12px;
-    white-space: nowrap;
-  }
+    white-space: nowrap;}
   .xmas-mk-tab-long {
-    display: none;
-  }
+    display: none;}
   .xmas-mk-tab-short {
-    display: inline;
-  }
+    display: inline;}
   .xmas-mk-tab-num {
-    margin-right: 4px;
-  }
+    margin-right: 4px;}
   .xmas-mk-options {
     overflow: visible;
-    padding: 12px;
-  }
+    padding: 12px;}
   .xmas-mk-options h3 {
     margin-bottom: 8px;
-    font-size: 14px;
-  }
+    font-size: 14px;}
   .xmas-mk-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-  }
+    gap: 6px;}
   .xmas-mk-grid button {
     min-height: 38px;
     padding: 6px 6px;
     font-size: 12.5px;
-    overflow-wrap: anywhere;
-  }
+    overflow-wrap: anywhere;}
   .xmas-mk-snow {
-    width: 84px;
-  }
+    width: 84px;}
   .xmas-mk-stage {
-    padding: 4px 10px;
-  }
+    padding: 4px 10px;}
   .xmas-mk-options {
-    padding: 12px;
-  }
+    padding: 12px;}
   .xmas-mk-foot {
     gap: 8px;
-    padding-top: 10px;
-  }
+    padding-top: 10px;}
   .xmas-wiz-nav {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: 10px;
-  }
+    gap: 10px;}
   .xmas-wiz-back,
   .xmas-wiz-next {
     min-height: 44px;
@@ -5976,75 +4830,55 @@ a.xmas-social-chip:hover {
     font: inherit;
     font-size: 14px;
     font-weight: 700;
-    cursor: pointer;
-  }
+    cursor: pointer;}
   .xmas-wiz-back {
     border: 1px solid var(--line);
     background: #fff;
-    color: var(--ink);
-  }
+    color: var(--ink);}
   .xmas-wiz-back:disabled {
-    opacity: 0.4;
-  }
+    opacity: 0.4;}
   .xmas-wiz-next {
     border: 0;
     background: linear-gradient(180deg, var(--spruce-2), var(--spruce));
-    color: var(--paper-3);
-  }
+    color: var(--paper-3);}
   .xmas-wiz-count {
     justify-self: center;
     font-size: 12px;
-    color: var(--ink-2);
-  }
+    color: var(--ink-2);}
   .xmas-wiz-spacer {
-    width: 1px;
-  }
+    width: 1px;}
   .xmas-mk-actions {
-    grid-template-columns: 1fr;
-  }
-}
+    grid-template-columns: 1fr;}}
 @media (max-width: 759px) {
   .xmas-mk-body {
     align-self: start;
-    align-content: start;
-  }
+    align-content: start;}
   .xmas-mk-foot {
-    align-self: end;
-  }
-}
+    align-self: end;}}
 @media (max-width: 759px) {
   /* กล่องหน้าต่างบนมือถือเป็นคอลัมน์ธรรมดา (แถบจับด้านบนเป็นองค์ประกอบของกล่องเอง) */
   .xmas-mk {
     display: flex;
-    flex-direction: column;
-  }
+    flex-direction: column;}
   .xmas-mk-head,
   .xmas-mk-foot {
-    flex: none;
-  }
+    flex: none;}
   .xmas-mk-body {
     flex: 1 1 auto;
-    min-height: 0;
-  }
-}
+    min-height: 0;}}
 @media (max-width: 759px) {
   .xmas-mk-foot {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-  }
+    gap: 8px;}
   .xmas-mk-foot .xmas-wiz-nav,
   .xmas-mk-foot .xmas-mk-actions {
-    width: 100%;
-  }
-}
+    width: 100%;}}
 @media (max-width: 759px) {
   .xmas-mk > * {
     align-self: stretch;
     width: 100%;
-    justify-self: stretch;
-  }
-}
+    justify-self: stretch;}}
 
 /* ---------- Exclusive และสนับสนุนบนมือถือ: ทีละขั้น พอดีจอ ---------- */
 @media (max-width: 759px) {
@@ -6057,27 +4891,22 @@ a.xmas-social-chip:hover {
     flex-direction: column;
     border-radius: 0;
     padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
-    overflow: hidden;
-  }
+    overflow: hidden;}
   .xmas-support > *,
   .xmas-exclusive > * {
     flex: none;
-    width: 100%;
-  }
+    width: 100%;}
   .xmas-support h2,
   .xmas-exclusive h2 {
     font-size: 22px;
-    margin: 0;
-  }
+    margin: 0;}
   .xmas-support .xmas-sup-lead,
   .xmas-exclusive .xmas-sup-lead {
-    display: none;
-  }
+    display: none;}
   .xmas-support .xmas-x,
   .xmas-exclusive .xmas-x {
     top: 12px;
-    right: 12px;
-  }
+    right: 12px;}
   .xmas-sup-grid,
   .xmas-ex-split {
     flex: 1 1 auto;
@@ -6085,105 +4914,82 @@ a.xmas-social-chip:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    overflow: hidden;
-  }
+    overflow: hidden;}
   .xmas-sup-grid > .xmas-sup-card,
   .xmas-sup-grid > .xmas-sup-wide,
   .xmas-ex-split > .xmas-ex-col {
     flex: none;
-    width: 100%;
-  }
+    width: 100%;}
   .xmas-ex-split > .xmas-ex-back {
-    flex: none;
-  }
+    flex: none;}
   .xmas-ex-col {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-  }
+    gap: 10px;}
   .xmas-ex-side {
     order: -1;
     position: static;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-  }
+    gap: 8px;}
   .xmas-ex-side .xmas-sign-stage {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 10px;
-    padding: 6px 10px;
-  }
+    padding: 6px 10px;}
   .xmas-ex-side .xmas-sign-snow,
   .xmas-ex-side .xmas-snowman {
     width: 84px;
-    flex: none;
-  }
+    flex: none;}
   .xmas-ex-side .xmas-board-canvas {
     width: 100%;
-    min-width: 0;
-  }
+    min-width: 0;}
   .xmas-ex-side .xmas-sky-canvas {
-    border-radius: 16px;
-  }
+    border-radius: 16px;}
   .xmas-ex-side .xmas-hint {
-    display: none;
-  }
+    display: none;}
   .xmas-ex-side .xmas-msg {
-    margin: 0;
-  }
+    margin: 0;}
   .xmas-sec {
     padding: 12px;
-    gap: 8px;
-  }
+    gap: 8px;}
   .xmas-sec-head h3 {
-    font-size: 14px;
-  }
+    font-size: 14px;}
   .xmas-sup-card {
     padding: 12px;
-    gap: 8px;
-  }
+    gap: 8px;}
   .xmas-sup-prices button {
     min-height: 50px;
-    font-size: 18px;
-  }
+    font-size: 18px;}
   .xmas-spot-grid button,
   .xmas-sup-chips button,
   .xmas-pick-chips button {
     min-height: 34px;
-    font-size: 12.5px;
-  }
+    font-size: 12.5px;}
   .xmas-sup-foot,
   .xmas-ex-final {
     display: grid;
-    gap: 8px;
-  }
+    gap: 8px;}
   .xmas-sup-foot .xmas-submit,
   .xmas-ex-final .xmas-submit {
-    width: 100%;
-  }
+    width: 100%;}
   /* ปุ่มสุดท้ายแสดงเฉพาะขั้นสุดท้าย */
   .xmas-exclusive [data-step]:not([data-on="true"]),
   .xmas-support [data-step]:not([data-on="true"]) {
-    display: none !important;
-  }
+    display: none !important;}
   .xmas-exclusive .xmas-wiz-nav,
   .xmas-support .xmas-wiz-nav {
-    display: grid;
-  }
+    display: grid;}
   .xmas-exclusive .xmas-msg,
   .xmas-support .xmas-msg {
     font-size: 12.5px;
-    margin: 0;
-  }
-}
+    margin: 0;}}
 
 /* ---------- มือถือ: แผงแขวนคำอวยพร ---------- */
 @media (max-width: 759px) {
   .xmas-wish.is-open .xmas-sheet-toggle {
-    display: none;
-  }
+    display: none;}
   .xmas-wish .xmas-form-close {
     display: grid;
     position: absolute;
@@ -6196,40 +5002,30 @@ a.xmas-social-chip:hover {
     border-radius: 50%;
     background: rgba(15, 46, 36, 0.08);
     color: var(--ink);
-    border: 0;
-  }
+    border: 0;}
   .xmas-wish .xmas-build-top {
-    position: relative;
-  }
+    position: relative;}
   .xmas-wish .xmas-build-preview {
     height: 128px;
-    margin-bottom: 4px;
-  }
+    margin-bottom: 4px;}
   .xmas-wish .xmas-build-slot {
     margin: 4px 0 6px;
-    font-size: 12.5px;
-  }
+    font-size: 12.5px;}
   .xmas-wish .xmas-part-grid {
-    gap: 6px;
-  }
+    gap: 6px;}
   .xmas-wish .xmas-part-grid button {
     min-height: 56px;
-    padding: 6px;
-  }
-}
+    padding: 6px;}}
 
 /* ---------- มือถือ: ชวนเพื่อน ---------- */
 @media (max-width: 759px) {
   .xmas-invite {
     display: block;
-    width: min(92vw, 400px);
-  }
+    width: min(92vw, 400px);}
   .xmas-invite::before {
     width: 100%;
     box-sizing: border-box;
-    border-radius: 28px 28px 0 0;
-  }
-}
+    border-radius: 28px 28px 0 0;}}
 
 /* ---------- มือถือ: ประวัติล่าสุด แท็บเรียงเท่ากันพอดีจอ ---------- */
 @media (max-width: 759px) {
@@ -6238,8 +5034,7 @@ a.xmas-social-chip:hover {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 4px;
     padding: 8px 10px;
-    overflow: visible;
-  }
+    overflow: visible;}
   .xmas-feed .xmas-tab {
     flex-direction: column;
     gap: 2px;
@@ -6249,23 +5044,18 @@ a.xmas-social-chip:hover {
     font-size: 11px;
     line-height: 1.15;
     justify-content: center;
-    text-align: center;
-  }
+    text-align: center;}
   .xmas-feed .xmas-tab span {
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
-  }
+    max-width: 100%;}
   .xmas-feed .xmas-tab em {
     font-size: 10px;
-    padding: 0 6px;
-  }
+    padding: 0 6px;}
   .xmas-feed .xmas-tab .xicon {
     width: 14px;
-    height: 14px;
-  }
-}
+    height: 14px;}}
 
 /* ---------- มือถือ: เมนูล่างแบบกระจกเข้ม ตามแบบอ้างอิง ---------- */
 @media (max-width: 759px) {
@@ -6273,129 +5063,96 @@ a.xmas-social-chip:hover {
     background: rgba(12, 42, 33, 0.92);
     border: 1px solid rgba(232, 209, 154, 0.22);
     border-radius: 24px;
-    box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.7);
-  }
+    box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.7);}
   .xmas-action {
     background: transparent;
     color: rgba(247, 242, 230, 0.82);
     border-radius: 16px;
-    transform: none;
-  }
+    transform: none;}
   .xmas-action.is-exclusive {
     transform: none;
     background: transparent;
     color: #e8d19a;
     font-weight: 700;
     box-shadow: none;
-    min-height: 56px;
-  }
+    min-height: 56px;}
   .xmas-action.is-exclusive .xicon {
-    color: #e8d19a;
-  }
+    color: #e8d19a;}
   .xmas-action-phone {
     background: var(--berry-2);
     color: #fff;
     border-radius: 16px;
-    min-height: 56px;
-  }
+    min-height: 56px;}
   .xmas-action-phone:hover,
   .xmas-action-phone:active {
-    background: var(--berry);
-  }
-}
+    background: var(--berry);}}
 @media (max-width: 759px) {
   /* แท็บข้อความไม่ต้องใช้ตัวอย่างลูกบอล จึงซ่อนเพื่อให้พอดีจอ */
   .xmas-wish-form.is-text-tab .xmas-build-preview {
-    display: none;
-  }
+    display: none;}
   .xmas-wish-form.is-text-tab textarea {
-    min-height: 84px;
-  }
-}
+    min-height: 84px;}}
 @media (max-width: 759px) {
   .xmas-support .xmas-kicker,
   .xmas-exclusive .xmas-kicker,
   .xmas-support h2,
   .xmas-exclusive h2 {
-    padding-right: 48px;
-  }
+    padding-right: 48px;}
   .xmas-exclusive h2,
   .xmas-support h2 {
-    margin-bottom: 10px;
-  }
-}
+    margin-bottom: 10px;}}
 @media (max-width: 759px) {
   .xmas-ex-split > *,
   .xmas-sup-grid > *,
   .xmas-sup-foot,
   .xmas-wiz-nav {
     align-self: stretch;
-    width: 100%;
-  }
+    width: 100%;}
   .xmas-wiz-nav {
-    grid-template-columns: auto 1fr auto;
-  }
-}
+    grid-template-columns: auto 1fr auto;}}
 @media (max-width: 759px) {
   .xmas-support .xmas-kicker,
   .xmas-exclusive .xmas-kicker,
   .xmas-support h2,
   .xmas-exclusive h2 {
     max-width: calc(100% - 52px);
-    padding-right: 0;
-  }
+    padding-right: 0;}
   .xmas-ex-side {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-  }
+    gap: 8px;}
   .xmas-ex-side .xmas-ex-final {
-    order: 5;
-  }
-}
+    order: 5;}}
 @media (max-width: 759px) {
   /* บนมือถือ ตัวอย่างอยู่บนสุด ปุ่มยืนยันและแถบขั้นอยู่ล่างสุด */
   .xmas-ex-side {
-    display: contents;
-  }
+    display: contents;}
   .xmas-ex-side .xmas-sign-stage,
   .xmas-ex-side .xmas-sky-canvas {
-    order: -1;
-  }
+    order: -1;}
   .xmas-ex-side .xmas-ex-final {
-    order: 10;
-  }
+    order: 10;}
   .xmas-ex-split > .xmas-wiz-nav {
-    order: 11;
-  }
+    order: 11;}
   .xmas-ex-split > .xmas-ex-col {
-    order: 0;
-  }
-}
+    order: 0;}}
 @media (max-width: 759px) {
   .xmas-ex-final,
   .xmas-sup-foot .xmas-wiz-final {
     width: 100%;
-    align-self: stretch;
-  }
+    align-self: stretch;}
   .xmas-ex-final .xmas-submit,
   .xmas-wiz-final {
     width: 100%;
-    margin: 0;
-  }
-}
+    margin: 0;}}
 @media (max-width: 759px) {
   .xmas-sup-head {
     padding-right: 48px;
-    gap: 0;
-  }
+    gap: 0;}
   .xmas-sup-badge {
-    display: none;
-  }
+    display: none;}
   .xmas-support h2 {
-    max-width: 100%;
-  }
-}
+    max-width: 100%;}}
 
 /* ---------- แก้ปุ่มปิดบนมือถือให้อยู่มุมขวาบนเสมอ และกันการเบี้ยวจากการแตะค้าง ---------- */
 @media (max-width: 759px) {
@@ -6410,15 +5167,12 @@ a.xmas-social-chip:hover {
     height: 40px;
     flex: none;
     align-self: auto;
-    z-index: 5;
-  }
+    z-index: 5;}
   .xmas-mk-head .xmas-x {
     position: static;
     width: 40px;
     height: 40px;
-    flex: none;
-  }
-}
+    flex: none;}}
 @media (hover: none) {
   .xmas-feed .xmas-tab-panel li > button:hover,
   .xmas-feed .xmas-tab-panel li > button:focus-visible,
@@ -6426,24 +5180,18 @@ a.xmas-social-chip:hover {
     transform: none;
     box-shadow: none;
     background: rgba(255, 255, 255, 0.55);
-    border-color: transparent;
-  }
+    border-color: transparent;}
   .xmas-feed .xmas-tab:hover::after {
-    transform: scaleX(0);
-  }
+    transform: scaleX(0);}
   .xmas-feed .xmas-tab.is-on::after {
-    transform: scaleX(1);
-  }
-}
+    transform: scaleX(1);}}
 @media (max-width: 759px) {
   /* ประวัติล่าสุดบนมือถือ: กว้างเต็มจอทุกขนาด ไม่ค้างความกว้างคงที่จากคอม */
   .xmas-feed {
     left: 8px;
     right: 8px;
     width: auto;
-    max-width: none;
-  }
-}
+    max-width: none;}}
 
 /* ---------- ข้อความขึ้นจอ: ภาพซ้อนเหนือต้นไม้ พอดีทุกขนาดจอ ---------- */
 .xmas-sky-overlay {
@@ -6459,37 +5207,29 @@ a.xmas-social-chip:hover {
   pointer-events: none;
   border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
-}
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);}
 .xmas-sky-overlay.is-on {
   opacity: 1;
-  transform: translateX(-50%) scale(1);
-}
+  transform: translateX(-50%) scale(1);}
 .xmas-sky-overlay canvas {
   width: 100%;
   height: 100%;
-  display: block;
-}
+  display: block;}
 @media (max-width: 759px) {
   .xmas-sky-overlay {
     top: 96px;
-    width: 94vw;
-  }
-}
+    width: 94vw;}}
 .xmas-spot-grid.is-wide {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
+  grid-template-columns: repeat(4, minmax(0, 1fr));}
 .xmas-spot-grid.is-wide button {
   min-height: 42px;
   font-size: 15px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-spot-grid button.is-used,
 .xmas-spot-grid button:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  text-decoration: line-through;
-}
+  text-decoration: line-through;}
 
 /* ---------- ตุ๊กตาที่เปิดดูบนมือถือ: การ์ดแถบล่าง ให้เห็นตุ๊กตาด้านบน ---------- */
 @media (max-width: 759px) {
@@ -6512,57 +5252,44 @@ a.xmas-social-chip:hover {
     padding: 12px 14px;
     justify-items: start;
     text-align: left;
-    border-radius: 24px;
-  }
+    border-radius: 24px;}
   .xmas-decor-card-art {
     grid-area: art;
     padding: 0;
-    width: 96px;
-  }
+    width: 96px;}
   .xmas-decor-card-snow {
-    width: 96px;
-  }
+    width: 96px;}
   .xmas-decor-card-glow {
-    width: 90%;
-  }
+    width: 90%;}
   .xmas-decor-card-tag {
     grid-area: tag;
-    font-size: 11px;
-  }
+    font-size: 11px;}
   .xmas-decor-card-name {
     grid-area: name;
-    font-size: 19px;
-  }
+    font-size: 19px;}
   .xmas-decor-card-parts {
     grid-area: parts;
-    justify-content: flex-start;
-  }
+    justify-content: flex-start;}
   .xmas-decor-card-like {
     grid-area: like;
     min-height: 36px;
     padding: 0 12px;
     margin-top: 2px;
-    font-size: 13px;
-  }
+    font-size: 13px;}
   .xmas-decor-card > .xmas-social-links {
-    display: none;
-  }
+    display: none;}
   .xmas-decor-card > .xmas-x {
     top: 8px;
     right: 8px;
     width: 34px;
-    height: 34px;
-  }
-}
+    height: 34px;}}
 
 /* ---------- ภาพตัวอย่างบ้านหิมะ Exclusive: กรอบกว้างกว่าตุ๊กตา จึงขยายให้ได้สัดส่วนเดียวกับป้าย ---------- */
 .xmas-cottage.xmas-sign-snow {
   width: 190px;
-  height: auto;
-}
+  height: auto;}
 .xmas-ex-side .xmas-cottage.xmas-sign-snow {
-  width: 130px;
-}
+  width: 130px;}
 
 /* ---------- ตัวอย่างบ้าน Exclusive แบบ 3 มิติ ---------- */
 .xmas-viewer {
@@ -6572,27 +5299,22 @@ a.xmas-social-chip:hover {
   border-radius: 14px;
   overflow: hidden;
   cursor: grab;
-  background: radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 70%);
-}
+  background: radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 70%);}
 .xmas-viewer canvas {
   display: block;
   width: 100%;
-  height: 100%;
-}
+  height: 100%;}
 
 /* ---------- ฐาน Exclusive: ตัวจัดของบนฐานและปุ่มในตัวอย่าง ---------- */
 .xmas-dio {
   display: grid;
   gap: 10px;
-  margin-top: 6px;
-}
+  margin-top: 6px;}
 .xmas-studio {
   display: grid;
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-studio-add .xmas-pick-chips button {
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xmas-studio-del {
   justify-self: start;
   background: none;
@@ -6601,30 +5323,24 @@ a.xmas-social-chip:hover {
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 13px;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-rot {
   display: grid;
   gap: 4px;
-  font-size: 13px;
-}
+  font-size: 13px;}
 .xmas-rot input[type="range"] {
   width: 100%;
-  accent-color: #c0392b;
-}
+  accent-color: #c0392b;}
 .xmas-rot em {
   font-style: normal;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-viewer-box {
   display: grid;
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-viewer-tools {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-}
+  gap: 8px;}
 .xmas-viewer-tools button {
   flex: 1 1 140px;
   min-width: 0;
@@ -6635,16 +5351,13 @@ a.xmas-social-chip:hover {
   font-size: 13px;
   font-weight: 600;
   padding: 8px 12px;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-viewer-tools button[aria-pressed="true"] {
   background: #1d4a33;
-  color: #fff;
-}
+  color: #fff;}
 .xmas-dio-pick {
   display: grid;
-  gap: 8px;
-}
+  gap: 8px;}
 
 .xmas-chip-dot {
   display: inline-block;
@@ -6653,14 +5366,12 @@ a.xmas-social-chip:hover {
   margin-right: 6px;
   vertical-align: -1px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-}
+  border: 1px solid rgba(0, 0, 0, 0.25);}
 
 .xmas-spot-map {
   display: grid;
   gap: 8px;
-  justify-items: start;
-}
+  justify-items: start;}
 .xmas-spot-map canvas {
   width: 100%;
   max-width: 360px;
@@ -6669,8 +5380,7 @@ a.xmas-social-chip:hover {
   border-radius: 14px;
   cursor: pointer;
   touch-action: manipulation;
-  background: #f4f8fc;
-}
+  background: #f4f8fc;}
 
 .xmas-spot-popup {
   position: fixed;
@@ -6679,8 +5389,7 @@ a.xmas-social-chip:hover {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(10, 24, 18, 0.6);
-}
+  background: rgba(10, 24, 18, 0.6);}
 .xmas-spot-popup-card {
   display: grid;
   gap: 12px;
@@ -6691,13 +5400,11 @@ a.xmas-social-chip:hover {
   background: #fffdf7;
   color: #1d2a22;
   text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-}
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);}
 .xmas-spot-popup-title {
   margin: 0;
   font-size: 20px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-spot-popup-card .xmas-submit {
   color: #fff;
   background: #1d4a33;
@@ -6706,8 +5413,7 @@ a.xmas-social-chip:hover {
   padding: 12px 16px;
   font-size: 15px;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 
 .xmas-pending {
   position: fixed;
@@ -6726,8 +5432,7 @@ a.xmas-social-chip:hover {
   background: rgba(255, 252, 244, 0.96);
   color: #1d2a22;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  font-size: 13px;
-}
+  font-size: 13px;}
 .xmas-pending button {
   padding: 6px 12px;
   border-radius: 999px;
@@ -6735,8 +5440,7 @@ a.xmas-social-chip:hover {
   background: #fff;
   color: #1d4a33;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 
 /* ---------- กล่องจดหมายคำสั่งซื้อของลูกค้า ---------- */
 .xmas-inbox-btn {
@@ -6755,8 +5459,7 @@ a.xmas-social-chip:hover {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
-}
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);}
 .xmas-inbox-btn b {
   min-width: 20px;
   padding: 1px 6px;
@@ -6764,8 +5467,7 @@ a.xmas-social-chip:hover {
   background: #f5c542;
   color: #1b1408;
   font-size: 12px;
-  text-align: center;
-}
+  text-align: center;}
 .xmas-inbox-back {
   position: fixed;
   inset: 0;
@@ -6773,8 +5475,7 @@ a.xmas-social-chip:hover {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(10, 24, 18, 0.55);
-}
+  background: rgba(10, 24, 18, 0.55);}
 .xmas-inbox {
   width: 100%;
   max-width: 460px;
@@ -6784,19 +5485,16 @@ a.xmas-social-chip:hover {
   border-radius: 18px;
   background: #fffdf7;
   color: #1d2a22;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-}
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);}
 .xmas-inbox header {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 10px;
-}
+  margin-bottom: 10px;}
 .xmas-inbox header h3 {
   flex: 1;
   margin: 0;
-  font-size: 17px;
-}
+  font-size: 17px;}
 .xmas-inbox header button {
   padding: 6px 12px;
   border-radius: 999px;
@@ -6804,24 +5502,20 @@ a.xmas-social-chip:hover {
   background: #fff;
   color: #1d4a33;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-inbox header button:last-child {
   padding: 2px 10px;
   font-size: 20px;
-  line-height: 1;
-}
+  line-height: 1;}
 .xmas-inbox-empty {
   color: #6b7a70;
-  text-align: center;
-}
+  text-align: center;}
 .xmas-inbox ul {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 10px;
-}
+  gap: 10px;}
 .xmas-inbox li {
   display: flex;
   gap: 10px;
@@ -6831,26 +5525,21 @@ a.xmas-social-chip:hover {
   padding: 12px;
   border-radius: 14px;
   border: 1px solid rgba(29, 74, 51, 0.12);
-  background: #fff;
-}
+  background: #fff;}
 .xmas-inbox li.is-paid {
-  border-color: rgba(34, 163, 90, 0.35);
-}
+  border-color: rgba(34, 163, 90, 0.35);}
 .xmas-inbox li.is-expired {
-  border-color: rgba(217, 119, 6, 0.4);
-}
+  border-color: rgba(217, 119, 6, 0.4);}
 .xmas-inbox li small {
   display: block;
   color: #5d6b62;
   font-size: 12px;
-  margin-top: 2px;
-}
+  margin-top: 2px;}
 .xmas-inbox-act {
   display: flex;
   gap: 6px;
   align-items: center;
-  flex-wrap: wrap;
-}
+  flex-wrap: wrap;}
 .xmas-inbox-act button {
   padding: 6px 12px;
   border-radius: 999px;
@@ -6859,36 +5548,29 @@ a.xmas-social-chip:hover {
   color: #fff;
   font-weight: 600;
   font-size: 13px;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-inbox-act button.ghost {
   background: #fff;
-  color: #1d4a33;
-}
+  color: #1d4a33;}
 .xmas-inbox-act .pill {
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xmas-inbox-act .pill.ok {
   background: #dcfce7;
-  color: #166534;
-}
+  color: #166534;}
 .xmas-inbox-act .pill.wait {
   background: #fef3c7;
-  color: #92400e;
-}
+  color: #92400e;}
 .xmas-inbox-act .pill.warn {
   background: #ffedd5;
-  color: #9a3412;
-}
+  color: #9a3412;}
 .xmas-inbox-pay {
   width: 100%;
   max-width: 460px;
   max-height: 92dvh;
-  overflow: auto;
-}
+  overflow: auto;}
 
 /* การ์ดบ้านหิมะ Exclusive: โครงเดียวกับการ์ดตุ๊กตา เพิ่มขอบฟอยล์และกรอบทองแบบพรีเมียม */
 .xmas-giant-card {
@@ -6898,8 +5580,7 @@ a.xmas-social-chip:hover {
   background:
     linear-gradient(var(--paper-3, #fbf7ec), var(--paper, #f1eadb)) padding-box,
     linear-gradient(135deg, #f6e3a4, #b8904a 45%, #f6e3a4 70%, #b8904a) border-box;
-  box-shadow: 0 0 0 4px rgba(184, 144, 74, 0.12), var(--shadow-lg, 0 30px 60px -24px rgba(0, 0, 0, 0.6));
-}
+  box-shadow: 0 0 0 4px rgba(184, 144, 74, 0.12), var(--shadow-lg, 0 30px 60px -24px rgba(0, 0, 0, 0.6));}
 .xmas-giant-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -6908,8 +5589,7 @@ a.xmas-social-chip:hover {
   color: #2a1d05;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.12em;
-}
+  letter-spacing: 0.12em;}
 .xmas-giant-art {
   width: 100%;
   height: 230px;
@@ -6917,23 +5597,19 @@ a.xmas-social-chip:hover {
   border-radius: 16px;
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 30%, rgba(227, 194, 122, 0.22), transparent 70%), #f4f8f2;
-  box-shadow: inset 0 0 0 1px rgba(184, 144, 74, 0.35);
-}
+  box-shadow: inset 0 0 0 1px rgba(184, 144, 74, 0.35);}
 .xmas-giant-art .xmas-viewer {
   aspect-ratio: auto;
   height: 230px;
   min-height: 0;
-  cursor: grab;
-}
+  cursor: grab;}
 .xmas-giant-art .xmas-viewer-tools {
-  display: none;
-}
+  display: none;}
 .xmas-giant-turn {
   display: flex;
   gap: 8px;
   justify-content: center;
-  margin-top: 4px;
-}
+  margin-top: 4px;}
 .xmas-giant-turn button {
   padding: 6px 14px;
   border-radius: 999px;
@@ -6942,13 +5618,11 @@ a.xmas-social-chip:hover {
   color: var(--ink, #15261f);
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-giant-name {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 22px;
-  letter-spacing: 0.01em;
-}
+  letter-spacing: 0.01em;}
 .xmas-giant-close {
   width: 100%;
   margin-top: 6px;
@@ -6960,8 +5634,7 @@ a.xmas-social-chip:hover {
   font-weight: 800;
   font-size: 15px;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(201, 154, 62, 0.35);
-}
+  box-shadow: 0 8px 20px rgba(201, 154, 62, 0.35);}
 
 /* แบนเนอร์ป้ายประจำบ้าน ด้านบนกลางจอ */
 .xmas-giant-banner {
@@ -6979,80 +5652,65 @@ a.xmas-social-chip:hover {
   border: 2px solid #d9b45a;
   box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.15), 0 16px 36px rgba(0, 0, 0, 0.35);
   animation: xmas-banner-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xmas-giant-banner-kicker {
   display: block;
   font-size: 11px;
   letter-spacing: 0.14em;
-  color: #e3c27a;
-}
+  color: #e3c27a;}
 .xmas-giant-banner p {
   margin: 4px 0 0;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 19px;
   line-height: 1.45;
-  overflow-wrap: anywhere;
-}
+  overflow-wrap: anywhere;}
 @keyframes xmas-banner-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -10px);
-  }
-}
+    transform: translate(-50%, -10px);}}
 
 /* สีป้ายประจำบ้านตามที่เจ้าของเลือก: สปรูซ งาช้าง เบอร์รี่ ทอง */
 .xmas-giant-banner.board-ivory {
   background: linear-gradient(180deg, #fffdf7, #f3ead2);
   border-color: #b58a2e;
   color: #0f3d2e;
-  text-shadow: none;
-}
+  text-shadow: none;}
 .xmas-giant-banner.board-berry {
   background: linear-gradient(180deg, #8a2748, #4f1027);
   border-color: #e3a0b4;
-  color: #fde7ef;
-}
+  color: #fde7ef;}
 .xmas-giant-banner.board-gold {
   background: linear-gradient(180deg, #f6dc8e, #c99a3e);
   border-color: #fff1c2;
-  color: #2a1d05;
-}
+  color: #2a1d05;}
 .xmas-giant-card.board-ivory {
   background:
     linear-gradient(#fffdf7, #f3ead2) padding-box,
-    linear-gradient(135deg, #0f3d2e, #2a6b52 50%, #0f3d2e) border-box;
-}
+    linear-gradient(135deg, #0f3d2e, #2a6b52 50%, #0f3d2e) border-box;}
 .xmas-giant-card.board-berry {
   background:
     linear-gradient(#fbf1f4, #f1dde5) padding-box,
-    linear-gradient(135deg, #7a2146, #c46a88 50%, #7a2146) border-box;
-}
+    linear-gradient(135deg, #7a2146, #c46a88 50%, #7a2146) border-box;}
 .xmas-giant-card.board-gold {
   background:
     linear-gradient(#fffaea, #f6e7b8) padding-box,
-    linear-gradient(135deg, #fff1c2, #c99a3e 50%, #fff1c2) border-box;
-}
+    linear-gradient(135deg, #fff1c2, #c99a3e 50%, #fff1c2) border-box;}
 .xmas-giant-card.board-ivory .xmas-giant-close,
 .xmas-giant-card.board-berry .xmas-giant-close {
   background: linear-gradient(90deg, #0f3d2e, #1d5f49);
   color: #f6e7bf;
-  box-shadow: 0 8px 20px rgba(15, 61, 46, 0.3);
-}
+  box-shadow: 0 8px 20px rgba(15, 61, 46, 0.3);}
 .xmas-giant-card.board-berry .xmas-giant-close {
   background: linear-gradient(90deg, #7a2146, #a8476c);
-  box-shadow: 0 8px 20px rgba(122, 33, 70, 0.3);
-}
+  box-shadow: 0 8px 20px rgba(122, 33, 70, 0.3);}
 
 /* สีลายฐานของบ้าน: แถบสีที่ขอบล่างของแบนเนอร์และพื้นหลังของพรีวิว */
 .xmas-giant-banner {
-  box-shadow: inset 0 -7px 0 var(--base, #ffb3cc), inset 0 0 0 4px rgba(0, 0, 0, 0.15), 0 16px 36px rgba(0, 0, 0, 0.35);
-}
+  box-shadow: inset 0 -7px 0 var(--base, #ffb3cc), inset 0 0 0 4px rgba(0, 0, 0, 0.15), 0 16px 36px rgba(0, 0, 0, 0.35);}
 .xmas-giant-art {
   background:
     radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--base, #ffb3cc) 26%, transparent), transparent 70%),
-    #f4f8f2;
-}
+    #f4f8f2;}
 
 /* คำอธิบายข้างโมเดลเมื่อแตะบ้านหรือตุ๊กตา */
 .xmas-tip {
@@ -7072,8 +5730,7 @@ a.xmas-social-chip:hover {
   text-align: center;
   pointer-events: auto;
   transition: opacity 0.15s ease;
-  will-change: transform;
-}
+  will-change: transform;}
 .xmas-tip::after {
   content: "";
   position: absolute;
@@ -7084,22 +5741,18 @@ a.xmas-social-chip:hover {
   background: #fffdf7;
   border-right: 1px solid rgba(184, 144, 74, 0.55);
   border-bottom: 1px solid rgba(184, 144, 74, 0.55);
-  transform: translateX(-50%) rotate(45deg);
-}
+  transform: translateX(-50%) rotate(45deg);}
 .xmas-tip-kicker {
   font-size: 11px;
   letter-spacing: 0.1em;
-  color: #9a7a2c;
-}
+  color: #9a7a2c;}
 .xmas-tip b {
-  font-size: 15px;
-}
+  font-size: 15px;}
 .xmas-tip-actions {
   display: flex;
   gap: 6px;
   justify-content: center;
-  align-items: center;
-}
+  align-items: center;}
 .xmas-tip-actions button {
   padding: 6px 14px;
   border-radius: 999px;
@@ -7108,8 +5761,7 @@ a.xmas-social-chip:hover {
   color: #2a1d05;
   font-weight: 700;
   font-size: 13px;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-tip-actions .xmas-tip-x {
   width: 28px;
   height: 28px;
@@ -7118,16 +5770,14 @@ a.xmas-social-chip:hover {
   color: #6b6b5a;
   border: 1px solid rgba(0, 0, 0, 0.12);
   font-size: 16px;
-  line-height: 1;
-}
+  line-height: 1;}
 
 /* ป้ายประจำบ้านด้านบนกลางจอ: กดปิดและลิงก์ได้ */
 .xmas-giant-banner {
   pointer-events: auto;
   display: grid;
   gap: 6px;
-  justify-items: center;
-}
+  justify-items: center;}
 .xmas-giant-banner-x {
   position: absolute;
   top: 8px;
@@ -7140,20 +5790,16 @@ a.xmas-social-chip:hover {
   color: #f2e2b0;
   font-size: 18px;
   line-height: 1;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-giant-banner-name {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-}
+  font-size: 20px;}
 .xmas-giant-banner .xmas-giant-close {
   width: auto;
   min-width: 160px;
-  margin-top: 4px;
-}
+  margin-top: 4px;}
 .xmas-giant-banner .xmas-social-links {
-  justify-content: center;
-}
+  justify-content: center;}
 
 /* คำแนะนำครั้งแรก */
 .xmas-tour {
@@ -7170,26 +5816,21 @@ a.xmas-social-chip:hover {
   background: #fffdf7;
   color: #15261f;
   border: 1px solid rgba(184, 144, 74, 0.55);
-  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.5);
-}
+  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.5);}
 .xmas-tour-count {
   font-size: 12px;
   color: #9a7a2c;
-  letter-spacing: 0.08em;
-}
+  letter-spacing: 0.08em;}
 .xmas-tour b {
-  font-size: 16px;
-}
+  font-size: 16px;}
 .xmas-tour p {
   margin: 0;
   font-size: 14px;
-  color: #4d5d54;
-}
+  color: #4d5d54;}
 .xmas-tour-actions {
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
-}
+  justify-content: flex-end;}
 .xmas-tour-actions button {
   padding: 8px 16px;
   border-radius: 999px;
@@ -7197,10 +5838,8 @@ a.xmas-social-chip:hover {
   background: #1d4a33;
   color: #fff;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xmas-tour-actions button.ghost {
   background: transparent;
   color: #5b6b62;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-}
+  border: 1px solid rgba(0, 0, 0, 0.12);}
