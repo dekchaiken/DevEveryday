@@ -35,6 +35,7 @@ import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
 import { ZONE_CAPACITY } from "@/lib/christmas/slots";
 import "./wishcards.css";
 import "./christmas.css";
+import { PendingOrdersWatch } from "./PendingOrdersWatch";
 
 // คำแนะนำครั้งแรก: สอนทีละปุ่ม ปุ่มอื่นจะเทาจนกว่าจะกดปุ่มที่สอนก่อน
 const SPOT_STEPS: SpotStep[] = [
@@ -734,6 +735,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {skyShow && <SkyOverlay key={skyShow.id} show={skyShow} onDone={() => setSkyShow(null)} />}
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
+      <PendingOrdersWatch roomId={room.id} notify={notify} />
+
       {toast && (
         <div key={toast.id} className={`xmas-toast ${toast.kind}`} role="status">
           {toast.text}

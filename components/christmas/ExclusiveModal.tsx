@@ -9,6 +9,7 @@ import { GIANT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { DioramaViewer } from "./DioramaViewer";
+import { rememberPending } from "./pendingOrders";
 import { Icon } from "./Icon";
 import { PaymentPanel, useDonateConfig } from "./PaymentPanel";
 import { paintSkyScene, type SkyTheme } from "./skyArt";
@@ -403,6 +404,8 @@ export default function ExclusiveModal({
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
       setOrderKind(kind);
       setOrder(data.order);
+      // จำไว้ในเครื่อง เผื่อลูกค้ารีเฟรชหน้าระหว่างรอชำระ
+      if (data.order.status === "awaiting_payment") rememberPending({ id: data.order.id, room: roomId, kind, amount: data.order.payAmount ? Number(data.order.payAmount) : data.order.amount, at: Date.now() });
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {
