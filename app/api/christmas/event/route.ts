@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/clientIp";
 import { getRoom, ROOMS } from "@/lib/christmas/rooms";
 import { enqueueEvent, rateOk } from "@/lib/christmas/store";
 import { parseEvent } from "@/lib/christmas/validate";
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
   }
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const ip = clientIp(req);
   if (!(await rateOk(ip, "event", 30, Date.now()))) {
     return NextResponse.json({ error: "ส่งบ่อยเกินไป" }, { status: 429 });
   }

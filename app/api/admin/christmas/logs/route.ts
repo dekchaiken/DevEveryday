@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearLogs, listLogs } from "@/lib/christmas/log";
+import { clearLogs, listLogs, writeLog } from "@/lib/christmas/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,5 +14,7 @@ export async function GET(req: Request) {
 // ล้าง log ทั้งหมด (แอดมินเท่านั้น)
 export async function DELETE() {
   await clearLogs();
+  // ทิ้งรอยไว้ว่ามีการล้าง log (รายการนี้จะเป็นรายการแรกหลังล้าง)
+  await writeLog({ type: "moderation", room: "all", actor: "admin", text: "ล้าง log ทั้งหมดโดยแอดมิน" });
   return NextResponse.json({ ok: true });
 }

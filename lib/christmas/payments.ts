@@ -2,8 +2,14 @@
 // เรียกได้หลายครั้งโดยไม่เกิดผลซ้ำ (จะส่งข้อความเฉพาะการยืนยันแรก)
 import { enqueueEvent } from "@/lib/christmas/store";
 import { getOrder, markPaid } from "@/lib/christmas/orders";
+import type { OmiseCharge } from "@/lib/christmas/omise";
 import { writeLog } from "@/lib/christmas/log";
 import { placePaidDecor } from "@/lib/christmas/decor";
+
+// ตรวจว่าใบเรียกเก็บเงินจาก Omise ตรงกับคำสั่งซื้อจริง ทั้งสถานะ ยอด (สตางค์) และสกุลเงิน
+export function chargeMatches(order: { amount: number }, charge: OmiseCharge): boolean {
+  return charge.status === "successful" && charge.amount === Math.round(order.amount * 100) && (charge.currency ?? "").toLowerCase() === "thb";
+}
 
 export async function confirmPayment(orderId: string, providerRef: string) {
   const before = await getOrder(orderId);

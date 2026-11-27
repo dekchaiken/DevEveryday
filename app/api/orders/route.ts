@@ -1,8 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/clientIp";
 import { applyCoupon, linesWithProducts, subtotalOf, type CartLine } from "@/lib/pricing";
 import { addOrder, ordersConfigured, type Order } from "@/lib/orders";
-import { tooMany } from "@/lib/leads";
+import { rateOk } from "@/lib/christmas/store";
 import { getShop } from "@/lib/shop";
 
 export const runtime = "nodejs";
@@ -22,8 +23,8 @@ export async function POST(req: Request) {
   }
   if (clip(body.website, 200)) return NextResponse.json({ ok: true });
 
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
-  if (tooMany(ip)) return NextResponse.json({ error: "ทำรายการบ่อยเกินไป ลองใหม่อีกครั้งภายหลัง" }, { status: 429 });
+  const ip = clientIp(req);
+  if (!(await rateOk(ip, "shop-order", 10, Date.now()))) return NextResponse.json({ error: "ทำรายการบ่อยเกินไป ลองใหม่อีกครั้งภายหลัง" }, { status: 429 });
 
   const c = (body.customer ?? {}) as Record<string, unknown>;
   const customer = {

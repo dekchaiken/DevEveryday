@@ -5,6 +5,11 @@ import type { ChristmasState, Ornament, ShowEvent } from "@/lib/christmas/types"
 import { ROOM_CAPACITY, ROOMS } from "@/lib/christmas/rooms";
 import { listGiants } from "@/lib/christmas/orders";
 
+// ตุ๊กตายักษ์ที่ส่งให้หน้าเว็บ: ตัด orderId ออก (เป็นข้อมูลภายในของการชำระเงิน)
+async function publicGiants(room: string) {
+  return (await listGiants(room)).map(({ orderId: _orderId, ...g }) => g);
+}
+
 const MAX_ORNAMENTS = 400;
 const SHOW_MEMORY_MS = 10 * 60 * 1000; // เก็บเหตุการณ์ที่จบแล้วไว้สักพักก่อนลบ
 const GAP_MS = 1500; // เว้นช่วงระหว่างพลุ/ข้อความ
@@ -47,7 +52,7 @@ export async function readState(room: string, now: number): Promise<ChristmasSta
       version: m.version,
       ornaments: m.ornaments.slice(0, 300),
       events: m.events.filter((e) => e.startAt + e.duration > now),
-      giants: await listGiants(room),
+      giants: await publicGiants(room),
       persistent: false,
     };
   }
@@ -55,7 +60,7 @@ export async function readState(room: string, now: number): Promise<ChristmasSta
     cmd<string | null>("GET", K.ver(room)),
     cmd<string[]>("LRANGE", K.orn(room), 0, 299),
     cmd<string[]>("ZRANGEBYSCORE", K.evt(room), now, "+inf"),
-    listGiants(room),
+    publicGiants(room),
   ]);
   return {
     version: Number(ver ?? 0),

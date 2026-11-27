@@ -17,7 +17,7 @@ type Config = {
 type Dash = {
   config: Config;
   env: { storage: boolean; omise: boolean; promptpay: boolean };
-  totals: { online: number; ornaments: number; revenue: number; paidCount: number; awaitingCount: number };
+  totals: { online: number; ornaments: number; revenue: number; paidCount: number; awaitingCount: number; giantTaken: number; giantCapacity: number };
   rooms: { id: string; name: string; online: number; capacity: number; ornaments: number; giant: { name: string; message: string; amount: number } | null }[];
   orders: { id: string; room: string; kind: string; amount: number; name: string; message: string; mode: string; status: string; createdAt: number; paidAt: number | null; providerRef: string }[];
 };
@@ -44,7 +44,8 @@ const ROOM_NAME: Record<string, string> = { bangkok: "กรุงเทพฯ",
 const fmt = (t: number) => new Date(t).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "medium" });
 const roomLabel = (id: string) => ROOM_NAME[id] ?? id;
 
-type Tab = "overview" | "data" | "log" | "filter" | "payment";
+type Tab = "overview" | "data" | "giants" | "log" | "filter" | "payment";
+type GiantRow = { room: string; spot: number; name: string; message: string; amount: number; paidAt: number; orderId: string; social: Record<string, string> | null };
 
 export default function ChristmasAdmin() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -110,6 +111,7 @@ export default function ChristmasAdmin() {
           [
             ["overview", "ภาพรวม"],
             ["data", "ข้อมูล"],
+            ["giants", "Exclusive"],
             ["log", "Log"],
             ["filter", "คำต้องห้าม"],
             ["payment", "การชำระเงิน"],
@@ -125,6 +127,7 @@ export default function ChristmasAdmin() {
 
       {tab === "overview" && <Overview dash={dash} moderate={moderate} />}
       {tab === "data" && <DataTab dash={dash} moderate={moderate} reload={load} flash={flash} />}
+      {tab === "giants" && <GiantsTab dash={dash} reload={load} flash={flash} />}
       {tab === "log" && <LogTab />}
       {tab === "filter" && <FilterTab dash={dash} reload={load} flash={flash} moderate={moderate} />}
       {tab === "payment" && <PaymentTab dash={dash} reload={load} flash={flash} />}
@@ -143,6 +146,7 @@ function Overview({ dash, moderate }: { dash: Dash | null; moderate: (items: obj
         <Stat label="ลูกบอลที่แขวน" value={`${t.ornaments}`} />
         <Stat label="ยอดสนับสนุนที่จ่ายแล้ว" value={`฿${t.revenue.toLocaleString("th-TH")}`} hint={`${t.paidCount} รายการ`} />
         <Stat label="รอชำระ" value={`${t.awaitingCount}`} />
+        <Stat label="Exclusive จองแล้ว" value={`${t.giantTaken} / ${t.giantCapacity}`} hint="ทุกห้องรวมกัน" />
       </section>
 
       <section className="adm-card">
@@ -739,6 +743,14 @@ function PaymentTab({ dash, reload, flash }: { dash: Dash | null; reload: () => 
   return (
     <>
       <section className="adm-card">
+        <h2>ส่งออกรายการสั่งซื้อ</h2>
+        <p className="adm-hint">ไฟล์ CSV ของรายการสั่งซื้อทั้งหมด (สูงสุด 2,000 รายการ) ไม่รวมอีเมลหรือเบอร์ของผู้ซื้อ เปิดด้วย Excel ได้</p>
+        <a className="adm-btn" href="/api/admin/christmas/orders/export">
+          ดาวน์โหลด CSV
+        </a>
+      </section>
+
+      <section className="adm-card">
         <h2>ตั้งค่าการสนับสนุน</h2>
         <form onSubmit={save} className="adm-form">
           <label className="adm-check">
@@ -805,6 +817,116 @@ function PaymentTab({ dash, reload, flash }: { dash: Dash | null; reload: () => 
           {check && <span className={`adm-status ${check.ok ? "paid" : "awaiting_payment"}`}>{check.note}</span>}
         </div>
         <p className="adm-hint">Stripe ยังไม่ได้เชื่อมในระบบนี้ ถ้าต้องการใช้ Stripe ต้องเพิ่มการเชื่อมต่อใหม่ก่อน</p>
+      </section>
+    </>
+  );
+}
+
+// ---------- Exclusive: ดูตุ๊กตายักษ์ทุกจุด ค้นหา และถอดออกเมื่อจำเป็น ----------
+function GiantsTab({ dash, reload, flash }: { dash: Dash | null; reload: () => void; flash: (ok: boolean, text: string) => void }) {
+  const [room, setRoom] = useState("all");
+  const [q, setQ] = useState("");
+  const [rows, setRows] = useState<GiantRow[] | null>(null);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/christmas/giants?room=${room}`, { cache: "no-store" });
+      if (!res.ok) throw new Error();
+      setRows(((await res.json()) as { giants: GiantRow[] }).giants);
+      setError("");
+    } catch {
+      setError("โหลดรายการ Exclusive ไม่สำเร็จ");
+    }
+  }, [room]);
+
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 15000);
+    return () => clearInterval(id);
+  }, [load]);
+
+  const shown = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return (rows ?? []).filter((r) => !needle || `${r.name} ${r.message}`.toLowerCase().includes(needle));
+  }, [rows, q]);
+
+  async function remove(r: GiantRow) {
+    if (!confirm(`ถอด "${r.name}" ออกจากจุด ${r.spot + 1} ของ${roomLabel(r.room)}? ทำย้อนกลับไม่ได้ (ผู้ซื้อจะไม่ได้รับเงินคืนจากหน้านี้)`)) return;
+    const res = await fetch("/api/admin/christmas/giants", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ room: r.room, spot: r.spot }),
+    });
+    const data = (await res.json()) as { error?: string };
+    flash(res.ok, res.ok ? "ถอดตุ๊กตายักษ์แล้ว" : data.error ?? "ถอดไม่สำเร็จ");
+    load();
+    reload();
+  }
+
+  return (
+    <>
+      <section className="adm-card">
+        <h2>Exclusive ที่จองแล้ว</h2>
+        <p className="adm-hint">
+          จองแล้ว {dash?.totals.giantTaken ?? "—"} จาก {dash?.totals.giantCapacity ?? "—"} จุด (ทุกห้อง) จุดที่ว่างและจุดที่กำลังมีคนจองค้างอยู่จะถูกใช้ตามลำดับเมื่อมีการสั่งซื้อ
+        </p>
+        <div className="adm-filters">
+          <select value={room} onChange={(e) => setRoom(e.target.value)} aria-label="ห้อง">
+            <option value="all">ทุกห้อง</option>
+            {(dash?.rooms ?? []).map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ค้นหาชื่อหรือข้อความ" aria-label="ค้นหา" />
+        </div>
+        {error && <p className="adm-empty">{error}</p>}
+        {rows === null && !error && <p className="adm-empty">กำลังโหลด…</p>}
+        {rows && (
+          <div className="adm-table-wrap">
+            <table className="adm-table">
+              <thead>
+                <tr>
+                  <th>ห้อง</th>
+                  <th>จุด</th>
+                  <th>ชื่อ</th>
+                  <th>ข้อความ</th>
+                  <th>ยอด</th>
+                  <th>เวลาจ่าย</th>
+                  <th>ลิงก์</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {shown.map((r) => (
+                  <tr key={`${r.room}-${r.spot}`}>
+                    <td>{roomLabel(r.room)}</td>
+                    <td>{r.spot + 1}</td>
+                    <td>{r.name}</td>
+                    <td>{r.message || "—"}</td>
+                    <td>฿{r.amount}</td>
+                    <td>{fmt(r.paidAt)}</td>
+                    <td>{r.social ? Object.values(r.social).filter(Boolean).length : 0}</td>
+                    <td>
+                      <button className="adm-btn danger" onClick={() => remove(r)}>
+                        ถอดออก
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {shown.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="adm-empty">
+                      ยังไม่มี Exclusive ในห้องนี้
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </>
   );

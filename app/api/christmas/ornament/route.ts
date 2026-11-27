@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/clientIp";
 import { getRoom } from "@/lib/christmas/rooms";
 import { addOrnament, rateOk } from "@/lib/christmas/store";
 import { parseOrnament } from "@/lib/christmas/validate";
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
   const room = getRoom(typeof body.room === "string" ? body.room : null);
   if (!room) return NextResponse.json({ error: "ไม่พบห้องนี้" }, { status: 400 });
 
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const ip = clientIp(req);
   if (!(await rateOk(ip, "ornament", 6, Date.now()))) {
     return NextResponse.json({ error: "แขวนบ่อยเกินไป รอสักครู่แล้วลองใหม่" }, { status: 429 });
   }

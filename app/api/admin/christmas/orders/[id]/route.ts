@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrder } from "@/lib/christmas/orders";
 import { confirmPayment } from "@/lib/christmas/payments";
 import { SpotLostError } from "@/lib/christmas/orders";
+import { writeLog } from "@/lib/christmas/log";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (order.status === "paid") return NextResponse.json({ ok: true, alreadyPaid: true });
   try {
     const paid = await confirmPayment(id, `manual:${new Date().toISOString()}`);
+    await writeLog({ type: "paid", room: order.room, actor: "admin", text: `แอดมินยืนยันการโอน ${id.slice(0, 8)} ฿${order.amount}` });
     return NextResponse.json({ ok: true, status: paid?.status });
   } catch (err) {
     if (err instanceof SpotLostError) return NextResponse.json({ error: err.message, code: "spot_lost" }, { status: 409 });

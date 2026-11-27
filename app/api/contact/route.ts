@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { addLead, leadsConfigured, tooMany, type Lead } from "@/lib/leads";
+import { clientIp } from "@/lib/clientIp";
+import { addLead, leadsConfigured, type Lead } from "@/lib/leads";
+import { rateOk } from "@/lib/christmas/store";
 import { getContent } from "@/lib/content";
 
 export const runtime = "nodejs";
@@ -20,8 +22,8 @@ export async function POST(req: Request) {
   // ช่อง website ซ่อนไว้ บอทมักกรอก ถ้ามีค่าให้ทำเหมือนสำเร็จแต่ไม่บันทึก
   if (clip(body.website, 200)) return NextResponse.json({ ok: true });
 
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
-  if (tooMany(ip)) return NextResponse.json({ error: "ส่งข้อความบ่อยเกินไป ลองใหม่อีกครั้งภายหลัง" }, { status: 429 });
+  const ip = clientIp(req);
+  if (!(await rateOk(ip, "contact", 5, Date.now()))) return NextResponse.json({ error: "ส่งข้อความบ่อยเกินไป ลองใหม่อีกครั้งภายหลัง" }, { status: 429 });
 
   const name = clip(body.name, 120);
   const email = clip(body.email, 160);

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/clientIp";
 import { getRoom } from "@/lib/christmas/rooms";
 import { ACCESSORIES, ARMS, BODY_COLORS, claimDecor, claimFreeDecor, HATS, LEGS, NOSES, releaseFreeDecor, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { rateOk } from "@/lib/christmas/store";
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
   const room = getRoom(typeof body.room === "string" ? body.room : null);
   if (!room) return NextResponse.json({ error: "ไม่พบห้องนี้" }, { status: 400 });
 
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const ip = clientIp(req);
   if (!(await rateOk(ip, "deco", 20, Date.now()))) {
     return NextResponse.json({ error: "วางบ่อยเกินไป รอสักครู่" }, { status: 429 });
   }
