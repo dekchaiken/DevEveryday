@@ -622,3 +622,101 @@ export function buildYardScenery(): Scenery {
     update: (t, reduced) => updates.forEach((u) => u(t, reduced)),
   };
 }
+
+// ---------- ไม้ของรั้วและเสา: เท็กซ์เจอร์ลายไม้ที่วาดเอง พร้อมลายนูนเล็กน้อย ----------
+let woodCache: { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } | null = null;
+export function woodTextures(): { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } {
+  if (woodCache) return woodCache;
+  const W = 256;
+  const H = 512;
+  const rnd = rng("fence-wood");
+  const mk = () => {
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    return c;
+  };
+  const cMap = mk();
+  const cBump = mk();
+  const g = cMap.getContext("2d")!;
+  const b = cBump.getContext("2d")!;
+  // พื้นไม้สีน้ำตาลอุ่นพร้อมไล่สีเล็กน้อย
+  const base = g.createLinearGradient(0, 0, W, 0);
+  base.addColorStop(0, "#6e4322");
+  base.addColorStop(0.5, "#8a5a2e");
+  base.addColorStop(1, "#5f3a1c");
+  g.fillStyle = base;
+  g.fillRect(0, 0, W, H);
+  b.fillStyle = "#808080";
+  b.fillRect(0, 0, W, H);
+  // เส้นลายไม้แนวตั้งที่คดเล็กน้อย
+  for (let i = 0; i < 140; i++) {
+    const x0 = rnd() * W;
+    const dark = rnd() < 0.7;
+    const amp = 1 + rnd() * 4;
+    const freq = 0.01 + rnd() * 0.02;
+    const ph = rnd() * 6;
+    g.strokeStyle = dark ? `rgba(40,18,6,${0.16 + rnd() * 0.3})` : `rgba(235,190,130,${0.08 + rnd() * 0.16})`;
+    g.lineWidth = 0.8 + rnd() * 2.4;
+    g.beginPath();
+    for (let y = 0; y <= H; y += 8) {
+      const x = x0 + Math.sin(y * freq + ph) * amp;
+      if (y === 0) g.moveTo(x, y);
+      else g.lineTo(x, y);
+    }
+    g.stroke();
+    b.strokeStyle = dark ? "#303030" : "#c8c8c8";
+    b.lineWidth = g.lineWidth;
+    b.beginPath();
+    for (let y = 0; y <= H; y += 8) {
+      const x = x0 + Math.sin(y * freq + ph) * amp;
+      if (y === 0) b.moveTo(x, y);
+      else b.lineTo(x, y);
+    }
+    b.stroke();
+  }
+  // รอยแตกและจุดด่างเล็ก ๆ ให้ดูเป็นไม้ที่ผ่านอากาศมานาน
+  for (let i = 0; i < 260; i++) {
+    const x = rnd() * W;
+    const y = rnd() * H;
+    g.fillStyle = `rgba(30,14,4,${0.1 + rnd() * 0.25})`;
+    g.fillRect(x, y, 1 + rnd() * 2, 2 + rnd() * 9);
+    b.fillStyle = rnd() < 0.5 ? "#2a2a2a" : "#b0b0b0";
+    b.fillRect(x, y, 1 + rnd() * 2, 2 + rnd() * 9);
+  }
+  // ตาไม้ (knot) วงรีเข้ม
+  for (let i = 0; i < 5; i++) {
+    const x = rnd() * W;
+    const y = rnd() * H;
+    const rx = 4 + rnd() * 5;
+    const ry = rx * (1.8 + rnd());
+    g.fillStyle = "rgba(60,30,12,0.45)";
+    g.beginPath();
+    g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    g.fill();
+    g.strokeStyle = "rgba(40,20,8,0.5)";
+    g.lineWidth = 1.2;
+    g.beginPath();
+    g.ellipse(x, y, rx * 1.5, ry * 1.5, 0, 0, Math.PI * 2);
+    g.stroke();
+    b.fillStyle = "#202020";
+    b.beginPath();
+    b.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    b.fill();
+  }
+  const map = new THREE.CanvasTexture(cMap);
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.wrapS = THREE.RepeatWrapping;
+  map.wrapT = THREE.RepeatWrapping;
+  const bump = new THREE.CanvasTexture(cBump);
+  bump.wrapS = THREE.RepeatWrapping;
+  bump.wrapT = THREE.RepeatWrapping;
+  woodCache = { map, bump };
+  return woodCache;
+}
+
+// ไม้แท่งกลม (log) ใช้ทำราวรั้วและเสา
+export function woodMaterial(): THREE.MeshStandardMaterial {
+  const { map, bump } = woodTextures();
+  return new THREE.MeshStandardMaterial({ map, bumpMap: bump, bumpScale: 1.4, roughness: 0.85, metalness: 0 });
+}
