@@ -7,7 +7,7 @@ import "./admin.css";
 
 type Config = {
   enabled: boolean;
-  payMode: "manual" | "gateway";
+  payMode: "manual" | "gateway" | "paynoi";
   presetPrices: number[];
   customMin: number;
   customMax: number;
@@ -18,7 +18,7 @@ type Config = {
 type Order = { id: string; room: string; kind: string; amount: number; name: string; message: string; mode: string; status: string; createdAt: number; paidAt: number | null; providerRef: string };
 type Dash = {
   config: Config;
-  env: { storage: boolean; omise: boolean; promptpay: boolean; alerts: boolean };
+  env: { storage: boolean; omise: boolean; promptpay: boolean; alerts: boolean; paynoi: boolean };
   totals: { online: number; ornaments: number; revenue: number; paidCount: number; awaitingCount: number; giantTaken: number; giantCapacity: number };
   rooms: { id: string; name: string; online: number; capacity: number; ornaments: number; giants: number; giant: { name: string; message: string; amount: number } | null }[];
   orders: Order[];
@@ -477,7 +477,7 @@ function Orders({ dash, reload, toast }: { dash: Dash; reload: () => void; toast
                     {o.message && <small className="adm-block">{o.message}</small>}
                   </td>
                   <td>฿{o.amount}</td>
-                  <td>{o.mode === "manual" ? "โอนเอง" : "Omise"}</td>
+                  <td>{o.mode === "manual" ? "โอนเอง" : o.mode === "paynoi" ? "paynoi" : "Omise"}</td>
                   <td>
                     <span className={`adm-tag ${o.status}`}>{STATUS_TH[o.status] ?? o.status}</span>
                   </td>
@@ -1191,6 +1191,10 @@ function Settings({ dash, reload, toast }: { dash: Dash; reload: () => void; toa
             <small>{dash.env.omise ? "มีคีย์แล้ว (ใช้เมื่อโหมด gateway)" : "ยังไม่ตั้ง OMISE_SECRET_KEY"}</small>
           </div>
           <div>
+            <Pill ok={dash.env.paynoi} label="paynoi (KBank)" />
+            <small>{dash.env.paynoi ? "มีคีย์และเลขพร้อมเพย์แล้ว" : "ยังไม่ตั้ง PAYNOI_API_KEY / PAYNOI_ACCOUNT"}</small>
+          </div>
+          <div>
             <Pill ok={dash.env.alerts} label="แจ้งเตือน Webhook" />
             <small>{dash.env.alerts ? "ส่งแจ้งเตือนคำสั่งใหม่และการชำระแล้ว" : "ยังไม่ตั้ง XMAS_ALERT_WEBHOOK_URL"}</small>
           </div>
@@ -1220,6 +1224,7 @@ function Settings({ dash, reload, toast }: { dash: Dash; reload: () => void; toa
             <select value={form.payMode} onChange={(e) => set("payMode", e.target.value as Config["payMode"])}>
               <option value="manual">โอน PromptPay แล้วแอดมินยืนยันเอง</option>
               <option value="gateway">Omise ยืนยันอัตโนมัติ</option>
+              <option value="paynoi">paynoi ตรวจการโอนเข้า KBank อัตโนมัติ</option>
             </select>
           </label>
           <label>

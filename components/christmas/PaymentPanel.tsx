@@ -114,16 +114,17 @@ export function PaymentPanel({
       </div>
       <div className="xmas-pay-qr">
         {order.mode === "manual" && qr && <img src={qr} alt="QR PromptPay" width={220} height={220} />}
-        {order.mode === "gateway" && order.qrImage && <img src={order.qrImage} alt="QR PromptPay" width={220} height={220} />}
+        {(order.mode === "gateway" || order.mode === "paynoi") && order.qrImage && <img src={order.qrImage} alt="QR PromptPay" width={220} height={220} />}
         {!qr && !order.qrImage && <span className="xmas-hint">กำลังสร้าง QR…</span>}
       </div>
-      <p className="xmas-pay-amount">ยอดที่ต้องโอน ฿{order.amount}</p>
+      <p className="xmas-pay-amount">ยอดที่ต้องโอน ฿{order.payAmount ?? order.amount}</p>
       <ol className="xmas-pay-steps">
         <li>เปิดแอปธนาคารหรือทรูมันนี่แล้วเลือกสแกน QR</li>
-        <li>ตรวจว่ายอดตรงกับ ฿{order.amount}</li>
+        <li>ตรวจว่ายอดตรงกับ ฿{order.payAmount ?? order.amount} (รวมสตางค์ทุกหลัก)</li>
         <li>รอระบบยืนยัน หน้านี้จะอัปเดตเองไม่ต้องรีเฟรช</li>
       </ol>
       {order.mode === "manual" && <p className="xmas-pay-note">โหมดนี้ทีมงานจะตรวจยอดและยืนยันให้หลังเงินเข้า</p>}
+      {order.mode === "paynoi" && <p className="xmas-pay-note">โอนยอดนี้เป๊ะ ระบบจะตรวจการโอนและยืนยันให้อัตโนมัติ ไม่ต้องส่งสลิป</p>}
       <div className="xmas-pay-warn" role="alert">
         <Icon name="star" size={16} />
         <span>

@@ -14,6 +14,7 @@ import { sanitizeSocial } from "@/lib/christmas/social";
 import { listDecor, parseDecorPick } from "@/lib/christmas/decor";
 import { parseGiantLook } from "@/lib/christmas/giant";
 import { notifyAdmin } from "@/lib/christmas/notify";
+import { createPaynoiTransaction, paynoiConfigured } from "@/lib/christmas/paynoi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,6 +126,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "ยังไม่ได้ตั้งค่าบัญชี PromptPay" }, { status: 503 });
       }
       base.qrPayload = payload;
+    } else if (config.payMode === "paynoi") {
+      // โอนเข้าบัญชีธนาคารโดยตรง ยอดมีสตางค์เฉพาะรายการ ระบบจะตรวจการโอนให้เอง
+      if (!paynoiConfigured()) {
+        if (spot >= 0) await releaseGiantSpot(room.id, spot, id);
+        return NextResponse.json({ error: "ระบบ paynoi ยังไม่ได้ตั้งค่า" }, { status: 503 });
+      }
+      const created = await createPaynoiTransaction(amount, id);
+      base.providerRef = created.transId;
+      base.qrImage = created.qrImage;
+      base.payAmountSatang = created.amountSatang;
     } else {
       const charge = await createPromptPayCharge(amount, id);
       base.providerRef = charge.id;
@@ -139,6 +150,7 @@ export async function POST(req: Request) {
   const label = kind === "giant" ? "Exclusive" : kind === "decor" ? `ตุ๊กตา Exclusive ช่อง ${decor!.slot + 1}` : "สนับสนุนทีม";
   await writeLog({ type: "order", room: room.id, actor: maskIp(ip), text: `${label} ฿${amount} · ${name} · ${config.payMode} · รอชำระ` });
   // แจ้งแอดมินทันทีที่มีคนสั่ง (โหมด manual ต้องไปตรวจสลิปเอง)
-  await notifyAdmin(`🛒 มีคำสั่งใหม่ ${label} ฿${amount} · ${name} · ห้อง ${room.name} · ${config.payMode === "manual" ? "รอโอนและยืนยัน" : "รอชำระผ่าน Omise"}`);
+  const how = config.payMode === "manual" ? "รอโอนและยืนยัน" : config.payMode === "paynoi" ? "รอโอนผ่าน paynoi (ยืนยันอัตโนมัติ)" : "รอชำระผ่าน Omise";
+  await notifyAdmin(`🛒 มีคำสั่งใหม่ ${label} ฿${amount} · ${name} · ห้อง ${room.name} · ${how}`);
   return NextResponse.json({ order: toPreview(base) });
 }

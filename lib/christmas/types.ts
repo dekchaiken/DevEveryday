@@ -59,7 +59,8 @@ export type OrderPreview = {
   id: string;
   status: "awaiting_payment" | "paid" | "cancelled";
   amount: number;
-  mode: "manual" | "gateway";
+  mode: "manual" | "gateway" | "paynoi";
+  payAmount?: string; // ยอดที่ต้องโอนพร้อมสตางค์ (paynoi)
   qrPayload: string;
   qrImage: string;
 };

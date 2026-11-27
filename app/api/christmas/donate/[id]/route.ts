@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrder, toPreview } from "@/lib/christmas/orders";
 import { retrieveCharge } from "@/lib/christmas/omise";
+import { checkPaynoiTransaction, paynoiMatches } from "@/lib/christmas/paynoi";
 import { chargeMatches, confirmPayment } from "@/lib/christmas/payments";
 
 export const runtime = "nodejs";
@@ -18,6 +19,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       if (charge.metadata?.orderId === order.id && chargeMatches(order, charge)) {
         order = (await confirmPayment(order.id, charge.id)) ?? order;
       }
+    } catch {
+      /* ยังตรวจไม่ได้ ลองใหม่รอบถัดไป */
+    }
+  }
+  if (order.status === "awaiting_payment" && order.mode === "paynoi" && order.providerRef) {
+    try {
+      const check = await checkPaynoiTransaction(order.providerRef);
+      if (paynoiMatches(check, order.id, order.payAmountSatang)) order = (await confirmPayment(order.id, order.providerRef)) ?? order;
     } catch {
       /* ยังตรวจไม่ได้ ลองใหม่รอบถัดไป */
     }
