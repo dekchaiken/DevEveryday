@@ -325,25 +325,37 @@ const ROUTE: [number, number, number][] = [
   [-50, 11, -120],
   [-28, 9, -78],
   [-16, 7.6, -46],
-  [-13, 6.2, -24],
-  [-6, 5.6, -14],
-  [3, 5.8, -20],
-  [11, 5.4, -13],
-  [9, 5.2, -3],
-  [0, 5.6, -3],
-  [-9, 5.4, -6],
-  [-10, 4.9, -15],
+  [-10.34, 5.9, -13.76],
+  [-5.5, 5.6, -19.53],
+  [-0.0, 5.4, -21.0],
+  [5.5, 5.4, -19.53],
+  [10.34, 5.6, -13.76],
+  [10.34, 5.8, -6.24],
+  [5.5, 5.9, -0.47],
+  [-1.91, 5.7, 0.83],
+  [-8.43, 5.5, -2.93],
+  [-11.0, 5.2, -10.0],
+  [-8, 4.9, -16],
   [-5, 4.8, -19],
   [0, 5.3, -26],
   [12, 7.5, -42],
   [42, 11, -100],
   [80, 13, -170],
 ];
-const ROUTE_CURVE = new THREE.CatmullRomCurve3(
+// เส้นทางถูกสุ่มตัวอย่างให้ระยะเท่ากันและเกลี่ยเล็กน้อย จึงไม่มีจุดหักมุมกะทันหัน
+const ROUTE_RAW = new THREE.CatmullRomCurve3(
   ROUTE.map(([x, y, z]) => new THREE.Vector3(x, y, z)),
   false,
   "centripetal",
 );
+const ROUTE_SAMPLES = ROUTE_RAW.getSpacedPoints(400);
+const ROUTE_SMOOTH = ROUTE_SAMPLES.map((_, i) => {
+  const acc = new THREE.Vector3();
+  const W = 14;
+  for (let k = -W; k <= W; k++) acc.add(ROUTE_SAMPLES[Math.min(ROUTE_SAMPLES.length - 1, Math.max(0, i + k))]);
+  return acc.multiplyScalar(1 / (2 * W + 1));
+});
+const ROUTE_CURVE = new THREE.CatmullRomCurve3(ROUTE_SMOOTH, false, "catmullrom", 0.5);
 
 export function buildSleighFlight(): SleighFlight {
   const group = new THREE.Group();
@@ -415,9 +427,29 @@ export function buildSleighFlight(): SleighFlight {
   const flightSec = FLIGHT_DURATION_MS / 1000;
   const v3 = new THREE.Vector3();
   const tan = new THREE.Vector3();
-  const xAxis = new THREE.Vector3(1, 0, 0);
-  const qAlign = new THREE.Quaternion();
+  const up = new THREE.Vector3(0, 1, 0);
+  const basisX = new THREE.Vector3();
+  const basisY = new THREE.Vector3();
+  const basisZ = new THREE.Vector3();
+  const basisM = new THREE.Matrix4();
+  const qBasis = new THREE.Quaternion();
   const qBank = new THREE.Quaternion();
+  const tmpTan = new THREE.Vector3();
+  // ทิศทางการบินในแนวราบ (มุมรอบแกนตั้ง) ใช้คำนวณการเอียงตัวตอนเลี้ยว
+  const headingAt = (u: number) => {
+    ROUTE_CURVE.getTangentAt(Math.min(1, Math.max(0, u)), tmpTan);
+    return Math.atan2(tmpTan.z, tmpTan.x);
+  };
+  // ผลต่างมุมแบบวนรอบ (ป้องกันการกระโดดตอนมุมข้ามแกน ±π)
+  const wrapAngle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+  const headingDelta = (u: number, du: number) => {
+    return wrapAngle(headingAt(u + du) - headingAt(u - du));
+  };
+  // ฟังก์ชันขั้นบันไดแบบนุ่ม ใช้ทำให้ขบวนค่อย ๆ ปรากฏและค่อย ๆ หายไป
+  const smooth = (x: number) => {
+    const c = Math.min(1, Math.max(0, x));
+    return c * c * (3 - 2 * c);
+  };
   const tailPos = new THREE.Vector3();
   let active = false;
 
@@ -430,12 +462,29 @@ export function buildSleighFlight(): SleighFlight {
       rig.visible = active;
       if (progress !== null) {
         ROUTE_CURVE.getPointAt(progress, v3);
-        ROUTE_CURVE.getTangentAt(progress, tan).normalize();
+        // ทิศทางเฉลี่ยจากจุดใกล้เคียง เพื่อให้การหันหน้าไม่กระตุกตอนเลี้ยวโค้ง
+        const dTan = 0.003;
+        ROUTE_CURVE.getTangentAt(progress, tan);
+        ROUTE_CURVE.getTangentAt(Math.max(0, progress - dTan), tmpTan);
+        tan.add(tmpTan);
+        ROUTE_CURVE.getTangentAt(Math.min(1, progress + dTan), tmpTan);
+        tan.add(tmpTan).multiplyScalar(0.25).normalize();
         // เลื่อนหันหน้าตามเส้นทาง เอียงซ้ายขวาเบา ๆ และเด้งตามการก้าวของกวาง
         rig.position.set(v3.x, v3.y + Math.sin(t * 9.2) * 0.03 + Math.sin(t * 5.1) * 0.04, v3.z);
-        qAlign.setFromUnitVectors(xAxis, tan);
-        qBank.setFromAxisAngle(tan, Math.sin(t * 1.3) * 0.07 + Math.sin(t * 0.6) * 0.03);
-        rig.quaternion.copy(qAlign).premultiply(qBank);
+        // หันหน้าตามเส้นทางด้วยฐานมุมฉากที่ไม่พลิกกลับหัว (ใช้แทนการหมุนจากเวกเตอร์ที่อาจกลับทิศ)
+        basisX.copy(tan);
+        basisZ.crossVectors(tan, up).normalize();
+        basisY.crossVectors(basisZ, basisX).normalize();
+        basisM.makeBasis(basisX, basisY, basisZ);
+        qBasis.setFromRotationMatrix(basisM);
+        // เอียงตัวเข้าโค้งตามอัตราการเลี้ยว แล้วโยกเบา ๆ ให้เป็นธรรมชาติ
+        const du = 0.004;
+        const yawRate = (headingDelta(progress, du) / (2 * du)) / (FLIGHT_DURATION_MS / 1000);
+        const bank = Math.max(-0.5, Math.min(0.5, -yawRate * 0.9)) + Math.sin(t * 1.3) * 0.04;
+        qBank.setFromAxisAngle(basisX, bank);
+        rig.quaternion.copy(qBasis).premultiply(qBank);
+        // ขบวนค่อย ๆ โผล่จากระยะไกลและค่อย ๆ จางหายตอนท้ายรอบ (ไม่ป็อปหาย)
+        rig.scale.setScalar(SCALE * smooth(progress / 0.05) * smooth((1 - progress) / 0.05));
 
         // ซานตาเด้งตามเลื่อน พู่หมวกและหนวดพลิ้วตามลม
         santa.group.position.y = 0.84 + Math.sin(t * 9.2 + 0.6) * 0.012;
