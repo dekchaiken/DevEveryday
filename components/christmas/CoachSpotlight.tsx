@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import "./wishcards.css";
 
 export type SpotStep = { target: string; title: string; body: string };
@@ -10,6 +10,8 @@ export type SpotStep = { target: string; title: string; body: string };
 export function CoachSpotlight({ steps, active, onDone }: { steps: readonly SpotStep[]; active: boolean; onDone: () => void }) {
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const activeRef = useRef(active);
+  activeRef.current = active;
 
   // วัดตำแหน่งของขั้นนี้ รอให้ส่วนนั้นโหลดเสร็จก่อน (ฉาก 3 มิติโหลดทีหลัง) ถ้ารอนานเกินไปค่อยข้ามไป
   useEffect(() => {
@@ -37,24 +39,32 @@ export function CoachSpotlight({ steps, active, onDone }: { steps: readonly Spot
     };
   }, [active, i, steps, onDone]);
 
-  // กดปุ่มที่ไฮไลท์ = เรียนรู้ขั้นนี้แล้ว
+  // กดปุ่มที่ไฮไลท์ = ปุ่มนั้นทำงานจริง (เปิดโต๊ะ/โซน/ตุ๊กตา) แล้วไปขั้นถัดไป
+  // จับการกดตอน pointerdown: แตะต้นแล้วแผงแขวนจะเปิดตอน pointerup ทำให้ป้ายซ่อนก่อนถึง click
+  // ถ้ารอดูตอน click จะพลาดการนับขั้น จึงจำไว้ตั้งแต่ตอนกด
   useEffect(() => {
-    if (!active || i >= steps.length) return;
+    if (i >= steps.length) return;
     const target = steps[i].target;
-    // กดปุ่มที่ไฮไลท์ = ไปขั้นถัดไปของการสอน โดยไม่ทำงานของปุ่มนั้นจริง
-    const onClick = (e: MouseEvent) => {
+    const hits = (node: EventTarget | null) => {
       const el = document.querySelector(target);
-      if (!el || !(e.target instanceof Node) || !el.contains(e.target)) return;
-      // ขั้นต้นไม้: ให้การแตะไปถึงต้นจริง เพื่อเปิดหน้าแขวนคำอวยพร
-      if (target !== "[data-tree-scene]") {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      setI((n) => n + 1);
+      return !!el && node instanceof Node && el.contains(node);
     };
+    let pressed = false;
+    const onDown = (e: PointerEvent) => {
+      pressed = activeRef.current && hits(e.target);
+    };
+    const onClick = (e: MouseEvent) => {
+      const was = pressed;
+      pressed = false;
+      if (was && hits(e.target)) setI((n) => n + 1);
+    };
+    window.addEventListener("pointerdown", onDown, true);
     window.addEventListener("click", onClick, true);
-    return () => window.removeEventListener("click", onClick, true);
-  }, [active, i, steps]);
+    return () => {
+      window.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("click", onClick, true);
+    };
+  }, [i, steps]);
 
   if (!active || !rect || i >= steps.length) return null;
 

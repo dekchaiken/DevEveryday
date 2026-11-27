@@ -930,8 +930,21 @@
 .xmas-wish .xmas-build-top .xmas-kicker {
   margin-bottom: 4px;
 }
+/* ปุ่มปิดแผงแขวนคำอวยพร: แสดงทั้งคอมและมือถือ ไม่ให้ค้างจนต้องกดแผงอื่นก่อน */
 .xmas-wish .xmas-form-close {
-  display: none;
+  display: grid;
+  place-items: center;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(15, 61, 46, 0.08);
+  color: var(--spruce-2);
+  cursor: pointer;
 }
 .xmas-build-preview {
   display: grid;
@@ -2016,7 +2029,7 @@
 /* หน้าหลักค่อยๆ ปรากฏใต้ฉากของขวัญตอนเริ่มวาบ ให้สองฉากซ้อนกันแล้วเปลี่ยนต่อเนื่องกัน */
 .xmas-gift-under {
   opacity: 0;
-  transition: opacity 0.9s cubic-bezier(0.3, 0.6, 0.3, 1);
+  transition: opacity 0.2s ease;
 }
 .xmas-gift-under.is-shown {
   opacity: 1;
@@ -2858,9 +2871,6 @@
   0% { filter: brightness(1); }
   40% { filter: brightness(1.35); }
   100% { filter: brightness(1.1); }
-}
-.xmas-gift.is-opening {
-  animation: xmas-out 0.55s ease 1.05s both;
 }
 @keyframes xmas-out {
   from { opacity: 1; }
@@ -4278,32 +4288,17 @@
   width: 100%;
   height: 100%;
 }
-/* หลังวาบ: ฉากทั้งหมดกลายเป็นสีงาช้างก่อน แล้วค่อยจางเผยหน้าหลัก */
-.xmas-gift::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: #fffaf0;
-  opacity: 0;
-  pointer-events: none;
-}
-/* ขอบกล่องแสงไม่ให้เห็นเป็นกรอบ: ฉากเริ่มขาวตั้งแต่ตอนแสงเต็มกล่อง */
-.xmas-gift.is-opening::after {
-  animation: xmas-whiteup 0.8s ease 1.5s both;
-}
-.xmas-gift.is-leaving::after {
-  opacity: 1;
-  animation: none;
-}
+/* จบการแกะ: วงกลมของฉากของขวัญหดลงไปที่ตำแหน่งต้นคริสต์มาส เผยหน้าหลักที่อยู่ข้างใต้ (ไม่มีพื้นขาวทับ) */
 .xmas-gift.is-leaving {
-  animation: xmas-out 0.9s cubic-bezier(0.3, 0.6, 0.3, 1) 0s both;
+  animation: xmas-iris 0.95s cubic-bezier(0.65, 0, 0.25, 1) both;
 }
-@keyframes xmas-whiteup {
-  to { opacity: 1; }
+@keyframes xmas-iris {
+  from { clip-path: circle(150% at 50% 42%); }
+  to { clip-path: circle(0% at 50% 42%); }
 }
 .xmas-gift.is-opening .xmas-gift-hint,
-.xmas-gift.is-opening .xmas-gift-skip {
+.xmas-gift.is-opening .xmas-gift-skip,
+.xmas-gift.is-opening .xmas-gift-title {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
