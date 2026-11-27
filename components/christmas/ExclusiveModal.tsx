@@ -128,7 +128,7 @@ function PickRow({ title, options, value, onChange, swatch = false }: { title: s
 
 // แผนที่ลานมองจากด้านบน: จุดเขียวว่าง จุดแดงมีคนจองแล้ว จุดทองคือที่ที่คุณเลือก (ไม่เลือกก็ได้ ระบบจัดให้)
 const MAP_PX = 360;
-function SpotMap({ taken, value, onPick }: { taken: Set<number>; value: number | null; onPick: (i: number) => void }) {
+function SpotMap({ taken, held, value, onPick }: { taken: Set<number>; held: Set<number>; value: number | null; onPick: (i: number) => void }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const scale = MAP_PX / (LAND_R * 2 + 4);
   const toPx = (x: number, z: number) => [MAP_PX / 2 + x * scale, MAP_PX / 2 + z * scale] as const;
@@ -170,10 +170,10 @@ function SpotMap({ taken, value, onPick }: { taken: Set<number>; value: number |
     const side = 2 * CELL * scale;
     GIANT_POSITIONS.forEach((p, i) => {
       const [px, pz] = toPx(p.x, p.z);
-      g.fillStyle = i === value ? "#facc15" : taken.has(i) ? "#ef4444" : "#22c55e";
+      g.fillStyle = i === value ? "#facc15" : taken.has(i) ? "#ef4444" : held.has(i) ? "#f59e0b" : "#22c55e";
       g.fillRect(px - side / 2, pz - side / 2, side, side);
     });
-  }, [taken, value, scale]);
+  }, [taken, held, value, scale]);
 
   function pick(e: React.MouseEvent<HTMLCanvasElement>) {
     const cv = ref.current;
@@ -192,14 +192,14 @@ function SpotMap({ taken, value, onPick }: { taken: Set<number>; value: number |
         best = i;
       }
     });
-    if (best < 0 || bestD > (CELL * 1.6) ** 2 || taken.has(best)) return;
+    if (best < 0 || bestD > (CELL * 1.6) ** 2 || taken.has(best) || held.has(best)) return;
     onPick(best);
   }
 
   return (
     <div className="xmas-spot-map">
       <canvas ref={ref} width={MAP_PX} height={MAP_PX} onClick={pick} role="img" aria-label="แผนที่ลาน เลือกจุดตั้งบ้านหิมะ" />
-      <p className="xmas-hint">เขียว = ว่าง · แดง = มีคนจองแล้ว · ทอง = ที่คุณเลือก{value === null ? " · ยังไม่ได้เลือก ระบบจะจัดให้ตอนชำระเงิน" : ""}</p>
+      <p className="xmas-hint">เขียว = ว่าง · ส้ม = มีคนกำลังจอง (รอชำระ) · แดง = ซื้อไปแล้ว · ทอง = ที่คุณเลือก{value === null ? " · ยังไม่ได้เลือก ระบบจะจัดให้ตอนชำระเงิน" : ""}</p>
     </div>
   );
 }
@@ -334,6 +334,7 @@ export default function ExclusiveModal({
   const [selId, setSelId] = useState<string | null>(null);
   const [spotPick, setSpotPick] = useState<number | null>(null);
   const [taken, setTaken] = useState<Set<number>>(new Set());
+  const [held, setHeld] = useState<Set<number>>(new Set());
   const [spotPopup, setSpotPopup] = useState(false);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
@@ -360,7 +361,10 @@ export default function ExclusiveModal({
   const loadTaken = useCallback(() => {
     fetch(`/api/christmas/state?room=${encodeURIComponent(roomId)}`)
       .then((r) => r.json())
-      .then((d: { giants?: { spot: number }[] }) => setTaken(new Set((d.giants ?? []).map((g) => g.spot))))
+      .then((d: { giants?: { spot: number }[]; holds?: number[] }) => {
+        setTaken(new Set((d.giants ?? []).map((g) => g.spot)));
+        setHeld(new Set(d.holds ?? []));
+      })
       .catch(() => {});
   }, [roomId]);
   useEffect(() => {
@@ -564,7 +568,7 @@ export default function ExclusiveModal({
                 </label>
                 <div className="xmas-sup-field">
                   <span>ตำแหน่งบนลาน</span>
-                  <SpotMap taken={taken} value={spotPick} onPick={(i) => setSpotPick(i)} />
+                  <SpotMap taken={taken} held={held} value={spotPick} onPick={(i) => setSpotPick(i)} />
                   {spotPick !== null && (
                     <button type="button" className="xmas-studio-del" onClick={() => setSpotPick(null)}>
                       ให้ระบบเลือกให้

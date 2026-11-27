@@ -51,6 +51,7 @@ export type ChristmasState = {
   ornaments: Ornament[];
   events: ShowEvent[]; // เฉพาะเหตุการณ์ที่ยังไม่จบ
   giants: GiantSign[]; // ตุ๊กตายักษ์ทุกตัวในห้อง
+  holds?: number[]; // จุดที่มีคนกำลังจองอยู่ (รอชำระ) ยังไม่ใช่ของที่ซื้อแล้ว
   persistent: boolean; // false = ใช้หน่วยความจำชั่วคราว (ยังไม่ได้ตั้งค่า Redis)
 };
 

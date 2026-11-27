@@ -3,7 +3,7 @@
 import { cmd, storeConfigured } from "@/lib/redis";
 import type { ChristmasState, Ornament, ShowEvent } from "@/lib/christmas/types";
 import { ROOM_CAPACITY, ROOMS } from "@/lib/christmas/rooms";
-import { listGiants } from "@/lib/christmas/orders";
+import { listGiants, listHeldSpots } from "@/lib/christmas/orders";
 
 // ตุ๊กตายักษ์ที่ส่งให้หน้าเว็บ: ตัด orderId ออก (เป็นข้อมูลภายในของการชำระเงิน)
 async function publicGiants(room: string) {
@@ -53,20 +53,23 @@ export async function readState(room: string, now: number): Promise<ChristmasSta
       ornaments: m.ornaments.slice(0, 300),
       events: m.events.filter((e) => e.startAt + e.duration > now),
       giants: await publicGiants(room),
+      holds: await listHeldSpots(room, now),
       persistent: false,
     };
   }
-  const [ver, ornRaw, evtRaw, giants] = await Promise.all([
+  const [ver, ornRaw, evtRaw, giants, holds] = await Promise.all([
     cmd<string | null>("GET", K.ver(room)),
     cmd<string[]>("LRANGE", K.orn(room), 0, 299),
     cmd<string[]>("ZRANGEBYSCORE", K.evt(room), now, "+inf"),
     publicGiants(room),
+    listHeldSpots(room, now),
   ]);
   return {
     version: Number(ver ?? 0),
     ornaments: (ornRaw ?? []).map((s) => JSON.parse(s) as Ornament),
     events: (evtRaw ?? []).map((s) => JSON.parse(s) as ShowEvent),
     giants,
+    holds,
     persistent: true,
   };
 }

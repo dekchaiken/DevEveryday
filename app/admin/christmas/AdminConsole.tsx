@@ -372,14 +372,20 @@ function Orders({ dash, reload, toast }: { dash: Dash; reload: () => void; toast
     setWorking(true);
     let paid = 0;
     let failed = 0;
+    const seen: string[] = [];
+    let lastError = "";
     for (const id of ids) {
       const res = await fetch(`/api/admin/christmas/orders/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "check_paynoi" }) });
-      const data = (await res.json()) as { status?: string; error?: string };
-      if (!res.ok) failed++;
-      else if (data.status === "paid") paid++;
+      const data = (await res.json()) as { status?: string; paynoi?: string; error?: string };
+      if (!res.ok) {
+        failed++;
+        lastError = data.error ?? "";
+      } else if (data.status === "paid") paid++;
+      else seen.push(data.paynoi ? `paynoi: ${data.paynoi}` : "ไม่มีสถานะ");
     }
     setWorking(false);
-    toast(failed === 0 ? "ok" : "bad", `ตรวจ paynoi ${ids.length} รายการ · ยืนยันแล้ว ${paid}${failed ? ` · ผิดพลาด ${failed}` : ""}`);
+    const detail = seen.length ? ` · ${[...new Set(seen)].join(", ")}` : "";
+    toast(failed === 0 && paid > 0 ? "ok" : "bad", `ตรวจ paynoi ${ids.length} รายการ · ยืนยันแล้ว ${paid}${detail}${failed ? ` · ผิดพลาด ${failed}${lastError ? ` (${lastError})` : ""}` : ""}`);
     reload();
   }
 
