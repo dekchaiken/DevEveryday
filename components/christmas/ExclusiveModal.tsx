@@ -409,7 +409,7 @@ export default function ExclusiveModal({
       setOrderKind(kind);
       setOrder(data.order);
       // จำไว้ในเครื่อง เผื่อลูกค้ารีเฟรชหน้าระหว่างรอชำระ
-      if (data.order.status === "awaiting_payment") rememberPending({ id: data.order.id, room: roomId, kind, amount: data.order.payAmount ? Number(data.order.payAmount) : data.order.amount, at: Date.now() });
+      rememberPending({ id: data.order.id, room: roomId, kind, amount: data.order.payAmount ? Number(data.order.payAmount) : data.order.amount, name: name.trim(), at: Date.now() });
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
     } finally {

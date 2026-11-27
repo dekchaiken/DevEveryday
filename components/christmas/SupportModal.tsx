@@ -1,5 +1,6 @@
 "use client";
 
+import { rememberPending } from "./pendingOrders";
 import { useEffect, useState, type FormEvent } from "react";
 import type { OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
@@ -61,6 +62,7 @@ export default function SupportModal({
       });
       const data = (await res.json()) as { order?: OrderPreview; error?: string };
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
+      rememberPending({ id: data.order.id, room: roomId, kind: "support", amount: data.order.payAmount ? Number(data.order.payAmount) : data.order.amount, name: name.trim(), at: Date.now() });
       setOrder(data.order);
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");

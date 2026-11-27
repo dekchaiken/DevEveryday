@@ -62,6 +62,11 @@ export type OrderPreview = {
   amount: number;
   mode: "manual" | "gateway" | "paynoi";
   payAmount?: string; // ยอดที่ต้องโอนพร้อมสตางค์ (paynoi)
+  kind?: string; // giant | decor | message | support
+  name?: string;
+  createdAt?: number;
+  spot?: number; // ตำแหน่งบนลาน (บ้านหิมะ Exclusive)
+  slot?: number; // ช่องตุ๊กตา (ตุ๊กตา Exclusive)
   qrPayload: string;
   qrImage: string;
 };
