@@ -7,7 +7,7 @@ import { DioramaViewer } from "./DioramaViewer";
 import { Icon } from "./Icon";
 import { SocialLinks } from "./ProfileCard";
 import type { Social } from "@/lib/christmas/social";
-import type { GiantLook } from "@/lib/christmas/giant";
+import { BASE_HEX, type GiantLook } from "@/lib/christmas/giant";
 
 export type GiantInfo = { name: string; message: string; spot: number; social?: Social; look?: GiantLook };
 
@@ -17,11 +17,19 @@ export function boardOf(info: GiantInfo): string {
   return b === "ivory" || b === "berry" || b === "gold" ? b : "spruce";
 }
 
+// สีลายของฐาน (ใช้เป็นสีแถบและสีพื้นหลังของพรีวิว)
+export function baseColorOf(info: GiantInfo): string {
+  const key = info.look?.base ?? "pink";
+  const hex = (BASE_HEX[key] ?? BASE_HEX.pink).a;
+  return `#${hex.toString(16).padStart(6, "0")}`;
+}
+
 export function GiantCard({ info, onClose }: { info: GiantInfo; onClose: () => void }) {
   const turnRef = useRef<((rad: number) => void) | null>(null);
   const look: GiantLook = info.look ?? { base: "pink", items: [], board: "spruce" };
+  const base = baseColorOf(info);
   return (
-    <div className={`xmas-focus glass xmas-decor-card xmas-giant-card board-${boardOf(info)}`} role="dialog" aria-label={`บ้านของ ${info.name}`}>
+    <div className={`xmas-focus glass xmas-decor-card xmas-giant-card board-${boardOf(info)}`} style={{ ["--base" as string]: base }} role="dialog" aria-label={`บ้านของ ${info.name}`}>
       <button className="xmas-x" onClick={onClose} aria-label="ปิด">
         <Icon name="close" size={18} />
       </button>
@@ -58,7 +66,7 @@ export function GiantCard({ info, onClose }: { info: GiantInfo; onClose: () => v
 // แบนเนอร์ป้ายประจำบ้านด้านบนกลางจอ: ข้อความบนป้ายและชื่อเจ้าของ กรอบฟอยล์ทอง
 export function GiantBanner({ info }: { info: GiantInfo }) {
   return (
-    <div className={`xmas-giant-banner board-${boardOf(info)}`} role="status" aria-label="ป้ายประจำบ้าน">
+    <div className={`xmas-giant-banner board-${boardOf(info)}`} style={{ ["--base" as string]: baseColorOf(info) }} role="status" aria-label="ป้ายประจำบ้าน">
       <span className="xmas-giant-banner-kicker">ป้ายประจำบ้าน · {info.name}</span>
       <p>{info.message || "ขอให้ทุกคนมีความสุขในวันคริสต์มาส"}</p>
     </div>

@@ -7069,3 +7069,13 @@ a.xmas-social-chip:hover {
   background: linear-gradient(90deg, #7a2146, #a8476c);
   box-shadow: 0 8px 20px rgba(122, 33, 70, 0.3);
 }
+
+/* สีลายฐานของบ้าน: แถบสีที่ขอบล่างของแบนเนอร์และพื้นหลังของพรีวิว */
+.xmas-giant-banner {
+  box-shadow: inset 0 -7px 0 var(--base, #ffb3cc), inset 0 0 0 4px rgba(0, 0, 0, 0.15), 0 16px 36px rgba(0, 0, 0, 0.35);
+}
+.xmas-giant-art {
+  background:
+    radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--base, #ffb3cc) 26%, transparent), transparent 70%),
+    #f4f8f2;
+}
