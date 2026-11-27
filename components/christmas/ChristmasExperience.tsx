@@ -969,7 +969,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       <CoachSpotlight
         steps={SPOT_STEPS}
-        active={coachArmed && !coachDone && !studioOpen && !chooseOpen && !zoneOpen && !zoneReveal && !sharedCard && !leavingOnboard && profile !== null && profile !== undefined}
+        active={coachArmed && !coachDone && !intro && !studioOpen && !chooseOpen && !zoneOpen && !zoneReveal && !sharedCard && !leavingOnboard && profile !== null && profile !== undefined}
         onDone={finishCoach}
       />
 
