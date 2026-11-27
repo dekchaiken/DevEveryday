@@ -39,7 +39,7 @@ import { PendingOrdersWatch } from "./PendingOrdersWatch";
 import { GiantBanner, type GiantInfo } from "./GiantCard";
 
 // คำอธิบายที่ลอยข้างโมเดลเมื่อแตะบ้านหรือตุ๊กตา (กดปุ่มในนั้นจึงจะเปิดป้ายหรือรายละเอียด)
-type TipState = { kicker: string; title: string; cta: string; x: number; y: number; z: number; open: () => void };
+type TipState = { kicker: string; title: string; cta: string; x: number; y: number; z: number; open: () => void; close: () => void };
 
 // คำแนะนำครั้งแรก: สอนทีละปุ่ม ปุ่มอื่นจะเทาจนกว่าจะกดปุ่มที่สอนก่อน
 const SPOT_STEPS: SpotStep[] = [
@@ -670,7 +670,16 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onGiantClick={(g) => {
             const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
             const info: GiantInfo = { name: g.name, message: g.message, spot: g.spot, social: g.social, look: g.look };
-            setTip({ kicker: "บ้านหิมะ Exclusive", title: g.name, cta: "ดูป้าย", x: def.x, y: 1.6, z: def.z, open: () => setGiantCard(info) });
+            setTip({
+              kicker: "บ้านหิมะ Exclusive",
+              title: g.name,
+              cta: "ดูป้าย",
+              x: def.x,
+              y: 1.6,
+              z: def.z,
+              open: () => setGiantCard(info),
+              close: () => treeRef.current?.focusGiant(null),
+            });
           }}
           decor={decor}
           markerSlot={markerSlot}
@@ -687,6 +696,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           }}
           onDecorClick={(d) => {
             const pos = SLOT_POSITIONS[d.slot] ?? SLOT_POSITIONS[0];
+            // กล้องบินไปหาตุ๊กตาทันทีเหมือนเดิม แล้วคำอธิบายลอยข้างตุ๊กตา
+            treeRef.current?.focusDecor(d);
             setTip({
               kicker: "ตุ๊กตาหิมะ",
               title: d.name,
@@ -697,8 +708,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
               open: () => {
                 setDecorFocus(d);
                 setFocus(null);
-                treeRef.current?.focusDecor(d);
               },
+              close: () => treeRef.current?.focusDecor(null),
             });
           }}
           snowing={snowOn}
@@ -808,7 +819,16 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             >
               {tip.cta}
             </button>
-            <button type="button" className="xmas-tip-x" onClick={() => setTip(null)} aria-label="ปิดคำอธิบาย">
+            <button
+              type="button"
+              className="xmas-tip-x"
+              onClick={() => {
+                const close = tip.close;
+                setTip(null);
+                close();
+              }}
+              aria-label="ปิดคำอธิบาย"
+            >
               ×
             </button>
           </div>
