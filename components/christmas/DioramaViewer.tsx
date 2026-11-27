@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { GiantLook } from "@/lib/christmas/giant";
-import { buildGiantFigure } from "./giantSign";
+import { buildDiorama } from "./diorama";
 import { shade } from "./zoneScenery";
 
 type Updatable = { update: (t: number, reduced: boolean) => void };
@@ -25,7 +25,7 @@ function disposeTree(root: THREE.Object3D) {
   });
 }
 
-export function CottageViewer({ look, name, message }: { look: GiantLook; name: string; message: string }) {
+export function DioramaViewer({ look, name, message }: { look: GiantLook; name: string; message: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const contentRef = useRef<THREE.Group | null>(null);
@@ -52,14 +52,14 @@ export function CottageViewer({ look, name, message }: { look: GiantLook; name: 
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 60);
-    camera.position.set(0, 1.9, 7.9);
+    camera.position.set(0, 1.5, 4.6);
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.25, 0);
+    controls.target.set(0, 0.8, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.enablePan = false;
-    controls.minDistance = 4.6;
-    controls.maxDistance = 12;
+    controls.minDistance = 3;
+    controls.maxDistance = 9;
     controls.maxPolarAngle = Math.PI * 0.5;
 
     scene.add(new THREE.HemisphereLight(0xffffff, 0x8fa8c8, 1.2));
@@ -73,7 +73,7 @@ export function CottageViewer({ look, name, message }: { look: GiantLook; name: 
     fill.position.set(-4, 3, -2);
     scene.add(fill);
 
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(4.2, 56), new THREE.MeshStandardMaterial({ color: 0xf4f8fc, roughness: 0.95 }));
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(2.6, 56), new THREE.MeshStandardMaterial({ color: 0xf4f8fc, roughness: 0.95 }));
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
@@ -127,7 +127,7 @@ export function CottageViewer({ look, name, message }: { look: GiantLook; name: 
       scene.remove(contentRef.current);
       disposeTree(contentRef.current);
     }
-    const fig = buildGiantFigure({ look, name, message, side: 1 });
+    const fig = buildDiorama({ look, name, message });
     const group = new THREE.Group();
     group.add(shade(fig.group));
     scene.add(group);
@@ -135,5 +135,5 @@ export function CottageViewer({ look, name, message }: { look: GiantLook; name: 
     figureRef.current = fig;
   }, [look, name, message]);
 
-  return <div ref={wrapRef} className="xmas-viewer" role="img" aria-label="ตัวอย่างบ้านหิมะ Exclusive แบบ 3 มิติ หมุนดูได้" />;
+  return <div ref={wrapRef} className="xmas-viewer" role="img" aria-label="ตัวอย่างตุ๊กตาหิมะ Exclusive แบบ 3 มิติ หมุนดูได้" />;
 }

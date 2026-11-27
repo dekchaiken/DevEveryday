@@ -12,7 +12,8 @@ import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNo
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, type GiantLook } from "@/lib/christmas/giant";
 import { buildYardScenery, candyStripes, giftBox, miniPine, shade, woodMaterial } from "./zoneScenery";
-import { buildGiantFigure, buildZoneSign, ZONE_SIGN_H } from "./giantSign";
+import { buildZoneSign, ZONE_SIGN_H } from "./giantSign";
+import { buildDiorama } from "./diorama";
 import { buildSleighFlight, flightProgressAt } from "./sleighFlight";
 import { serverNowMs, startServerClock } from "./serverClock";
 
@@ -935,19 +936,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
 
     // ---------- ตุ๊กตาหิมะยักษ์ของห้อง พร้อมป้ายห้อย ----------
-    // บ้านหิมะ Exclusive: บ้านตามลุคที่ผู้ซื้อเลือก พร้อมป้ายข้างบ้านที่หันเข้าหาใจกลางฉาก
+    // ตุ๊กตาหิมะ Exclusive: ฐานกลมลายขนม ของตกแต่งตามที่ผู้ซื้อวางบนตาราง 4×4 ตั้งอยู่กึ่งกลางจุด 2×2
     function buildGiant(g: GiantSpec) {
       const look = g.look ?? DEFAULT_GIANT_LOOK;
       const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
-      const side = def.x > 0 ? -1 : 1;
-      const figure = buildGiantFigure({ look, name: g.name, message: g.message, side });
-      const grp = figure.group;
-      grp.userData.update = figure.update;
-      const gx = def.x;
-      const gz = def.z;
-      grp.position.set(gx, 0, gz);
-      // หันหน้าเข้าหาผู้ชม เพื่อให้เห็นป้ายและบ้าน (ตำแหน่งอื่นหมุนเล็กน้อยไปทางต้น)
-      grp.rotation.y = -0.2 + (gx > 0 ? -0.15 : 0.15);
+      const d = buildDiorama({ look, name: g.name, message: g.message });
+      const grp = d.group;
+      grp.userData.update = d.update;
+      grp.position.set(def.x, 0, def.z);
       return grp;
     }
     const giantGroups = new Map<number, { key: string; grp: THREE.Group }>();

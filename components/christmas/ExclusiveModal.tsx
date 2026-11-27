@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
-import { DECO_GROUND, DECO_ROOF, DEFAULT_GIANT_LOOK, GIANT_BODY, GIANT_LIGHTS, SIGN_BOARDS, type GiantLook } from "@/lib/christmas/giant";
+import { colorOptionsFor, DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_GRID, DIORAMA_KINDS, SIGN_BOARDS, type DioramaItem, type GiantLook } from "@/lib/christmas/giant";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
-import { CottageViewer } from "./CottageViewer";
+import { DioramaViewer } from "./DioramaViewer";
 import { Icon } from "./Icon";
 import { PaymentPanel, useDonateConfig } from "./PaymentPanel";
 import { paintSkyScene, type SkyTheme } from "./skyArt";
@@ -67,6 +67,10 @@ const LABEL: Record<string, string> = {
   star: "ดาวดวงใหญ่",
   cream: "ครีม",
   multi: "หลากสี",
+  pink: "ชมพูอ่อน",
+  forest: "เขียวเข้ม",
+  frost: "เขียวหิมะ",
+  tree: "ต้นสน",
 };
 
 type View = "menu" | "giant" | "message" | "decor";
@@ -103,6 +107,65 @@ function PickRow({ title, options, value, onChange }: { title: string; options: 
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ชื่อบนปุ่มของแต่ละชนิด
+const KIND_LABEL: Record<string, string> = { snowman: "ตุ๊กตาหิมะ", tree: "ต้นสน", gift: "ของขวัญ", candy: "ไม้เท้าขนม" };
+
+// ตารางวางของบนฐาน 4×4: ช่องว่างเป็นพื้นเขียวให้วางได้ ช่องที่มีของเป็นพื้นชมพู แตะเพื่อเลือกชนิดและสี
+function DioramaEditor({ items, onChange }: { items: DioramaItem[]; onChange: (items: DioramaItem[]) => void }) {
+  const [active, setActive] = useState<number | null>(null);
+  const byCell = new Map(items.map((it) => [it.i, it]));
+  const current = active === null ? undefined : byCell.get(active);
+  const colors = current ? colorOptionsFor(current.kind) : [];
+
+  function place(i: number, kind: string) {
+    const rest = items.filter((x) => x.i !== i);
+    if (kind === "none") return onChange(rest);
+    const opts = colorOptionsFor(kind);
+    const keep = byCell.get(i);
+    const color = opts.length ? (keep && opts.includes(keep.color) && keep.kind === kind ? keep.color : opts[0]) : "";
+    onChange([...rest, { i, kind, color }].sort((a, b) => a.i - b.i));
+  }
+  function paint(i: number, color: string) {
+    onChange(items.map((x) => (x.i === i ? { ...x, color } : x)));
+  }
+
+  return (
+    <div className="xmas-dio">
+      <div className="xmas-dio-grid" role="grid" aria-label="ตารางวางของบนฐาน">
+        {Array.from({ length: DIORAMA_GRID * DIORAMA_GRID }, (_, i) => {
+          const it = byCell.get(i);
+          return (
+            <button
+              key={i}
+              type="button"
+              role="gridcell"
+              className={`xmas-dio-cell ${it ? "is-filled" : "is-empty"} ${active === i ? "is-on" : ""}`}
+              onClick={() => setActive(i)}
+              aria-label={`ช่อง ${Math.floor(i / DIORAMA_GRID) + 1}-${(i % DIORAMA_GRID) + 1}${it ? ` ${KIND_LABEL[it.kind]}` : " ว่าง"}`}
+            >
+              {it ? KIND_LABEL[it.kind] : ""}
+            </button>
+          );
+        })}
+      </div>
+      {active !== null && (
+        <div className="xmas-dio-pick">
+          <PickRow
+            title={`ช่อง ${Math.floor(active / DIORAMA_GRID) + 1}-${(active % DIORAMA_GRID) + 1} · วางอะไร`}
+            options={["none", ...DIORAMA_KINDS]}
+            value={current?.kind ?? "none"}
+            onChange={(v) => place(active, v)}
+          />
+          {colors.length > 0 && current && (
+            <PickRow title="สี" options={colors} value={current.color} onChange={(v) => paint(active, v)} />
+          )}
+        </div>
+      )}
+      <p className="xmas-hint">แตะช่องเพื่อวางของ เลือก "ไม่มี" เพื่อเอาออก</p>
     </div>
   );
 }
@@ -182,8 +245,8 @@ export default function ExclusiveModal({
   function setPart(key: GiantKey, value: string) {
     setLook((l) => ({ ...l, [key]: value }));
   }
-  function setDeco(index: number, value: string) {
-    setLook((l) => ({ ...l, deco: l.deco.map((x, j) => (j === index ? value : x)) }));
+  function setItems(items: DioramaItem[]) {
+    setLook((l) => ({ ...l, items }));
   }
 
   async function create(kind: "giant" | "message" | "decor", body: Record<string, unknown>) {
@@ -348,23 +411,18 @@ export default function ExclusiveModal({
               <section className="xmas-sec" data-step="1" data-on={step === 1}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">2</span>
-                  <h3>ตกแต่ง · บ้านหลังนี้</h3>
+                  <h3>ตกแต่ง · ฐานและของบนฐาน</h3>
                 </header>
-                <PickRow title="สีผนังบ้าน" options={GIANT_BODY} value={look.body} onChange={(v) => setPart("body", v)} />
-                <PickRow title="สีไฟประดับ" options={GIANT_LIGHTS} value={look.lights} onChange={(v) => setPart("lights", v)} />
+                <PickRow title="ลายฐาน" options={DIORAMA_BASES} value={look.base} onChange={(v) => setPart("base", v)} />
+                <DioramaEditor items={look.items} onChange={setItems} />
               </section>
 
               <section className="xmas-sec" data-step="2" data-on={step === 2}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">3</span>
-                  <h3>ตกแต่ง · ป้ายและของหน้าบ้าน</h3>
+                  <h3>ตกแต่ง · ป้ายชื่อเล็ก</h3>
                 </header>
                 <PickRow title="สีป้าย" options={SIGN_BOARDS} value={look.board} onChange={(v) => setPart("board", v)} />
-                <PickRow title="ลาน · ซ้ายใกล้ประตู" options={["none", ...DECO_GROUND]} value={look.deco[0]} onChange={(v) => setDeco(0, v)} />
-                <PickRow title="ลาน · ขวาใกล้ประตู" options={["none", ...DECO_GROUND]} value={look.deco[1]} onChange={(v) => setDeco(1, v)} />
-                <PickRow title="ลาน · ซ้ายหน้าสุด" options={["none", ...DECO_GROUND]} value={look.deco[2]} onChange={(v) => setDeco(2, v)} />
-                <PickRow title="ลาน · ขวาหน้าสุด" options={["none", ...DECO_GROUND]} value={look.deco[3]} onChange={(v) => setDeco(3, v)} />
-                <PickRow title="ยอดหลังคา" options={["none", ...DECO_ROOF]} value={look.deco[4]} onChange={(v) => setDeco(4, v)} />
               </section>
 
               <section className="xmas-sec" data-step="3" data-on={step === 3}>
@@ -394,7 +452,7 @@ export default function ExclusiveModal({
 
             <aside className="xmas-ex-col xmas-ex-side">
               <div className="xmas-sign-stage">
-                <CottageViewer look={look} name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} />
+                <DioramaViewer look={look} name={name.trim() || "ชื่อของคุณ"} message={message.trim() || "ข้อความของคุณจะขึ้นตรงนี้"} />
               </div>
               <p className="xmas-hint">ตัวอย่างนี้อัปเดตตามที่เลือกและพิมพ์ บ้านหลังนี้จะตั้งอยู่บนลานตรงตำแหน่งที่เลือก พร้อมป้ายนี้ข้างบ้าน</p>
               <div className="xmas-ex-final" data-step="3" data-on={step === 3}>
