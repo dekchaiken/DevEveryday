@@ -7,6 +7,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 import { GIANT_MODEL_SCALE, GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
+import { LAND_R } from "@/lib/christmas/grid";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
@@ -151,7 +152,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     // ---------- พื้นหิมะ ----------
     // พื้นหิมะ: ผิวเป็นลอนกองหิมะเบา ๆ รอบนอก โคนต้นเรียบ และมีเม็ดหิมะจากเท็กซ์เจอร์
-    const groundGeo = new THREE.PlaneGeometry(96, 96, 220, 220);
+    // พื้นหิมะครอบคลุมลานทั้งหมด (ขนาดตามรัศมีลาน) ส่วนขอบจะถูกหมอกบัง
+    const groundSize = LAND_R * 2 + 8;
+    const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize, 260, 260);
     groundGeo.rotateX(-Math.PI / 2);
     const gp = groundGeo.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < gp.count; i++) {
