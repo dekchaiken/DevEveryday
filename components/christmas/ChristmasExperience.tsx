@@ -36,7 +36,7 @@ import { ZONE_CAPACITY } from "@/lib/christmas/slots";
 import "./wishcards.css";
 import "./christmas.css";
 import { PendingOrdersWatch } from "./PendingOrdersWatch";
-import { GiantCard, type GiantInfo } from "./GiantCard";
+import { GiantBanner, GiantCard, type GiantInfo } from "./GiantCard";
 
 // คำแนะนำครั้งแรก: สอนทีละปุ่ม ปุ่มอื่นจะเทาจนกว่าจะกดปุ่มที่สอนก่อน
 const SPOT_STEPS: SpotStep[] = [
@@ -739,6 +739,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
       <PendingOrdersWatch roomId={room.id} notify={notify} />
+      {giantCard && <GiantBanner info={giantCard} />}
       {giantCard && (
         <GiantCard
           info={giantCard}
