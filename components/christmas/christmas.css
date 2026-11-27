@@ -6768,7 +6768,7 @@ a.xmas-social-chip:hover {
 .xmas-inbox-btn {
   position: fixed;
   right: 14px;
-  bottom: 84px;
+  bottom: 150px; /* เหนือปุ่มซูมและพ้นแถบเมนูด้านล่าง */
   z-index: 40;
   display: inline-flex;
   gap: 8px;
@@ -6914,4 +6914,79 @@ a.xmas-social-chip:hover {
   max-width: 460px;
   max-height: 92dvh;
   overflow: auto;
+}
+
+/* การ์ดบ้านหิมะ Exclusive ที่แตะบนฉาก */
+.xmas-giant-card-back {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 20, 14, 0.25);
+}
+.xmas-giant-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 20px 20px 18px;
+  border-radius: 18px;
+  background: #fffdf7;
+  color: #1d2a22;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  animation: xmas-giant-in 0.35s ease-out;
+  text-align: center;
+}
+@keyframes xmas-giant-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+.xmas-giant-card-kicker {
+  margin: 0;
+  color: #9a7a2c;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.xmas-giant-card h3 {
+  margin: 4px 0 8px;
+  font-size: 20px;
+}
+.xmas-giant-card-sign {
+  margin: 0 auto 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1b5a44, #0b2e22);
+  color: #f6e7bf;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.xmas-giant-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.xmas-giant-card-links a,
+.xmas-giant-card-links span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(29, 74, 51, 0.25);
+  color: #1d4a33;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.xmas-giant-card-close {
+  padding: 9px 22px;
+  border-radius: 999px;
+  border: 0;
+  background: #1d4a33;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
 }

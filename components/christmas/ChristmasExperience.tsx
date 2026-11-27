@@ -36,6 +36,7 @@ import { ZONE_CAPACITY } from "@/lib/christmas/slots";
 import "./wishcards.css";
 import "./christmas.css";
 import { PendingOrdersWatch } from "./PendingOrdersWatch";
+import { GiantCard, type GiantInfo } from "./GiantCard";
 
 // คำแนะนำครั้งแรก: สอนทีละปุ่ม ปุ่มอื่นจะเทาจนกว่าจะกดปุ่มที่สอนก่อน
 const SPOT_STEPS: SpotStep[] = [
@@ -87,6 +88,7 @@ function useServerClock() {
 }
 
 export default function ChristmasExperience({ roomId }: { roomId: string }) {
+  const [giantCard, setGiantCard] = useState<GiantInfo | null>(null);
   const room = getRoom(roomId) as RoomTheme;
   const router = useRouter();
   const [online, setOnline] = useState<{ count: number; capacity: number } | null>(null);
@@ -634,7 +636,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onOrnamentClick={(o) => setFocus(o)}
           onError={() => setWebglOk(false)}
           ground={room.ground}
-          giants={(state?.giants ?? []).map((g) => ({ name: g.name, message: g.message, spot: g.spot ?? 0, look: g.look }))}
+          giants={(state?.giants ?? []).map((g) => ({ name: g.name, message: g.message, spot: g.spot ?? 0, look: g.look, social: g.social }))}
+          onGiantClick={(g) => setGiantCard({ name: g.name, message: g.message, spot: g.spot, social: g.social })}
           decor={decor}
           markerSlot={markerSlot}
           zoneCards={cards}
@@ -736,6 +739,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
       <PendingOrdersWatch roomId={room.id} notify={notify} />
+      {giantCard && <GiantCard info={giantCard} onClose={() => setGiantCard(null)} />}
 
       {toast && (
         <div key={toast.id} className={`xmas-toast ${toast.kind}`} role="status">

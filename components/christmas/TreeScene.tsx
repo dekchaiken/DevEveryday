@@ -17,9 +17,10 @@ import { buildZoneSign, ZONE_SIGN_H } from "./giantSign";
 import { buildDiorama } from "./diorama";
 import { buildSleighFlight, flightProgressAt } from "./sleighFlight";
 import { serverNowMs, startServerClock } from "./serverClock";
+import type { Social } from "@/lib/christmas/social";
 
 // ตุ๊กตายักษ์ที่ตั้งป้ายไว้: ชื่อ ข้อความ ตำแหน่ง และลุค (ถ้าไม่มีจะใช้ลุคเริ่มต้น)
-type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook };
+type GiantSpec = { name: string; message: string; spot: number; look?: GiantLook; social?: Social };
 
 export type Preview = { height: number; angle: number; color: string; shape: string } | null;
 
@@ -49,6 +50,7 @@ type Props = {
   giants: GiantSpec[]; // ตุ๊กตายักษ์ทุกตัวในห้องพร้อมป้ายและตำแหน่ง
   decor: Decor[]; // ตุ๊กตาหิมะที่ผู้ใช้ตกแต่งรอบต้น
   onDecorClick: (d: Decor) => void;
+  onGiantClick?: (g: GiantSpec) => void; // แตะบ้านหิมะ Exclusive เพื่อดูป้ายและลิงก์
   markerSlot: number | null; // ช่องที่กำลังเลือกบนพื้น
   onGroundPick: (slot: number) => void; // แตะพื้นหิมะเพื่อเลือกช่องใกล้ที่สุด
   zoneCards?: CardRecord[]; // การ์ดที่แขวนบนรั้วโซนคำอวยพร
@@ -59,7 +61,7 @@ type Props = {
 };
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange }: Props) {
   const snowingRef = useRef(snowing);
   snowingRef.current = snowing;
   const mountRef = useRef<HTMLDivElement>(null);
@@ -77,8 +79,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
   } | null>(null);
-  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGroundPick, onZoneCardClick, onAwayChange });
-  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGroundPick, onZoneCardClick, onAwayChange };
+  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange });
+  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange };
   const readyRef = useRef(onReady);
   readyRef.current = onReady;
 
@@ -702,6 +704,24 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           return;
         }
       }
+      // บ้านหิมะ Exclusive: กล้องบินไปหา แล้วเปิดป้ายและลิงก์ของเจ้าของ
+      const giantHit = raycaster.intersectObjects([...giantGroups.values()].map((v) => v.grp), true)[0];
+      if (giantHit) {
+        let obj: THREE.Object3D | null = giantHit.object;
+        while (obj && obj.userData.giantSpot === undefined) obj = obj.parent;
+        const spec = obj ? giantSpecs.get(obj.userData.giantSpot as number) : undefined;
+        if (spec) {
+          const def = GIANT_POSITIONS[spec.spot] ?? GIANT_POSITIONS[0];
+          const tgt = new THREE.Vector3(def.x, 0.9, def.z);
+          const dir = new THREE.Vector3(camera.position.x - def.x, 0, camera.position.z - def.z);
+          if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
+          dir.normalize().multiplyScalar(4.8);
+          const toPos = new THREE.Vector3(def.x + dir.x, 2.4, def.z + dir.z);
+          camFlight = { start: performance.now(), dur: reduced ? 1 : 900, fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt: tgt };
+          callbacks.current.onGiantClick?.(spec);
+          return;
+        }
+      }
       if (instBodies) {
         const ih = raycaster.intersectObject(instBodies, false)[0];
         if (ih && ih.instanceId !== undefined && instDecor[ih.instanceId]) {
@@ -754,6 +774,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         focusDecorGroup.position.y = Math.abs(Math.sin(t * 2.6)) * 0.1;
       }
       const now = performance.now();
+      if (camFlight) {
+        const k = Math.min(1, (now - camFlight.start) / camFlight.dur);
+        const e = k * k * (3 - 2 * k); // ค่อย ๆ เร่งแล้วชะลอ
+        camera.position.lerpVectors(camFlight.fromPos, camFlight.toPos, e);
+        controls.target.lerpVectors(camFlight.fromTgt, camFlight.toTgt, e);
+        if (k >= 1) camFlight = null;
+      }
       if (beacon) {
         const age = (now - beacon.start) / 1000;
         const b = beacon;
@@ -949,9 +976,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       grp.userData.update = d.update;
       grp.position.set(def.x, 0, def.z);
       grp.scale.setScalar(GIANT_MODEL_SCALE);
+      grp.userData.giantSpot = g.spot;
       return grp;
     }
     const giantGroups = new Map<number, { key: string; grp: THREE.Group }>();
+    const giantSpecs = new Map<number, GiantSpec>();
+    // กล้องบินไปหาบ้านที่แตะ (ค่าเป็นจุดเริ่มและจุดหมายของการเคลื่อนกล้อง)
+    let camFlight: { start: number; dur: number; fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3 } | null = null;
     function disposeGroup(grp: THREE.Group) {
       scene.remove(grp);
       grp.traverse((o) => {
@@ -972,6 +1003,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       for (const g of list) {
         const key = JSON.stringify(g);
         keep.add(g.spot);
+        giantSpecs.set(g.spot, g);
         const cur = giantGroups.get(g.spot);
         if (cur && cur.key === key) continue;
         if (cur) disposeGroup(cur.grp);
@@ -983,6 +1015,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         if (!keep.has(spot)) {
           disposeGroup(cur.grp);
           giantGroups.delete(spot);
+          giantSpecs.delete(spot);
         }
       }
     }
