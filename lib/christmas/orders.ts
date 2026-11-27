@@ -189,5 +189,18 @@ export async function removeGiant(room: string, spot: number): Promise<boolean> 
 // ข้อมูลที่แสดงให้ผู้ใช้เห็น (ไม่มีข้อมูลสำหรับใช้ภายใน)
 export function toPreview(o: Order): OrderPreview {
   const payAmount = o.payAmountSatang !== undefined ? (o.payAmountSatang / 100).toFixed(2) : undefined;
-  return { id: o.id, status: o.status, amount: o.amount, payAmount, mode: o.mode, qrPayload: o.qrPayload, qrImage: o.qrImage };
+  return {
+    id: o.id,
+    status: o.status,
+    amount: o.amount,
+    payAmount,
+    mode: o.mode,
+    qrPayload: o.qrPayload,
+    qrImage: o.qrImage,
+    kind: o.kind,
+    name: o.name,
+    createdAt: o.createdAt,
+    spot: o.kind === "giant" ? o.spot : undefined, // ตำแหน่งบนลาน (บ้านหิมะ Exclusive)
+    slot: o.decor?.slot, // ช่องที่วางตุ๊กตา (ตุ๊กตา Exclusive)
+  };
 }

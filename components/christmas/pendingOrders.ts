@@ -1,15 +1,16 @@
-// จำคำสั่งซื้อที่ยังไม่ชำระไว้ในเบราว์เซอร์ของลูกค้า เพื่อให้กลับมาตรวจสถานะได้หลังรีเฟรชหน้า
-// เก็บเฉพาะรหัสคำสั่งกับยอดและห้อง ไม่เก็บข้อมูลส่วนตัว และอ่านเขียนครอบ try/catch เผื่อเบราว์เซอร์บล็อก storage
-export type PendingOrder = { id: string; room: string; kind: string; amount: number; at: number };
+// กล่องจดหมายของลูกค้า: จำคำสั่งซื้อไว้ในเบราว์เซอร์ เพื่อให้กลับมาดูสถานะ ชำระต่อ หรือดูผลหลังรีเฟรช
+// เก็บเฉพาะรหัสคำสั่ง ห้อง ประเภท ยอด และชื่อที่ลูกค้าใส่เอง ข้อมูลการชำระและตกแต่งอยู่บนเซิร์ฟเวอร์
+// อ่านเขียนครอบ try/catch เผื่อเบราว์เซอร์บล็อก storage
+export type PendingOrder = { id: string; room: string; kind: string; amount: number; name?: string; at: number; notified?: boolean };
 
 const KEY = "xmas-pending-orders";
-const MAX_AGE_MS = 3 * 60 * 60 * 1000; // คำสั่งที่เก่ากว่านี้ไม่ต้องตามต่อ
+const MAX_AGE_MS = 24 * 60 * 60 * 1000; // เก็บไว้ 24 ชั่วโมง แล้วซ่อนจากกล่องจดหมายเอง
 
-export function listPending(): PendingOrder[] {
+function readAll(): PendingOrder[] {
   try {
     const raw = window.localStorage.getItem(KEY);
     const list = raw ? (JSON.parse(raw) as PendingOrder[]) : [];
-    return Array.isArray(list) ? list.filter((o) => o && typeof o.id === "string" && Date.now() - o.at < MAX_AGE_MS) : [];
+    return Array.isArray(list) ? list.filter((o) => o && typeof o.id === "string") : [];
   } catch {
     return [];
   }
@@ -17,16 +18,24 @@ export function listPending(): PendingOrder[] {
 
 function save(list: PendingOrder[]) {
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(list.slice(-20)));
+    window.localStorage.setItem(KEY, JSON.stringify(list.slice(-30)));
   } catch {
     /* ไม่ทำให้หน้าพัง */
   }
 }
 
+export function listPending(): PendingOrder[] {
+  return readAll().filter((o) => Date.now() - o.at < MAX_AGE_MS);
+}
+
 export function rememberPending(o: PendingOrder) {
-  save([...listPending().filter((x) => x.id !== o.id), o]);
+  save([...readAll().filter((x) => x.id !== o.id), o]);
 }
 
 export function forgetPending(id: string) {
-  save(listPending().filter((x) => x.id !== id));
+  save(readAll().filter((x) => x.id !== id));
+}
+
+export function markNotified(id: string) {
+  save(readAll().map((x) => (x.id === id ? { ...x, notified: true } : x)));
 }
