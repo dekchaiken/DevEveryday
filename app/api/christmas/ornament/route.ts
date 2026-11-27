@@ -32,7 +32,9 @@ export async function POST(req: Request) {
   }
 
   const ornament = { ...parsed.value, id: crypto.randomUUID(), createdAt: Date.now() };
-  await addOrnament(room.id, ornament);
+  if (!(await addOrnament(room.id, ornament))) {
+    return NextResponse.json({ error: "ต้นคริสต์มาสห้องนี้แขวนครบ 999 คำอวยพรแล้ว ขอบคุณทุกคนมาก ๆ" }, { status: 409 });
+  }
   await writeLog({ type: "ornament", room: room.id, actor: maskIp(ip), text: `${ornament.name} · ${ornament.shape}/${ornament.color}: ${ornament.wish || "-"}` });
   return NextResponse.json({ ok: true, ornament });
 }

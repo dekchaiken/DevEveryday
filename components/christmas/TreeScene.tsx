@@ -5,12 +5,16 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import type { Ornament } from "@/lib/christmas/types";
+import { TREE_CAPACITY, type Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { GIANT_MODEL_SCALE, GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
+import { distToPath, GIANT_MODEL_SCALE, GIANT_POSITIONS, inZone, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_CARD_SLOTS, ZONE_GATE, ZONE_RAIL_Y } from "@/lib/christmas/slots";
 import { LAND_R } from "@/lib/christmas/grid";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
-import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
+import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, surfaceNormal, TREE_TOP_Y } from "./geometry";
+import { buildTreeModel, type TreeVariant } from "./treeModel";
+import { createOrnamentLayer } from "./ornamentLayer";
+import { createTreeAura } from "./treeAura";
+import { buildPlaza } from "./plazaScenery";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, parseGiantLook, type GiantLook } from "@/lib/christmas/giant";
 import { buildYardScenery, candyStripes, giftBox, miniPine, shade, woodMaterial } from "./zoneScenery";
@@ -29,6 +33,7 @@ export type LocateTarget = { kind: "decor"; slot: number } | { kind: "giant"; sp
 
 export type TreeSceneHandle = {
   launchFirework: (color: string) => void;
+  celebrate: () => void; // ฉลองต้นครบ 999 คำอวยพร (ออร่า พลุ ประกายทอง)
   locate: (target: LocateTarget) => void;
   highlightDecor: (slot: number) => void;
   focusOrnament: (id: string | null) => void;
@@ -131,6 +136,9 @@ function mergeStaticMeshes(root: THREE.Group, keep: Set<THREE.Object3D>) {
   }
 }
 
+// ธีมของต้นคริสต์มาสในฉากหลัก (เทียบทั้ง 3 แบบได้ที่ /Christmas/tree-lab)
+const TREE_VARIANT: TreeVariant = "classic";
+
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
 export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange }: Props) {
   const snowingRef = useRef(snowing);
@@ -190,16 +198,17 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     scene.fog = new THREE.Fog(0x0c251d, 14, 56);
 
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 220);
-    camera.position.set(0, 2.6, 9.2);
+    camera.position.set(0, 3.0, 10.4);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.85, 0);
+    controls.target.set(0, 2.15, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
     controls.minDistance = 4.5;
     // ซูมออกได้ไกลพอให้เห็นทั้งวงตุ๊กตาหิมะและตุ๊กตายักษ์ทั้ง 12 จุด
     controls.maxDistance = 60;
-    controls.maxPolarAngle = Math.PI * 0.55;
+    // ก้มกล้องได้ไม่เกินแนวเกือบขนานพื้น (ไม่ให้มุดลงใต้พื้นแล้วเห็นทะลุ)
+    controls.maxPolarAngle = Math.PI * 0.47;
     controls.enablePan = false;
     controls.autoRotate = false; // ไม่หมุนเอง ผู้ใช้หมุนดูได้เอง
 
@@ -223,17 +232,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const rim = new THREE.DirectionalLight(0x7dd3fc, 0.8);
     rim.position.set(-7, 4, -5);
     scene.add(rim);
-    const starLight = new THREE.PointLight(0xffc857, 2.4, 6, 2);
-    starLight.position.set(0, TREE_H + 0.4, 0.4);
-    scene.add(starLight);
 
     // ---------- พื้นหิมะ ----------
     // พื้นหิมะ: ผิวเป็นลอนกองหิมะเบา ๆ รอบนอก โคนต้นเรียบ และมีเม็ดหิมะจากเท็กซ์เจอร์
     // พื้นหิมะครอบคลุมลานทั้งหมด (ขนาดตามรัศมีลาน) ส่วนขอบจะถูกหมอกบัง
     const groundSize = LAND_R * 2 + 8;
-    // ลานเป็นวงกลม (ไม่ใช่สี่เหลี่ยม) เพื่อไม่ให้มุมลอยเห็นทะลุ และมีขอบดินหนาอยู่ด้านล่างด้วย
+    // ลานเป็นวงกลมแบ่งเป็นวงย่อยหลายชั้น (ยังมีลอนหิมะได้) ไม่มีมุมสี่เหลี่ยมลอยให้เห็นทะลุ
     const groundRadius = groundSize / 2 + 4;
-    const groundGeo = new THREE.CircleGeometry(groundRadius, 160);
+    const groundGeo = new THREE.RingGeometry(0, groundRadius, 180, 90);
     groundGeo.rotateX(-Math.PI / 2);
     const gp = groundGeo.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < gp.count; i++) {
@@ -242,7 +248,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const d = Math.hypot(x, z);
       const drift = (Math.sin(x * 0.55 + Math.cos(z * 0.7)) * Math.cos(z * 0.45 - x * 0.3) * 0.6 + Math.sin(x * 1.7 + z * 1.3) * 0.25) * 0.11;
       const edge = Math.min(Math.max((d - 10) / 10, 0), 1); // ลานด้านในเรียบ ให้ของประดับวางได้พอดี
-      gp.setY(i, drift * edge * edge);
+      // ในโซนคำอวยพรและทางเดินไปโซนเรียบ รั้วและซุ้มจึงตั้งได้ตรงพื้นพอดี
+      const flat = inZone(x, z, 2.5) || distToPath(x, z) < 2.4 ? 0 : 1;
+      gp.setY(i, drift * edge * edge * flat);
     }
     groundGeo.computeVertexNormals();
     const snowTex = makeSnowTexture();
@@ -254,240 +262,41 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     ground.receiveShadow = true;
     ground.position.y = -0.02;
     scene.add(ground);
-    // ขอบดินหนาใต้ลาน: เวลามองจากมุมต่ำจะเห็นเป็นชั้นดินหิมะ ไม่ทะลุเป็นช่องว่าง
+    // ขอบดินหนาใต้ลานและพื้นด้านล่าง: มองจากมุมต่ำแค่ไหนก็ไม่เห็นเป็นช่องโหว่
     const soil = new THREE.MeshStandardMaterial({ color: 0x23423a, roughness: 1, side: THREE.DoubleSide });
-    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(groundRadius, groundRadius * 0.92, 4.2, 160, 1, true), soil);
-    skirt.position.y = -2.1;
+    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(groundRadius, groundRadius * 0.92, 4.2, 180, 1, true), soil);
+    skirt.position.y = -2.12;
     scene.add(skirt);
-    const underside = new THREE.Mesh(new THREE.CircleGeometry(groundRadius * 0.92, 160), new THREE.MeshBasicMaterial({ color: 0x0c251d }));
+    const underside = new THREE.Mesh(new THREE.CircleGeometry(groundRadius * 0.92, 180), new THREE.MeshBasicMaterial({ color: 0x0c251d, side: THREE.DoubleSide }));
     underside.rotation.x = Math.PI / 2;
-    underside.position.y = -4.2;
+    underside.position.y = -4.22;
     scene.add(underside);
 
-    // ---------- ลำต้น ----------
-    const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.16, 0.22, 0.9, 16),
-      new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.8 }),
-    );
-    trunk.position.y = 0.45;
-    trunk.castShadow = true;
-    scene.add(trunk);
-
-    // ---------- กล่องของขวัญใต้ต้น ----------
-    const giftColors = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e, 0xf472b6];
-    const giftSpots = [
-      [1.55, 0.2, 0.4, 0.34],
-      [-1.35, 0.15, 0.9, 0.26],
-      [0.4, 0.14, 1.6, 0.22],
-      [-0.7, 0.2, -1.3, 0.3],
-      [1.1, 0.12, -1.0, 0.2],
-    ];
-    giftSpots.forEach(([x, y, z, size], i) => {
-      const color = giftColors[i % giftColors.length];
-      const box = new THREE.Group();
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(size, size, size),
-        new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, metalness: 0.1, clearcoat: 0.6 }),
-      );
-      body.position.y = size / 2;
-      const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xfff7e0, roughness: 0.3, metalness: 0.4, emissive: 0x332200, emissiveIntensity: 0.2 });
-      const rib1 = new THREE.Mesh(new THREE.BoxGeometry(size * 1.02, size * 1.02, size * 0.14), ribbonMat);
-      rib1.position.y = size / 2;
-      const rib2 = new THREE.Mesh(new THREE.BoxGeometry(size * 0.14, size * 1.02, size * 1.02), ribbonMat);
-      rib2.position.y = size / 2;
-      const bow = new THREE.Mesh(new THREE.SphereGeometry(size * 0.2, 14, 14), ribbonMat);
-      bow.position.y = size * 1.02;
-      box.add(body, rib1, rib2, bow);
-      box.traverse((o) => {
-        o.castShadow = true;
-        o.receiveShadow = true;
-      });
-      box.position.set(x, y, z);
-      box.rotation.y = i * 0.7;
-      scene.add(box);
-    });
-
-    // ---------- ใบไม้: จุดสีเขียวหลายโทนกระจายบนผิวกรวย ----------
-    const treeGroup = new THREE.Group();
-    scene.add(treeGroup);
-    const FOLIAGE = isSmall ? 1500 : 3200;
-    const fPos = new Float32Array(FOLIAGE * 3);
-    const fCol = new Float32Array(FOLIAGE * 3);
-    const greens = [0x14532d, 0x166534, 0x15803d, 0x16a34a, 0x22c55e, 0x0f3d24];
-    const tmp = new THREE.Color();
-    for (let i = 0; i < FOLIAGE; i++) {
-      const h = Math.pow(Math.random(), 0.8);
-      const a = Math.random() * Math.PI * 2;
-      const r = radiusAt(h) * (0.78 + Math.random() * 0.22);
-      fPos[i * 3] = Math.cos(a) * r;
-      fPos[i * 3 + 1] = h * TREE_H + 0.1 + (Math.random() - 0.5) * 0.04;
-      fPos[i * 3 + 2] = Math.sin(a) * r;
-      tmp.setHex(greens[Math.floor(Math.random() * greens.length)]);
-      fCol[i * 3] = tmp.r;
-      fCol[i * 3 + 1] = tmp.g;
-      fCol[i * 3 + 2] = tmp.b;
-    }
-    const foliageGeo = new THREE.BufferGeometry();
-    foliageGeo.setAttribute("position", new THREE.BufferAttribute(fPos, 3));
-    foliageGeo.setAttribute("color", new THREE.BufferAttribute(fCol, 3));
-    const foliage = new THREE.Points(
-      foliageGeo,
-      new THREE.PointsMaterial({ size: isSmall ? 0.05 : 0.04, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.55, depthWrite: false }),
-    );
-    treeGroup.add(foliage);
-
-    // ใบสนจริง: กิ่งย่อยเป็นแผ่นมีขอบหยักและห้อยลง ปลายกิ่งมีหิมะเกาะ
-    const frondMesh = new THREE.Mesh(
-      buildFronds(isSmall),
-      new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.78, metalness: 0 }),
-    );
-    frondMesh.castShadow = true;
-    frondMesh.receiveShadow = true;
-    treeGroup.add(frondMesh);
-    // ชั้นในของพุ่มที่สั้นและมืดกว่า เติมช่องว่างให้ต้นดูหนาและมีเงาซ้อน
-    const innerMesh = new THREE.Mesh(
-      buildFronds(isSmall, 0.72, true),
-      new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.9, metalness: 0 }),
-    );
-    innerMesh.castShadow = true;
-    innerMesh.receiveShadow = true;
-    treeGroup.add(innerMesh);
-
-    // กรวยโปร่งแสงสำหรับรับการคลิกบนผิวต้น
-    const hitCone = new THREE.Mesh(
-      new THREE.ConeGeometry(TREE_R0 + 0.02, TREE_H, 40, 1, true),
-      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
-    );
-    hitCone.position.y = TREE_H / 2 + 0.1;
-    treeGroup.add(hitCone);
-
-    // ---------- ดาวบนยอด ----------
-    const starShape = new THREE.Shape();
-    for (let i = 0; i < 10; i++) {
-      const rr = i % 2 === 0 ? 0.36 : 0.16;
-      const ang = Math.PI / 2 + (i * Math.PI) / 5;
-      const x = Math.cos(ang) * rr;
-      const y = Math.sin(ang) * rr;
-      if (i === 0) starShape.moveTo(x, y);
-      else starShape.lineTo(x, y);
-    }
-    starShape.closePath();
-    const starGeo = new THREE.ExtrudeGeometry(starShape, { depth: 0.08, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 2 });
-    const starMesh = new THREE.Mesh(
-      starGeo,
-      new THREE.MeshPhysicalMaterial({ color: 0xffd76a, metalness: 0.9, roughness: 0.18, emissive: 0xffa500, emissiveIntensity: 0.35, clearcoat: 1 }),
-    );
-    starMesh.position.set(0, TREE_H + 0.32, 0);
-    scene.add(starMesh);
+    // ---------- ต้นคริสต์มาส: พุ่มสนจากกิ่งจริง ไฟ สายลูกปัด ดาว ผ้าคลุมโคน และกล่องของขวัญ (treeModel.ts) ----------
     const glowTex = makeGlowTexture();
-    const starGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffd76a, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending }));
-    starGlow.scale.set(1.8, 1.8, 1);
-    starGlow.position.copy(starMesh.position);
-    scene.add(starGlow);
+    const tree = buildTreeModel({ variant: TREE_VARIANT, small: isSmall, glowTex });
+    scene.add(tree.group);
+    const hitCone = tree.hitMesh;
+    // ลานหินลายทองรอบต้น รั้วไม้เท้าลูกกวาดกับโคมไฟ และอุโมงค์ซุ้มไฟตามทางไปโซนคำอวยพร
+    const plaza = buildPlaza({ gate: ZONE_GATE, glowTex, small: isSmall });
+    scene.add(plaza.group);
 
-    // ---------- ไฟประดับแบบเกลียว กระพริบ ----------
-    const LIGHTS = 70;
-    const lightMeshes: THREE.Mesh[] = [];
-    const lightColors = [0xffd76a, 0xff6b6b, 0x7dd3fc, 0xffffff, 0xf9a8d4];
-    for (let i = 0; i < LIGHTS; i++) {
-      const t = i / LIGHTS;
-      const h = 0.06 + t * 0.9;
-      const a = t * Math.PI * 9;
-      const r = radiusAt(h) * 1.02;
-      const bulb = new THREE.Mesh(
-        new THREE.SphereGeometry(0.035, 10, 10),
-        new THREE.MeshBasicMaterial({ color: lightColors[i % lightColors.length] }),
-      );
-      bulb.position.set(Math.cos(a) * r, h * TREE_H + 0.1, Math.sin(a) * r);
-      treeGroup.add(bulb);
-      lightMeshes.push(bulb);
-    }
-
-    // ---------- ลูกบอลและของตกแต่งที่ผู้ใช้แขวน ----------
-    const ornGroup = new THREE.Group();
-    scene.add(ornGroup);
-    // swing = สถานะตัวแกว่ง (มุม และความเร็วเชิงมุม) จำลองด้วยสปริง-แดมเปอร์
-    const ornMeshes = new Map<string, { mesh: THREE.Object3D; born: number; target: THREE.Vector3; landed: boolean; color: number; swing: { x: number; z: number; vx: number; vz: number }; body: THREE.Object3D; string: THREE.Mesh; bow: THREE.Object3D; hookY: number }>();
-    const ornaments3D = new Map<string, Ornament>();
+    // ---------- ลูกบอลคำอวยพร: ห้อยจากกิ่งจริง รองรับได้ถึง 999 ลูก (ornamentLayer.ts) ----------
+    const ornLayer = createOrnamentLayer({
+      capacity: TREE_CAPACITY,
+      // ลูกบอลหล่นลงถึงจุดแขวน: มีประกายสีเดียวกับลูกบอลแตกออกเบา ๆ
+      onLanded: (pos, color) => burst(pos.clone().add(new THREE.Vector3(0, 0.08, 0)), color, isSmall ? 14 : 24, 0.25),
+    });
+    scene.add(ornLayer.group);
     let loadedOnce = false;
 
-    function makeOrnamentMesh(o: Ornament) {
-      const color = ORNAMENT_HEX[o.color] ?? 0xf5c542;
-      const mat = new THREE.MeshPhysicalMaterial({ color, metalness: 0.65, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.1 });
-      let geo: THREE.BufferGeometry;
-      if (o.shape === "star") {
-        geo = new THREE.ExtrudeGeometry(starShape, { depth: 0.05, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 1 });
-        geo.scale(0.36, 0.36, 0.36);
-        geo.center();
-      } else if (o.shape === "gift") {
-        geo = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-      } else if (o.shape === "bell") {
-        const pts = [new THREE.Vector2(0.02, 0.12), new THREE.Vector2(0.07, 0.08), new THREE.Vector2(0.09, -0.02), new THREE.Vector2(0.12, -0.08), new THREE.Vector2(0.02, -0.08)];
-        geo = new THREE.LatheGeometry(pts, 20);
-      } else {
-        geo = new THREE.SphereGeometry(0.11, 28, 28);
-      }
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.castShadow = true;
-      // ห่วงแขวนเล็ก ๆ ที่ยอดของชิ้นงาน ทำให้ดูเป็นของที่แขวนอยู่จริง
-      const hookY = o.shape === "star" ? 0.2 : o.shape === "gift" ? 0.13 : 0.135;
-      const hook = new THREE.Mesh(
-        new THREE.TorusGeometry(0.03, 0.008, 8, 18),
-        new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.25 }),
-      );
-      hook.position.y = hookY;
-      mesh.add(hook);
-      mesh.userData.hookY = hookY;
-      if (o.shape === "gift") {
-        const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.205, 0.205, 0.04), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.2, roughness: 0.4 }));
-        mesh.add(ribbon);
-      }
-      const p = ornamentPosition(o.height, o.angle);
-      mesh.position.set(p.x, p.y, p.z);
-      mesh.userData.ornamentId = o.id;
-      mesh.userData.color = color;
-      return mesh;
-    }
-
-    function addOrnamentMesh(o: Ornament, animate: boolean) {
-      if (ornMeshes.has(o.id)) return;
-      const body = makeOrnamentMesh(o);
-      const target = body.position.clone();
-      const hookY = (body.userData.hookY as number) ?? 0.135;
-      // ตัวชิ้นงานวางออกจากผิวต้นตามแนวปกติ เพื่อให้แนบผิวเป็นระนาบเดียวกัน
-      // ดาวและระฆังหันระนาบตามผิวต้นด้วย การแกว่งหมุนรอบจุดแนบ
-      const nrm = surfaceNormal(o.angle);
-      // ลูกบอลห้อยจากห่วงลงมาบนเชือกสั้น ๆ ที่ผูกกับกิ่ง (จุดหมุนอยู่ที่กิ่ง)
-      body.position.set(nrm.x * 0.03, animate ? 0 : -ORN_STRING, nrm.z * 0.03);
-      body.rotation.set(0, -o.angle + Math.PI / 2, 0);
-      const pivot = new THREE.Group();
-      pivot.position.copy(target);
-      pivot.add(body);
-      const string = new THREE.Mesh(STRING_GEO, STRING_MAT);
-      string.scale.y = animate ? 0.001 : ORN_STRING - hookY;
-      pivot.add(string);
-      const bow = makeRibbonBow();
-      if (animate) bow.scale.setScalar(0.001);
-      pivot.add(bow);
-      ornGroup.add(pivot);
-      ornMeshes.set(o.id, {
-        mesh: pivot,
-        born: animate ? performance.now() : 0,
-        target,
-        landed: !animate,
-        color: (body.userData.color as number) ?? 0xffd76a,
-        swing: { x: 0, z: 0, vx: 0, vz: 0 },
-        body,
-        string,
-        bow,
-        hookY,
-      });
-      ornaments3D.set(o.id, o);
-    }
+    // ---------- ออร่าความคืบหน้า: ไต่จากโคนถึงยอดตามจำนวนคำอวยพร (treeAura.ts) ----------
+    const aura = createTreeAura({ small: isSmall, pixelRatio: renderer.getPixelRatio() });
+    scene.add(aura.group);
 
     // ---------- ตัวอย่างลูกบอลก่อนยืนยัน ----------
     const previewMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.12, 24, 24),
+      new THREE.SphereGeometry(0.075, 24, 24),
       new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false }),
     );
     previewMesh.visible = false;
@@ -600,6 +409,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       m.receiveShadow = true;
       dressing.add(m);
     }
+    // เอาของประดับที่ตกบนทางเดินไปโซนหรือในเขตโซนคำอวยพรออก (ทางเดินต้องโล่ง)
+    for (const child of [...dressing.children]) {
+      if (child === pathMesh) continue;
+      const cp = child.position;
+      if (distToPath(cp.x, cp.z) < 2.2 || inZone(cp.x, cp.z, 1.5)) dressing.remove(child);
+    }
     // ของประดับรอบลานทั้งหมดนิ่งอยู่แล้ว จึงรวมเมชเพื่อลดคำสั่งวาด
     mergeStaticMeshes(dressing, new Set<THREE.Object3D>());
 
@@ -617,8 +432,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const total = Math.min(Math.max(Math.round(count), 0), 60);
       const variants = ["adult", "hat", "adult", "bag", "adult", "hat", "bag", "adult"];
       for (let i = 0; i < total; i++) {
-        const angle = rnd() * Math.PI * 2;
+        let angle = rnd() * Math.PI * 2;
         const dist = 15 + rnd() * 5;
+        // ไม่ให้เงาคนยืนบนทางเดินหรือในโซนคำอวยพร
+        for (let tries = 0; tries < 6 && (distToPath(Math.cos(angle) * dist, Math.sin(angle) * dist) < 2 || inZone(Math.cos(angle) * dist, Math.sin(angle) * dist, 1)); tries++) angle += 0.5;
         const variant = rnd() < 0.15 ? "child" : variants[Math.floor(rnd() * variants.length)];
         const h = variant === "child" ? 1.25 : 1.75 + (rnd() - 0.5) * 0.12;
         const aspect = variant === "child" ? 0.5 : 0.48;
@@ -688,11 +505,25 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       }
     }
 
+    // ฉลองต้นครบ 999 คำอวยพร: ออร่าพุ่งออกรอบต้น พลุหลายสีต่อเนื่อง และประกายทองโปรยจากยอด
+    let celebrateTimers: number[] = [];
+    function celebrateTree() {
+      celebrateTimers.forEach((id) => clearTimeout(id));
+      celebrateTimers = [];
+      aura.celebrate();
+      const colors = ["gold", "red", "white", "pink", "blue", "green"];
+      const shots = reduced ? 4 : 24;
+      for (let i = 0; i < shots; i++) celebrateTimers.push(window.setTimeout(() => firework(colors[i % colors.length]), 200 + i * 420));
+      // ประกายทองโปรยลงรอบต้นจากยอดเป็นจังหวะ
+      for (let i = 0; i < (reduced ? 2 : 10); i++) {
+        celebrateTimers.push(window.setTimeout(() => burst(new THREE.Vector3(0, TREE_TOP_Y + 0.3, 0), 0xffd76a, isSmall ? 70 : 130, 0.7), 400 + i * 950));
+      }
+    }
     function firework(colorName: string) {
       const hex = ORNAMENT_HEX[colorName] ?? 0xffd76a;
       const n = isSmall ? 90 : 160;
       // จุดระเบิดต้องอยู่ในกรอบกล้อง: เหนือยอดต้นเล็กน้อยและกระจายซ้ายขวา
-      const origin = new THREE.Vector3((Math.random() - 0.5) * 6, 3.9 + Math.random() * 0.9, -2.5 + Math.random() * 3.5);
+      const origin = new THREE.Vector3((Math.random() - 0.5) * 6, TREE_TOP_Y + 0.2 + Math.random() * 0.9, -2.5 + Math.random() * 3.5);
       burst(origin, hex, n, 1);
     }
 
@@ -772,15 +603,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const rect = renderer.domElement.getBoundingClientRect();
       ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
-      const ornHit = raycaster.intersectObjects(ornGroup.children, true)[0];
-      if (ornHit) {
-        let obj: THREE.Object3D | null = ornHit.object;
-        while (obj && !obj.userData.ornamentId) obj = obj.parent;
-        const o = obj ? ornaments3D.get(obj.userData.ornamentId as string) : undefined;
-        if (o) {
-          callbacks.current.onOrnamentClick(o);
-          return;
-        }
+      const picked = ornLayer.pick(raycaster);
+      if (picked) {
+        callbacks.current.onOrnamentClick(picked);
+        return;
       }
       const decorHit = raycaster.intersectObjects(decorGroup.children, true)[0];
       if (decorHit) {
@@ -822,7 +648,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       }
       const hit = raycaster.intersectObject(hitCone, false)[0];
       if (hit) {
-        const local = treeGroup.worldToLocal(hit.point.clone());
+        const local = hit.point.clone(); // ต้นอยู่ที่จุดกำเนิดของฉาก
         const pick = pointToHeightAngle(local.x, local.y, local.z);
         callbacks.current.onPick(pick.height, pick.angle);
         return;
@@ -837,8 +663,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const rect = renderer.domElement.getBoundingClientRect();
       ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
-      const hit = raycaster.intersectObjects(ornGroup.children, true)[0];
-      renderer.domElement.style.cursor = hit ? "pointer" : "";
+      renderer.domElement.style.cursor = ornLayer.pick(raycaster) ? "pointer" : "";
     };
     renderer.domElement.addEventListener("pointerdown", onDown);
     renderer.domElement.addEventListener("pointerup", onUp);
@@ -848,6 +673,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     let reduced = reducedMotion;
     let raf = 0;
     const startedAt = performance.now();
+    let lastFrameAt = startedAt;
     function frame() {
       const t = (performance.now() - startedAt) / 1000;
       if (focusDecorGroup) {
@@ -899,54 +725,16 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       }
       controls.autoRotate = false;
       controls.update();
+      // กันกล้องและจุดมองไม่ให้ต่ำกว่าพื้นหิมะ (เช่นตอนซูมเข้าใกล้หรือหมุนมุมต่ำ)
+      if (camera.position.y < 0.45) camera.position.y = 0.45;
+      if (controls.target.y < 0) controls.target.y = 0;
 
-      lightMeshes.forEach((b, i) => {
-        const on = reduced ? 1 : 0.55 + 0.45 * Math.sin(t * 2.4 + i * 1.7);
-        (b.material as THREE.MeshBasicMaterial).opacity = on;
-        (b.material as THREE.MeshBasicMaterial).transparent = true;
-        b.scale.setScalar(0.85 + on * 0.25);
-      });
-      starMesh.rotation.y = reduced ? 0 : t * 0.6;
-      starGlow.material.opacity = 0.65 + 0.2 * Math.sin(t * 2);
-      starLight.intensity = 2.0 + 0.5 * Math.sin(t * 2);
-
-      ornMeshes.forEach((entry) => {
-        if (entry.born && !entry.landed) {
-          // ลูกบอลค่อย ๆ ลงมาตามเชือก เชือกยืดออกจากกิ่ง และโบว์ผูกติดกิ่งก่อน
-          const k = Math.min((now - entry.born) / 1100, 1);
-          const e = easeOutBounce(k);
-          entry.body.position.y = -ORN_STRING * e;
-          entry.string.scale.y = Math.max(0.001, -(entry.body.position.y + entry.hookY));
-          entry.bow.scale.setScalar(Math.min(k * 3, 1));
-          entry.mesh.rotation.z = Math.sin(k * 14) * 0.5 * (1 - k);
-          if (k >= 1) {
-            entry.landed = true;
-            entry.body.position.y = -ORN_STRING;
-            entry.string.scale.y = ORN_STRING - entry.hookY;
-            entry.bow.scale.setScalar(1);
-            // แรงกระแทกตอนลงถึงจุดแขวน ทำให้ลูกบอลแกว่งออกไปและค่อย ๆ หยุด
-            entry.swing.vx = 0.9 * (Math.random() > 0.5 ? 1 : -1);
-            entry.swing.vz = (Math.random() - 0.5) * 0.9;
-            entry.mesh.position.copy(entry.target);
-            const col = entry.color;
-            burst(entry.target.clone().add(new THREE.Vector3(0, 0.1, 0)), col, isSmall ? 14 : 24, 0.25);
-          }
-        } else if (!reduced) {
-          // สปริง-แดมเปอร์: ดึงกลับสู่แนวดิ่ง มีแรงลมเบา ๆ และแรงหน่วงทำให้การแกว่งค่อย ๆ หยุด
-          const sw = entry.swing;
-          const K = 16; // ความแข็งของเชือก
-          const C = 1.6; // แรงหน่วง
-          const wind = Math.sin(t * 0.9 + entry.target.x * 1.7) * 0.6 + Math.sin(t * 2.3 + entry.target.z) * 0.25;
-          const dt = 1 / 60;
-          sw.vx += (-K * sw.x - C * sw.vx + wind * 2.0) * dt;
-          sw.vz += (-K * sw.z - C * sw.vz + wind * 0.8) * dt;
-          sw.x = Math.max(-0.7, Math.min(0.7, sw.x + sw.vx * dt));
-          sw.z = Math.max(-0.7, Math.min(0.7, sw.z + sw.vz * dt));
-          entry.mesh.rotation.x = sw.x;
-          entry.mesh.rotation.z = sw.z;
-          entry.mesh.rotation.y = Math.sin(t * 0.8 + entry.target.x) * 0.05;
-        }
-      });
+      const frameDt = Math.min(0.05, (now - lastFrameAt) / 1000);
+      lastFrameAt = now;
+      tree.update(t, reduced);
+      plaza.update(t, reduced);
+      ornLayer.update(now, t, reduced);
+      aura.update(frameDt, t, reduced);
 
       if (marker.visible) {
         const k = 1 + 0.12 * Math.sin(t * 4);
@@ -962,11 +750,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         (sky.panel.material as THREE.SpriteMaterial).opacity = alpha;
         const pop = 0.88 + 0.12 * easeOutBounce(Math.min(age / 0.7, 1));
         sky.panel.scale.set((isSmall ? 5.8 : 6.4) * pop, (isSmall ? 1.45 : 1.6) * pop, 1);
-        sky.panel.position.y = 5.2 + Math.sin(t * 1.2) * 0.06;
+        sky.panel.position.y = TREE_TOP_Y + 1.6 + Math.sin(t * 1.2) * 0.06;
         if (sky.sled) {
           (sky.sled.material as THREE.SpriteMaterial).opacity = alpha;
           const k = Math.min(age / dur, 1);
-          sky.sled.position.set(-16 + 32 * k, 4.3 + Math.sin(age * 3.2) * 0.14, -2.4);
+          sky.sled.position.set(-16 + 32 * k, TREE_TOP_Y + 0.7 + Math.sin(age * 3.2) * 0.14, -2.4);
         }
         if (sky.sparkle) {
           (sky.sparkle.material as THREE.PointsMaterial).opacity = alpha * (0.45 + 0.4 * Math.sin(t * 6));
@@ -1144,7 +932,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const zh = ZONE.half;
     const gx = ZONE_GATE.x;
     const gz = ZONE_GATE.z;
-    const RAIL_Y = [2.25, 1.7, 1.15, 0.6]; // 4 ชั้น ห่างกัน 0.55 หน่วย ให้ซองแขวนใต้ราวได้โดยไม่ทับราวชั้นล่าง
+    const RAIL_Y = ZONE_RAIL_Y; // 4 ชั้น ห่างกัน 0.55 หน่วย (ผังเดียวกับที่ใช้นับความจุการ์ด)
     const POST_H = 2.45;
     const zBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number) => {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -1306,19 +1094,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       zoneGroup.add(bulb);
       zoneLights.push(bulb);
     }
-    // ทางเดินหินจากประตูโซนไปยังต้นไม้ พร้อมโคมไฟสองข้าง
-    const pathLen = Math.hypot(gx, gz);
-    const dirX = -gx / pathLen;
-    const dirZ = -gz / pathLen;
-    for (let k = 0; k < 16; k++) {
-      const d = 1.8 + k * 1.1;
-      const px = gx + dirX * d;
-      const pz = gz + dirZ * d;
-      if (Math.hypot(px, pz) < 3.6) break;
-      const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.52, 0.06, 14), zStone);
-      stone.position.set(px, 0.04, pz);
-      zoneGroup.add(stone);
-    }
+    // ทางเดินจากต้นไม้มาถึงประตูโซนอยู่ใน plazaScenery.ts (ทางหินปูพร้อมอุโมงค์ซุ้มไฟ)
     // ของขวัญและต้นสน 3 มิติรอบโซน (อยู่นอกรั้ว ไม่บังการ์ด)
     const presentColors = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e, 0xec4899];
     [
@@ -1344,7 +1120,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       zoneGroup.add(shade(t));
     });
 
-    // ซองอวยพรบนรั้ว 4 ชั้น ด้านหน้ามองเห็นก่อน รวมไม่เกิน ZONE_CAPACITY (284 ช่อง)
+    // ซองอวยพรบนรั้ว 4 ชั้น ด้านหน้ามองเห็นก่อน รวมไม่เกิน ZONE_CAPACITY
     const ENV_HEX: Record<string, [string, string, string]> = {
       red: ["#b91c3c", "#9b1630", "#ffffff"],
       gold: ["#d9a93a", "#b98a2a", "#ffffff"],
@@ -1405,27 +1181,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       hg.fillRect(0, 0, 128, 128);
     }
     const haloTex = new THREE.CanvasTexture(haloCv);
-    // ตำแหน่งซอง: ด้านหน้าก่อน (กล้องมองเห็น) แล้วด้านข้าง และด้านหลัง ทำทีละชั้น
-    const ZONE_SLOTS: { x: number; z: number; ry: number; y: number }[] = [];
-    const step = 0.8;
-    const sideTs: number[] = [];
-    for (let t = -zh + 0.8; t <= zh - 0.8 + 0.001; t += step) sideTs.push(Math.round(t * 100) / 100);
-    for (const y of RAIL_Y) {
-      sideTs.forEach((t) => {
-        if (Math.abs(zx + t - gx) > 1.8) ZONE_SLOTS.push({ x: zx + t, z: gz + 0.1, ry: 0, y });
-      });
-    }
-    for (const y of RAIL_Y) {
-      sideTs.forEach((t) => {
-        ZONE_SLOTS.push({ x: zx - zh - 0.1, z: zz + t, ry: -Math.PI / 2, y });
-        ZONE_SLOTS.push({ x: zx + zh + 0.1, z: zz + t, ry: Math.PI / 2, y });
-      });
-    }
-    for (const y of RAIL_Y) {
-      sideTs.forEach((t) => {
-        ZONE_SLOTS.push({ x: zx + t, z: zz - zh - 0.1, ry: Math.PI, y });
-      });
-    }
+    // ตำแหน่งซอง: ด้านหน้าก่อน แล้วด้านข้าง และด้านหลัง (คำนวณใน layout.ts ใช้ร่วมกับการนับความจุ)
+    const ZONE_SLOTS = ZONE_CARD_SLOTS;
     const zHookGeo = new THREE.TorusGeometry(0.085, 0.01, 6, 18);
     const zHookMat = new THREE.MeshStandardMaterial({ color: 0xd9b45a, roughness: 0.3, metalness: 0.8 });
     // โซ่สั้นจากตะขอลงไปยังมุมบนของซอง
@@ -1831,8 +1588,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     function animateCam(toPos: THREE.Vector3, toTgt: THREE.Vector3, dur = 900) {
       camAnim = { fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt, start: performance.now(), dur };
     }
-    const HOME_POS = new THREE.Vector3(0, 2.6, 9.2);
-    const HOME_TGT = new THREE.Vector3(0, 1.85, 0);
+    const HOME_POS = new THREE.Vector3(0, 3.0, 10.4);
+    const HOME_TGT = new THREE.Vector3(0, 2.15, 0);
     // ซูมเข้า/ออกทีละขั้นแบบนุ่ม (ปุ่มบนจอ) ระยะถูกจำกัดตามค่าที่ตั้งไว้
     function zoomBy(factor: number) {
       const dir = camera.position.clone().sub(controls.target);
@@ -1874,7 +1631,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // 2) เลื่อนไปเหนือโซน
       zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx, 34, cz + 6), new THREE.Vector3(cx, 0, cz), 1000), 1150));
       // 3) ลงมาดูรั้วและการ์ดระดับสายตา
-      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx + 3.5 * far, 5.4 * far, cz + 15.5 * far), new THREE.Vector3(cx, 1.4, cz), 1100), 2200));
+      const zk = ZONE.half / 8; // โซนกว้างขึ้น กล้องถอยออกตามสัดส่วน
+      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx + 3.5 * far * zk, 5.4 * far * zk, cz + 15.5 * far * zk), new THREE.Vector3(cx, 1.4, cz), 1100), 2200));
     }
     function returnView() {
       zoneTimers.forEach((t) => clearTimeout(t));
@@ -1889,7 +1647,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         controls.minDistance = savedView.min;
         savedView = null;
       } else {
-        animateCam(new THREE.Vector3(0, 2.6, 9.2), new THREE.Vector3(0, 1.85, 0), 1000);
+        animateCam(HOME_POS.clone(), HOME_TGT.clone(), 1000);
         controls.minDistance = 4.5;
       }
     }
@@ -1971,12 +1729,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         }
         return;
       }
-      const entry = ornMeshes.get(id);
-      const o = ornaments3D.get(id);
-      if (!entry || !o) return;
+      const o = ornLayer.get(id);
+      const p = ornLayer.worldPosition(id);
+      if (!o || !p) return;
       if (!savedView) savedView = { pos: camera.position.clone(), tgt: controls.target.clone(), min: controls.minDistance };
-      const p = new THREE.Vector3();
-      entry.mesh.getWorldPosition(p);
       // กล้องอยู่นอกผิวต้นตรงจุดที่แขวน มองลงมาที่ลูกบอลระดับสายตา
       const n = surfaceNormal(o.angle);
       const toPos = new THREE.Vector3(p.x + n.x * 1.7, p.y + 0.25, p.z + n.z * 1.7);
@@ -2148,7 +1904,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setDecor(decor);
 
     api.current = {
-      addOrnament: (o) => addOrnamentMesh(o, true),
+      addOrnament: (o) => ornLayer.add(o, true),
       setDecor,
       setMarker: (slot) => {
         if (slot === null) {
@@ -2162,18 +1918,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       setGiants: api_setGiants,
       setZoneCards: api_setZoneCards,
       setOrnaments: (list) => {
-        const ids = new Set(list.map((o) => o.id));
-        for (const [id, entry] of ornMeshes) {
-          if (!ids.has(id)) {
-            ornGroup.remove(entry.mesh);
-            ornMeshes.delete(id);
-            ornaments3D.delete(id);
-          }
-        }
-        // โหลดครั้งแรกไม่ต้องเล่นแอนิเมชัน ที่เหลือให้ลูกบอลใหม่ค่อย ๆ ปรากฏ
-        const animateNew = loadedOnce;
+        // โหลดครั้งแรกไม่ต้องเล่นแอนิเมชัน ที่เหลือให้ลูกบอลใหม่ค่อย ๆ หล่นลงมาจากกิ่ง
+        ornLayer.set(list, loadedOnce);
+        aura.setProgress(Math.min(list.length, TREE_CAPACITY) / TREE_CAPACITY, !loadedOnce);
         loadedOnce = true;
-        list.forEach((o) => addOrnamentMesh(o, animateNew));
       },
       setPreview: (p) => {
         if (!p) {
@@ -2194,6 +1942,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     };
     readyRef.current({
       launchFirework: (color: string) => api.current?.firework(color),
+      celebrate: () => celebrateTree(),
       highlightDecor: (slot: number) => highlightDecor(slot),
       focusOrnament: (id: string | null) => focusOrnament(id),
       focusDecor: (d: Decor | null) => focusDecor(d),
@@ -2272,6 +2021,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       renderer.domElement.removeEventListener("pointerup", onUp);
       renderer.domElement.removeEventListener("pointermove", onMove);
       controls.dispose();
+      celebrateTimers.forEach((id) => clearTimeout(id));
+      tree.dispose();
+      plaza.dispose();
+      ornLayer.dispose();
+      aura.dispose();
       scene.traverse((o) => {
         const m = o as THREE.Mesh;
         m.geometry?.dispose?.();
@@ -2407,73 +2161,6 @@ function makeSnowTexture() {
   return tex;
 }
 
-// กิ่งสนหลายชั้นรอบต้น: แต่ละกิ่งเป็นแผ่นหยักที่ห้อยลงตามความยาว ไล่สีจากโคนเข้มไปปลายอ่อน และมีหิมะเกาะปลายบางกิ่ง
-function buildFronds(small: boolean, rScale = 1, inner = false): THREE.BufferGeometry {
-  const pos: number[] = [];
-  const col: number[] = [];
-  const idx: number[] = [];
-  const cBase = new THREE.Color(0x0c3320);
-  const cMid = new THREE.Color(0x166534);
-  const cTip = new THREE.Color(0x2fa35a);
-  const cSnow = new THREE.Color(0xf1f7fc);
-  const tmp = new THREE.Color();
-  const TIERS = small ? 18 : 30;
-  const PER = small ? 12 : 20;
-  const SEG = small ? 5 : 6;
-  let vi = 0;
-
-  for (let t = 0; t < TIERS; t++) {
-    const hN = 0.05 + (t / (TIERS - 1)) * 0.9;
-    const y0 = hN * TREE_H + 0.1;
-    const R = radiusAt(hN) * 1.02 * rScale;
-    for (let k = 0; k < PER; k++) {
-      const ang = ((k + (t % 2) * 0.5) / PER) * Math.PI * 2 + (Math.random() - 0.5) * 0.22;
-      const len = R * (0.95 + Math.random() * 0.3) + 0.08;
-      const droop = 0.08 + Math.random() * 0.1;
-      const width = 0.11 + Math.random() * 0.05 + hN * 0.03;
-      const snowy = Math.random() < 0.42;
-      const cx = Math.cos(ang);
-      const cz = Math.sin(ang);
-      const lx = -cz; // เวกเตอร์ด้านข้างของกิ่ง
-      const lz = cx;
-      const start = vi;
-      for (let i = 0; i <= SEG; i++) {
-        const s = i / SEG;
-        const u = len * s;
-        const w = -droop * len * s * s; // ห้อยลงปลาย
-        const taper = Math.sin(Math.PI * Math.min(s * 0.9 + 0.1, 1)) * (1 - s * 0.45);
-        const jag = i % 2 === 0 ? 1 : 0.62; // ขอบหยักแบบเข็มสน
-        const hw = width * taper * jag + 0.004;
-        for (const side of [1, -1]) {
-          const v = hw * side;
-          const jx = (Math.random() - 0.5) * 0.01;
-          pos.push(cx * u + lx * v + jx, y0 + w + 0.02 * s, cz * u + lz * v);
-          // สีไล่จากโคนเข้มไปปลายอ่อน
-          tmp.copy(cBase).lerp(cMid, Math.min(s * 1.4, 1)).lerp(cTip, Math.max(0, (s - 0.6) * 2.5));
-          if (inner) tmp.multiplyScalar(0.55); // ชั้นในมืดกว่า ให้ดูมีมิติ
-          else if (snowy && s > 0.55 && side === 1) tmp.lerp(cSnow, Math.min((s - 0.55) * 1.6, 0.92));
-          col.push(tmp.r, tmp.g, tmp.b);
-          vi++;
-        }
-      }
-      for (let i = 0; i < SEG; i++) {
-        const a = start + i * 2;
-        const b = a + 1;
-        const c = a + 2;
-        const d = a + 3;
-        idx.push(a, b, c, b, d, c);
-      }
-    }
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
-  geo.setIndex(idx);
-  geo.computeVertexNormals();
-  return geo;
-}
-
-
 // เนินเขาหิมะรอบฉาก: ผิวเป็นลอนแบบธรรมชาติ ยอดมีหิมะ ฐานมืดกลมกลืนกับท้องฟ้าค่ำ
 function buildHills(): THREE.Mesh {
   const R = 42;
@@ -2510,32 +2197,6 @@ function buildHills(): THREE.Mesh {
   const hills = new THREE.Mesh(geo, mat);
   hills.receiveShadow = false;
   return hills;
-}
-
-// ความยาวเชือกจากจุดแขวนถึงลูกบอล และเชือกกับโบว์ผูกกิ่งที่ใช้ร่วมกันทุกชิ้น
-const ORN_STRING = 0.34;
-const STRING_GEO = (() => {
-  const g = new THREE.CylinderGeometry(0.0045, 0.0045, 1, 6);
-  g.translate(0, -0.5, 0); // ปลายบนอยู่ที่จุดแขวน ยืดลงด้านล่างตามการ scale
-  return g;
-})();
-const STRING_MAT = new THREE.MeshStandardMaterial({ color: 0xe9e2cc, roughness: 0.7, metalness: 0 });
-
-// โบว์ริบบิ้นสั้น ๆ ที่ผูกเชือกไว้กับกิ่ง
-function makeRibbonBow() {
-  const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.45 });
-  const loop = new THREE.SphereGeometry(0.024, 10, 8);
-  const l = new THREE.Mesh(loop, mat);
-  l.scale.set(1.35, 0.8, 0.5);
-  l.position.set(-0.02, 0.012, 0);
-  const r = new THREE.Mesh(loop, mat);
-  r.scale.set(1.35, 0.8, 0.5);
-  r.position.set(0.02, 0.012, 0);
-  const knot = new THREE.Mesh(new THREE.SphereGeometry(0.011, 8, 8), mat);
-  knot.position.y = 0.012;
-  g.add(l, r, knot);
-  return g;
 }
 
 // แผ่นภาพเงาคน (ขาวดำ ย้อมสีทีหลังด้วย SpriteMaterial.color)

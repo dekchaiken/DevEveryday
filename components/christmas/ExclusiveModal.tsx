@@ -169,6 +169,7 @@ function SpotMap({ taken, held, value, onPick }: { taken: Set<number>; held: Set
     // จุดตั้ง Exclusive: ขนาด 2×2 ช่อง
     const side = 2 * CELL * scale;
     GIANT_POSITIONS.forEach((p, i) => {
+      if (p.blocked) return;
       const [px, pz] = toPx(p.x, p.z);
       g.fillStyle = i === value ? "#facc15" : taken.has(i) ? "#ef4444" : held.has(i) ? "#f59e0b" : "#22c55e";
       g.fillRect(px - side / 2, pz - side / 2, side, side);
@@ -186,6 +187,7 @@ function SpotMap({ taken, held, value, onPick }: { taken: Set<number>; held: Set
     let best = -1;
     let bestD = Infinity;
     GIANT_POSITIONS.forEach((p, i) => {
+      if (p.blocked) return;
       const d = (p.x - x) ** 2 + (p.z - z) ** 2;
       if (d < bestD) {
         bestD = d;

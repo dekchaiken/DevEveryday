@@ -1816,3 +1816,182 @@
     display: none;
   }
 }
+
+/* ---------- ตัวนับคำอวยพรบนต้น 0/999 ---------- */
+.xmas-tree-count {
+  position: absolute;
+  top: 144px;
+  left: 24px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(10, 30, 22, 0.72);
+  border: 1px solid rgba(242, 217, 140, 0.45);
+  color: #f6f1e4;
+  font-size: 13px;
+  white-space: nowrap;
+  box-shadow: 0 12px 26px -16px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  animation: xmas-count-in 0.5s ease both;
+}
+.xmas-tree-count b {
+  color: #f2d98c;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.xmas-tree-count-max,
+.xmas-tree-count-pct {
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.xmas-tree-count-pct {
+  min-width: 3.4em;
+  text-align: right;
+}
+.xmas-tree-count-bar {
+  position: relative;
+  width: 96px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+.xmas-tree-count-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #c9a24a, #f2d98c, #fff3c4);
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.xmas-tree-count.is-full {
+  border-color: #f2d98c;
+  box-shadow: 0 0 0 3px rgba(242, 217, 140, 0.25), 0 12px 26px -16px rgba(0, 0, 0, 0.7);
+}
+@keyframes xmas-count-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 759px) {
+  .xmas-tree-count {
+    top: 120px;
+    left: 12px;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .xmas-tree-count-bar {
+    width: 64px;
+  }
+}
+
+/* ---------- ฉลองต้นครบ 999 คำอวยพร ---------- */
+.xmas-celebrate {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: radial-gradient(60% 50% at 50% 40%, rgba(242, 217, 140, 0.18), rgba(6, 18, 13, 0.55));
+  animation: xg-in 0.4s ease both;
+  overflow: hidden;
+}
+.xmas-celebrate-card {
+  position: relative;
+  width: min(440px, 100%);
+  padding: 26px 24px 22px;
+  border-radius: 22px;
+  text-align: center;
+  color: #15261f;
+  background: #fbf6e9;
+  border: 2px solid #d9b45a;
+  box-shadow: 0 0 0 6px rgba(217, 180, 90, 0.18), 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  animation: xmas-celebrate-pop 0.6s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+}
+.xmas-celebrate-kicker {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: #8a6a2a;
+}
+.xmas-celebrate-card h2 {
+  margin: 6px 0 4px;
+  font-family: Georgia, "Noto Serif Thai", serif;
+  font-size: 26px;
+  color: #0f3d2e;
+}
+.xmas-celebrate-sub {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: #3b4b43;
+}
+.xmas-celebrate-msg {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #0f3d2e;
+  color: #f6e7bf;
+  text-align: left;
+}
+.xmas-celebrate-msg p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.xmas-celebrate-msg cite {
+  display: block;
+  margin-top: 8px;
+  font-style: normal;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #f2d98c;
+  text-align: right;
+}
+.xmas-celebrate-btn {
+  min-height: 44px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 999px;
+  background: #9e1b2f;
+  color: #fff8e8;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.xmas-celebrate-btn:active {
+  transform: scale(0.97);
+}
+.xmas-celebrate-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.xmas-celebrate-confetti i {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0.9;
+  animation: xmas-confetti-fall 3.6s linear infinite;
+}
+@keyframes xmas-confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(110vh) rotate(720deg); }
+}
+@keyframes xmas-celebrate-pop {
+  from { opacity: 0; transform: scale(0.85) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xmas-celebrate-confetti i,
+  .xmas-celebrate-card,
+  .xmas-tree-count {
+    animation: none;
+  }
+}

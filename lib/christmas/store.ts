@@ -1,7 +1,7 @@
 // เก็บสถานะต้นคริสต์มาสแยกตามห้อง ใช้ Upstash Redis ถ้าตั้งค่าไว้
 // ถ้ายังไม่ได้ตั้งค่า จะใช้หน่วยความจำของเซิร์ฟเวอร์ (ใช้ได้เฉพาะตอนพัฒนาในเครื่อง)
 import { cmd, storeConfigured } from "@/lib/redis";
-import type { ChristmasState, Ornament, ShowEvent } from "@/lib/christmas/types";
+import { TREE_CAPACITY, type ChristmasState, type Ornament, type ShowEvent } from "@/lib/christmas/types";
 import { ROOM_CAPACITY, ROOMS } from "@/lib/christmas/rooms";
 import { listGiants, listHeldSpots } from "@/lib/christmas/orders";
 
@@ -10,7 +10,8 @@ async function publicGiants(room: string) {
   return (await listGiants(room)).map(({ orderId: _orderId, ...g }) => g);
 }
 
-const MAX_ORNAMENTS = 400;
+// ต้นหนึ่งต้นแขวนได้ไม่เกินความจุ (ครบแล้วปิดรับ ไม่ลบลูกเก่าทิ้ง)
+const MAX_ORNAMENTS = TREE_CAPACITY;
 const SHOW_MEMORY_MS = 10 * 60 * 1000; // เก็บเหตุการณ์ที่จบแล้วไว้สักพักก่อนลบ
 const GAP_MS = 1500; // เว้นช่วงระหว่างพลุ/ข้อความ
 // เวลานำหน้าก่อนเริ่มเล่น ต้องมากกว่าความล่าช้าของการโพลสถานะ (ประมาณ 3–4 วินาที)
@@ -50,7 +51,7 @@ export async function readState(room: string, now: number): Promise<ChristmasSta
     const m = memRoom(room);
     return {
       version: m.version,
-      ornaments: m.ornaments.slice(0, 300),
+      ornaments: m.ornaments.slice(0, MAX_ORNAMENTS),
       events: m.events.filter((e) => e.startAt + e.duration > now),
       giants: await publicGiants(room),
       holds: await listHeldSpots(room, now),
@@ -59,7 +60,7 @@ export async function readState(room: string, now: number): Promise<ChristmasSta
   }
   const [ver, ornRaw, evtRaw, giants, holds] = await Promise.all([
     cmd<string | null>("GET", K.ver(room)),
-    cmd<string[]>("LRANGE", K.orn(room), 0, 299),
+    cmd<string[]>("LRANGE", K.orn(room), 0, MAX_ORNAMENTS - 1),
     cmd<string[]>("ZRANGEBYSCORE", K.evt(room), now, "+inf"),
     publicGiants(room),
     listHeldSpots(room, now),
@@ -75,17 +76,24 @@ export async function readState(room: string, now: number): Promise<ChristmasSta
 }
 
 // ---------- เพิ่มลูกบอล ----------
-export async function addOrnament(room: string, o: Ornament) {
+// แขวนลูกบอลหนึ่งลูก คืน false ถ้าต้นเต็มแล้ว (ครบ TREE_CAPACITY)
+// ใส่ก่อนแล้วตรวจความยาว ถ้าเกินให้เอาลูกที่เพิ่งใส่ออก ลูกเก่าไม่ถูกลบแม้มีคนแขวนพร้อมกัน
+export async function addOrnament(room: string, o: Ornament): Promise<boolean> {
   if (!persistent()) {
     const m = memRoom(room);
+    if (m.ornaments.length >= MAX_ORNAMENTS) return false;
     m.ornaments.unshift(o);
-    m.ornaments.length = Math.min(m.ornaments.length, MAX_ORNAMENTS);
     m.version++;
-    return;
+    return true;
   }
-  await cmd("LPUSH", K.orn(room), JSON.stringify(o));
-  await cmd("LTRIM", K.orn(room), 0, MAX_ORNAMENTS - 1);
+  const json = JSON.stringify(o);
+  const len = await cmd<number>("LPUSH", K.orn(room), json);
+  if (Number(len) > MAX_ORNAMENTS) {
+    await cmd("LREM", K.orn(room), 1, json);
+    return false;
+  }
   await cmd("INCR", K.ver(room));
+  return true;
 }
 
 // ---------- จัดคิวเหตุการณ์ของห้อง ----------

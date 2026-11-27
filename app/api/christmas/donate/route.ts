@@ -9,7 +9,7 @@ import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { MESSAGE_THEMES, type MessageTheme } from "@/lib/christmas/types";
 import { maskIp, writeLog } from "@/lib/christmas/log";
-import { GIANT_CAPACITY } from "@/lib/christmas/slots";
+import { GIANT_CAPACITY, isBlockedGiantSpot } from "@/lib/christmas/slots";
 import { sanitizeSocial } from "@/lib/christmas/social";
 import { listDecor, parseDecorPick } from "@/lib/christmas/decor";
 import { parseGiantLook } from "@/lib/christmas/giant";
@@ -75,6 +75,9 @@ export async function POST(req: Request) {
     const s = Number(body.spot);
     if (!Number.isInteger(s) || s < 0 || s >= GIANT_CAPACITY) {
       return NextResponse.json({ error: "จุดที่เลือกไม่ถูกต้อง" }, { status: 400 });
+    }
+    if (isBlockedGiantSpot(s)) {
+      return NextResponse.json({ error: "จุดนี้อยู่ในเขตโซนคำอวยพรหรือทางเดิน เลือกจุดอื่น" }, { status: 409 });
     }
     wantedSpot = s;
   }

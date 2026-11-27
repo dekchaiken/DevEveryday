@@ -31,7 +31,8 @@ export function parseOrnament(body: Record<string, unknown>, extra: readonly str
   const angle = Number(body.angle);
   if (!name) return { error: "กรุณาใส่ชื่อเล่น" } as const;
   if (hasBlocked(name, extra) || hasBlocked(wish, extra)) return { error: "ข้อความมีคำที่ไม่เหมาะสม" } as const;
-  if (!Number.isFinite(height) || height < 0.12 || height > 0.96) return { error: "ตำแหน่งบนต้นไม่ถูกต้อง" } as const;
+  // ช่วงเดียวกับที่หน้าเว็บให้แตะได้ (geometry.ts: pointToHeightAngle) เผื่อขอบไว้เล็กน้อย
+  if (!Number.isFinite(height) || height < 0.06 || height > 0.96) return { error: "ตำแหน่งบนต้นไม่ถูกต้อง" } as const;
   if (!Number.isFinite(angle)) return { error: "ตำแหน่งบนต้นไม่ถูกต้อง" } as const;
   const social = sanitizeSocial(body.social, (s) => hasBlocked(s, extra));
   return {

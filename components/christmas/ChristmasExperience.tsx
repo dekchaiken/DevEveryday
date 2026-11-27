@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import type { ChristmasState, Ornament, OrnamentColor, OrnamentShape, ShowEvent } from "@/lib/christmas/types";
-import { ORNAMENT_COLORS, ORNAMENT_SHAPES } from "@/lib/christmas/types";
+import { ORNAMENT_COLORS, ORNAMENT_SHAPES, TREE_CAPACITY } from "@/lib/christmas/types";
 import type { Preview, TreeSceneHandle } from "./TreeScene";
 import { getRoom, type RoomTheme } from "@/lib/christmas/rooms";
 import { useRouter } from "next/navigation";
@@ -335,6 +335,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   // คู่มือการใช้งาน: เปิดอัตโนมัติครั้งแรกหลังของขวัญเปิดและตั้งชื่อแล้ว เปิดซ้ำได้จากปุ่ม "?"
   const [guideOn, setGuideOn] = useState(false);
   const [giftDone, setGiftDone] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false); // ฉาก 3 มิติพร้อมรับคำสั่ง (เช่น ฉลอง)
+  const [celebrateOpen, setCelebrateOpen] = useState(false); // หน้าต่างฉลองต้นครบ 999 คำอวยพร
+  const [celebrateMsg, setCelebrateMsg] = useState("");
   useEffect(() => {
     if (document.documentElement.dataset.giftDone === "1") setGiftDone(true);
     const on = () => setGiftDone(true);
@@ -471,6 +474,28 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     for (const o of local) map.set(o.id, o);
     return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
   }, [state, local]);
+
+  // ---------- จำนวนคำอวยพรบนต้น (0–999) ออร่าบนต้นไต่ขึ้นตามเปอร์เซ็นต์นี้ ----------
+  const hung = Math.min(ornaments.length, TREE_CAPACITY);
+  const hungPct = Math.floor((hung / TREE_CAPACITY) * 100);
+  // ต้นครบ 999 คำอวยพร: ฉลองทั้งห้อง (แต่ละเครื่องเห็นครั้งเดียว) พร้อมข้อความจากแอดมิน
+  useEffect(() => {
+    if (hung < TREE_CAPACITY || !giftDone || !sceneReady) return;
+    const key = `xmas-celebrated-${roomId}`;
+    try {
+      if (localStorage.getItem(key) === "1") return;
+      localStorage.setItem(key, "1");
+    } catch {
+      /* ไม่เป็นไร */
+    }
+    // เห็นพลุและออร่าพุ่งรอบต้นก่อน แล้วข้อความจากแอดมินค่อยขึ้นตามมา
+    treeRef.current?.celebrate();
+    window.setTimeout(() => setCelebrateOpen(true), 3200);
+    fetch("/api/christmas/config")
+      .then((r) => r.json())
+      .then((c: { celebrateMessage?: string }) => setCelebrateMsg(c.celebrateMessage ?? ""))
+      .catch(() => {});
+  }, [hung, giftDone, sceneReady, roomId]);
 
 
   // ---------- ฟอร์มแขวนลูกบอล ----------
@@ -668,6 +693,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <TreeScene
           onReady={(h) => {
             treeRef.current = h;
+            setSceneReady(true);
           }}
           ornaments={ornaments}
           preview={previewData}
@@ -948,6 +974,42 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           <Icon name="clock" size={18} /> ประวัติล่าสุด
         </button>
       </nav>
+
+      {/* ตัวนับคำอวยพรบนต้น 0/999 และแถบความคืบหน้า */}
+      {!zoneOpen && (
+        <div className={`xmas-tree-count ${hung >= TREE_CAPACITY ? "is-full" : ""}`} role="status" aria-live="polite" title="จำนวนคำอวยพรที่แขวนบนต้นนี้">
+          <span className="xmas-tree-count-label">{hung >= TREE_CAPACITY ? "ต้นเต็มแล้ว" : "แขวนแล้ว"}</span>
+          <b>{hung.toLocaleString("th-TH")}</b>
+          <span className="xmas-tree-count-max">/ {TREE_CAPACITY}</span>
+          <span className="xmas-tree-count-bar" aria-hidden>
+            <i style={{ width: `${Math.max(hungPct, hung > 0 ? 1 : 0)}%` }} />
+          </span>
+          <span className="xmas-tree-count-pct">{hung > 0 && hungPct === 0 ? "<1%" : `${hungPct}%`}</span>
+        </div>
+      )}
+
+      {/* ฉลองต้นครบ 999 คำอวยพร */}
+      {celebrateOpen && (
+        <div className="xmas-celebrate" role="dialog" aria-modal="true" aria-labelledby="xmas-celebrate-title" onClick={() => setCelebrateOpen(false)}>
+          <div className="xmas-celebrate-confetti" aria-hidden>
+            {Array.from({ length: 36 }, (_, i) => (
+              <i key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 9) * 0.35}s`, background: ["#f2d98c", "#dc2643", "#7dd3fc", "#86efac", "#f9a8d4", "#ffffff"][i % 6] }} />
+            ))}
+          </div>
+          <div className="xmas-celebrate-card" onClick={(e) => e.stopPropagation()}>
+            <p className="xmas-celebrate-kicker">ต้นคริสต์มาส{room.name}</p>
+            <h2 id="xmas-celebrate-title">ครบ 999 คำอวยพรแล้ว!</h2>
+            <p className="xmas-celebrate-sub">ทุกคนช่วยกันแขวนจนต้นเต็ม 100% ขอบคุณที่มาร่วมส่งความสุขด้วยกัน</p>
+            <blockquote className="xmas-celebrate-msg">
+              <p>{celebrateMsg || "ขอบคุณทุกคำอวยพร ขอให้ทุกคนมีความสุขมาก ๆ ในเทศกาลนี้"}</p>
+              <cite>— ADMIN</cite>
+            </blockquote>
+            <button type="button" className="xmas-celebrate-btn" onClick={() => setCelebrateOpen(false)} autoFocus>
+              ฉลองด้วยกัน
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* แถบข้อความวิ่งด้านบน */}
       <Ticker

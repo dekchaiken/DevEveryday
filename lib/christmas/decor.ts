@@ -1,6 +1,6 @@
 // ตุ๊กตาหิมะที่ผู้ใช้ตกแต่งและวางบนช่องรอบต้นคริสต์มาส (ฟรี) เก็บแยกตามห้อง
 import { cmd, storeConfigured } from "@/lib/redis";
-import { SLOT_COUNT } from "@/lib/christmas/slots";
+import { isReservedSlot, SLOT_COUNT } from "@/lib/christmas/slots";
 import type { Social } from "@/lib/christmas/social";
 
 export { SLOT_COUNT };
@@ -115,7 +115,7 @@ export async function placePaidDecor(room: string, id: string, name: string, soc
   taken.add(pick.slot);
   for (let t = 0; t < 300; t++) {
     const i = Math.floor(Math.random() * SLOT_COUNT);
-    if (taken.has(i)) continue;
+    if (taken.has(i) || isReservedSlot(i)) continue;
     taken.add(i);
     if (await claimDecor(build(i))) return { decor: build(i), moved: true };
   }
