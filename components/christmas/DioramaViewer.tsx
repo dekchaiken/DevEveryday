@@ -21,6 +21,8 @@ type Props = {
   onMove: (id: string, x: number, z: number) => void;
   // โหมดดูอย่างเดียว (การ์ดบนฉาก): หมุนดูได้ แต่ลากย้ายชิ้นของไม่ได้
   readOnly?: boolean;
+  // ให้พาเรนต์สั่งหมุนดูได้ (บวกทวนเข็ม ลบตามเข็ม หน่วยเรเดียน)
+  turnRef?: { current: ((rad: number) => void) | null };
 };
 
 type V3 = [number, number, number];
@@ -45,7 +47,7 @@ function disposeTree(root: THREE.Object3D) {
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 
-export function DioramaViewer({ look, name, message, selectedId, onSelect, onMove, readOnly = false }: Props) {
+export function DioramaViewer({ look, name, message, selectedId, onSelect, onMove, readOnly = false, turnRef }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const contentRef = useRef<THREE.Group | null>(null);
@@ -210,8 +212,8 @@ export function DioramaViewer({ look, name, message, selectedId, onSelect, onMov
     let raf = 0;
     const loop = () => {
       // หมุนดูทีละ 90° ตามปุ่ม: ขยับทีละนิดต่อเฟรมให้ดูนุ่ม
-      if (spinRef.current > 0.0001) {
-        const step = Math.min(spinRef.current, 0.05);
+      if (Math.abs(spinRef.current) > 0.0001) {
+        const step = Math.sign(spinRef.current) * Math.min(Math.abs(spinRef.current), 0.05);
         spinRef.current -= step;
         const off = camera.position.clone().sub(controls.target).applyAxisAngle(UP, step);
         camera.position.copy(controls.target).add(off);
@@ -240,6 +242,13 @@ export function DioramaViewer({ look, name, message, selectedId, onSelect, onMov
       controlsRef.current = null;
     };
   }, []);
+
+  // ส่งตัวสั่งหมุนให้พาเรนต์ใช้จากปุ่มบนการ์ด
+  useEffect(() => {
+    if (turnRef) turnRef.current = (rad: number) => {
+      spinRef.current += rad;
+    };
+  }, [turnRef]);
 
   // สร้างฐานและของใหม่ทุกครั้งที่ลุค ชื่อ หรือข้อความเปลี่ยน
   useEffect(() => {
