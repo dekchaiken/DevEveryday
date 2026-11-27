@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
   try {
     const check = await checkPaynoiTransaction(transId);
-    if (paynoiMatches(check, order.id, order.payAmountSatang)) await confirmPayment(order.id, transId);
+    if (paynoiMatches(check, order.payAmountSatang)) await confirmPayment(order.id, transId);
     return NextResponse.json({ status: 1 });
   } catch {
     // ตรวจไม่ได้ตอนนี้ ให้ paynoi ส่งซ้ำภายหลัง

@@ -63,7 +63,8 @@ export async function checkPaynoiTransaction(transId: string): Promise<PaynoiChe
   };
 }
 
-// รายการนี้จ่ายครบแล้วหรือยัง: สถานะ completed ตรงรหัสออเดอร์และยอดเป็นสตางค์เดียวกัน
-export function paynoiMatches(check: PaynoiCheck, orderId: string, expectedSatang: number | undefined): boolean {
-  return check.paymentStatus === "completed" && check.ref1 === orderId && expectedSatang !== undefined && check.amountSatang === expectedSatang;
+// รายการนี้จ่ายครบแล้วหรือยัง: สถานะ completed และยอดเป็นสตางค์เดียวกับที่สร้างไว้
+// ไม่ยืนยันจากค่า ref1 ที่ paynoi ส่งกลับ เพราะอาจถูกตัดความยาวได้ ใช้รหัสรายการที่เราเก็บไว้ (providerRef) แทน
+export function paynoiMatches(check: PaynoiCheck, expectedSatang: number | undefined): boolean {
+  return check.paymentStatus === "completed" && expectedSatang !== undefined && check.amountSatang === expectedSatang;
 }
