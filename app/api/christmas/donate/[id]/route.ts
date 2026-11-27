@@ -26,7 +26,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (order.status === "awaiting_payment" && order.mode === "paynoi" && order.providerRef) {
     try {
       const check = await checkPaynoiTransaction(order.providerRef);
-      if (paynoiMatches(check, order.id, order.payAmountSatang)) order = (await confirmPayment(order.id, order.providerRef)) ?? order;
+      if (paynoiMatches(check, order.payAmountSatang)) order = (await confirmPayment(order.id, order.providerRef)) ?? order;
     } catch {
       /* ยังตรวจไม่ได้ ลองใหม่รอบถัดไป */
     }

@@ -475,6 +475,7 @@ function Orders({ dash, reload, toast }: { dash: Dash; reload: () => void; toast
                   <td>
                     {o.name}
                     {o.message && <small className="adm-block">{o.message}</small>}
+                    {o.mode === "paynoi" && o.providerRef && <small className="adm-block adm-mono">paynoi: {o.providerRef}</small>}
                   </td>
                   <td>฿{o.amount}</td>
                   <td>{o.mode === "manual" ? "โอนเอง" : o.mode === "paynoi" ? "paynoi" : "Omise"}</td>

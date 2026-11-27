@@ -644,3 +644,7 @@
     padding: 14px;
   }
 }
+
+.adm-mono {
+  font-family: ui-monospace, monospace;
+}
