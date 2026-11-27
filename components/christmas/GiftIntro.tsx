@@ -26,6 +26,13 @@ export default function GiftIntro({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [phase]);
 
+  // บอกหน้าหลักว่าของขวัญเปิดเสร็จแล้ว เพื่อให้คู่มือการใช้งานเริ่มหลังจากนั้น
+  useEffect(() => {
+    if (phase !== "done") return;
+    document.documentElement.dataset.giftDone = "1";
+    window.dispatchEvent(new Event("xmas-gift-done"));
+  }, [phase]);
+
   const open = () => setPhase((p) => (p === "play" ? "open" : p));
   const finish = () => setPhase((p) => (p === "open" ? "leaving" : p));
   const skip = () => setPhase("done");
