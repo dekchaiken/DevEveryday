@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
-import { colorOptionsFor, DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, MAX_ITEMS, SIGN_BOARDS, type DioramaItem, type GiantLook } from "@/lib/christmas/giant";
+import { DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
+import { CELL, LAND_R, TREE_CORE_R } from "@/lib/christmas/grid";
+import { GIANT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { DioramaViewer } from "./DioramaViewer";
@@ -71,6 +73,13 @@ const LABEL: Record<string, string> = {
   forest: "เขียวเข้ม",
   frost: "เขียวหิมะ",
   tree: "ต้นสน",
+  navy: "น้ำเงินเข้ม",
+  orange: "ส้ม",
+  warm: "แสงอุ่น",
+  purple: "ม่วง",
+  silver: "เงิน",
+  black: "ดำ",
+  wood: "ไม้",
 };
 
 type View = "menu" | "giant" | "message" | "decor";
@@ -96,13 +105,18 @@ function WizardNav({ step, last, setStep }: { step: number; last: number; setSte
 type GiantKey = keyof GiantLook;
 
 // ปุ่มเลือกชิ้นส่วนแบบแถวเดียว ใช้ทั้งตุ๊กตายักษ์และข้อความ
-function PickRow({ title, options, value, onChange }: { title: string; options: readonly string[]; value: string; onChange: (v: string) => void }) {
+function hexOf(key: string): string | null {
+  return key in PALETTE ? `#${PALETTE[key as PaletteKey].toString(16).padStart(6, "0")}` : null;
+}
+
+function PickRow({ title, options, value, onChange, swatch = false }: { title: string; options: readonly string[]; value: string; onChange: (v: string) => void; swatch?: boolean }) {
   return (
     <div className="xmas-pick-row">
       <span className="xmas-pick-title">{title}</span>
       <div className="xmas-pick-chips" role="radiogroup" aria-label={title}>
         {options.map((o) => (
           <button type="button" key={o} role="radio" aria-checked={value === o} className={value === o ? "is-on" : ""} onClick={() => onChange(o)}>
+            {swatch && hexOf(o) && <i className="xmas-chip-dot" style={{ background: hexOf(o) ?? undefined }} aria-hidden />}
             {LABEL[o] ?? o}
           </button>
         ))}
@@ -111,10 +125,85 @@ function PickRow({ title, options, value, onChange }: { title: string; options: 
   );
 }
 
-// ชื่อบนปุ่มของแต่ละชนิด
-const KIND_LABEL: Record<string, string> = { snowman: "ตุ๊กตาหิมะ", tree: "ต้นสน", gift: "ของขวัญ", candy: "ไม้เท้าขนม" };
+// แผนที่ลานมองจากด้านบน: จุดเขียวว่าง จุดแดงมีคนจองแล้ว จุดทองคือที่ที่คุณเลือก (ไม่เลือกก็ได้ ระบบจัดให้)
+const MAP_PX = 360;
+function SpotMap({ taken, value, onPick }: { taken: Set<number>; value: number | null; onPick: (i: number) => void }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const scale = MAP_PX / (LAND_R * 2 + 4);
+  const toPx = (x: number, z: number) => [MAP_PX / 2 + x * scale, MAP_PX / 2 + z * scale] as const;
 
-// ตัวจัดของบนฐาน: เพิ่มชิ้นใหม่ เลือกชิ้น ปรับสี หมุน และเอาออก ส่วนตำแหน่งลากได้ในตัวอย่างด้านขวา
+  useEffect(() => {
+    const cv = ref.current;
+    const g = cv?.getContext("2d");
+    if (!cv || !g) return;
+    g.clearRect(0, 0, MAP_PX, MAP_PX);
+    // ลาน
+    g.beginPath();
+    g.arc(...toPx(0, 0), LAND_R * scale, 0, Math.PI * 2);
+    g.fillStyle = "#f4f8fc";
+    g.fill();
+    g.strokeStyle = "rgba(40,110,70,0.35)";
+    g.lineWidth = 2;
+    g.stroke();
+    // ทางเดินไปโซนและโซนคำอวยพร
+    const [gx, gz] = toPx(ZONE_GATE.x, ZONE_GATE.z);
+    g.beginPath();
+    g.moveTo(...toPx(0, 0));
+    g.lineTo(gx, gz);
+    g.strokeStyle = "rgba(120,110,100,0.6)";
+    g.lineWidth = 4;
+    g.stroke();
+    const [zx, zz] = toPx(ZONE.x - ZONE.half, ZONE.z - ZONE.half);
+    g.fillStyle = "rgba(20,90,60,0.18)";
+    g.fillRect(zx, zz, ZONE.half * 2 * scale, ZONE.half * 2 * scale);
+    g.fillStyle = "rgba(20,70,50,0.7)";
+    g.font = "600 11px sans-serif";
+    g.textAlign = "center";
+    g.fillText("โซนคำอวยพร", ...toPx(ZONE.x, ZONE.z));
+    // ต้นคริสต์มาส
+    g.beginPath();
+    g.arc(...toPx(0, 0), TREE_CORE_R * scale, 0, Math.PI * 2);
+    g.fillStyle = "#14532d";
+    g.fill();
+    // จุดตั้ง Exclusive: ขนาด 2×2 ช่อง
+    const side = 2 * CELL * scale;
+    GIANT_POSITIONS.forEach((p, i) => {
+      const [px, pz] = toPx(p.x, p.z);
+      g.fillStyle = i === value ? "#facc15" : taken.has(i) ? "#ef4444" : "#22c55e";
+      g.fillRect(px - side / 2, pz - side / 2, side, side);
+    });
+  }, [taken, value, scale]);
+
+  function pick(e: React.MouseEvent<HTMLCanvasElement>) {
+    const cv = ref.current;
+    if (!cv) return;
+    const rect = cv.getBoundingClientRect();
+    const wx = ((e.clientX - rect.left) * MAP_PX) / rect.width;
+    const wz = ((e.clientY - rect.top) * MAP_PX) / rect.height;
+    const x = (wx - MAP_PX / 2) / scale;
+    const z = (wz - MAP_PX / 2) / scale;
+    let best = -1;
+    let bestD = Infinity;
+    GIANT_POSITIONS.forEach((p, i) => {
+      const d = (p.x - x) ** 2 + (p.z - z) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    });
+    if (best < 0 || bestD > (CELL * 1.6) ** 2 || taken.has(best)) return;
+    onPick(best);
+  }
+
+  return (
+    <div className="xmas-spot-map">
+      <canvas ref={ref} width={MAP_PX} height={MAP_PX} onClick={pick} role="img" aria-label="แผนที่ลาน เลือกจุดตั้งบ้านหิมะ" />
+      <p className="xmas-hint">เขียว = ว่าง · แดง = มีคนจองแล้ว · ทอง = ที่คุณเลือก{value === null ? " · ยังไม่ได้เลือก ระบบจะจัดให้ตอนชำระเงิน" : ""}</p>
+    </div>
+  );
+}
+
+// ตัวจัดของบนฐาน: เพิ่มชิ้นใหม่ เลือกชิ้น แต่งสีทีละส่วน หมุน และเอาออก ส่วนตำแหน่งลากได้ในตัวอย่างด้านขวา
 function newItemId() {
   return Math.random().toString(36).slice(2, 10);
 }
@@ -122,15 +211,13 @@ function newItemId() {
 function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: DioramaItem[]; selectedId: string | null; onSelect: (id: string | null) => void; onChange: (items: DioramaItem[]) => void }) {
   const [note, setNote] = useState("");
   const selected = items.find((it) => it.id === selectedId) ?? null;
-  const colors = selected ? colorOptionsFor(selected.kind) : [];
   const deg = selected ? Math.round((((selected.r % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) * (180 / Math.PI)) % 360 : 0;
 
   function add(kind: string) {
     if (items.length >= MAX_ITEMS) return setNote(`ใส่ได้สูงสุด ${MAX_ITEMS} ชิ้นต่อฐาน`);
     const spot = freeSpot(items, kind);
     if (!spot) return setNote("พื้นที่บนฐานเต็มแล้ว ลองย้ายหรือเอาชิ้นอื่นออกก่อน");
-    const opts = colorOptionsFor(kind);
-    const item: DioramaItem = { id: newItemId(), kind, color: opts[0] ?? "", x: spot.x, z: spot.z, r: 0 };
+    const item = makeItem(newItemId(), kind, spot.x, spot.z);
     setNote("");
     onChange([...items, item]);
     onSelect(item.id);
@@ -138,6 +225,10 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
   function patch(p: Partial<DioramaItem>) {
     if (!selected) return;
     onChange(items.map((it) => (it.id === selected.id ? { ...it, ...p } : it)));
+  }
+  function setPart(key: string, value: string) {
+    if (!selected) return;
+    patch({ parts: { ...selected.parts, [key]: value } });
   }
   function remove() {
     if (!selected) return;
@@ -152,7 +243,7 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
         <div className="xmas-pick-chips">
           {DIORAMA_KINDS.map((k) => (
             <button key={k} type="button" onClick={() => add(k)}>
-              + {KIND_LABEL[k]}
+              + {specFor(k)?.label ?? k}
             </button>
           ))}
         </div>
@@ -164,8 +255,7 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
           <div className="xmas-pick-chips" role="radiogroup" aria-label="ของบนฐาน">
             {items.map((it, i) => (
               <button key={it.id} type="button" role="radio" aria-checked={it.id === selectedId} className={it.id === selectedId ? "is-on" : ""} onClick={() => onSelect(it.id)}>
-                {i + 1}. {KIND_LABEL[it.kind]}
-                {it.color ? ` · ${LABEL[it.color] ?? it.color}` : ""}
+                {i + 1}. {specFor(it.kind)?.label ?? it.kind}
               </button>
             ))}
           </div>
@@ -173,7 +263,10 @@ function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: Diora
       )}
       {selected ? (
         <div className="xmas-dio-pick">
-          {colors.length > 0 && <PickRow title="สี" options={colors} value={selected.color} onChange={(v) => patch({ color: v })} />}
+          <span className="xmas-pick-title">แต่งสี {specFor(selected.kind)?.label}</span>
+          {partsFor(selected.kind).map((part) => (
+            <PickRow key={part.key} title={part.label} options={part.options} value={selected.parts[part.key] ?? part.options[0]} onChange={(v) => setPart(part.key, v)} swatch />
+          ))}
           <label className="xmas-rot">
             <span>
               หมุนชิ้นนี้ <em>{deg}°</em>
@@ -238,6 +331,9 @@ export default function ExclusiveModal({
   const [theme, setTheme] = useState<MessageTheme>("fireworks");
   const [look, setLook] = useState<GiantLook>(DEFAULT_GIANT_LOOK);
   const [selId, setSelId] = useState<string | null>(null);
+  const [spotPick, setSpotPick] = useState<number | null>(null);
+  const [taken, setTaken] = useState<Set<number>>(new Set());
+  const [spotPopup, setSpotPopup] = useState(false);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -258,6 +354,23 @@ export default function ExclusiveModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [locked, onClose]);
+
+  // โหลดจุดที่มีคนจองแล้ว: ตอนเปิดฟอร์มตุ๊กตายักษ์ และตอนที่ผู้ซื้อต้องเลือกจุดใหม่
+  const loadTaken = useCallback(() => {
+    fetch(`/api/christmas/state?room=${encodeURIComponent(roomId)}`)
+      .then((r) => r.json())
+      .then((d: { giants?: { spot: number }[] }) => setTaken(new Set((d.giants ?? []).map((g) => g.spot))))
+      .catch(() => {});
+  }, [roomId]);
+  useEffect(() => {
+    if (view === "giant") loadTaken();
+  }, [view, loadTaken]);
+
+  function closeSpotPopup() {
+    setSpotPopup(false);
+    setSpotPick(null);
+    loadTaken();
+  }
 
   function goView(v: View) {
     setStep(0);
@@ -280,7 +393,13 @@ export default function ExclusiveModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ room: roomId, kind, social: social ?? {}, ...body }),
       });
-      const data = (await res.json()) as { order?: OrderPreview; error?: string };
+      const data = (await res.json()) as { order?: OrderPreview; error?: string; code?: string };
+      // จุดที่เลือกถูกคนอื่นไปก่อน: เด้งให้เลือกใหม่ (ยังไม่ได้ตัดเงิน)
+      if (res.status === 409 && data.code === "spot_taken") {
+        setSpotPopup(true);
+        loadTaken();
+        return;
+      }
       if (!res.ok || !data.order) throw new Error(data.error ?? "สร้างรายการไม่สำเร็จ");
       setOrderKind(kind);
       setOrder(data.order);
@@ -295,7 +414,7 @@ export default function ExclusiveModal({
     e.preventDefault();
     if (!giantChosen) return setError("เลือกหรือกรอกยอดก่อน");
     if (!name.trim()) return setError("กรุณาใส่ชื่อที่จะแสดงบนป้าย");
-    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), look });
+    create("giant", { amount: giantChosen, name: name.trim(), message: message.trim(), look, spot: spotPick });
   }
 
   function submitMessage(e: FormEvent) {
@@ -350,6 +469,18 @@ export default function ExclusiveModal({
         {disabled && <p className="xmas-msg err">ตอนนี้ปิดรับการสนับสนุนชั่วคราว</p>}
 
         {order && <PaymentPanel order={order} onUpdate={setOrder} onClose={() => onPaid(orderKind, name.trim())} />}
+
+        {spotPopup && (
+          <div className="xmas-spot-popup" role="alertdialog" aria-modal="true" aria-labelledby="xmas-spot-popup-title">
+            <div className="xmas-spot-popup-card">
+              <p id="xmas-spot-popup-title" className="xmas-spot-popup-title">น่าเสียดายจัง</p>
+              <p>ช่องนี้มีคนเอาไปแล้ว เลือกช่องใหม่นะ</p>
+              <button type="button" className="xmas-submit" onClick={closeSpotPopup}>
+                เลือกช่องใหม่
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* เมนู: สองฟีเจอร์แยกการ์ด */}
         {!order && cfg && !disabled && view === "menu" && (
@@ -428,6 +559,15 @@ export default function ExclusiveModal({
                     />
                   </div>
                 </label>
+                <div className="xmas-sup-field">
+                  <span>ตำแหน่งบนลาน</span>
+                  <SpotMap taken={taken} value={spotPick} onPick={(i) => setSpotPick(i)} />
+                  {spotPick !== null && (
+                    <button type="button" className="xmas-studio-del" onClick={() => setSpotPick(null)}>
+                      ให้ระบบเลือกให้
+                    </button>
+                  )}
+                </div>
               </section>
 
               <section className="xmas-sec" data-step="1" data-on={step === 1}>

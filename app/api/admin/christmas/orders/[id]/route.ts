@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrder } from "@/lib/christmas/orders";
 import { confirmPayment } from "@/lib/christmas/payments";
+import { SpotLostError } from "@/lib/christmas/orders";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!order) return NextResponse.json({ error: "ไม่พบคำสั่งนี้" }, { status: 404 });
   if (order.mode !== "manual") return NextResponse.json({ error: "คำสั่งนี้ยืนยันอัตโนมัติผ่าน Omise" }, { status: 400 });
   if (order.status === "paid") return NextResponse.json({ ok: true, alreadyPaid: true });
-  const paid = await confirmPayment(id, `manual:${new Date().toISOString()}`);
-  return NextResponse.json({ ok: true, status: paid?.status });
+  try {
+    const paid = await confirmPayment(id, `manual:${new Date().toISOString()}`);
+    return NextResponse.json({ ok: true, status: paid?.status });
+  } catch (err) {
+    if (err instanceof SpotLostError) return NextResponse.json({ error: err.message, code: "spot_lost" }, { status: 409 });
+    throw err;
+  }
 }

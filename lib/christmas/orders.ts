@@ -19,7 +19,7 @@ export type Order = {
   name: string;
   message: string;
   theme: MessageTheme; // ธีมการแสดงบนท้องฟ้า (เฉพาะ giant)
-  spot: number; // ตำแหน่งป้ายประจำห้อง 0–3 (เฉพาะ giant)
+  spot: number; // จุดตั้ง Exclusive (เฉพาะ giant) จองไว้ตอนสร้างออเดอร์ 0–N ส่วนออเดอร์อื่นเป็น 0
   social?: Social; // ลิงก์โซเชียลของผู้สนับสนุน
   decor?: DecorPick; // ชิ้นส่วนตุ๊กตา (เฉพาะ decor)
   look?: GiantLook; // ลุคตุ๊กตายักษ์ (เฉพาะ giant)
@@ -34,11 +34,18 @@ export type Order = {
 
 export type Giant = { orderId: string; name: string; message: string; amount: number; paidAt: number; spot: number; social?: Social; look?: GiantLook };
 
-const mem = { orders: new Map<string, Order>(), giants: new Map<string, Map<number, Giant>>() };
+const mem = {
+  orders: new Map<string, Order>(),
+  giants: new Map<string, Map<number, Giant>>(),
+  holds: new Map<string, Map<number, { orderId: string; exp: number }>>(),
+};
+// จองจุดไว้ตั้งแต่สร้างออเดอร์ ถ้าไม่จ่ายภายในเวลานี้จุดจะว่างให้คนอื่น
+export const HOLD_MS = 60 * 60 * 1000;
 const K = {
   order: (id: string) => `xmas:order:${id}`,
   index: "xmas:orders", // ZSET score = createdAt
   giants: (room: string) => `xmas:${room}:giants`, // HASH: ตำแหน่ง -> ตุ๊กตายักษ์ (ทุกตัวที่ซื้อ)
+  hold: (room: string, spot: number) => `xmas:${room}:hold:${spot}`, // STRING: รหัสออเดอร์ที่จองจุดนี้ (หมดอายุเอง)
 };
 
 export async function saveOrder(o: Order) {
@@ -71,17 +78,62 @@ export async function markPaid(id: string, providerRef: string, now: number): Pr
   const o = await getOrder(id);
   if (!o || o.status === "paid") return o;
   const paid: Order = { ...o, status: "paid", paidAt: now, providerRef: providerRef || o.providerRef };
-  await saveOrder(paid);
   if (paid.kind === "giant") {
-    // จองตำแหน่งว่างถัดไปให้ตุ๊กตาตัวนี้ (ไม่แทนที่ตัวที่ซื้อไว้แล้ว)
+    // จุดที่จองไว้ตอนสร้างออเดอร์ต้องยังเป็นของคำสั่งนี้ ถ้าหมดอายุแล้วมีคนอื่นได้ไปจะไม่จัดจุดให้เอง
+    // ให้โยน error เพื่อให้แอดมินคุยกับผู้ซื้อ (ไม่มีกรณีจ่ายแล้วแต่ไม่ได้จุด)
     const base = { orderId: paid.id, name: paid.name, message: paid.message, amount: paid.amount, paidAt: now, social: paid.social, look: paid.look };
-    const start = (await listGiants(paid.room)).length;
-    for (let k = 0; k < GIANT_CAPACITY; k++) {
-      const spot = (start + k) % GIANT_CAPACITY;
-      if (await claimGiantSpot(paid.room, spot, { ...base, spot })) break;
-    }
+    const ok = paid.spot >= 0 && paid.spot < GIANT_CAPACITY && (await claimGiantSpot(paid.room, paid.spot, { ...base, spot: paid.spot }));
+    if (!ok) throw new SpotLostError(paid.spot);
   }
+  await saveOrder(paid);
   return paid;
+}
+
+export class SpotLostError extends Error {
+  constructor(spot: number) {
+    super(`จุดที่จองไว้ (จุด ${spot + 1}) หมดอายุแล้วและมีคนอื่นได้ไปแล้ว ต้องติดต่อผู้ซื้อเพื่อเลือกจุดใหม่`);
+  }
+}
+
+// จองจุดให้คำสั่งนี้ (SET NX พร้อมวันหมดอายุ) คืน false ถ้ามีคำสั่งอื่นจองอยู่หรือมีคนซื้อไปแล้ว
+async function holdSpot(room: string, spot: number, orderId: string): Promise<boolean> {
+  if (!storeConfigured()) {
+    if (mem.giants.get(room)?.has(spot)) return false;
+    const m = mem.holds.get(room) ?? new Map<number, { orderId: string; exp: number }>();
+    const cur = m.get(spot);
+    const now = Date.now();
+    if (cur && cur.exp > now && cur.orderId !== orderId) return false;
+    m.set(spot, { orderId, exp: now + HOLD_MS });
+    mem.holds.set(room, m);
+    return true;
+  }
+  if (await cmd<string | null>("HGET", K.giants(room), String(spot))) return false;
+  return (await cmd<string | null>("SET", K.hold(room, spot), orderId, "NX", "PX", HOLD_MS)) === "OK";
+}
+
+// คืนจุดเมื่อสร้างออเดอร์ไม่สำเร็จ (เช่น สร้าง QR ไม่ได้) เพื่อให้คนอื่นจองได้
+export async function releaseGiantSpot(room: string, spot: number, orderId: string): Promise<void> {
+  if (!storeConfigured()) {
+    const m = mem.holds.get(room);
+    if (m?.get(spot)?.orderId === orderId) m.delete(spot);
+    return;
+  }
+  if ((await cmd<string | null>("GET", K.hold(room, spot))) === orderId) await cmd("DEL", K.hold(room, spot));
+}
+
+// จองจุดให้ออเดอร์ใหม่: ถ้าผู้ซื้อระบุจุดมาให้จองจุดนั้น ถ้าไม่ระบุให้หาจุดว่างถัดไป
+export async function reserveGiantSpot(room: string, orderId: string, wanted: number | null): Promise<{ spot: number } | { error: "taken" | "full" }> {
+  const taken = new Set((await listGiants(room)).map((g) => g.spot));
+  if (wanted !== null) {
+    if (taken.has(wanted)) return { error: "taken" };
+    return (await holdSpot(room, wanted, orderId)) ? { spot: wanted } : { error: "taken" };
+  }
+  if (taken.size >= GIANT_CAPACITY) return { error: "full" };
+  for (let s = 0; s < GIANT_CAPACITY; s++) {
+    if (taken.has(s)) continue;
+    if (await holdSpot(room, s, orderId)) return { spot: s };
+  }
+  return { error: "full" };
 }
 
 // ตุ๊กตายักษ์ทั้งหมดของห้อง (เรียงตามเวลาที่ซื้อ)

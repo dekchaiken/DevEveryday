@@ -6,7 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
+import { GIANT_MODEL_SCALE, GIANT_POSITIONS, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, radiusAt, surfaceNormal, TREE_H, TREE_R0 } from "./geometry";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
@@ -945,6 +945,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const grp = d.group;
       grp.userData.update = d.update;
       grp.position.set(def.x, 0, def.z);
+      grp.scale.setScalar(GIANT_MODEL_SCALE);
       return grp;
     }
     const giantGroups = new Map<number, { key: string; grp: THREE.Group }>();
