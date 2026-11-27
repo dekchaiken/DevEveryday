@@ -637,7 +637,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onError={() => setWebglOk(false)}
           ground={room.ground}
           giants={(state?.giants ?? []).map((g) => ({ name: g.name, message: g.message, spot: g.spot ?? 0, look: g.look, social: g.social }))}
-          onGiantClick={(g) => setGiantCard({ name: g.name, message: g.message, spot: g.spot, social: g.social })}
+          onGiantClick={(g) => setGiantCard({ name: g.name, message: g.message, spot: g.spot, social: g.social, look: g.look })}
           decor={decor}
           markerSlot={markerSlot}
           zoneCards={cards}

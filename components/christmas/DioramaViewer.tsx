@@ -19,6 +19,8 @@ type Props = {
   onSelect: (id: string | null) => void;
   // เรียกตอนปล่อยชิ้นที่ลาก (ระหว่างลากขยับในหน้าจอเองโดยไม่แตะข้อมูล)
   onMove: (id: string, x: number, z: number) => void;
+  // โหมดดูอย่างเดียว (การ์ดบนฉาก): หมุนดูได้ แต่ลากย้ายชิ้นของไม่ได้
+  readOnly?: boolean;
 };
 
 type V3 = [number, number, number];
@@ -43,7 +45,7 @@ function disposeTree(root: THREE.Object3D) {
 
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 
-export function DioramaViewer({ look, name, message, selectedId, onSelect, onMove }: Props) {
+export function DioramaViewer({ look, name, message, selectedId, onSelect, onMove, readOnly = false }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const contentRef = useRef<THREE.Group | null>(null);
@@ -53,8 +55,8 @@ export function DioramaViewer({ look, name, message, selectedId, onSelect, onMov
   const [top, setTop] = useState(false);
 
   // ค่าล่าสุดสำหรับ listener ที่ผูกครั้งเดียว
-  const latest = useRef({ look, selectedId, onSelect, onMove });
-  latest.current = { look, selectedId, onSelect, onMove };
+  const latest = useRef({ look, selectedId, onSelect, onMove, readOnly });
+  latest.current = { look, selectedId, onSelect, onMove, readOnly };
 
   // ตั้งฉาก กล้อง แสง และลูปการแสดงผลครั้งเดียว พร้อมการลาก/เลือกชิ้น
   useEffect(() => {
@@ -134,6 +136,7 @@ export function DioramaViewer({ look, name, message, selectedId, onSelect, onMov
     const itemGroup = (id: string) => contentRef.current?.children.find((c) => c.userData.itemId === id) ?? null;
 
     const onDown = (e: PointerEvent) => {
+      if (latest.current.readOnly) return; // ปล่อยให้ตัวควบคุมกล้องหมุนดูอย่างเดียว
       aim(e);
       const id = itemAt();
       if (!id) {
