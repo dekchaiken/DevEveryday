@@ -321,10 +321,9 @@ export function flightProgressAt(serverMs: number): number | null {
 
 // เส้นทาง: ไกลสุดบนขอบฟ้า → เข้ามาใกล้ → วนรอบต้นคริสต์มาส → ลดระดับเหนือโซนอวยพร → บินออกไปไกล
 const ROUTE: [number, number, number][] = [
-  [-80, 12, -160],
-  [-50, 11, -120],
-  [-28, 9, -78],
-  [-16, 7.6, -46],
+  [-60, 10, -60],
+  [-36, 8.4, -38],
+  [-20, 7, -24],
   [-10.34, 5.9, -13.76],
   [-5.5, 5.6, -19.53],
   [-0.0, 5.4, -21.0],
@@ -338,9 +337,9 @@ const ROUTE: [number, number, number][] = [
   [-8, 4.9, -16],
   [-5, 4.8, -19],
   [0, 5.3, -26],
-  [12, 7.5, -42],
-  [42, 11, -100],
-  [80, 13, -170],
+  [14, 6.6, -32],
+  [40, 8.4, -36],
+  [64, 9.5, -40],
 ];
 // เส้นทางถูกสุ่มตัวอย่างให้ระยะเท่ากันและเกลี่ยเล็กน้อย จึงไม่มีจุดหักมุมกะทันหัน
 const ROUTE_RAW = new THREE.CatmullRomCurve3(
@@ -484,7 +483,7 @@ export function buildSleighFlight(): SleighFlight {
         qBank.setFromAxisAngle(basisX, bank);
         rig.quaternion.copy(qBasis).premultiply(qBank);
         // ขบวนค่อย ๆ โผล่จากระยะไกลและค่อย ๆ จางหายตอนท้ายรอบ (ไม่ป็อปหาย)
-        rig.scale.setScalar(SCALE * smooth(progress / 0.05) * smooth((1 - progress) / 0.05));
+        rig.scale.setScalar(SCALE * smooth(progress / 0.04) * smooth((1 - progress) / 0.04));
 
         // ซานตาเด้งตามเลื่อน พู่หมวกและหนวดพลิ้วตามลม
         santa.group.position.y = 0.84 + Math.sin(t * 9.2 + 0.6) * 0.012;
