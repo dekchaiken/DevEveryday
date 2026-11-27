@@ -29,6 +29,7 @@ import type { Decor } from "@/lib/christmas/decor";
 import type { CardRecord, CardSpec, PropKind } from "@/lib/christmas/cardSpec";
 import { CardStudio } from "./CardStudio";
 import { CardReveal, WishZone } from "./WishZone";
+import { GuideSpotlight } from "./GuideSpotlight";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
 import { GIANT_POSITIONS, SLOT_POSITIONS, ZONE_CAPACITY } from "@/lib/christmas/slots";
@@ -301,6 +302,31 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   }, [zoneOpen, studioOpen]);
   const [exclusiveDraft, setExclusiveDraft] = useState<DecorDraft | null>(null); // ตุ๊กตา Exclusive ที่รอชำระเงิน
   const [shareOf, setShareOf] = useState<Ornament | null>(null); // การ์ดคำอวยพรที่กำลังแชร์
+  // คู่มือการใช้งาน: เปิดอัตโนมัติครั้งแรกหลังของขวัญเปิดและตั้งชื่อแล้ว เปิดซ้ำได้จากปุ่ม "?"
+  const [guideOn, setGuideOn] = useState(false);
+  const [giftDone, setGiftDone] = useState(false);
+  useEffect(() => {
+    if (document.documentElement.dataset.giftDone === "1") setGiftDone(true);
+    const on = () => setGiftDone(true);
+    window.addEventListener("xmas-gift-done", on);
+    return () => window.removeEventListener("xmas-gift-done", on);
+  }, []);
+  useEffect(() => {
+    if (!giftDone || !profile) return;
+    try {
+      if (localStorage.getItem("xmas-guide-v1") !== "1") setGuideOn(true);
+    } catch {
+      /* ไม่เป็นไร */
+    }
+  }, [giftDone, profile]);
+  const finishGuide = useCallback(() => {
+    setGuideOn(false);
+    try {
+      localStorage.setItem("xmas-guide-v1", "1");
+    } catch {
+      /* ไม่เป็นไร */
+    }
+  }, []);
   const played = useRef(new Set<string>());
 
   // ---------- โหลดสถานะกลางเป็นระยะ ----------
@@ -832,6 +858,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
               <span>อันดับ</span>
             </button>
           </div>
+          <button type="button" className="xmas-guide-btn" aria-label="ดูคู่มือการใช้งาน" title="ดูคู่มือการใช้งาน" onClick={() => setGuideOn(true)}>
+            ?
+          </button>
           <button type="button" className={`xmas-music-toggle ${musicOn ? "is-on" : ""}`} aria-pressed={musicOn} aria-label={musicOn ? "ปิดเพลงคลอ" : "เปิดเพลงคลอ"} onClick={toggleMusic}>
             <Icon name="music" size={15} />
             <span className="xmas-music-bars" aria-hidden>
@@ -873,7 +902,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         >
           <Icon name="snowman" size={18} /> ตกแต่งตุ๊กตาหิมะ
         </button>
-        <button className="xmas-action" onClick={() => setInviteOpen(true)}>
+        <button className="xmas-action" data-invite-btn onClick={() => setInviteOpen(true)}>
           <Icon name="users" size={18} /> ชวนเพื่อน
         </button>
         <button className="xmas-action is-exclusive" data-exclusive-btn onClick={() => setExclusiveOpen(true)}>
@@ -899,6 +928,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             ? [{ key: "welcome", text: "ยินดีต้อนรับสู่ต้นคริสต์มาส แขวนคำอวยพรของคุณเป็นคนแรกได้เลย" }]
             : []),
         ]}
+      />
+
+      <GuideSpotlight
+        active={guideOn && giftDone && !!profile && !studioOpen && !chooseOpen && !sheetOpen && !zoneOpen && !inviteOpen && !decorOpen && !exclusiveOpen && !supportOpen && !profileEdit && !feedOpen && !rankOpen && !focus && !shareOf && !sharedCard && !exclusiveDraft}
+        onDone={finishGuide}
       />
 
       {inviteOpen && (
