@@ -29,7 +29,6 @@ import type { Decor } from "@/lib/christmas/decor";
 import type { CardRecord, CardSpec, PropKind } from "@/lib/christmas/cardSpec";
 import { CardStudio } from "./CardStudio";
 import { CardReveal, WishZone } from "./WishZone";
-import { CoachSpotlight, type SpotStep } from "./CoachSpotlight";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
 import { GIANT_POSITIONS, SLOT_POSITIONS, ZONE_CAPACITY } from "@/lib/christmas/slots";
@@ -40,15 +39,6 @@ import { GiantBanner, type GiantInfo } from "./GiantCard";
 
 // คำอธิบายที่ลอยข้างโมเดลเมื่อแตะบ้านหรือตุ๊กตา (กดปุ่มในนั้นจึงจะเปิดป้ายหรือรายละเอียด)
 type TipState = { kicker: string; title: string; cta: string; x: number; y: number; z: number; open: () => void; close: () => void };
-
-// คำแนะนำครั้งแรก: สอนทีละปุ่ม ปุ่มอื่นจะเทาจนกว่าจะกดปุ่มที่สอนก่อน
-const SPOT_STEPS: SpotStep[] = [
-  { target: "[data-tree-scene]", title: "แตะต้นคริสต์มาสเพื่อแขวนคำอวยพร", body: "แตะตรงไหนบนต้นก็ได้ หน้าแขวนจะเปิดที่จุดนั้น" },
-  { target: "[data-studio-btn]", title: "คำอวยพรและลูกบอล", body: "ทำการ์ดอวยพรหรือแขวนลูกบอลบนต้น" },
-  { target: "[data-zone-btn]", title: "โซนคำอวยพร", body: "การ์ดที่ส่งไปจะขึ้นบนรั้วในโซนนี้ แตะเพื่อดูการ์ดของทุกคน" },
-  { target: "[data-decor-btn]", title: "ตกแต่งตุ๊กตาหิมะ", body: "สร้างตุ๊กตาหิมะแล้ววางรอบต้น แตะตุ๊กตาบนต้นเพื่อดูรายละเอียด" },
-  { target: "[data-exclusive-btn]", title: "บ้านหิมะ Exclusive", body: "ตั้งบ้านของคุณบนลาน แตะบ้านของทุกคนเพื่อดูป้ายและลิงก์" },
-];
 
 // Three.js โหลดเฉพาะฝั่งเบราว์เซอร์ ไม่ให้กระทบเวลาเปิดหน้าแรก
 const TreeScene = dynamic(() => import("./TreeScene").then((m) => m.default), {
@@ -138,12 +128,10 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     const [pick, setPick] = useState<{ height: number; angle: number } | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
     const [panelPulse, setPanelPulse] = useState(0);
-    const [hintOn, setHintOn] = useState(true);
   const [chooseOpen, setChooseOpen] = useState(false);
   const [sharedCard, setSharedCard] = useState<CardRecord | null>(null); // การ์ดจากลิงก์แชร์ของเพื่อน
  // เลือกระหว่างการ์ดกับการแขวนลูกบอล
   const [zoneOpen, setZoneOpen] = useState(false); // โซนคำอวยพร
-  const [zoneHint, setZoneHint] = useState(false); // ป้ายชี้ไปโซนคำอวยพรหลังส่งการ์ด
   const [away, setAway] = useState(false); // กล้องอยู่นอกมุมเดิม (ไปดูตุ๊กตาหรือโซน)
   const [zoneReveal, setZoneReveal] = useState<CardRecord | null>(null); // การ์ดที่แตะบนรั้วในฉาก
   const [zoneList, setZoneList] = useState(false); // รายการการ์ดทั้งหมดในโซน
@@ -227,7 +215,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [decorOpen, setDecorOpen] = useState(false);
   const [decorFocus, setDecorFocus] = useState<Decor | null>(null);
   const prevOnline = useRef<number | null>(null);
-  const [intro, setIntro] = useState(true); // ป๊อปอัปเชิญก่อนเข้าต้นไม้
   // โปรไฟล์ผู้เยี่ยมชม: undefined = ยังอ่านจากเครื่องไม่เสร็จ, null = ยังไม่เคยกรอก
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
   const [profileEdit, setProfileEdit] = useState(false);
@@ -312,27 +299,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   useEffect(() => {
     if (zoneOpen || studioOpen) setSheetOpen(false);
   }, [zoneOpen, studioOpen]);
-  const [coachArmed, setCoachArmed] = useState(false); // เริ่มสอนหลังส่งการ์ดใบแรกแล้วกลับมาหน้าต้นคริสต์มาส
-  const [coachDone, setCoachDone] = useState(true); // ค่าเริ่มต้นซ่อนไว้จนอ่านค่าจากเครื่องเสร็จ
-  useEffect(() => {
-    try {
-      const done = localStorage.getItem("xmas-coach-v2") === "1";
-      setCoachDone(done);
-      // ผู้เข้าชมครั้งแรกจะได้คำแนะนำทันที (ไม่ต้องรอส่งการ์ดก่อน)
-      if (!done) setCoachArmed(true);
-    } catch {
-      setCoachDone(true);
-    }
-  }, []);
-  const finishCoach = useCallback(() => {
-    setCoachDone(true);
-    setCoachArmed(false);
-    try {
-      localStorage.setItem("xmas-coach-v2", "1");
-    } catch {
-      /* ไม่เป็นไร */
-    }
-  }, []);
   const [exclusiveDraft, setExclusiveDraft] = useState<DecorDraft | null>(null); // ตุ๊กตา Exclusive ที่รอชำระเงิน
   const [shareOf, setShareOf] = useState<Ornament | null>(null); // การ์ดคำอวยพรที่กำลังแชร์
   const played = useRef(new Set<string>());
@@ -537,7 +503,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     setLeavingOnboard(true);
     setTimeout(() => {
       setLeavingOnboard(false);
-      setIntro(false);
       setStudioMandatory(true);
       setStudioEnter(true);
       setStudioOpen(true);
@@ -605,17 +570,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     const t = setInterval(refreshCards, 15000);
     return () => clearInterval(t);
   }, [zoneOpen, refreshCards]);
-  // ป้ายชี้ไปโซนคำอวยพรจะหายเองหลังผ่านไปไม่นาน และวางให้อยู่เหนือปุ่มโซนคำอวยพร
-  useEffect(() => {
-    if (!zoneHint) return;
-    const btn = document.querySelector("[data-zone-btn]");
-    if (btn) {
-      const r = btn.getBoundingClientRect();
-      setTipX(r.left + r.width / 2);
-    }
-    const t = setTimeout(() => setZoneHint(false), 8000);
-    return () => clearTimeout(t);
-  }, [zoneHint]);
 
   async function likeCard(id: string) {
     if (likedWishes.has(id)) return;
@@ -737,26 +691,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
       {profileEdit && profile && (
         <ProfileCard initial={profile} editing onSave={saveProfileAndClose} onCancel={() => setProfileEdit(false)} />
-      )}
-
-      {/* ป๊อปอัปเชิญเข้าร่วม */}
-      {intro && !leavingOnboard && profile !== undefined && profile !== null && (
-        <div className="xmas-intro" role="dialog" aria-modal="true" aria-labelledby="xmas-intro-title">
-          <div className="xmas-intro-card">
-            <div className="xmas-intro-orb" aria-hidden>
-              <span />
-              <span />
-              <span />
-            </div>
-            <p className="xmas-intro-kicker">ยินดีต้อนรับ</p>
-            <h1 id="xmas-intro-title">สวัสดี {profile?.name}</h1>
-            <p className="xmas-intro-text">ขอให้คริสต์มาสนี้อบอุ่นและมีความสุข มาแขวนคำอวยพรบนต้นให้ทุกคนได้เห็นพร้อมกัน</p>
-            <p className="xmas-intro-tip">แนะนำ: เลือกลูกบอล เขียนคำอวยพรสั้นๆ ให้คนที่คุณรัก แล้วแตะต้นเพื่อแขวน</p>
-            <button className="xmas-intro-btn" onClick={() => setIntro(false)} autoFocus>
-              <span>เริ่มแขวนคำอวยพร</span>
-            </button>
-          </div>
-        </div>
       )}
 
       {supportOpen && (
@@ -925,7 +859,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <button className="xmas-action" data-studio-btn onClick={() => { setFeedOpen(false); setChooseOpen(true); }}>
           <Icon name="bauble" size={18} /> คำอวยพร
         </button>
-        <button className="xmas-action" data-zone-btn onClick={() => { setZoneHint(false); setZoneOpen(true); treeRef.current?.flyToZone(); }}>
+        <button className="xmas-action" data-zone-btn onClick={() => { setZoneOpen(true); treeRef.current?.flyToZone(); }}>
           <Icon name="sparkle" size={18} /> โซนคำอวยพร
         </button>
         <button
@@ -965,12 +899,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             ? [{ key: "welcome", text: "ยินดีต้อนรับสู่ต้นคริสต์มาส แขวนคำอวยพรของคุณเป็นคนแรกได้เลย" }]
             : []),
         ]}
-      />
-
-      <CoachSpotlight
-        steps={SPOT_STEPS}
-        active={coachArmed && !coachDone && !intro && !studioOpen && !chooseOpen && !sheetOpen && !zoneOpen && !zoneReveal && !sharedCard && !leavingOnboard && profile !== null && profile !== undefined}
-        onDone={finishCoach}
       />
 
       {inviteOpen && (
@@ -1128,7 +1056,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
                 setSheetOpen(true);
                 setFeedOpen(false);
                 setPanelPulse((n) => n + 1);
-                setHintOn(true);
               }}
             >
               <span className="xc-choose-ico" aria-hidden>
@@ -1177,8 +1104,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setStudioMandatory(false);
             setStudioEnter(false);
             setCards((list) => [card, ...list.filter((c) => c.id !== card.id)]);
-            setZoneHint(true);
-            setCoachArmed(true);
             notify("ok", "การ์ดของคุณถูกส่งไปโซนคำอวยพรแล้ว");
             refreshCards();
           }}
@@ -1236,23 +1161,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         />
       )}
 
-      {zoneHint && !zoneOpen && !(coachArmed && !coachDone) && (
-        <button type="button" className="xz-tip" style={tipX !== null ? { left: tipX } : undefined} onClick={() => { setZoneHint(false); setZoneOpen(true); treeRef.current?.flyToZone(); }}>
-          การ์ดของคุณอยู่ที่โซนคำอวยพรแล้ว แตะเพื่อดู
-        </button>
-      )}
-
-      {/* ป้ายบอกให้แตะต้นไม้เพื่อเลือกตำแหน่ง */}
-      {sheetOpen && hintOn && !pick && !zoneOpen && !away && !studioOpen && !chooseOpen && !(coachArmed && !coachDone) && (
-        <div className="xmas-tap-hint" role="status" onClick={() => setHintOn(false)}>
-          <span className="xmas-tap-ring" aria-hidden />
-          แตะที่ต้นคริสต์มาสเพื่อเลือกตำแหน่ง
-        </div>
-      )}
-
       {/* แผงแขวนลูกบอล */}
       {sheetOpen && (
-      <section key={panelPulse} className={`xmas-panel glass xmas-wish ${sheetOpen ? "is-open" : ""} ${panelPulse ? "is-pulse" : ""}`} aria-label="แขวนคำอวยพร" onPointerDown={() => setHintOn(true)}>
+      <section key={panelPulse} className={`xmas-panel glass xmas-wish ${sheetOpen ? "is-open" : ""} ${panelPulse ? "is-pulse" : ""}`} aria-label="แขวนคำอวยพร">
         <button className="xmas-sheet-toggle" onClick={() => setSheetOpen((v) => !v)} aria-expanded={sheetOpen}>
           {sheetOpen ? "ปิดแผง" : "แขวนคำอวยพรของคุณ"}
         </button>

@@ -5,32 +5,28 @@
   display: grid;
   place-items: center;
   perspective: 900px;
-  min-width: 0;
-}
+  min-width: 0;}
 .xc-card {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
   border-radius: 16px;
   transform-style: preserve-3d;
-  box-shadow: 0 30px 40px -24px rgba(0, 0, 0, 0.75), 0 2px 0 rgba(255, 255, 255, 0.35) inset;
-}
+  box-shadow: 0 30px 40px -24px rgba(0, 0, 0, 0.75), 0 2px 0 rgba(255, 255, 255, 0.35) inset;}
 .xc-card-face {
   position: absolute;
   inset: 0;
   overflow: hidden;
   border-radius: inherit;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-}
+  grid-template-rows: auto 1fr auto;}
 .xc-card-frame {
   position: absolute;
   inset: 9px;
   border: 1.5px solid currentColor;
   opacity: 0.55;
   border-radius: 10px;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xc-card-title {
   position: relative;
   z-index: 1;
@@ -39,13 +35,11 @@
   font-family: var(--serif, Georgia, serif);
   font-size: clamp(11px, 2.4vw, 14px);
   letter-spacing: 0.08em;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xc-card-props {
   position: absolute;
   inset: 0;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xc-prop {
   position: absolute;
   width: 15%;
@@ -53,23 +47,19 @@
   display: grid;
   place-items: center;
   pointer-events: none;
-  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
-}
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));}
 .xc-prop.is-drag {
   pointer-events: auto;
   cursor: grab;
-  touch-action: none;
-}
+  touch-action: none;}
 .xc-prop.is-sel {
   outline: 2px dashed #ffe7a3;
   outline-offset: 4px;
-  border-radius: 8px;
-}
+  border-radius: 8px;}
 .xc-prop-svg {
   width: 100%;
   height: 100%;
-  overflow: visible;
-}
+  overflow: visible;}
 .xc-card-body {
   position: absolute;
   left: 12px;
@@ -83,8 +73,7 @@
   display: grid;
   gap: 4px;
   background: rgba(255, 252, 244, 0.82);
-  color: #1f2b22;
-}
+  color: #1f2b22;}
 .xc-card-wish {
   margin: 0;
   font-size: clamp(12px, 2.6vw, 15px);
@@ -93,43 +82,35 @@
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xc-card-sign {
   font-size: 12px;
   font-weight: 700;
-  opacity: 0.85;
-}
+  opacity: 0.85;}
 .xc-card-shine {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   background: linear-gradient(115deg, transparent 25%, rgba(255, 255, 255, 0.38) var(--shine, 50%), transparent 75%);
-  mix-blend-mode: soft-light;
-}
+  mix-blend-mode: soft-light;}
 
 /* แบบการ์ด 4 แบบ */
 .xc-theme-kraft {
   background: linear-gradient(160deg, #d8b48a, #b98a5a);
-  color: #4a2e18;
-}
+  color: #4a2e18;}
 .xc-theme-pine {
   background: radial-gradient(circle at 50% 0%, #1d5a44, #0c3026 70%);
-  color: #f6e7bf;
-}
+  color: #f6e7bf;}
 .xc-theme-candy {
   background: repeating-linear-gradient(-45deg, #fff 0 14px, #fde2e8 14px 28px);
-  color: #8f1a2d;
-}
+  color: #8f1a2d;}
 .xc-theme-frost {
   background: radial-gradient(circle at 30% 20%, #ffffff, #d6f0fb 60%, #a6d9ef);
-  color: #1c4e66;
-}
+  color: #1c4e66;}
 .xc-theme-pine .xc-card-body {
   background: rgba(9, 40, 31, 0.78);
-  color: #f6e7bf;
-}
+  color: #f6e7bf;}
 .xc-swatch {
   display: block;
   width: 100%;
@@ -137,30 +118,25 @@
   max-width: 100%;
   aspect-ratio: 3 / 2;
   border-radius: 12px;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
-}
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);}
 
 /* สีซอง */
 .xc-env-red,
 .xz-env-red {
   --env: #b91c3c;
-  --env-front: #9b1630;
-}
+  --env-front: #9b1630;}
 .xc-env-gold,
 .xz-env-gold {
   --env: #d9a93a;
-  --env-front: #b98a2a;
-}
+  --env-front: #b98a2a;}
 .xc-env-green,
 .xz-env-green {
   --env: #1f7a4d;
-  --env-front: #16603b;
-}
+  --env-front: #16603b;}
 .xc-env-white,
 .xz-env-white {
   --env: #f4efe3;
-  --env-front: #e0d6bf;
-}
+  --env-front: #e0d6bf;}
 
 /* ---------- ฉากโต๊ะและตัวออกแบบ ---------- */
 .xc-studio {
@@ -171,21 +147,18 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   color: #f7f2e6;
-  font-family: inherit;
-}
+  font-family: inherit;}
 .xc-table {
   position: absolute;
   inset: 0;
   background:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 26px),
-    radial-gradient(ellipse at 50% 35%, #7a4a2b 0%, #4a2a17 55%, #24130a 100%);
-}
+    radial-gradient(ellipse at 50% 35%, #7a4a2b 0%, #4a2a17 55%, #24130a 100%);}
 .xc-table::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
-}
+  background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);}
 .xc-light {
   position: absolute;
   width: 180px;
@@ -194,27 +167,21 @@
   background: radial-gradient(circle, rgba(255, 214, 120, 0.55), transparent 70%);
   filter: blur(6px);
   animation: xc-float 9s ease-in-out infinite alternate;
-  z-index: 0;
-}
+  z-index: 0;}
 .xc-light.l1 {
   top: -40px;
-  left: -30px;
-}
+  left: -30px;}
 .xc-light.l2 {
   top: 18%;
   right: -50px;
-  animation-delay: -3s;
-}
+  animation-delay: -3s;}
 .xc-light.l3 {
   bottom: 8%;
   left: 30%;
-  animation-delay: -6s;
-}
+  animation-delay: -6s;}
 @keyframes xc-float {
   to {
-    transform: translate(26px, 18px) scale(1.08);
-  }
-}
+    transform: translate(26px, 18px) scale(1.08);}}
 .xc-studio-top {
   position: relative;
   z-index: 2;
@@ -222,25 +189,21 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
-}
+  padding: calc(12px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));}
 .xc-studio-title h2 {
   margin: 0;
   font-family: var(--serif, Georgia, serif);
   font-size: clamp(18px, 4vw, 24px);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xc-kicker {
   margin: 0;
   font-size: 11px;
   letter-spacing: 0.14em;
-  color: #e8d19a;
-}
+  color: #e8d19a;}
 .xc-stepcount {
   font-size: 13px;
   font-weight: 700;
-  color: #e8d19a;
-}
+  color: #e8d19a;}
 .xc-icon-btn {
   width: 40px;
   height: 40px;
@@ -250,8 +213,7 @@
   color: #f7f2e6;
   display: grid;
   place-items: center;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-stage {
   position: relative;
   z-index: 1;
@@ -260,22 +222,18 @@
   justify-items: center;
   gap: 8px;
   min-height: 0;
-  padding: 18px 16px 12px;
-}
+  padding: 18px 16px 12px;}
 .xc-studio-card {
-  width: min(64vw, 36dvh);
-}
+  width: min(64vw, 36dvh);}
 .xc-studio-card .xc-card {
-  box-shadow: 0 40px 50px -26px rgba(0, 0, 0, 0.9);
-}
+  box-shadow: 0 40px 50px -26px rgba(0, 0, 0, 0.9);}
 .xc-stage-hint {
   margin: 0;
   font-size: 12px;
   color: #f1e4bf;
   background: rgba(20, 12, 6, 0.45);
   padding: 4px 12px;
-  border-radius: 999px;
-}
+  border-radius: 999px;}
 .xc-panel {
   position: relative;
   z-index: 2;
@@ -288,13 +246,11 @@
   color: #2a1d10;
   box-shadow: 0 -20px 40px -20px rgba(0, 0, 0, 0.6);
   min-height: 0;
-  max-height: 48dvh;
-}
+  max-height: 48dvh;}
 .xc-steps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-}
+  gap: 6px;}
 .xc-steps button {
   display: flex;
   align-items: center;
@@ -311,8 +267,7 @@
   color: #4a3420;
   cursor: pointer;
   white-space: nowrap;
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xc-steps button span {
   display: grid;
   place-items: center;
@@ -320,45 +275,36 @@
   height: 20px;
   border-radius: 50%;
   background: rgba(184, 144, 74, 0.2);
-  font-size: 11px;
-}
+  font-size: 11px;}
 .xc-steps button.is-on {
   background: linear-gradient(180deg, #2f6b52, #1d4a37);
   color: #f7f2e6;
-  border-color: transparent;
-}
+  border-color: transparent;}
 .xc-steps button.is-on span {
-  background: rgba(232, 209, 154, 0.3);
-}
+  background: rgba(232, 209, 154, 0.3);}
 .xc-panel-body {
   min-height: 0;
   overflow: hidden;
-  padding: 4px;
-}
+  padding: 4px;}
 .xc-pick {
   display: grid;
   gap: 10px;
-  align-content: start;
-}
+  align-content: start;}
 .xc-pick h3 {
   margin: 0;
   font-size: 15px;
-  font-weight: 700;
-}
+  font-weight: 700;}
 .xc-row-between {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-}
+  align-items: baseline;}
 .xc-count {
   font-size: 12px;
-  color: #7a6446;
-}
+  color: #7a6446;}
 .xc-theme-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
+  gap: 8px;}
 .xc-theme-opt {
   min-width: 0;
   overflow: hidden;
@@ -374,16 +320,13 @@
   font-weight: 600;
   color: #4a3420;
   cursor: pointer;
-  text-align: center;
-}
+  text-align: center;}
 .xc-theme-opt.is-on {
-  box-shadow: 0 0 0 2px #b9862a;
-}
+  box-shadow: 0 0 0 2px #b9862a;}
 .xc-env-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
+  gap: 8px;}
 .xc-env-chip {
   display: grid;
   justify-items: center;
@@ -398,36 +341,28 @@
   font-size: 11.5px;
   font-weight: 600;
   color: #4a3420;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-env-chip .xc-env-art {
   width: 100%;
-  max-width: 64px;
-}
+  max-width: 64px;}
 .xc-env-chip.is-on {
   border-color: #b9862a;
-  box-shadow: 0 6px 14px -8px rgba(90, 60, 30, 0.6);
-}
+  box-shadow: 0 6px 14px -8px rgba(90, 60, 30, 0.6);}
 .xc-icon-spacer,
 .xc-btn-spacer {
   display: block;
   width: 40px;
-  height: 40px;
-}
+  height: 40px;}
 .xc-btn-spacer {
-  width: 1px;
-}
+  width: 1px;}
 .xc-stage.has-env .xc-studio-card {
-  width: min(50vw, 27dvh);
-}
+  width: min(50vw, 27dvh);}
 .xc-stage.has-env .xc-env-stage .xc-env-art {
-  width: min(38vw, 130px);
-}
+  width: min(38vw, 130px);}
 .xc-palette {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
-}
+  gap: 6px;}
 .xc-palette-item {
   display: grid;
   justify-items: center;
@@ -440,29 +375,24 @@
   font-size: 11px;
   color: #4a3420;
   cursor: pointer;
-  min-width: 0;
-}
+  min-width: 0;}
 .xc-palette-item:hover {
-  border-color: #b9862a;
-}
+  border-color: #b9862a;}
 .xc-palette-art {
   width: 36px;
   height: 36px;
   display: grid;
-  place-items: center;
-}
+  place-items: center;}
 .xc-sel-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   min-height: 44px;
-  align-items: center;
-}
+  align-items: center;}
 .xc-sel-empty {
   margin: 0;
   font-size: 12px;
-  color: #7a6446;
-}
+  color: #7a6446;}
 .xc-tool {
   display: inline-flex;
   align-items: center;
@@ -476,24 +406,20 @@
   font-size: 12.5px;
   font-weight: 600;
   color: #4a3420;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-tool.is-danger {
   color: #8f1a2d;
-  border-color: rgba(143, 26, 45, 0.35);
-}
+  border-color: rgba(143, 26, 45, 0.35);}
 .xc-field {
   display: grid;
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #4a3420;
-}
+  color: #4a3420;}
 .xc-field em {
   font-style: normal;
   font-weight: 500;
-  color: #7a6446;
-}
+  color: #7a6446;}
 .xc-field input,
 .xc-field textarea {
   font: inherit;
@@ -504,13 +430,11 @@
   background: #fff;
   color: #2a1d10;
   resize: none;
-  min-width: 0;
-}
+  min-width: 0;}
 .xc-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
+  gap: 6px;}
 .xc-chips button {
   font: inherit;
   font-size: 11.5px;
@@ -520,31 +444,25 @@
   background: #fff;
   color: #4a3420;
   cursor: pointer;
-  text-align: left;
-}
+  text-align: left;}
 .xc-review p {
   margin: 0;
-  font-size: 14px;
-}
+  font-size: 14px;}
 .xc-review-note {
   font-size: 12.5px !important;
-  color: #7a6446;
-}
+  color: #7a6446;}
 .xc-panel-foot {
   display: grid;
-  gap: 6px;
-}
+  gap: 6px;}
 .xc-msg {
   margin: 0;
   font-size: 12.5px;
   color: #8f1a2d;
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xc-nav {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 10px;
-}
+  gap: 10px;}
 .xc-btn,
 .xc-btn-ghost {
   min-height: 46px;
@@ -553,52 +471,41 @@
   font: inherit;
   font-size: 14.5px;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-btn-ghost {
   border: 1px solid rgba(90, 60, 30, 0.25);
   background: #fff;
-  color: #4a3420;
-}
+  color: #4a3420;}
 .xc-btn {
   border: 0;
   background: linear-gradient(180deg, #2f6b52, #1d4a37);
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 .xc-btn.is-send {
   background: linear-gradient(180deg, #d9a93a, #b98a2a);
-  color: #2a1d10;
-}
+  color: #2a1d10;}
 .xc-btn:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
-}
+  cursor: not-allowed;}
 
 /* คอมพิวเตอร์: ตั้งการ์ดซ้าย แผงตัวเลือกขวา ไม่ต้องเลื่อน */
 @media (min-width: 760px) {
   .xc-studio {
     grid-template-columns: minmax(0, 1fr) 400px;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
+    grid-template-rows: auto minmax(0, 1fr);}
   .xc-studio-top {
-    grid-column: 1 / -1;
-  }
+    grid-column: 1 / -1;}
   .xc-stage {
     grid-column: 1;
-    grid-row: 2;
-  }
+    grid-row: 2;}
   .xc-panel {
     grid-column: 2;
     grid-row: 2;
     max-height: none;
     border-radius: 0;
     box-shadow: -20px 0 40px -20px rgba(0, 0, 0, 0.6);
-    padding: 18px 20px;
-  }
+    padding: 18px 20px;}
   .xc-studio-card {
-    width: min(34vw, 50dvh);
-  }
-}
+    width: min(34vw, 50dvh);}}
 
 /* ---------- โซนคำอวยพร ---------- */
 .xz-zone {
@@ -607,13 +514,11 @@
   z-index: 85;
   overflow: hidden;
   color: #f7f2e6;
-  background: radial-gradient(ellipse at 50% 0%, #1d4a52 0%, #0d2430 55%, #061219 100%);
-}
+  background: radial-gradient(ellipse at 50% 0%, #1d4a52 0%, #0d2430 55%, #061219 100%);}
 .xz-sky {
   position: absolute;
   inset: 0;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xz-moon {
   position: absolute;
   top: 9%;
@@ -622,32 +527,26 @@
   height: 56px;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 40%, #fff7d6, #f1d88a 60%, #c9a24a);
-  box-shadow: 0 0 40px rgba(255, 230, 160, 0.5);
-}
+  box-shadow: 0 0 40px rgba(255, 230, 160, 0.5);}
 .xz-star {
   position: absolute;
   width: 3px;
   height: 3px;
   border-radius: 50%;
   background: #fff;
-  animation: xz-twinkle 2.6s ease-in-out infinite alternate;
-}
+  animation: xz-twinkle 2.6s ease-in-out infinite alternate;}
 @keyframes xz-twinkle {
   from {
-    opacity: 0.2;
-  }
+    opacity: 0.2;}
   to {
-    opacity: 1;
-  }
-}
+    opacity: 1;}}
 .xz-lights {
   position: absolute;
   top: 8px;
   left: 0;
   right: 0;
   height: 8px;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xz-light {
   position: absolute;
   top: 0;
@@ -656,32 +555,24 @@
   margin-left: -4px;
   border-radius: 50%;
   animation: xz-blink 1.6s ease-in-out infinite alternate;
-  box-shadow: 0 0 10px currentColor;
-}
+  box-shadow: 0 0 10px currentColor;}
 .xz-light.c0 {
   color: #ffd76a;
-  background: #ffd76a;
-}
+  background: #ffd76a;}
 .xz-light.c1 {
   color: #ff6b8a;
-  background: #ff6b8a;
-}
+  background: #ff6b8a;}
 .xz-light.c2 {
   color: #7dd3fc;
-  background: #7dd3fc;
-}
+  background: #7dd3fc;}
 .xz-light.c3 {
   color: #86efac;
-  background: #86efac;
-}
+  background: #86efac;}
 @keyframes xz-blink {
   from {
-    opacity: 0.25;
-  }
+    opacity: 0.25;}
   to {
-    opacity: 1;
-  }
-}
+    opacity: 1;}}
 .xz-head {
   position: relative;
   z-index: 2;
@@ -689,24 +580,20 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  padding: calc(30px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
-}
+  padding: calc(30px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));}
 .xz-head h2 {
   margin: 2px 0 0;
   font-family: var(--serif, Georgia, serif);
   font-size: clamp(20px, 4.4vw, 26px);
-  font-weight: 600;
-}
+  font-weight: 600;}
 .xz-kicker {
   margin: 0;
   font-size: 11px;
   letter-spacing: 0.14em;
-  color: #e8d19a;
-}
+  color: #e8d19a;}
 .xz-count {
   font-size: 12px;
-  color: #cfe9e4;
-}
+  color: #cfe9e4;}
 .xz-close {
   width: 40px;
   height: 40px;
@@ -717,8 +604,7 @@
   display: grid;
   place-items: center;
   cursor: pointer;
-  flex: none;
-}
+  flex: none;}
 .xz-area {
   position: absolute;
   left: 0;
@@ -726,12 +612,10 @@
   top: 118px;
   bottom: 0;
   padding: 0 max(14px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
-  overflow-y: auto;
-}
+  overflow-y: auto;}
 .xz-bells {
   position: relative;
-  height: 36px;
-}
+  height: 36px;}
 .xz-bell {
   position: absolute;
   top: 4px;
@@ -740,21 +624,16 @@
   margin-left: -11px;
   transform-origin: 50% 0;
   animation: xz-swing 3.2s ease-in-out infinite alternate;
-  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.4));
-}
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.4));}
 @keyframes xz-swing {
   from {
-    transform: rotate(-8deg);
-  }
+    transform: rotate(-8deg);}
   to {
-    transform: rotate(8deg);
-  }
-}
+    transform: rotate(8deg);}}
 .xz-fence {
   position: relative;
   height: 26px;
-  margin: 0 -4px;
-}
+  margin: 0 -4px;}
 .xz-rail {
   position: absolute;
   left: 0;
@@ -763,12 +642,10 @@
   height: 7px;
   border-radius: 4px;
   background: linear-gradient(180deg, #a77a4a, #6b4423);
-  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.35);
-}
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.35);}
 .xz-rail.r2 {
   top: 18px;
-  height: 5px;
-}
+  height: 5px;}
 .xz-grid {
   list-style: none;
   margin: 0;
@@ -776,8 +653,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 10px;
-  justify-items: center;
-}
+  justify-items: center;}
 .xz-hang {
   position: relative;
   display: grid;
@@ -788,21 +664,16 @@
   cursor: pointer;
   transform-origin: 50% 0;
   animation: xz-sway 4s ease-in-out infinite alternate;
-  color: inherit;
-}
+  color: inherit;}
 @keyframes xz-sway {
   from {
-    transform: rotate(-3deg);
-  }
+    transform: rotate(-3deg);}
   to {
-    transform: rotate(3deg);
-  }
-}
+    transform: rotate(3deg);}}
 .xz-string {
   width: 2px;
   height: 14px;
-  background: rgba(255, 255, 255, 0.55);
-}
+  background: rgba(255, 255, 255, 0.55);}
 .xz-env-mini {
   position: relative;
   display: grid;
@@ -812,12 +683,10 @@
   border-radius: 8px;
   background: var(--env);
   box-shadow: 0 10px 14px -8px rgba(0, 0, 0, 0.7), inset 0 -18px 0 var(--env-front);
-  transition: transform 0.2s ease;
-}
+  transition: transform 0.2s ease;}
 .xz-hang:hover .xz-env-mini,
 .xz-hang:focus-visible .xz-env-mini {
-  transform: translateY(-3px) scale(1.04);
-}
+  transform: translateY(-3px) scale(1.04);}
 .xz-seal {
   position: absolute;
   top: 10px;
@@ -827,8 +696,7 @@
   margin-left: -6px;
   border-radius: 50%;
   background: #ffd76a;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
-}
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);}
 .xz-to {
   position: absolute;
   bottom: 22px;
@@ -841,15 +709,13 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
+  white-space: nowrap;}
 .xz-empty {
   margin: 36px auto 0;
   max-width: 320px;
   text-align: center;
   font-size: 14px;
-  color: #cfe9e4;
-}
+  color: #cfe9e4;}
 
 /* การเปิดซองอวยพร */
 .xz-open {
@@ -860,29 +726,25 @@
   place-items: center;
   padding: 16px;
   background: rgba(4, 12, 18, 0.74);
-  backdrop-filter: blur(4px);
-}
+  backdrop-filter: blur(4px);}
 .xz-letter {
   display: grid;
   justify-items: center;
   gap: 14px;
-  width: min(80vw, 280px, 38dvh);
-}
+  width: min(80vw, 280px, 38dvh);}
 .xz-envelope {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 2;
   background: var(--env);
   border-radius: 10px;
-  box-shadow: 0 30px 40px -20px rgba(0, 0, 0, 0.8);
-}
+  box-shadow: 0 30px 40px -20px rgba(0, 0, 0, 0.8);}
 .xz-env-back {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background: var(--env);
-  z-index: 1;
-}
+  z-index: 1;}
 .xz-card-slot {
   position: absolute;
   left: 50%;
@@ -890,8 +752,7 @@
   width: 74%;
   z-index: 2;
   transform: translate(-50%, 70%);
-  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
+  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);}
 .xz-env-front {
   position: absolute;
   left: 0;
@@ -901,8 +762,7 @@
   z-index: 3;
   background: var(--env-front);
   clip-path: polygon(0 0, 50% 40%, 100% 0, 100% 100%, 0 100%);
-  border-radius: 0 0 10px 10px;
-}
+  border-radius: 0 0 10px 10px;}
 .xz-flap {
   position: absolute;
   left: 0;
@@ -913,67 +773,52 @@
   background: var(--env-front);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: 50% 0;
-  transition: transform 0.6s ease;
-}
+  transition: transform 0.6s ease;}
 
 .xz-open.is-shake .xz-envelope {
-  animation: xz-shake 0.5s ease-in-out;
-}
+  animation: xz-shake 0.5s ease-in-out;}
 @keyframes xz-shake {
   0%,
   100% {
-    transform: rotate(0deg);
-  }
+    transform: rotate(0deg);}
   25% {
-    transform: rotate(-3deg);
-  }
+    transform: rotate(-3deg);}
   75% {
-    transform: rotate(3deg);
-  }
-}
+    transform: rotate(3deg);}}
 .xz-open.is-open .xz-flap,
 .xz-open.is-out .xz-flap,
 .xz-open.is-show .xz-flap {
   transform: rotateX(180deg);
-  z-index: 0;
-}
+  z-index: 0;}
 .xz-open.is-out .xz-card-slot,
 .xz-open.is-show .xz-card-slot {
   z-index: 5;
-  transform: translate(-50%, -30%);
-}
+  transform: translate(-50%, -30%);}
 .xz-open.is-show .xz-card-slot .xc-card {
-  transition: transform 0.25s ease;
-}
+  transition: transform 0.25s ease;}
 .xz-reveal {
   display: grid;
   gap: 10px;
   justify-items: center;
   width: 100%;
   margin-top: 14px;
-  animation: xz-rise 0.4s ease both;
-}
+  animation: xz-rise 0.4s ease both;}
 @keyframes xz-rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
-  }
+    transform: translateY(10px);}
   to {
     opacity: 1;
-    transform: none;
-  }
-}
+    transform: none;}}
 .xz-from {
   margin: 0;
   font-size: 13px;
-  color: #e8d19a;
-}
+  color: #e8d19a;}
 .xz-reveal-row {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: center;
-}
+  justify-content: center;}
 .xz-like,
 .xz-done {
   display: inline-flex;
@@ -985,44 +830,33 @@
   font: inherit;
   font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xz-like {
   border: 1px solid rgba(255, 107, 138, 0.6);
   background: rgba(255, 107, 138, 0.15);
-  color: #ffd1dc;
-}
+  color: #ffd1dc;}
 .xz-like.is-on {
   background: #ff6b8a;
-  color: #fff;
-}
+  color: #fff;}
 .xz-like:disabled {
-  cursor: default;
-}
+  cursor: default;}
 .xz-like b {
-  font-variant-numeric: tabular-nums;
-}
+  font-variant-numeric: tabular-nums;}
 .xz-done {
   border: 1px solid rgba(232, 209, 154, 0.5);
   background: rgba(6, 18, 25, 0.5);
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 
 @media (min-width: 760px) {
   .xz-area {
-    top: 124px;
-  }
+    top: 124px;}
   .xz-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    padding: 16px 40px 0;
-  }
+    padding: 16px 40px 0;}
   .xz-bells {
-    padding: 0 40px;
-  }
+    padding: 0 40px;}
   .xz-fence {
-    margin: 0;
-  }
-}
+    margin: 0;}}
 
 @media (prefers-reduced-motion: reduce) {
   .xz-star,
@@ -1031,104 +865,51 @@
   .xz-hang,
   .xc-light,
   .xz-open.is-shake .xz-envelope {
-    animation: none;
-  }
-}
-
-/* ป้ายชี้ไปโซนคำอวยพรหลังส่งการ์ด (อยู่เหนือแถบเมนู) */
-.xz-tip {
-  position: fixed;
-  left: 50%;
-  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-  z-index: 60;
-  transform: translateX(-50%);
-  max-width: min(90vw, 360px);
-  padding: 10px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(232, 209, 154, 0.6);
-  background: rgba(20, 40, 32, 0.94);
-  color: #f7f2e6;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.7);
-  animation: xz-tip-in 0.45s ease both, xz-tip-bob 1.6s ease-in-out 0.45s infinite alternate;
-}
-.xz-tip::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -7px;
-  width: 12px;
-  height: 12px;
-  margin-left: -6px;
-  transform: rotate(45deg);
-  background: rgba(20, 40, 32, 0.94);
-  border-right: 1px solid rgba(232, 209, 154, 0.6);
-  border-bottom: 1px solid rgba(232, 209, 154, 0.6);
-}
+    animation: none;}}
 @keyframes xz-tip-in {
   from {
     opacity: 0;
-    translate: 0 10px;
-  }
+    translate: 0 10px;}
   to {
     opacity: 1;
-    translate: 0 0;
-  }
-}
-@keyframes xz-tip-bob {
-  to {
-    translate: 0 -5px;
-  }
-}
+    translate: 0 0;}}
 
 /* มือถือ: ของตกแต่งและแถบเครื่องมือเรียงเป็นตาราง 5 ช่อง ให้พอดีจอไม่ต้องเลื่อน */
 @media (max-width: 759px) {
   .xc-palette {
-    gap: 4px;
-  }
+    gap: 4px;}
   .xc-palette-item {
     padding: 4px 1px;
-    font-size: 10px;
-  }
+    font-size: 10px;}
   .xc-palette-art {
     width: 30px;
-    height: 30px;
-  }
+    height: 30px;}
   .xc-sel-bar {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
-    min-height: 40px;
-  }
+    min-height: 40px;}
   .xc-sel-empty {
-    grid-column: 1 / -1;
-  }
+    grid-column: 1 / -1;}
   .xc-tool {
     justify-content: center;
     min-height: 36px;
     padding: 0 2px;
     font-size: 10.5px;
-    min-width: 0;
-  }
-}
+    min-width: 0;}}
 
 /* ซองการ์ดแบบ flat (ใช้ในตัวเลือกสีซองและตัวอย่างบนโต๊ะ) */
 .xc-env-art {
   position: relative;
   display: block;
   width: 100%;
-  aspect-ratio: 3 / 2;
-}
+  aspect-ratio: 3 / 2;}
 .xc-env-body {
   position: absolute;
   inset: 0;
   border-radius: 8px;
   background: var(--env);
-  box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.45);
-}
+  box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.45);}
 .xc-env-pocket {
   position: absolute;
   left: 0;
@@ -1137,8 +918,7 @@
   height: 60%;
   border-radius: 0 0 8px 8px;
   background: var(--env-front);
-  clip-path: polygon(0 0, 50% 42%, 100% 0, 100% 100%, 0 100%);
-}
+  clip-path: polygon(0 0, 50% 42%, 100% 0, 100% 100%, 0 100%);}
 .xc-env-flap {
   position: absolute;
   left: 0;
@@ -1147,73 +927,56 @@
   height: 52%;
   background: var(--env-front);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  opacity: 0.95;
-}
+  opacity: 0.95;}
 .xc-env-stage {
   display: grid;
   justify-items: center;
-  gap: 4px;
-}
+  gap: 4px;}
 .xc-env-stage .xc-env-art {
-  width: min(44vw, 170px);
-}
+  width: min(44vw, 170px);}
 .xc-env-stage span {
   font-size: 12px;
-  color: #f1e4bf;
-}
+  color: #f1e4bf;}
 
 /* ฉากเปิดโต๊ะหลังตั้งชื่อ: หน้าโปรไฟล์ค่อย ๆ จางไป โต๊ะค่อย ๆ ซูมเข้า การ์ดตกลงมาบนโต๊ะ */
 .xc-onboard {
   position: fixed;
   inset: 0;
   z-index: 70;
-  overflow: hidden;
-}
+  overflow: hidden;}
 .xc-onboard.is-leaving {
   animation: xc-leave 0.6s ease forwards;
-  pointer-events: none;
-}
+  pointer-events: none;}
 @keyframes xc-leave {
   to {
     opacity: 0;
     transform: scale(1.03);
-    filter: blur(6px);
-  }
-}
+    filter: blur(6px);}}
 .xc-studio.is-enter {
-  animation: xc-enter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
+  animation: xc-enter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;}
 .xc-studio.is-enter .xc-studio-card {
-  animation: xc-card-in 1s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
+  animation: xc-card-in 1s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both;}
 @keyframes xc-enter {
   from {
     opacity: 0;
     transform: scale(1.04);
-    filter: blur(6px);
-  }
+    filter: blur(6px);}
   to {
     opacity: 1;
     transform: none;
-    filter: none;
-  }
-}
+    filter: none;}}
 @keyframes xc-card-in {
   from {
     opacity: 0;
-    transform: translateY(36px) rotate(-5deg);
-  }
+    transform: translateY(36px) rotate(-5deg);}
   to {
     opacity: 1;
-    transform: none;
-  }
-}
+    transform: none;}}
 
 /* ---------- การ์ดอวยพรรุ่นใหม่: ข้อความอิสระ สติ๊กเกอร์บนซอง ลิงก์แชร์ ---------- */
 .xc-card-face {
   container-type: inline-size;
-  display: block;
-}
+  display: block;}
 .xc-card-sign {
   position: absolute;
   right: 12px;
@@ -1225,12 +988,10 @@
   color: #1f2b22;
   font-size: 11px;
   font-weight: 700;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xc-card-props,
 .xc-env-props {
-  z-index: 2;
-}
+  z-index: 2;}
 .xc-text {
   position: absolute;
   z-index: 3;
@@ -1243,80 +1004,60 @@
   overflow-wrap: anywhere;
   font-size: calc(100cqi * 0.085);
   touch-action: none;
-  user-select: none;
-}
+  user-select: none;}
 .xc-text.is-drag {
-  cursor: grab;
-}
+  cursor: grab;}
 .xc-text.is-sel {
   outline: 2px dashed #ffe7a3;
   outline-offset: 5px;
-  border-radius: 6px;
-}
+  border-radius: 6px;}
 .xc-text.is-empty {
-  opacity: 0.45;
-}
+  opacity: 0.45;}
 .xc-text.fx-outline {
-  text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff;
-}
+  text-shadow: 2px 0 0 #fff, -2px 0 0 #fff, 0 2px 0 #fff, 0 -2px 0 #fff, 1.5px 1.5px 0 #fff, -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff;}
 .xc-text.fx-shadow {
-  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.28), 0 7px 12px rgba(0, 0, 0, 0.3);
-}
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.28), 0 7px 12px rgba(0, 0, 0, 0.3);}
 .xc-text.fx-glow {
-  text-shadow: 0 0 6px var(--tc), 0 0 16px var(--tc);
-}
+  text-shadow: 0 0 6px var(--tc), 0 0 16px var(--tc);}
 .xc-theme-berry {
   background: radial-gradient(circle at 18% 18%, rgba(255, 228, 230, 0.35), transparent 35%), radial-gradient(circle at 82% 74%, #be185d, transparent 55%), #9f1239;
-  color: #fff1f2;
-}
+  color: #fff1f2;}
 .xc-theme-night {
   background: radial-gradient(circle, rgba(253, 230, 138, 0.9) 0 1px, transparent 1.6px) 0 0 / 26px 26px, radial-gradient(circle at 30% 20%, #334155, #0f172a 72%);
-  color: #fef3c7;
-}
+  color: #fef3c7;}
 .xc-theme-night .xc-card-frame {
-  border-color: #fde68a;
-}
+  border-color: #fde68a;}
 .xc-env-pink,
 .xz-env-pink {
   --env: #f9a8d4;
-  --env-front: #f472b6;
-}
+  --env-front: #f472b6;}
 .xc-env-blue,
 .xz-env-blue {
   --env: #93c5fd;
-  --env-front: #60a5fa;
-}
+  --env-front: #60a5fa;}
 .xc-env-art .xc-env-flap {
   transition: transform 0.6s ease, opacity 0.6s ease;
-  transform-origin: 50% 0;
-}
+  transform-origin: 50% 0;}
 .xc-env-props {
   position: absolute;
-  inset: 0;
-}
+  inset: 0;}
 .xc-env-props .xc-prop {
   width: 16%;
-  pointer-events: none;
-}
+  pointer-events: none;}
 .xc-env-props .xc-prop.is-drag {
-  pointer-events: auto;
-}
+  pointer-events: auto;}
 .xc-env-big {
   display: grid;
   place-items: center;
-  width: 100%;
-}
+  width: 100%;}
 .xc-env-hero {
-  width: min(70vw, 300px);
-}
+  width: min(70vw, 300px);}
 .xc-env-stage span {
-  font-size: 12px;
-}
+  font-size: 12px;}
 .xc-cats {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
+  gap: 6px;}
 .xc-cats button,
 .xc-chip-btn {
   min-height: 34px;
@@ -1328,31 +1069,25 @@
   font: inherit;
   font-size: 12.5px;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-cats button.is-on,
 .xc-chip-btn.is-on {
   background: linear-gradient(180deg, #2f6b52, #1d4a37);
   color: #f7f2e6;
-  border-color: transparent;
-}
+  border-color: transparent;}
 .xc-chip-btn.is-add:disabled {
   opacity: 0.45;
-  cursor: default;
-}
+  cursor: default;}
 .xc-palette-wrap {
   display: grid;
-  gap: 8px;
-}
+  gap: 8px;}
 .xc-text-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
+  gap: 6px;}
 .xc-text-edit {
   display: grid;
-  gap: 8px;
-}
+  gap: 8px;}
 .xc-text-edit textarea {
   font: inherit;
   font-size: 15px;
@@ -1362,13 +1097,11 @@
   background: #fff;
   color: #2a1d10;
   resize: none;
-  min-width: 0;
-}
+  min-width: 0;}
 .xc-text-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
+  gap: 6px;}
 .xc-text-row select {
   font: inherit;
   font-size: 13px;
@@ -1378,13 +1111,11 @@
   border: 1px solid rgba(90, 60, 30, 0.2);
   background: #fff;
   color: #2a1d10;
-  min-width: 0;
-}
+  min-width: 0;}
 .xc-swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-}
+  gap: 8px;}
 .xc-swatch-dot {
   width: 26px;
   height: 26px;
@@ -1392,24 +1123,19 @@
   border: 2px solid #fff;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  padding: 0;
-}
+  padding: 0;}
 .xc-swatch-dot.is-on {
-  box-shadow: 0 0 0 3px #b9862a;
-}
+  box-shadow: 0 0 0 3px #b9862a;}
 .xc-sel-bar .xc-tool.is-on {
   background: #1d4a37;
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 .xc-sel-bar .xc-tool b,
 .xc-sel-bar .xc-tool i {
-  font-size: 13px;
-}
+  font-size: 13px;}
 .xz-envelope-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 2;
-}
+  aspect-ratio: 3 / 2;}
 .xz-card-slot {
   position: absolute;
   left: 50%;
@@ -1417,47 +1143,38 @@
   width: 74%;
   z-index: 0;
   transform: translate(-50%, 70%);
-  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
+  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);}
 .xz-env-reveal {
   position: absolute;
   inset: 0;
   z-index: 2;
   width: 100%;
-  aspect-ratio: auto;
-}
+  aspect-ratio: auto;}
 .xz-open.is-open .xc-env-flap,
 .xz-open.is-out .xc-env-flap,
 .xz-open.is-show .xc-env-flap {
   transform: rotateX(180deg);
-  opacity: 0;
-}
+  opacity: 0;}
 .xz-open.is-out .xz-card-slot,
 .xz-open.is-show .xz-card-slot {
   z-index: 5;
-  transform: translate(-50%, -30%);
-}
+  transform: translate(-50%, -30%);}
 .xz-zone-env {
   position: relative;
   display: block;
-  width: 118px;
-}
+  width: 118px;}
 .xz-env-zone-art {
   width: 118px;
-  box-shadow: 0 10px 14px -8px rgba(0, 0, 0, 0.7);
-}
+  box-shadow: 0 10px 14px -8px rgba(0, 0, 0, 0.7);}
 .xz-hang:hover .xz-zone-env,
 .xz-hang:focus-visible .xz-zone-env {
-  transform: translateY(-3px) scale(1.04);
-}
+  transform: translateY(-3px) scale(1.04);}
 .xz-zone-env {
-  transition: transform 0.2s ease;
-}
+  transition: transform 0.2s ease;}
 .xz-zone-env .xz-to {
   bottom: 14%;
   left: 8px;
-  right: 8px;
-}
+  right: 8px;}
 .xc-choose-back {
   position: fixed;
   inset: 0;
@@ -1466,8 +1183,7 @@
   align-items: end;
   justify-items: center;
   background: rgba(4, 12, 18, 0.6);
-  backdrop-filter: blur(3px);
-}
+  backdrop-filter: blur(3px);}
 .xc-choose {
   display: grid;
   gap: 12px;
@@ -1475,24 +1191,18 @@
   padding: 22px 18px calc(18px + env(safe-area-inset-bottom, 0px));
   border-radius: 24px 24px 0 0;
   background: linear-gradient(180deg, #fdf8ee, #f4ead2);
-  color: #2a1d10;
-}
+  color: #2a1d10;}
 @media (min-width: 760px) {
   .xc-choose-back {
-    align-items: center;
-  }
+    align-items: center;}
   .xc-choose {
-    border-radius: 24px;
-  }
-}
+    border-radius: 24px;}}
 .xc-choose h2 {
   margin: 0;
   font-family: var(--serif, Georgia, serif);
-  font-size: 22px;
-}
+  font-size: 22px;}
 .xc-choose .xc-kicker {
-  color: #7a6446;
-}
+  color: #7a6446;}
 .xc-choose-opt {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -1505,18 +1215,15 @@
   color: #2a1d10;
   text-align: left;
   font: inherit;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-choose-opt b {
-  font-size: 16px;
-}
+  font-size: 16px;}
 .xc-choose-opt small {
   display: block;
   margin-top: 2px;
   font-size: 12.5px;
   color: #7a6446;
-  line-height: 1.5;
-}
+  line-height: 1.5;}
 .xc-choose-ico {
   display: grid;
   place-items: center;
@@ -1524,75 +1231,57 @@
   height: 50px;
   border-radius: 15px;
   background: linear-gradient(180deg, #2f6b52, #1d4a37);
-  color: #f7f2e6;
-}
+  color: #f7f2e6;}
 .xc-theme-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+  grid-template-columns: repeat(3, minmax(0, 1fr));}
 .xc-env-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+  grid-template-columns: repeat(3, minmax(0, 1fr));}
 @media (min-width: 760px) {
   .xc-theme-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
+    grid-template-columns: repeat(3, minmax(0, 1fr));}}
 /* ขั้นตอนทั้ง 5 แถวเดียวให้พอดีจอมือถือ */
 .xc-steps {
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 4px;
-}
+  gap: 4px;}
 .xc-steps button {
   gap: 3px;
   padding: 0 3px;
-  font-size: 11.5px;
-}
+  font-size: 11.5px;}
 .xc-steps button span {
   width: 17px;
   height: 17px;
-  font-size: 10px;
-}
+  font-size: 10px;}
 
 .xz-reveal-row {
-  flex-wrap: nowrap;
-}
+  flex-wrap: nowrap;}
 .xz-reveal-row .xz-like,
 .xz-reveal-row .xz-done {
   padding: 0 12px;
   white-space: nowrap;
-  font-size: 13px;
-}
+  font-size: 13px;}
 /* มือถือ: ตัวแก้ข้อความกระชับให้พอดีแผงโดยไม่ต้องเลื่อน */
 @media (max-width: 759px) {
   .xc-text-edit {
-    gap: 6px;
-  }
+    gap: 6px;}
   .xc-text-edit textarea {
     height: 52px;
     padding: 6px 10px;
-    font-size: 14px;
-  }
+    font-size: 14px;}
   .xc-text-row select {
-    min-height: 32px;
-  }
+    min-height: 32px;}
   .xc-swatches {
-    gap: 6px;
-  }
+    gap: 6px;}
   .xc-swatch-dot {
     width: 22px;
-    height: 22px;
-  }
+    height: 22px;}
   .xc-text-edit .xc-sel-bar {
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 3px;
-    min-height: 0;
-  }
+    min-height: 0;}
   .xc-text-edit .xc-tool {
     min-height: 34px;
     padding: 0;
-    font-size: 12px;
-  }
-}
+    font-size: 12px;}}
 
 /* แถบควบคุมโซนคำอวยพรและกลับมุมเดิม (อยู่เหนือแถบเมนู) */
 .xz-hud {
@@ -1611,14 +1300,12 @@
   box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.7);
   color: #f7f2e6;
   white-space: nowrap;
-  animation: xz-tip-in 0.45s ease both;
-}
+  animation: xz-tip-in 0.45s ease both;}
 .xz-hud-count {
   padding: 0 6px;
   font-size: 12.5px;
   font-weight: 700;
-  color: #e8d19a;
-}
+  color: #e8d19a;}
 .xz-hud-btn {
   min-height: 36px;
   padding: 0 14px;
@@ -1629,105 +1316,83 @@
   font: inherit;
   font-size: 13px;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xz-hud-btn.is-ghost {
   background: rgba(255, 255, 255, 0.12);
   color: #f7f2e6;
-  border: 1px solid rgba(232, 209, 154, 0.4);
-}
+  border: 1px solid rgba(232, 209, 154, 0.4);}
 
 /* การ์ดขยับเองตลอดเวลา ไม่ต้องเอาเมาส์ไปชี้ และแสงวิ่งผ่านผิวการ์ด */
 .xc-card.is-idle {
-  animation: xc-idle 7s ease-in-out infinite;
-}
+  animation: xc-idle 7s ease-in-out infinite;}
 @keyframes xc-idle {
   0%,
   100% {
-    transform: rotateX(3deg) rotateY(-7deg) translateY(0);
-  }
+    transform: rotateX(3deg) rotateY(-7deg) translateY(0);}
   50% {
-    transform: rotateX(-3deg) rotateY(7deg) translateY(-5px);
-  }
-}
+    transform: rotateX(-3deg) rotateY(7deg) translateY(-5px);}}
 .xc-card-shine {
   background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.42) 50%, transparent 70%);
   background-size: 250% 100%;
   mix-blend-mode: soft-light;
-  animation: xc-sheen 5s linear infinite;
-}
+  animation: xc-sheen 5s linear infinite;}
 @keyframes xc-sheen {
   from {
-    background-position: 150% 0;
-  }
+    background-position: 150% 0;}
   to {
-    background-position: -150% 0;
-  }
-}
+    background-position: -150% 0;}}
 
 /* ลวดลายกระดาษ 6 แบบ: ทุกแบบใช้สีพื้น --base ได้ จึงเปลี่ยนสีเองได้ */
 .xc-theme-kraft {
   --base: #d8b48a;
   background: radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.25) 0 1.5px, transparent 2.5px) 0 0 / 22px 22px, repeating-linear-gradient(35deg, rgba(90, 50, 20, 0.09) 0 2px, transparent 2px 9px), linear-gradient(160deg, color-mix(in srgb, var(--base) 85%, white), var(--base));
-  color: #4a2e18;
-}
+  color: #4a2e18;}
 .xc-theme-pine {
   --base: #0c3026;
   background: radial-gradient(circle, #e2b93b 0 1.2px, transparent 2px) 0 0 / 28px 28px, repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.05) 0 3px, transparent 3px 14px), linear-gradient(170deg, color-mix(in srgb, var(--base) 80%, #1f7a4d), var(--base));
-  color: #f6e7bf;
-}
+  color: #f6e7bf;}
 .xc-theme-pine .xc-card-frame {
-  border-color: #e2b93b;
-}
+  border-color: #e2b93b;}
 .xc-theme-candy {
   --base: #ffffff;
   background: repeating-linear-gradient(-45deg, #ef4444 0 14px, var(--base) 14px 28px), linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
-  color: #8f1a2d;
-}
+  color: #8f1a2d;}
 .xc-theme-candy .xc-card-frame {
-  border-color: #ef4444;
-}
+  border-color: #ef4444;}
 .xc-theme-frost {
   --base: #d6f0fb;
   background: radial-gradient(circle, #ffffff 0 1.8px, transparent 3px) 0 0 / 26px 26px, radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), transparent 55%), linear-gradient(170deg, var(--base), color-mix(in srgb, var(--base) 70%, #7dd3fc));
-  color: #1c4e66;
-}
+  color: #1c4e66;}
 .xc-theme-berry {
   --base: #9f1239;
   background: radial-gradient(circle, rgba(255, 228, 230, 0.55) 0 3px, transparent 4px) 0 0 / 30px 30px, radial-gradient(circle at 82% 80%, rgba(0, 0, 0, 0.28), transparent 55%), linear-gradient(160deg, color-mix(in srgb, var(--base) 80%, #fb7185), var(--base));
-  color: #fff1f2;
-}
+  color: #fff1f2;}
 .xc-theme-night {
   --base: #0f172a;
   background: radial-gradient(circle, rgba(253, 230, 138, 0.95) 0 1px, transparent 1.6px) 0 0 / 26px 26px, radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.5px) 13px 13px / 40px 40px, linear-gradient(170deg, color-mix(in srgb, var(--base) 85%, #334155), var(--base));
-  color: #fef3c7;
-}
+  color: #fef3c7;}
 .xc-bg-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-}
+  gap: 8px;}
 .xc-color-input {
   width: 30px;
   height: 30px;
   padding: 0;
   border: 0;
   background: none;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-color-row {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #4a3420;
-}
+  color: #4a3420;}
 .xc-seg {
   display: flex;
   gap: 6px;
-  justify-content: center;
-}
+  justify-content: center;}
 .xc-seg button {
   min-height: 34px;
   padding: 0 16px;
@@ -1737,16 +1402,13 @@
   color: #f7f2e6;
   font: inherit;
   font-weight: 600;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xc-seg button.is-on {
   background: #e8d19a;
-  color: #2a1d10;
-}
+  color: #2a1d10;}
 .xc-stage-cap {
   font-size: 12px;
-  color: #f1e4bf;
-}
+  color: #f1e4bf;}
 .xc-send-env {
   position: absolute;
   left: 50%;
@@ -1756,165 +1418,80 @@
   opacity: 0;
   pointer-events: none;
   display: none;
-  transform: translate(-50%, -50%);
-}
+  transform: translate(-50%, -50%);}
 .xc-send-env.is-on {
-  display: block;
-}
-
-/* คำแนะนำครั้งแรก: ทั้งหน้าเทาดำ เหลือปุ่มที่สอนให้สว่าง */
-.xc-spot-block {
-  position: fixed;
-  z-index: 70;
-  background: rgba(6, 16, 12, 0.5);
-  pointer-events: auto;
-  animation: xc-spot-fade 0.35s ease-out both;
-}
-@keyframes xc-spot-fade {
-  from { opacity: 0; }
-}
-.xc-spot-ring {
-  position: fixed;
-  z-index: 71;
-  border: 2px solid #ffd76a;
-  border-radius: 18px;
-  box-shadow: 0 0 0 6px rgba(255, 215, 106, 0.25), 0 0 26px rgba(255, 215, 106, 0.6);
-  pointer-events: none;
-  transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease;
-  animation: xc-spot-pulse 1.4s ease-in-out infinite;
-}
-@keyframes xc-spot-pulse {
-  50% {
-    box-shadow: 0 0 0 10px rgba(255, 215, 106, 0.1), 0 0 34px rgba(255, 215, 106, 0.85);
-  }
-}
-.xc-spot-tip {
-  animation: xc-spot-tip-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  position: fixed;
-  z-index: 72;
-  display: grid;
-  gap: 4px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: #fdf8ee;
-  color: #2a1d10;
-  box-shadow: 0 20px 40px -18px rgba(0, 0, 0, 0.7);
-  pointer-events: none;
-  animation: xz-tip-in 0.4s ease both;
-}
-.xc-spot-tip .xc-kicker {
-  color: #7a6446;
-}
-.xc-spot-tip b {
-  font-size: 16px;
-}
-.xc-spot-tip p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.xc-spot-tip small {
-  color: #7a6446;
-  font-size: 11.5px;
-}
+  display: block;}
 
 /* มือถือ: แผงตัวเลือกสูงขึ้นเล็กน้อย การ์ดและซองเล็กลง ตัวเลือกกระชับ ให้พอดีจอโดยไม่ต้องเลื่อน */
 @media (max-width: 759px) {
   .xc-panel {
-    max-height: 56dvh;
-  }
+    max-height: 56dvh;}
   .xc-studio-card {
-    width: min(44vw, 24dvh);
-  }
+    width: min(44vw, 24dvh);}
   .xc-env-hero {
-    width: min(58vw, 24dvh);
-  }
+    width: min(58vw, 24dvh);}
   .xc-theme-grid {
-    gap: 6px;
-  }
+    gap: 6px;}
   .xc-theme-opt {
     padding: 4px;
     gap: 4px;
-    font-size: 10.5px;
-  }
+    font-size: 10.5px;}
   .xc-theme-opt .xc-swatch {
-    aspect-ratio: 2 / 1;
-  }
+    aspect-ratio: 2 / 1;}
   .xc-env-row {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 4px;
-  }
+    gap: 4px;}
   .xc-env-chip {
     padding: 5px 2px;
     gap: 2px;
-    font-size: 10px;
-  }
+    font-size: 10px;}
   .xc-env-chip .xc-env-art {
-    max-width: 36px;
-  }
+    max-width: 36px;}
   .xc-palette {
-    gap: 4px;
-  }
+    gap: 4px;}
   .xc-palette-item {
     padding: 3px 1px;
-    font-size: 9.5px;
-  }
+    font-size: 9.5px;}
   .xc-palette-art {
     width: 26px;
-    height: 26px;
-  }
-}
+    height: 26px;}}
 @media (max-width: 759px) {
   .xc-theme-opt .xc-swatch {
-    aspect-ratio: 3 / 1;
-  }
+    aspect-ratio: 3 / 1;}
   .xc-bg-row {
-    gap: 5px;
-  }
+    gap: 5px;}
   .xc-bg-row .xc-swatch-dot {
     width: 20px;
-    height: 20px;
-  }
+    height: 20px;}
   .xc-bg-row .xc-color-input {
     width: 24px;
-    height: 24px;
-  }
+    height: 24px;}
   .xc-bg-row .xc-chip-btn {
     min-height: 28px;
     padding: 0 8px;
-    font-size: 11px;
-  }
-}
+    font-size: 11px;}}
 @media (max-width: 759px) {
   .xc-panel {
     gap: 6px;
-    padding-top: 10px;
-  }
-}
+    padding-top: 10px;}}
 
 /* มือถือ: แถบโซนคำอวยพรอยู่ใต้หัวข้อ ไม่ทับปุ่มซูมและแถบเมนู */
 @media (max-width: 759px) {
   .xz-hud {
     top: 218px;
     bottom: auto;
-    max-width: calc(100vw - 24px);
-  }
+    max-width: calc(100vw - 24px);}
   .xz-hud-btn {
     padding: 0 10px;
-    font-size: 12px;
-  }
+    font-size: 12px;}
   .xz-hud-count {
-    font-size: 11.5px;
-  }
-}
+    font-size: 11.5px;}}
 /* มือถือ: ป้าย Exclusive ไม่ล้นไปทับปุ่มสนับสนุน */
 @media (max-width: 759px) {
   .xmas-action.is-exclusive {
     font-size: 9.5px;
     letter-spacing: -0.02em;
-    white-space: nowrap;
-  }
-}
+    white-space: nowrap;}}
 
 .xz-more {
   display: block;
@@ -1928,37 +1505,30 @@
   font: inherit;
   font-size: 14px;
   font-weight: 700;
-  cursor: pointer;
-}
+  cursor: pointer;}
 .xz-more:disabled {
   opacity: 0.5;
-  cursor: default;
-}
+  cursor: default;}
 
 /* แกะซอง: การ์ดอยู่หลังซอง สั่นแล้วเปิดฝา การ์ดเลื่อนขึ้นผ่านปากซองให้เห็นส่วนบนก่อน (ไม่หลุดขอบจอ)
    จากนั้นซองค่อย ๆ จางหาย แล้วการ์ดเลื่อนลงมาอยู่กลางจอ ขนาดอ้างอิงความกว้างซอง (cqw) */
 .xz-letter {
   container-type: inline-size;
-  width: min(88vw, 440px, 58dvh);
-}
+  width: min(88vw, 440px, 58dvh);}
 .xz-open .xz-envelope-wrap {
   container-type: inline-size;
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 2;
-}
+  aspect-ratio: 3 / 2;}
 .xz-open.is-shake .xz-envelope-wrap {
-  animation: xz-shake 0.48s ease-in-out;
-}
+  animation: xz-shake 0.48s ease-in-out;}
 .xz-open .xz-card-clip {
   position: absolute;
   inset: 0;
   z-index: 1;
-  clip-path: inset(-600% -60% 0 -60%);
-}
+  clip-path: inset(-600% -60% 0 -60%);}
 .xz-open.is-show .xz-card-clip {
-  clip-path: inset(-600% -60% -600% -60%);
-}
+  clip-path: inset(-600% -60% -600% -60%);}
 .xz-open .xz-card-slot {
   position: absolute;
   left: 50%;
@@ -1966,37 +1536,22 @@
   bottom: auto;
   width: 78cqw;
   transform: translate(-50%, 0);
-  transition: transform 0.7s cubic-bezier(0.22, 0.8, 0.25, 1);
-}
+  transition: transform 0.7s cubic-bezier(0.22, 0.8, 0.25, 1);}
 .xz-open.is-out .xz-card-slot {
-  transform: translate(-50%, -113.5cqw);
-}
+  transform: translate(-50%, -113.5cqw);}
 .xz-open.is-show .xz-card-slot {
   transform: translate(-50%, -85.3cqw);
-  transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.25, 1) 0.35s;
-}
+  transition: transform 0.55s cubic-bezier(0.22, 0.8, 0.25, 1) 0.35s;}
 .xz-open .xz-env-reveal {
-  transition: opacity 0.4s ease;
-}
+  transition: opacity 0.4s ease;}
 .xz-open.is-show .xz-env-reveal {
-  opacity: 0;
-}
+  opacity: 0;}
 .xz-open.is-show .xz-reveal {
-  margin-top: calc(19cqw + 10px);
-}
+  margin-top: calc(19cqw + 10px);}
 @media (prefers-reduced-motion: reduce) {
   .xz-open.is-shake .xz-envelope-wrap {
-    animation: none;
-  }
+    animation: none;}
   .xz-open .xz-card-slot,
   .xz-open .xz-env-reveal {
-    transition: none;
-  }
-}
-
-@keyframes xc-spot-tip-in {
-  from { opacity: 0; transform: translateY(10px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .xc-spot-block, .xc-spot-tip, .xc-spot-ring { animation: none; transition: none; }
-}
+    transition: none;}}
+@media (prefers-reduced-motion: reduce) {}
