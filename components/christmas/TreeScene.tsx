@@ -974,6 +974,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // บ้านหิมะ Exclusive: บินเข้าหาเหมือนตุ๊กตาที่ผู้ใช้ตกแต่ง และจำมุมเดิมไว้ให้กลับมาได้
     function focusGiant(spot: number | null) {
       if (spot === null) {
+        callbacks.current.onAwayChange?.(false);
         if (savedView) {
           animateCam(savedView.pos, savedView.tgt, 1000);
           controls.minDistance = savedView.min;
@@ -983,6 +984,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       }
       const def = GIANT_POSITIONS[spot] ?? GIANT_POSITIONS[0];
       rememberView();
+      callbacks.current.onAwayChange?.(true);
       const tgt = new THREE.Vector3(def.x, 0.9, def.z);
       const dir = new THREE.Vector3(camera.position.x - def.x, 0, camera.position.z - def.z);
       if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
