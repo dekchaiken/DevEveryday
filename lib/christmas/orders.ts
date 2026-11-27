@@ -47,6 +47,7 @@ const K = {
   index: "xmas:orders", // ZSET score = createdAt
   giants: (room: string) => `xmas:${room}:giants`, // HASH: ตำแหน่ง -> ตุ๊กตายักษ์ (ทุกตัวที่ซื้อ)
   hold: (room: string, spot: number) => `xmas:${room}:hold:${spot}`, // STRING: รหัสออเดอร์ที่จองจุดนี้ (หมดอายุเอง)
+  holdIdx: (room: string) => `xmas:${room}:holdidx`, // HASH: จุด -> เวลาหมดอายุ (ใช้แสดงบนแผนที่)
 };
 
 export async function saveOrder(o: Order) {
@@ -109,7 +110,20 @@ async function holdSpot(room: string, spot: number, orderId: string): Promise<bo
     return true;
   }
   if (await cmd<string | null>("HGET", K.giants(room), String(spot))) return false;
-  return (await cmd<string | null>("SET", K.hold(room, spot), orderId, "NX", "PX", HOLD_MS)) === "OK";
+  const ok = (await cmd<string | null>("SET", K.hold(room, spot), orderId, "NX", "PX", HOLD_MS)) === "OK";
+  if (ok) await cmd("HSET", K.holdIdx(room), String(spot), Date.now() + HOLD_MS);
+  return ok;
+}
+
+// จุดที่มีคนกำลังจองอยู่ตอนนี้ (ไม่รวมที่หมดอายุแล้ว) ใช้แสดงบนแผนที่ให้ลูกค้าเห็นว่ามีคนจอง
+export async function listHeldSpots(room: string, now: number): Promise<number[]> {
+  if (!storeConfigured()) {
+    return [...(mem.holds.get(room)?.entries() ?? [])].filter(([, h]) => h.exp > now).map(([spot]) => spot);
+  }
+  const raw = (await cmd<string[]>("HGETALL", K.holdIdx(room))) ?? [];
+  const out: number[] = [];
+  for (let i = 0; i < raw.length; i += 2) if (Number(raw[i + 1]) > now) out.push(Number(raw[i]));
+  return out;
 }
 
 // คืนจุดเมื่อสร้างออเดอร์ไม่สำเร็จ (เช่น สร้าง QR ไม่ได้) เพื่อให้คนอื่นจองได้
@@ -119,7 +133,10 @@ export async function releaseGiantSpot(room: string, spot: number, orderId: stri
     if (m?.get(spot)?.orderId === orderId) m.delete(spot);
     return;
   }
-  if ((await cmd<string | null>("GET", K.hold(room, spot))) === orderId) await cmd("DEL", K.hold(room, spot));
+  if ((await cmd<string | null>("GET", K.hold(room, spot))) === orderId) {
+    await cmd("DEL", K.hold(room, spot));
+    await cmd("HDEL", K.holdIdx(room), String(spot));
+  }
 }
 
 // จองจุดให้ออเดอร์ใหม่: ถ้าผู้ซื้อระบุจุดมาให้จองจุดนั้น ถ้าไม่ระบุให้หาจุดว่างถัดไป
