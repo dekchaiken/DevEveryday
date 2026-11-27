@@ -32,11 +32,15 @@ import { CardReveal, WishZone } from "./WishZone";
 import { CoachSpotlight, type SpotStep } from "./CoachSpotlight";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
-import { ZONE_CAPACITY } from "@/lib/christmas/slots";
+import { GIANT_POSITIONS, SLOT_POSITIONS, ZONE_CAPACITY } from "@/lib/christmas/slots";
+import { FirstVisitTour } from "./FirstVisitTour";
 import "./wishcards.css";
 import "./christmas.css";
 import { PendingOrdersWatch } from "./PendingOrdersWatch";
-import { GiantBanner, GiantCard, type GiantInfo } from "./GiantCard";
+import { GiantBanner, type GiantInfo } from "./GiantCard";
+
+// คำอธิบายที่ลอยข้างโมเดลเมื่อแตะบ้านหรือตุ๊กตา (กดปุ่มในนั้นจึงจะเปิดป้ายหรือรายละเอียด)
+type TipState = { kicker: string; title: string; cta: string; x: number; y: number; z: number; open: () => void };
 
 // คำแนะนำครั้งแรก: สอนทีละปุ่ม ปุ่มอื่นจะเทาจนกว่าจะกดปุ่มที่สอนก่อน
 const SPOT_STEPS: SpotStep[] = [
@@ -89,6 +93,26 @@ function useServerClock() {
 
 export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [giantCard, setGiantCard] = useState<GiantInfo | null>(null);
+  const [tip, setTip] = useState<TipState | null>(null);
+  const tipRef = useRef<HTMLDivElement | null>(null);
+
+  // วางคำอธิบายให้ตามตำแหน่งโมเดลบนจอทุกเฟรม (กล้องบินหรือหมุนก็ยังอยู่ข้างโมเดล)
+  useEffect(() => {
+    if (!tip) return;
+    let raf = 0;
+    const loop = () => {
+      const el = tipRef.current;
+      const h = treeRef.current;
+      if (el && h) {
+        const p = h.project(tip.x, tip.y, tip.z);
+        el.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px) translate(-50%, calc(-100% - 14px))`;
+        el.style.opacity = p.visible ? "1" : "0";
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => cancelAnimationFrame(raf);
+  }, [tip]);
   const room = getRoom(roomId) as RoomTheme;
   const router = useRouter();
   const [online, setOnline] = useState<{ count: number; capacity: number } | null>(null);
@@ -492,9 +516,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     }
   }
 
+  // แตะต้นคริสต์มาสตรงไหนก็เปิดหน้าแขวนคำอวยพรทันที ไม่ต้องกดปุ่มก่อน
   const onPick = useCallback((height: number, angle: number) => {
     setPick({ height, angle });
     setFocus(null);
+    setSheetOpen(true);
   }, []);
 
   // ---------- การ์ดอวยพร: โต๊ะออกแบบ โซนคำอวยพร ----------
@@ -637,7 +663,11 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           onError={() => setWebglOk(false)}
           ground={room.ground}
           giants={(state?.giants ?? []).map((g) => ({ name: g.name, message: g.message, spot: g.spot ?? 0, look: g.look, social: g.social }))}
-          onGiantClick={(g) => setGiantCard({ name: g.name, message: g.message, spot: g.spot, social: g.social, look: g.look })}
+          onGiantClick={(g) => {
+            const def = GIANT_POSITIONS[g.spot] ?? GIANT_POSITIONS[0];
+            const info: GiantInfo = { name: g.name, message: g.message, spot: g.spot, social: g.social, look: g.look };
+            setTip({ kicker: "บ้านหิมะ Exclusive", title: g.name, cta: "ดูป้าย", x: def.x, y: 1.6, z: def.z, open: () => setGiantCard(info) });
+          }}
           decor={decor}
           markerSlot={markerSlot}
           zoneCards={cards}
@@ -652,9 +682,20 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             setDecorOpen(true);
           }}
           onDecorClick={(d) => {
-            setDecorFocus(d);
-            setFocus(null);
-            treeRef.current?.focusDecor(d);
+            const pos = SLOT_POSITIONS[d.slot] ?? SLOT_POSITIONS[0];
+            setTip({
+              kicker: "ตุ๊กตาหิมะ",
+              title: d.name,
+              cta: "ดูรายละเอียด",
+              x: pos.x,
+              y: 1.0,
+              z: pos.z,
+              open: () => {
+                setDecorFocus(d);
+                setFocus(null);
+                treeRef.current?.focusDecor(d);
+              },
+            });
           }}
           snowing={snowOn}
           crowd={{ count: online?.count ?? 0, seed: room.id }}
@@ -739,9 +780,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
       <PendingOrdersWatch roomId={room.id} notify={notify} />
-      {giantCard && <GiantBanner info={giantCard} />}
       {giantCard && (
-        <GiantCard
+        <GiantBanner
           info={giantCard}
           onClose={() => {
             setGiantCard(null);
@@ -749,6 +789,28 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           }}
         />
       )}
+      {tip && (
+        <div ref={tipRef} className="xmas-tip" role="dialog" aria-label="ข้อมูลที่แตะ">
+          <span className="xmas-tip-kicker">{tip.kicker}</span>
+          <b>{tip.title}</b>
+          <div className="xmas-tip-actions">
+            <button
+              type="button"
+              onClick={() => {
+                const open = tip.open;
+                setTip(null);
+                open();
+              }}
+            >
+              {tip.cta}
+            </button>
+            <button type="button" className="xmas-tip-x" onClick={() => setTip(null)} aria-label="ปิดคำอธิบาย">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+      <FirstVisitTour />
 
       {toast && (
         <div key={toast.id} className={`xmas-toast ${toast.kind}`} role="status">

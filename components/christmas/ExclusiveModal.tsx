@@ -86,7 +86,7 @@ const LABEL: Record<string, string> = {
 type View = "menu" | "giant" | "message" | "decor";
 
 // แถบถอยกลับ/ถัดไปของขั้นตอน (แสดงเฉพาะบนมือถือ)
-function WizardNav({ step, last, setStep }: { step: number; last: number; setStep: (n: number | ((n: number) => number)) => void }) {
+function WizardNav({ step, last, setStep, canNext = true }: { step: number; last: number; setStep: (n: number | ((n: number) => number)) => void; canNext?: boolean }) {
   return (
     <nav className="xmas-wiz-nav" aria-label="ขั้นตอน">
       <button type="button" className="xmas-wiz-back" onClick={() => setStep((n) => Math.max(0, n - 1))} disabled={step === 0}>
@@ -94,7 +94,7 @@ function WizardNav({ step, last, setStep }: { step: number; last: number; setSte
       </button>
       <span className="xmas-wiz-count">ขั้นที่ {step + 1} จาก {last + 1}</span>
       {step < last ? (
-        <button type="button" className="xmas-wiz-next" onClick={() => setStep((n) => Math.min(last, n + 1))}>
+        <button type="button" className="xmas-wiz-next" onClick={() => setStep((n) => Math.min(last, n + 1))} disabled={!canNext} title={canNext ? undefined : "เลือกหรือกรอกยอดก่อน"}>
           ถัดไป
         </button>
       ) : (
@@ -638,7 +638,7 @@ export default function ExclusiveModal({
                 </button>
               </div>
             </aside>
-            <WizardNav step={step} last={3} setStep={setStep} />
+            <WizardNav step={step} last={3} setStep={setStep} canNext={step !== 0 || giantChosen !== null} />
           </form>
         )}
 

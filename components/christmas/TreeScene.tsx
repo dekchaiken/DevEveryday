@@ -33,6 +33,7 @@ export type TreeSceneHandle = {
   focusOrnament: (id: string | null) => void;
   focusDecor: (d: Decor | null) => void;
   focusGiant: (spot: number | null) => void; // กล้องบินไปหาบ้านหิมะ Exclusive และกลับมุมเดิมเมื่อส่ง null
+  project: (x: number, y: number, z: number) => { x: number; y: number; visible: boolean }; // พิกัดจอของจุดในโลก (ใช้วางคำอธิบายข้างโมเดล)
   flyToZone: () => void; // ซูมออกเป็นแผนที่ แล้วไปที่โซนคำอวยพร
   returnView: () => void; // กลับไปมุมกล้องเดิมก่อนไปดูตุ๊กตาหรือโซน
   zoomBy: (factor: number) => void;
@@ -2101,6 +2102,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       focusOrnament: (id: string | null) => focusOrnament(id),
       focusDecor: (d: Decor | null) => focusDecor(d),
       focusGiant: (spot: number | null) => focusGiant(spot),
+      project: (x: number, y: number, z: number) => {
+        const v = new THREE.Vector3(x, y, z).project(camera);
+        const w = renderer.domElement.clientWidth;
+        const h = renderer.domElement.clientHeight;
+        return { x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, visible: v.z < 1 && Math.abs(v.x) < 1.15 && Math.abs(v.y) < 1.15 };
+      },
       flyToZone: () => flyToZone(),
       returnView: () => returnView(),
       locate: (target: LocateTarget) => locate(target),

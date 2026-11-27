@@ -7079,3 +7079,154 @@ a.xmas-social-chip:hover {
     radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--base, #ffb3cc) 26%, transparent), transparent 70%),
     #f4f8f2;
 }
+
+/* คำอธิบายข้างโมเดลเมื่อแตะบ้านหรือตุ๊กตา */
+.xmas-tip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 12;
+  display: grid;
+  gap: 6px;
+  min-width: 168px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fffdf7;
+  color: #15261f;
+  border: 1px solid rgba(184, 144, 74, 0.55);
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  pointer-events: auto;
+  transition: opacity 0.15s ease;
+  will-change: transform;
+}
+.xmas-tip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  background: #fffdf7;
+  border-right: 1px solid rgba(184, 144, 74, 0.55);
+  border-bottom: 1px solid rgba(184, 144, 74, 0.55);
+  transform: translateX(-50%) rotate(45deg);
+}
+.xmas-tip-kicker {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #9a7a2c;
+}
+.xmas-tip b {
+  font-size: 15px;
+}
+.xmas-tip-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+.xmas-tip-actions button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(90deg, #f2d98c, #c99a3e);
+  color: #2a1d05;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.xmas-tip-actions .xmas-tip-x {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: #6b6b5a;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ป้ายประจำบ้านด้านบนกลางจอ: กดปิดและลิงก์ได้ */
+.xmas-giant-banner {
+  pointer-events: auto;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+.xmas-giant-banner-x {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(227, 194, 122, 0.55);
+  background: rgba(0, 0, 0, 0.15);
+  color: #f2e2b0;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.xmas-giant-banner-name {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+}
+.xmas-giant-banner .xmas-giant-close {
+  width: auto;
+  min-width: 160px;
+  margin-top: 4px;
+}
+.xmas-giant-banner .xmas-social-links {
+  justify-content: center;
+}
+
+/* คำแนะนำครั้งแรก */
+.xmas-tour {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
+  transform: translateX(-50%);
+  z-index: 65;
+  width: min(92vw, 360px);
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #fffdf7;
+  color: #15261f;
+  border: 1px solid rgba(184, 144, 74, 0.55);
+  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.5);
+}
+.xmas-tour-count {
+  font-size: 12px;
+  color: #9a7a2c;
+  letter-spacing: 0.08em;
+}
+.xmas-tour b {
+  font-size: 16px;
+}
+.xmas-tour p {
+  margin: 0;
+  font-size: 14px;
+  color: #4d5d54;
+}
+.xmas-tour-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.xmas-tour-actions button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 0;
+  background: #1d4a33;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.xmas-tour-actions button.ghost {
+  background: transparent;
+  color: #5b6b62;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
