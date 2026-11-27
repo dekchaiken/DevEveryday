@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE, createSessionToken, safeEqual } from "@/lib/session";
+import { clientIp } from "@/lib/clientIp";
+import { rateOk } from "@/lib/christmas/store";
 
 export const runtime = "nodejs";
 
@@ -7,6 +9,10 @@ export async function POST(req: Request) {
   const expected = process.env.ADMIN_PASSWORD;
   if (!expected) {
     return NextResponse.json({ error: "ADMIN_PASSWORD is not configured" }, { status: 500 });
+  }
+  // จำกัดการลองรหัสผ่าน: ไม่เกิน 10 ครั้งต่อนาทีต่อ IP
+  if (!(await rateOk(clientIp(req), "admin-login", 10, Date.now()))) {
+    return NextResponse.json({ error: "ลองหลายครั้งเกินไป รอสักครู่แล้วลองใหม่" }, { status: 429 });
   }
 
   let password = "";

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { retrieveCharge } from "@/lib/christmas/omise";
-import { confirmPayment } from "@/lib/christmas/payments";
+import { chargeMatches, confirmPayment } from "@/lib/christmas/payments";
+import { getOrder } from "@/lib/christmas/orders";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +19,8 @@ export async function POST(req: Request) {
     try {
       const charge = await retrieveCharge(body.data.id);
       const orderId = charge.metadata?.orderId;
-      if (charge.status === "successful" && orderId) await confirmPayment(orderId, charge.id);
+      const order = orderId ? await getOrder(orderId) : null;
+      if (order && chargeMatches(order, charge)) await confirmPayment(order.id, charge.id);
     } catch {
       return NextResponse.json({ error: "ตรวจสอบรายการไม่สำเร็จ" }, { status: 500 });
     }

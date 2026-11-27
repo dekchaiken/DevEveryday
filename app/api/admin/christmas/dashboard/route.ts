@@ -3,6 +3,7 @@ import { getConfig } from "@/lib/christmas/config";
 import { ROOMS, ROOM_CAPACITY } from "@/lib/christmas/rooms";
 import { listOrders } from "@/lib/christmas/orders";
 import { persistent, readState, roomCounts } from "@/lib/christmas/store";
+import { GIANT_CAPACITY } from "@/lib/christmas/slots";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,8 @@ export async function GET() {
       online: rooms.reduce((s, r) => s + r.online, 0),
       ornaments: rooms.reduce((s, r) => s + r.ornaments, 0),
       revenue: paid.reduce((s, o) => s + o.amount, 0),
+      giantTaken: rooms.reduce((s, r) => s + r.giants, 0),
+      giantCapacity: GIANT_CAPACITY * rooms.length,
       paidCount: paid.length,
       awaitingCount: awaiting.length,
     },

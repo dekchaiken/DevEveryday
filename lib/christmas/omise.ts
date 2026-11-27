@@ -12,6 +12,8 @@ function auth() {
 
 export type OmiseCharge = {
   id: string;
+  amount?: number; // สตางค์
+  currency?: string;
   status: string; // pending | successful | failed | expired
   metadata?: { orderId?: string };
   source?: { scannable_code?: { image?: { download_uri?: string } } };

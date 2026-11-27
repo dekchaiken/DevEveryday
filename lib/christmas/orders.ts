@@ -159,6 +159,15 @@ async function claimGiantSpot(room: string, spot: number, g: Giant): Promise<boo
   return (await cmd<number>("HSETNX", K.giants(room), String(spot), JSON.stringify(g))) === 1;
 }
 
+// ถอดตุ๊กตายักษ์ออกจากจุด (แอดมินใช้ตอนลบเนื้อหาไม่เหมาะสม) คืน false ถ้าไม่มีอยู่
+export async function removeGiant(room: string, spot: number): Promise<boolean> {
+  if (!storeConfigured()) {
+    const m = mem.giants.get(room);
+    return Boolean(m?.delete(spot));
+  }
+  return (await cmd<number>("HDEL", K.giants(room), String(spot))) === 1;
+}
+
 // ข้อมูลที่แสดงให้ผู้ใช้เห็น (ไม่มีข้อมูลสำหรับใช้ภายใน)
 export function toPreview(o: Order): OrderPreview {
   return { id: o.id, status: o.status, amount: o.amount, mode: o.mode, qrPayload: o.qrPayload, qrImage: o.qrImage };

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrder, toPreview } from "@/lib/christmas/orders";
 import { retrieveCharge } from "@/lib/christmas/omise";
-import { confirmPayment } from "@/lib/christmas/payments";
+import { chargeMatches, confirmPayment } from "@/lib/christmas/payments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (order.status === "awaiting_payment" && order.mode === "gateway" && order.providerRef) {
     try {
       const charge = await retrieveCharge(order.providerRef);
-      if (charge.status === "successful" && charge.metadata?.orderId === order.id) {
+      if (charge.metadata?.orderId === order.id && chargeMatches(order, charge)) {
         order = (await confirmPayment(order.id, charge.id)) ?? order;
       }
     } catch {

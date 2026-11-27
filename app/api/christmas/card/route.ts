@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/clientIp";
 import { getRoom } from "@/lib/christmas/rooms";
 import { rateOk } from "@/lib/christmas/store";
 import { getConfig } from "@/lib/christmas/config";
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
   const clientId = typeof body.clientId === "string" ? body.clientId.slice(0, 64) : "";
   if (!clientId) return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
 
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const ip = clientIp(req);
   if (!(await rateOk(ip, "card", 6, Date.now()))) {
     return NextResponse.json({ error: "ส่งการ์ดบ่อยเกินไป รอสักครู่แล้วลองใหม่" }, { status: 429 });
   }

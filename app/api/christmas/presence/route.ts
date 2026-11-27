@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRoom, ROOM_CAPACITY } from "@/lib/christmas/rooms";
-import { heartbeat } from "@/lib/christmas/store";
+import { heartbeat, rateOk } from "@/lib/christmas/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +19,8 @@ export async function POST(req: Request) {
   if (!room || !clientId) return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
 
   // ไม่จำกัดตาม IP เพราะหลายคนอาจใช้เครือข่ายเดียวกัน ความจุของห้องคือการจำกัดจริง
+  // แต่จำกัดต่อ clientId กันการส่งสัญญาณถี่ผิดปกติ
+  if (!(await rateOk(clientId, "presence", 30, Date.now()))) return NextResponse.json({ error: "ส่งถี่เกินไป" }, { status: 429 });
   const result = await heartbeat(room.id, clientId, Date.now());
   return NextResponse.json({ ok: true, ...result, capacity: ROOM_CAPACITY });
 }

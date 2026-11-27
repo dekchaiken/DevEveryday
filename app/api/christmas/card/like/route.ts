@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/clientIp";
 import { getRoom } from "@/lib/christmas/rooms";
 import { likeOrnament } from "@/lib/christmas/likes";
 import { rateOk } from "@/lib/christmas/store";
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   const id = typeof body.id === "string" ? body.id.slice(0, 64) : "";
   const clientId = typeof body.clientId === "string" ? body.clientId.slice(0, 64) : "";
   if (!room || !id || !clientId) return NextResponse.json({ error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
-  const ip = (req.headers.get("x-forwarded-for") ?? "unknown").split(",")[0].trim();
+  const ip = clientIp(req);
   if (!(await rateOk(ip, "clike", 40, Date.now()))) {
     return NextResponse.json({ error: "กดถูกใจบ่อยเกินไป รอสักครู่" }, { status: 429 });
   }
