@@ -12,6 +12,7 @@ export type ChristmasConfig = {
   decorPrice: number; // ราคาตุ๊กตาหิมะ Exclusive ต่อตัว (บาท) จ่ายทุกครั้งที่วาง 1 ตัว
   messagePrice: number; // ราคาข้อความอวยพรขึ้นจอ (บาท)
   blockedWords: string[]; // คำต้องห้ามเพิ่มเติมที่แอดมินกำหนด
+  celebrateMessage: string; // ข้อความจากแอดมินที่ขึ้นตอนต้นคริสต์มาสแขวนครบ 999 คำอวยพร
 };
 
 export const DEFAULT_CONFIG: ChristmasConfig = {
@@ -23,6 +24,7 @@ export const DEFAULT_CONFIG: ChristmasConfig = {
   decorPrice: 29,
   messagePrice: 19,
   blockedWords: [],
+  celebrateMessage: "ขอบคุณทุกคำอวยพรที่ช่วยกันแขวนจนต้นคริสต์มาสของเราเต็มต้น ขอให้ทุกคนมีความสุข สุขภาพแข็งแรง และสมหวังในทุกสิ่งตลอดปีใหม่นี้",
 };
 
 let memConfig: ChristmasConfig | null = null;
@@ -65,6 +67,8 @@ export function validateConfig(input: Record<string, unknown>): { value: Christm
   const blockedWords = Array.isArray(input.blockedWords)
     ? [...new Set(input.blockedWords.map((w) => String(w).trim().slice(0, 30)).filter(Boolean))].slice(0, 200)
     : [];
+  const celebrateMessage =
+    typeof input.celebrateMessage === "string" && input.celebrateMessage.trim() ? input.celebrateMessage.trim().slice(0, 400) : DEFAULT_CONFIG.celebrateMessage;
   return {
     value: {
       enabled: input.enabled !== false,
@@ -75,6 +79,7 @@ export function validateConfig(input: Record<string, unknown>): { value: Christm
       decorPrice,
       messagePrice,
       blockedWords,
+      celebrateMessage,
     },
   };
 }

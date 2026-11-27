@@ -14,6 +14,7 @@ type Config = {
   decorPrice: number;
   messagePrice: number;
   blockedWords: string[];
+  celebrateMessage: string;
 };
 type Order = { id: string; room: string; kind: string; amount: number; name: string; message: string; mode: string; status: string; createdAt: number; paidAt: number | null; providerRef: string };
 type Dash = {
@@ -1309,6 +1310,10 @@ function Settings({ dash, reload, toast }: { dash: Dash; reload: () => void; toa
               <input type="number" value={form.messagePrice} onChange={(e) => set("messagePrice", Number(e.target.value))} />
             </label>
           </div>
+          <label>
+            <span>ข้อความฉลองเมื่อต้นคริสต์มาสแขวนครบ 999 คำอวยพร (ขึ้นให้ทุกคนในห้องเห็น ลงชื่อ ADMIN)</span>
+            <textarea rows={3} maxLength={400} value={form.celebrateMessage ?? ""} onChange={(e) => set("celebrateMessage", e.target.value)} />
+          </label>
           <button className="adm-btn primary" disabled={saving}>
             {saving ? "กำลังบันทึก…" : "บันทึกการตั้งค่า"}
           </button>

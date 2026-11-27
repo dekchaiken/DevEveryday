@@ -7,6 +7,8 @@ export const ORNAMENT_COLORS = ["gold", "red", "blue", "pink", "white", "green"]
 export type OrnamentColor = (typeof ORNAMENT_COLORS)[number];
 
 export const ORNAMENT_SHAPES = ["ball", "star", "bell", "gift"] as const;
+// จำนวนคำอวยพรที่ต้นคริสต์มาสหนึ่งต้นรับได้ (ครบแล้ว = 100% และฉลองทั้งห้อง)
+export const TREE_CAPACITY = 999;
 export type OrnamentShape = (typeof ORNAMENT_SHAPES)[number];
 
 // ลูกบอลหรือของตกแต่งหนึ่งชิ้นบนต้น

@@ -4,7 +4,7 @@ import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
 import type { DecorPick } from "@/lib/christmas/decor";
 import type { GiantLook } from "@/lib/christmas/giant";
-import { GIANT_CAPACITY } from "@/lib/christmas/slots";
+import { GIANT_CAPACITY, isBlockedGiantSpot } from "@/lib/christmas/slots";
 
 export type OrderStatus = "awaiting_payment" | "paid" | "cancelled";
 // giant = ตุ๊กตาหิมะยักษ์ (Exclusive ประจำห้อง) | support = สนับสนุนทีม DevEveryday
@@ -143,12 +143,12 @@ export async function releaseGiantSpot(room: string, spot: number, orderId: stri
 export async function reserveGiantSpot(room: string, orderId: string, wanted: number | null): Promise<{ spot: number } | { error: "taken" | "full" }> {
   const taken = new Set((await listGiants(room)).map((g) => g.spot));
   if (wanted !== null) {
-    if (taken.has(wanted)) return { error: "taken" };
+    if (taken.has(wanted) || isBlockedGiantSpot(wanted)) return { error: "taken" };
     return (await holdSpot(room, wanted, orderId)) ? { spot: wanted } : { error: "taken" };
   }
   if (taken.size >= GIANT_CAPACITY) return { error: "full" };
   for (let s = 0; s < GIANT_CAPACITY; s++) {
-    if (taken.has(s)) continue;
+    if (taken.has(s) || isBlockedGiantSpot(s)) continue;
     if (await holdSpot(room, s, orderId)) return { spot: s };
   }
   return { error: "full" };
