@@ -2080,3 +2080,63 @@
     text-align: center;}
   .xz-pick-actions {
     justify-content: center;}}
+
+/* ---------- มือถือ: ในหมู่บ้านคำอวยพร ปุ่มทั้งหมดอยู่ล่างจอเหนือเมนู กลางจอเว้นให้กำแพงการ์ด ---------- */
+.xz-nav-count {
+  display: none;}
+@media (max-width: 759px) {
+  .xz-hud {
+    top: auto;
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    padding: 6px;
+    gap: 6px;}
+  .xz-hud-count {
+    display: none;}
+  .xz-nav {
+    bottom: calc(158px + env(safe-area-inset-bottom, 0px));}
+  .xz-nav-label {
+    display: grid;
+    line-height: 1.25;}
+  .xz-nav-count {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #e8d19a;}
+  .xmas-zoom.is-zone {
+    display: none;}}
+/* มือถือแนวนอน: แถบเลื่อนกำแพงชิดซ้าย แถบโซนชิดขวา อยู่แถวเดียวเหนือเมนู กำแพงการ์ดอยู่กลางจอเต็ม ๆ */
+@media (max-height: 520px) and (orientation: landscape) {
+  .xz-nav {
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: auto;
+    top: auto;
+    transform: none;
+    bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+    padding: 3px;}
+  .xz-nav-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;}
+  .xz-hud {
+    left: auto;
+    right: max(12px, env(safe-area-inset-right, 0px));
+    top: auto;
+    transform: none;
+    bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+    padding: 5px;}
+  .xz-hud-count {
+    display: none;}
+  .xz-nav-label {
+    display: grid;
+    line-height: 1.2;
+    min-width: 80px;}
+  .xz-nav-count {
+    display: block;
+    font-size: 10px;
+    color: #e8d19a;}
+  .xmas-zoom.is-zone {
+    display: none;}}
+/* มือถือแนวนอนในหมู่บ้าน: ซ่อนตัวอักษรวิ่ง ให้พื้นที่แนวตั้งทั้งหมดกับกำแพงการ์ด */
+@media (max-height: 520px) and (orientation: landscape) {
+  .xmas-stage.is-zone .xmas-ticker {
+    display: none;}}

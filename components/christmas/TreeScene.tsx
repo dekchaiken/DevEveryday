@@ -1337,7 +1337,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
     // มุมกล้องในหมู่บ้าน: จอแนวตั้งกว้างกว่า เห็นกำแพงได้มากขึ้น
     let ZONE_FOV = 50;
-    const zoneFov = () => (camera.aspect < 1 ? 62 : 50);
+    // จอเตี้ยแนวตั้ง (เช่น 360×640) ใช้มุมกว้างขึ้นอีก ให้กำแพงพอดีแถบว่างระหว่างหัวจอกับปุ่มล่าง
+    const zoneFov = () => (renderer.domElement.clientHeight < 520 && camera.aspect > 1 ? 76 : camera.aspect < 0.7 ? (renderer.domElement.clientHeight < 700 ? 80 : 74) : camera.aspect < 1 ? 62 : 50);
     // มุมกล้องปกติ (จอแคบกว้างกว่า) ใช้ปลายทางของการเดินกลับ
     const baseFov = () => (camera.aspect < 0.8 ? 50 : 38);
     function playPath(keys: Key[], opts: { speed?: number; turn?: number; maxDur?: number; endMin?: number; done?: () => void } = {}) {
@@ -1443,21 +1444,60 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const angleOf = (p: THREE.Vector3) => Math.atan2(p.z - ZONE.z, p.x - ZONE.x);
     const radiusOf = (p: THREE.Vector3) => Math.hypot(p.x - ZONE.x, p.z - ZONE.z);
     const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
-    // จุดชม: จอแคบแบ่งหน้ากำแพงเป็นซ้าย/ขวา ให้ซองใหญ่พออ่านชื่อได้
-    // ระยะยืนที่เห็นหน้ากำแพงเต็มความกว้าง (กว้าง 3.6 หน่วย) ตามสัดส่วนจอ ถ้าไกลเกินทางเดินให้แบ่งชมซ้าย/ขวา
-    const fitDist = (halfW: number) => {
-      const tv = Math.tan(THREE.MathUtils.degToRad(zoneFov()) / 2);
-      return Math.max(halfW / (tv * camera.aspect), 1.45 / tv);
+    // ---------- จัดกรอบจุดชมให้เห็นซองครบทุกใบ ไม่โดนแถบปุ่มบนจอบัง ----------
+    // ซองในหน้ากำแพงหนึ่งหน้า: 5 คอลัมน์ (ห่าง 0.7) × 5 แถว กินความสูง 0.2–2.67 หน่วย
+    // แถบว่างบนจอ (สัดส่วนจากบน) ที่ซองต้องอยู่ภายใน: มือถือมีหัวข้อ/ตัวอักษรวิ่งด้านบน และแถบโซน แถบเลื่อนกำแพง เมนูด้านล่าง
+    const WALL_MID_Y = 1.44;
+    const WALL_HALF_H = 1.32;
+    const STOP_MAX_DIST = 3.6; // เกินนี้จะชนกำแพงฝั่งตรงข้ามของทางเดิน
+    const band = () => {
+      const h = Math.max(renderer.domElement.clientHeight, 1);
+      // ขอบบน: ใต้หัวข้อและตัวอักษรวิ่ง (วัดจากหน้าจอจริง เพราะหัวข้อสูงไม่เท่ากันแต่ละจอ)
+      const rectTop = renderer.domElement.getBoundingClientRect().top;
+      const ticker = document.querySelector(".xmas-ticker")?.getBoundingClientRect();
+      const top = Math.max(ticker && ticker.height > 0 ? ticker.bottom - rectTop : 0, 76) + 10;
+      if (h < 520 && window.innerWidth > h) return [84 / h, 1 - 122 / h]; // มือถือแนวนอน: ตัวอักษรวิ่งซ่อนในโซน ปุ่มเรียงแถวเดียวด้านล่าง
+      return window.innerWidth < 760 ? [top / h, 1 - 228 / h] : [top / h, 1 - 214 / h];
     };
-    const halves = () => fitDist(1.7) > 3.6;
+    // แบ่งหน้ากำแพงเป็นกี่ส่วน (1 = ทั้งหน้า, 2 = ซ้าย/ขวาส่วนละ 3 คอลัมน์, 3 = ส่วนละ 2 คอลัมน์)
+    const PART_HALF_W: Record<number, number> = { 1: 1.74, 2: 1.04, 3: 0.68 };
+    const FACE_HALF_W = 1.74; // ครึ่งความกว้างแถวซอง (คอลัมน์นอกสุด ±1.4 + ครึ่งซอง + ขอบ)
+    function framing() {
+      const tv = Math.tan(THREE.MathUtils.degToRad(zoneFov()) / 2);
+      const [top, bot] = band();
+      const bandH = Math.max(bot - top, 0.3);
+      const dH = WALL_HALF_H / (bandH * tv);
+      // แบ่งน้อยส่วนที่สุดที่ความกว้างยังพอดีจอ (ความสูงใช้ระยะเดียวกันทุกแบบ จึงไม่ใช่เหตุให้แบ่งเพิ่ม)
+      for (const n of [1, 2, 3]) {
+        const dW = PART_HALF_W[n] / (tv * camera.aspect * 0.96);
+        if (dW <= STOP_MAX_DIST || n === 3) {
+          const d = Math.min(Math.max(dH, dW, 2.4), STOP_MAX_DIST);
+          // ส่วนซ้าย/ขวาชิดขอบกำแพงพอดี (เห็นกว้างกว่าที่ต้องการเมื่อระยะถูกกำหนดด้วยความสูง)
+          const vis = d * tv * camera.aspect * 0.96;
+          const edge = Math.max(FACE_HALF_W - vis, 0);
+          const centers = n === 1 ? [0] : n === 2 ? [-edge, edge] : [-edge, 0, edge];
+          return { n, d, tv, ndcY: 1 - (top + bot), centers };
+        }
+      }
+      return { n: 1, d: STOP_MAX_DIST, tv, ndcY: 0, centers: [0] };
+    }
+    const partOf = (t: number) => {
+      const centers = framing().centers;
+      let best = 0;
+      centers.forEach((c, i) => {
+        if (Math.abs(t - c) < Math.abs(t - centers[best])) best = i;
+      });
+      return best;
+    };
     function stopKey(stop: number, part = 0): Key {
       ZONE_FOV = zoneFov();
       const st = ZONE_STOPS[stop];
-      const half = halves();
-      const shift = half ? (part === 0 ? -0.9 : 0.9) : 0;
-      const dist = Math.min(Math.max(fitDist(half ? 0.98 : 1.7), 2.6), 3.6);
-      const c = new THREE.Vector3(st.center.x + st.tangent.x * shift, 1.45, st.center.z + st.tangent.z * shift);
-      const p = new THREE.Vector3(c.x + st.normal.x * dist, 1.6, c.z + st.normal.z * dist);
+      const f = framing();
+      const shift = f.centers[Math.min(part, f.n - 1)];
+      // มองระดับสายตาแนวนอน และเลื่อนจุดมองลงให้กลางกำแพงไปอยู่กลางแถบว่างบนจอ
+      const lookY = WALL_MID_Y - f.ndcY * f.d * f.tv;
+      const c = new THREE.Vector3(st.center.x + st.tangent.x * shift, lookY, st.center.z + st.tangent.z * shift);
+      const p = new THREE.Vector3(c.x + st.normal.x * f.d, lookY, c.z + st.normal.z * f.d);
       return { p, look: c, fov: ZONE_FOV };
     }
     // จุดชมที่มีการ์ดอยู่ (เรียงตามลำดับเดิน) แต่ละรายการคือ [จุดชม, ครึ่งซ้าย/ขวา]
@@ -1467,7 +1507,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const st = ZONE_STOPS[en.stop];
         const t = (en.pos.x - st.center.x) * st.tangent.x + (en.pos.z - st.center.z) * st.tangent.z;
         if (!used.has(en.stop)) used.set(en.stop, new Set());
-        used.get(en.stop)!.add(halves() ? (t < 0 ? 0 : 1) : 0);
+        used.get(en.stop)!.add(partOf(t));
       }
       const out: [number, number][] = [];
       ZONE_STOPS.forEach((_, i) => {
@@ -1991,7 +2031,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         if (!en) return;
         const st = ZONE_STOPS[en.stop];
         const t = (en.pos.x - st.center.x) * st.tangent.x + (en.pos.z - st.center.z) * st.tangent.z;
-        const part = halves() && t >= 0 ? 1 : 0;
+        const part = partOf(t);
         const idx = browseList().findIndex(([s, pt]) => s === en.stop && pt === part);
         village.highlight(id);
         if (!zoneAway || !inZone(camera.position.x, camera.position.z, 0.5)) flyToZone(Math.max(0, idx));
