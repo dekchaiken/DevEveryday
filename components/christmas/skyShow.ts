@@ -111,7 +111,14 @@ function words(text: string): string[] {
     segmenter = I.Segmenter ? new I.Segmenter("th", { granularity: "word" }) : null;
   }
   if (!segmenter) return graphemes(text);
-  return [...segmenter.segment(text)].map((x) => x.segment);
+  // ไม้ยมก (ๆ) และเครื่องหมายวรรคตอนติดกับคำก่อนหน้าเสมอ บรรทัดจึงไม่ขึ้นต้นด้วย ๆ
+  const out: string[] = [];
+  for (const { segment } of segmenter.segment(text)) {
+    if (out.length && /^\s*[ๆ!?.,…]+$/.test(segment)) out[out.length - 1] += segment;
+    else if (out.length && /^\s+$/.test(segment) && /^\s*ๆ/.test(text.slice(out.join("").length + segment.length))) out[out.length - 1] += segment;
+    else out.push(segment);
+  }
+  return out;
 }
 function graphemes(text: string): string[] {
   const units: string[] = [];
@@ -411,18 +418,22 @@ type Layers = {
   bulbs: { x: number; y: number }[];
 };
 
+// กรอบข้อความขนาดพอดี อยู่ช่วงบนกลางจอ (ไม่บังทั้งฉาก)
 function layoutFor(W: number, H: number): Layout {
   const portrait = W / H < 1.05;
   let pw: number;
   let ph: number;
+  let cy: number;
   if (portrait) {
-    pw = W * 0.9;
-    ph = Math.min(pw * 0.7, H * 0.42);
+    pw = W * 0.88;
+    ph = Math.min(pw * 0.56, H * 0.27);
+    cy = H * 0.3;
   } else {
-    pw = Math.min(W * 0.74, H * 1.55);
-    ph = pw * 0.4;
+    pw = Math.min(W * 0.5, H * 1.05);
+    ph = pw * 0.38;
+    cy = H * 0.3;
   }
-  return { W, H, pw, ph, px: (W - pw) / 2, py: H * (portrait ? 0.36 : 0.4) - ph / 2, portrait };
+  return { W, H, pw, ph, px: (W - pw) / 2, py: cy - ph / 2, portrait };
 }
 
 function buildLayers(L: Layout, o: SkyShowOpts): Layers {
@@ -695,7 +706,7 @@ function buildLayers(L: Layout, o: SkyShowOpts): Layers {
   const byBox = { x: cx - byW / 2, y: byY - byPx * 0.8, w: byW, h: byPx * 1.6 };
 
   // ข้อความหลัก: หาขนาดใหญ่สุดที่พอดีกรอบ
-  const maxLines = L.portrait ? 4 : 3;
+  const maxLines = 3;
   const areaW = w * (L.portrait ? 0.84 : 0.8);
   const areaTop = light ? y + h * 0.16 : y + h * 0.34;
   const areaH = (y + h * (light ? 0.9 : 0.88)) - areaTop;
@@ -1121,8 +1132,8 @@ export function createSkyPainter() {
       // ฉากหลังมืดลงและมีแสงตามสีธีม
       if (backdrop) {
         const v = g.createRadialGradient(W / 2, L.py + L.ph / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.75);
-        v.addColorStop(0, `rgba(${p.tint},${0.35 * env})`);
-        v.addColorStop(1, `rgba(${p.tint},${0.78 * env})`);
+        v.addColorStop(0, `rgba(${p.tint},${0.12 * env})`);
+        v.addColorStop(1, `rgba(${p.tint},${0.5 * env})`);
         g.fillStyle = v;
         g.fillRect(0, 0, W, H);
       }
@@ -1136,7 +1147,7 @@ export function createSkyPainter() {
         g.globalAlpha = 0.28 * rayIn;
         g.translate(W / 2, L.py + L.ph / 2);
         g.rotate(t * 0.12);
-        const rs = Math.max(W, H) * 1.1;
+        const rs = L.pw * 2.1;
         g.drawImage(raysSprite(p.glow), -rs / 2, -rs / 2, rs, rs);
         g.restore();
       }

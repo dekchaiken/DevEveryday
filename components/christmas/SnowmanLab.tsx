@@ -8,7 +8,7 @@ import { optionsOf, randomSnow, SNOW_PART_KEYS, type SnowPartKey } from "@/lib/c
 import { buildSnowman } from "./snowmanModel";
 import { buildDiorama } from "./diorama";
 import { buildSleighRig } from "./sleighModel";
-import { makeItem, type GiantLook } from "@/lib/christmas/giant";
+import { freeSpot, GIANT_TIERS, makeItem, randomLook, tierLook, type GiantLook } from "@/lib/christmas/giant";
 
 // หน้าตรวจโมเดล: แถวบนเรียงตัวเลือกของชิ้นที่ระบุใน ?part= (ค่าเริ่มต้น hat) แถวล่างเป็นชุดสุ่ม
 export default function SnowmanLab() {
@@ -55,14 +55,26 @@ export default function SnowmanLab() {
         ["snowman", "pine", "candy"],
         ["lantern", "reindeer", "bauble"],
       ];
-      styles.forEach((house, i) => {
-        const items = kinds[i].map((k, j) => makeItem(`i${j}`, k, -0.6 + j * 0.6, 0.6 + (j % 2) * 0.15));
-        const look: GiantLook = { base: ["red", "mint", "pink", "blue"][i], items, board: "spruce", house, wall: ["cream", "wood", "pink", "sky"][i], roof: ["red", "forest", "berry", "navy"][i], fence: fences[i] };
-        const d = buildDiorama({ look, name: "ทดสอบ", message: "สุขสันต์วันคริสต์มาส" });
+      // ?ex=1 บ้านตามระดับยอด 4 ระดับ (สุ่มแต่ง) · ?ex=2 ใช้ค่าเริ่มต้นของแต่ละระดับพร้อมของแต่งประจำระดับ
+      let seed = Number(params.get("seed") ?? 3);
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      GIANT_TIERS.forEach((tier, i) => {
+        const look: GiantLook = params.get("ex") === "2" ? { ...tierLook(tier), items: [] } : randomLook(tier, rnd);
+        if (params.get("ex") === "2") {
+          const extra = tier.kinds.filter((k) => !(GIANT_TIERS[i - 1]?.kinds ?? []).includes(k));
+          extra.forEach((k, j) => {
+            const sp = freeSpot(look.items, k, look.house);
+            if (sp) look.items.push(makeItem(`e${j}`, k, sp.x, sp.z));
+          });
+        }
+        const d = buildDiorama({ look, name: tier.name, message: tier.title });
         d.group.position.set(-4.5 + i * 3, 0, 0);
         scene.add(d.group);
         updates.push(d.update);
       });
+      void styles;
+      void fences;
+      void kinds;
       const cam = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.1, 100);
       void cam;
     } else {

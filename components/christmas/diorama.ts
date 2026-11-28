@@ -7,7 +7,7 @@ import { drawGiantBoard, type BoardStyle } from "./skyArt";
 import { buildItemModel } from "./decorItems";
 import { shade, snowSurface, std, type Scenery } from "./zoneScenery";
 import { buildFence, buildHouse } from "./exclusiveHouse";
-import { HOUSE_SPOT } from "@/lib/christmas/giant";
+import { houseSpot } from "@/lib/christmas/giant";
 
 export const BASE_H = 0.3;
 // ระดับผิวหิมะบนฐานที่ของทุกชิ้นตั้งอยู่
@@ -102,16 +102,54 @@ export function buildDiorama(opts: { look: GiantLook; name: string; message: str
     group.add(lump);
   }
 
+  // ระดับสูง: ฐานน้ำแข็งเรืองแสง (ระดับ 2) และออร่าทองพร้อมประกายลอยขึ้น (ระดับ 3)
+  const tier = opts.look.tier ?? 0;
+  if (tier >= 2) {
+    const glowHex = tier >= 3 ? 0xffd27a : 0x9fdcff;
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(BASE_R * 1.03, 0.03, 8, 80), new THREE.MeshStandardMaterial({ color: glowHex, emissive: glowHex, emissiveIntensity: 1.4 }));
+    halo.rotation.x = Math.PI / 2;
+    halo.position.y = 0.09 + (BASE_H - 0.09) / 2;
+    group.add(halo);
+  }
+  if (tier >= 3) {
+    // อัญมณีรอบฐาน
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * Math.PI * 2;
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.03), new THREE.MeshPhysicalMaterial({ color: k % 2 ? 0xc41e3a : 0x1f7a4d, roughness: 0.1, clearcoat: 1, metalness: 0.2 }));
+      gem.position.set(Math.cos(a) * BASE_R * 1.02, BASE_H - 0.05, Math.sin(a) * BASE_R * 1.02);
+      group.add(gem);
+    }
+    // ประกายทองลอยขึ้นรอบฐานแล้วจางหาย
+    const sparkMat = new THREE.MeshBasicMaterial({ color: 0xffe7a3, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    const sparks: THREE.Mesh[] = [];
+    for (let k = 0; k < 22; k++) {
+      const sp = new THREE.Mesh(new THREE.OctahedronGeometry(0.018), sparkMat.clone());
+      group.add(sp);
+      sparks.push(sp);
+    }
+    updates.push((t, reduced) => {
+      sparks.forEach((sp, k) => {
+        const ph = ((reduced ? 0.4 : t * 0.22) + k / sparks.length) % 1;
+        const a = k * 2.39 + ph * 0.8;
+        const r = BASE_R * (0.95 + 0.08 * Math.sin(k));
+        sp.position.set(Math.cos(a) * r, BASE_H + ph * 1.4, Math.sin(a) * r);
+        sp.rotation.y = t * 2 + k;
+        (sp.material as THREE.MeshBasicMaterial).opacity = Math.sin(ph * Math.PI) * 0.95;
+      });
+    });
+  }
+
   // บ้านกลางฐาน ทางเดินหินจากหน้าฐานถึงประตู และรั้ว
   const house = buildHouse(opts.look.house, opts.look.wall, opts.look.roof);
   if (house) {
-    house.group.position.set(HOUSE_SPOT.x, ITEM_Y - 0.01, HOUSE_SPOT.z);
-    house.group.scale.setScalar(1.25);
+    const hs = houseSpot(opts.look.house);
+    house.group.position.set(hs.x, ITEM_Y - 0.01, hs.z);
+    house.group.scale.setScalar(opts.look.house === "castle" ? 1.12 : opts.look.house === "chalet" ? 1.15 : 1.25);
     group.add(house.group);
     updates.push(house.update);
     const pathM = std(0xb9b1a3, 0.9);
     for (let k = 0; k < 5; k++) {
-      const z = HOUSE_SPOT.z + 0.42 + k * 0.17;
+      const z = hs.z + hs.r * 0.65 + k * 0.17;
       const st = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.08, 0.02, 10), pathM);
       st.scale.set(1.2, 1, 0.8);
       st.position.set(Math.sin(k * 1.7) * 0.03, ITEM_Y + 0.005, z);

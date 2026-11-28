@@ -6363,3 +6363,416 @@ a.xmas-social-chip:hover {
   .xmas-ex-side .xsky-preview {
     width: 100%;
     align-self: stretch;}}
+
+/* ---------- บ้านหิมะ Exclusive: หน้าเดียว ตัวอย่างบนสุด ทีละขั้นด้านล่าง ---------- */
+.xgh {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  grid-template-areas:
+    "preview steps"
+    "preview body"
+    "preview note"
+    "preview nav";
+  grid-template-rows: auto 1fr auto auto;
+  gap: 10px 18px;
+  margin-top: 8px;
+  min-height: min(560px, 70dvh);}
+.xgh-preview {
+  grid-area: preview;
+  position: relative;
+  align-self: start;
+  position: sticky;
+  top: 0;}
+.xgh-preview .xmas-viewer {
+  aspect-ratio: auto;
+  height: min(460px, 58dvh);
+  min-height: 0;
+  border-radius: 18px;}
+.xgh-preview .xmas-viewer-box {
+  position: relative;
+  gap: 0;}
+.xgh-preview .xmas-viewer-tools {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  justify-content: flex-start;
+  pointer-events: none;}
+.xgh-preview .xmas-viewer-tools button {
+  flex: none;
+  pointer-events: auto;
+  padding: 5px 11px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);}
+.xgh-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1d2b22;
+  background: #e8eef0;
+  box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.4);}
+.xgh-badge.t1 { background: linear-gradient(135deg, #f1f4f7, #c9d3dc);}
+.xgh-badge.t2 { background: linear-gradient(135deg, #fff1c2, #e8c160);}
+.xgh-badge.t3 { background: linear-gradient(135deg, #ffe39a, #c9922c); color: #3a2304; box-shadow: 0 0 0 2px rgba(255, 215, 120, 0.6), 0 6px 16px -6px rgba(201, 146, 44, 0.9);}
+.xgh-steps {
+  grid-area: steps;
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 3px;
+  list-style: none;
+  border-radius: 999px;
+  background: rgba(15, 46, 36, 0.07);}
+.xgh-steps li {
+  flex: 1;}
+.xgh-steps button {
+  width: 100%;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;}
+.xgh-steps li.is-on button {
+  background: #1d4a33;
+  color: #fff;}
+.xgh-steps li.is-done button {
+  color: #1d4a33;}
+.xgh-body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;}
+.xgh-tiers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  border-radius: 16px;
+  transition: box-shadow 0.2s ease;}
+.xgh-tiers.is-alert {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.45);
+  animation: xgh-shake 0.4s ease;}
+@keyframes xgh-shake {
+  0%, 100% { transform: none;}
+  25% { transform: translateX(-5px);}
+  75% { transform: translateX(5px);}}
+.xgh-tier {
+  display: grid;
+  gap: 1px;
+  padding: 9px 11px;
+  text-align: left;
+  border-radius: 14px;
+  border: 2px solid rgba(15, 46, 36, 0.12);
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;}
+.xgh-tier b {
+  font-size: 19px;
+  line-height: 1.2;}
+.xgh-tier span {
+  font-size: 13px;
+  font-weight: 700;}
+.xgh-tier small {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ink-2);}
+.xgh-tier.t1 { background: linear-gradient(160deg, #fff, #f1f4f7);}
+.xgh-tier.t2 { background: linear-gradient(160deg, #fffaf0, #fbeecb);}
+.xgh-tier.t3 { background: linear-gradient(160deg, #fff6dc, #f3d78e); border-color: rgba(201, 146, 44, 0.55);}
+.xgh-tier.is-on {
+  border-color: #1d4a33;
+  box-shadow: 0 0 0 3px rgba(29, 74, 51, 0.2);
+  transform: translateY(-1px);}
+.xgh-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(15, 46, 36, 0.14);
+  background: #fff;}
+.xgh-custom span {
+  font-size: 12.5px;
+  color: var(--ink-2);}
+.xgh-custom b {
+  color: #b8904a;}
+.xgh-custom input {
+  flex: 1 1 90px;
+  min-width: 70px;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 16px;
+  background: transparent;}
+.xgh-custom em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1d4a33;}
+.xgh-spot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;}
+.xgh-spot-info {
+  display: grid;
+  flex: 1 1 140px;
+  line-height: 1.3;}
+.xgh-spot-info span {
+  font-size: 12px;
+  color: var(--ink-2);}
+.xgh-spot-info b {
+  font-size: 13.5px;}
+.xgh-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 46, 36, 0.2);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;}
+.xgh-btn.is-gold {
+  border-color: #c99a3f;
+  background: linear-gradient(180deg, #fff6dc, #f3dc9d);}
+.xgh-btn.is-primary {
+  border-color: #1d4a33;
+  background: #1d4a33;
+  color: #fff;
+  min-width: 96px;}
+.xgh-btn.is-primary.is-wait {
+  opacity: 0.65;}
+.xgh-btn.is-ghost {
+  background: transparent;}
+.xgh-btn.is-danger {
+  border-color: rgba(190, 40, 90, 0.45);
+  color: #9b1d4a;}
+.xgh-map canvas {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: #f4f8fc;
+  cursor: pointer;
+  touch-action: pan-y;}
+.xgh-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;}
+.xgh-tabs::-webkit-scrollbar {
+  display: none;}
+.xgh-tabs button {
+  flex: none;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 46, 36, 0.14);
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;}
+.xgh-tabs button.is-on {
+  background: #1d4a33;
+  border-color: #1d4a33;
+  color: #fff;}
+.xgh-tabs .xgh-dice {
+  margin-left: auto;
+  border-color: #c99a3f;
+  background: linear-gradient(180deg, #fff6dc, #f3dc9d);}
+.xgh-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;}
+.xgh-row {
+  display: grid;
+  gap: 5px;
+  min-width: 0;}
+.xgh-row-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);}
+.xgh-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 3px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;}
+.xgh-chips button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 46, 36, 0.14);
+  background: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;}
+.xgh-chips button.is-on {
+  background: #1d4a33;
+  border-color: #1d4a33;
+  color: #fff;}
+.xgh-chips button.is-locked {
+  opacity: 0.55;
+  border-style: dashed;}
+.xgh-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);}
+.xgh-tierline {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);}
+.xgh-sel {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(15, 46, 36, 0.05);}
+.xgh-sel-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;}
+.xgh-rot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;}
+.xgh-rot em {
+  font-style: normal;
+  font-weight: 700;
+  min-width: 34px;}
+.xgh-rot input {
+  flex: 1;
+  accent-color: #c0392b;}
+.xgh-field {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--ink-2);}
+.xgh-field span {
+  display: flex;
+  justify-content: space-between;}
+.xgh-field em {
+  font-style: normal;}
+.xgh-field input,
+.xgh-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(15, 46, 36, 0.16);
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: #fff;
+  resize: none;}
+.xgh-pay {
+  width: 100%;}
+.xgh-note {
+  grid-area: note;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #fff1f1;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #9b1c1c;
+  font-size: 13px;
+  font-weight: 600;
+  animation: xz-tip-in 0.3s ease both;}
+.xgh-note span {
+  flex: 1;}
+.xgh-note button {
+  flex: none;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(180deg, #d9a93a, #b98a2a);
+  color: #2a1d10;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;}
+.xgh-nav {
+  grid-area: nav;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;}
+.xgh-count {
+  font-size: 12.5px;
+  color: var(--ink-2);}
+
+/* มือถือ: ทั้งหน้าอยู่ในจอเดียว ตัวอย่างบนสุด ตัวเลือกตรงกลาง ปุ่มขั้นตอนล่างสุด */
+@media (max-width: 759px) {
+  .xmas-exclusive.is-giant .xmas-kicker {
+    display: none;}
+  .xmas-exclusive.is-giant h2 {
+    font-size: 19px;
+    margin-bottom: 4px;}
+  .xgh {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 0;}
+  .xgh-preview {
+    position: relative;
+    flex: none;}
+  .xgh-preview .xmas-viewer {
+    height: clamp(160px, 29dvh, 270px);}
+  .xgh-steps,
+  .xgh-nav,
+  .xgh-note {
+    flex: none;}
+  .xgh-body {
+    flex: 1 1 auto;}
+  .xgh-tier {
+    padding: 7px 10px;}
+  .xgh-tier b {
+    font-size: 17px;}
+  .xgh-tier small {
+    font-size: 10.5px;}
+  .xgh-nav {
+    padding-top: 2px;}}
+@media (max-width: 759px) and (max-height: 700px) {
+  .xgh-tier small {
+    display: none;}
+  .xgh-preview .xmas-viewer {
+    height: clamp(140px, 26dvh, 220px);}}
+.xgh-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: none;
+  padding: 2px 0 6px;
+  background: var(--paper);}

@@ -373,6 +373,181 @@ function igloo(wallHex: number): Built {
   return { group: g, update: (t, r) => updates.forEach((u) => u(t, r)) };
 }
 
+// ชาเล่ต์สองชั้น (ระดับดาวประจำห้อง): ชั้นล่างหิน ชั้นบนไม้ ระเบียงไฟประดับ หน้าต่างบานเกล็ด กระบะดอกไม้
+function chalet(wallHex: number, roofHex: number): Built {
+  const g = new THREE.Group();
+  const updates: ((t: number, r: boolean) => void)[] = [];
+  const W = 0.9;
+  const D = 0.64;
+  const stone = std(0x8d8a85, 0.95);
+  const wood = new THREE.MeshStandardMaterial({ color: wallHex, roughness: 0.8 });
+  const timber = std(0x4a2c18, 0.8);
+  const trim = std(0xfffaf0, 0.5);
+  const shutter = std(0xb3203a, 0.6);
+  g.add(m(new THREE.BoxGeometry(W + 0.1, 0.06, D + 0.1), std(0x6f6b66, 0.95), 0, 0.03, 0));
+  g.add(m(new THREE.BoxGeometry(W, 0.32, D), stone, 0, 0.06 + 0.16, 0));
+  // ร่องหินชั้นล่าง
+  for (let k = 1; k < 4; k++) g.add(m(new THREE.BoxGeometry(W + 0.004, 0.006, D + 0.004), std(0x6d6a66, 0.95), 0, 0.06 + k * 0.08, 0));
+  const up = 0.38;
+  g.add(m(new THREE.BoxGeometry(W + 0.06, 0.34, D + 0.06), wood, 0, up + 0.17, 0));
+  for (let k = -3; k <= 3; k++) g.add(m(new THREE.BoxGeometry(0.025, 0.34, 0.01), timber, k * 0.14, up + 0.17, D / 2 + 0.035));
+  g.add(m(new THREE.BoxGeometry(W + 0.1, 0.03, D + 0.1), timber, 0, up, 0));
+  const rise = 0.46;
+  sideGables(W + 0.06, D + 0.06, rise, up + 0.34, wood, g);
+  gableRoof(W + 0.1, D + 0.1, rise, roofHex, up + 0.34, g);
+  // ระเบียงชั้นบน พร้อมราวและไฟประดับ
+  const by = up + 0.02;
+  g.add(m(new THREE.BoxGeometry(W - 0.06, 0.03, 0.16), timber, 0, by, D / 2 + 0.1));
+  for (let k = 0; k <= 8; k++) g.add(m(new THREE.BoxGeometry(0.014, 0.12, 0.014), timber, -W / 2 + 0.05 + ((W - 0.1) * k) / 8, by + 0.07, D / 2 + 0.17));
+  g.add(m(new THREE.BoxGeometry(W - 0.06, 0.02, 0.025), timber, 0, by + 0.13, D / 2 + 0.17));
+  g.add(m(new THREE.BoxGeometry(W - 0.04, 0.025, 0.04), snowMat(), 0, by + 0.15, D / 2 + 0.17));
+  const ls = lightString(Array.from({ length: 9 }, (_, i) => new THREE.Vector3(-W / 2 + 0.04 + ((W - 0.08) * i) / 8, by + 0.115 - 0.025 * Math.sin((i / 8) * Math.PI), D / 2 + 0.185)), BULBS);
+  g.add(ls.group);
+  updates.push(ls.update);
+  // หน้าต่างบานเกล็ดชั้นบนสามบาน และกระบะดอกไม้สีแดง
+  for (const x of [-0.28, 0, 0.28]) {
+    const w = windowPane(0.13, 0.15);
+    w.position.set(x, up + 0.2, D / 2 + 0.032);
+    g.add(w);
+    for (const s2 of [-1, 1]) g.add(m(new THREE.BoxGeometry(0.05, 0.16, 0.012), shutter, x + s2 * 0.1, up + 0.2, D / 2 + 0.035));
+  }
+  // ชั้นล่าง: ประตูไม้โค้ง พวงหรีด หน้าต่างสองข้าง กระบะดอกไม้
+  g.add(m(new THREE.BoxGeometry(0.2, 0.26, 0.03), std(0x6b3418, 0.6), 0, 0.06 + 0.13, D / 2 + 0.012));
+  g.add(m(new THREE.CylinderGeometry(0.1, 0.1, 0.03, 16, 1, false, 0, Math.PI).rotateX(Math.PI / 2).rotateZ(Math.PI / 2), std(0x6b3418, 0.6), 0, 0.32, D / 2 + 0.012));
+  const wr = wreath(0.04);
+  wr.position.set(0, 0.28, D / 2 + 0.04);
+  g.add(wr);
+  for (const sx of [-1, 1]) {
+    const w = windowPane(0.15, 0.13);
+    w.position.set(sx * 0.29, 0.06 + 0.17, D / 2 + 0.002);
+    g.add(w);
+    g.add(m(new THREE.BoxGeometry(0.19, 0.035, 0.05), timber, sx * 0.29, 0.06 + 0.08, D / 2 + 0.03));
+    for (let k = 0; k < 4; k++) g.add(m(new THREE.SphereGeometry(0.014, 8, 6), new THREE.MeshStandardMaterial({ color: 0xe0284a, emissive: 0x5a0010, emissiveIntensity: 0.4 }), sx * 0.29 - 0.06 + k * 0.04, 0.06 + 0.105, D / 2 + 0.035));
+    // หน้าต่างด้านข้างสองชั้น
+    for (const y of [0.06 + 0.17, up + 0.2]) {
+      const ws = windowPane(0.13, 0.13);
+      ws.rotation.y = sx * Math.PI / 2;
+      ws.position.set(sx * (W / 2 + (y > up ? 0.032 : 0.002)), y, 0);
+      g.add(ws);
+    }
+  }
+  // ปล่องไฟหิน ควัน และโคมไฟคู่หน้าประตู
+  g.add(m(new THREE.BoxGeometry(0.13, 0.42, 0.13), stone, -0.28, up + 0.5, -0.12));
+  g.add(m(new THREE.BoxGeometry(0.16, 0.04, 0.16), snowMat(), -0.28, up + 0.72, -0.12));
+  updates.push(smoke(-0.28, up + 0.8, -0.12, g));
+  for (const sx of [-1, 1]) g.add(m(new THREE.BoxGeometry(0.045, 0.065, 0.045), new THREE.MeshStandardMaterial({ color: 0xffd38a, emissive: 0xffb347, emissiveIntensity: 1.4 }), sx * 0.15, 0.26, D / 2 + 0.04));
+  g.add(m(new THREE.BoxGeometry(0.34, 0.04, 0.12), snowMat(), 0, 0.02, D / 2 + 0.08));
+  void trim;
+  return { group: g, update: (t, r) => updates.forEach((u) => u(t, r)) };
+}
+
+// ปราสาทหิมะ (ระดับผู้สนับสนุนรายใหญ่): หอคอยสี่มุม หลังคากรวยธงสะบัด ประตูโค้งเรืองแสง ไฟประดับระหว่างหอ และประกายดาวรอบปราสาท
+function castle(wallHex: number, roofHex: number): Built {
+  const g = new THREE.Group();
+  const updates: ((t: number, r: boolean) => void)[] = [];
+  const wall = new THREE.MeshPhysicalMaterial({ color: wallHex, roughness: 0.5, sheen: 0.5, sheenColor: new THREE.Color(0xdcecff) });
+  const roofM = new THREE.MeshPhysicalMaterial({ color: roofHex, roughness: 0.35, clearcoat: 0.6 });
+  const gold = std(0xf2c25a, 0.25, 0.9);
+  const glowWin = new THREE.MeshStandardMaterial({ color: 0xffe1a0, emissive: 0xffb347, emissiveIntensity: 1.5 });
+  const W = 0.78;
+  const D = 0.5;
+  g.add(m(new THREE.CylinderGeometry(0.66, 0.7, 0.06, 40), std(0xb8c4cf, 0.8), 0, 0.03, -0.02));
+  // ตัวปราสาทหลักและเชิงเทินบนกำแพง
+  g.add(m(new THREE.BoxGeometry(W, 0.46, D), wall, 0, 0.06 + 0.23, 0));
+  for (let k = 0; k < 9; k++) {
+    for (const z of [-D / 2 + 0.03, D / 2 - 0.03]) g.add(m(new THREE.BoxGeometry(0.05, 0.06, 0.05), wall, -W / 2 + 0.05 + ((W - 0.1) * k) / 8, 0.55, z));
+  }
+  g.add(m(new THREE.BoxGeometry(W + 0.01, 0.03, D + 0.01), snowMat(), 0, 0.53, 0));
+  // หอกลางสูง หลังคากรวย ธงทอง
+  const tower = (x: number, z: number, r: number, h: number, flag: boolean) => {
+    g.add(m(new THREE.CylinderGeometry(r, r * 1.05, h, 20), wall, x, 0.06 + h / 2, z));
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2;
+      g.add(m(new THREE.BoxGeometry(0.035, 0.045, 0.035), wall, x + Math.cos(a) * r * 0.95, 0.06 + h + 0.02, z + Math.sin(a) * r * 0.95));
+    }
+    g.add(m(new THREE.TorusGeometry(r * 0.98, 0.018, 6, 24).rotateX(Math.PI / 2), snowMat(), x, 0.06 + h + 0.005, z));
+    const cone = m(new THREE.ConeGeometry(r * 1.2, h * 0.55, 20), roofM, x, 0.06 + h + 0.05 + h * 0.275, z);
+    g.add(cone);
+    // หิมะเกาะช่วงล่างของหลังคากรวย
+    g.add(m(new THREE.ConeGeometry(r * 1.22, h * 0.16, 20, 1, true), snowMat(), x, 0.06 + h + 0.1, z));
+    g.add(m(new THREE.SphereGeometry(0.022, 10, 8), gold, x, 0.06 + h + 0.06 + h * 0.55, z));
+    // หน้าต่างโค้งเรืองแสงสองชั้น
+    for (const y of [0.06 + h * 0.4, 0.06 + h * 0.72]) {
+      const win = m(new THREE.PlaneGeometry(r * 0.45, r * 0.65), glowWin, x, y, z + r * 1.01);
+      g.add(win);
+      g.add(m(new THREE.CircleGeometry(r * 0.225, 12, 0, Math.PI), glowWin, x, y + r * 0.325, z + r * 1.01));
+    }
+    if (flag) {
+      const top = 0.06 + h + 0.06 + h * 0.55;
+      g.add(m(new THREE.CylinderGeometry(0.005, 0.005, 0.16, 6), gold, x, top + 0.08, z));
+      const fl = m(new THREE.PlaneGeometry(0.1, 0.06, 6, 1), new THREE.MeshStandardMaterial({ color: 0xc41e3a, side: THREE.DoubleSide, roughness: 0.6 }), x + 0.05, top + 0.13, z);
+      g.add(fl);
+      const pos = fl.geometry.attributes.position as THREE.BufferAttribute;
+      const base = Float32Array.from(pos.array as Float32Array);
+      updates.push((t, reduced) => {
+        for (let i = 0; i < pos.count; i++) {
+          const px = base[i * 3];
+          pos.setZ(i, reduced ? 0 : Math.sin(t * 6 + px * 40) * 0.012 * (px + 0.05) * 10);
+        }
+        pos.needsUpdate = true;
+      });
+    }
+    return 0.06 + h;
+  };
+  const tops: THREE.Vector3[] = [];
+  for (const [x, z] of [
+    [-0.42, 0.26],
+    [0.42, 0.26],
+    [-0.42, -0.26],
+    [0.42, -0.26],
+  ]) {
+    const h = z > 0 ? 0.62 : 0.72;
+    tops.push(new THREE.Vector3(x, tower(x, z, 0.12, h, z > 0) - 0.02, z));
+  }
+  tower(0, -0.05, 0.17, 0.92, true);
+  // ประตูโค้งใหญ่ ด้านในเรืองแสงอุ่น ซี่ประตูทอง
+  g.add(m(new THREE.PlaneGeometry(0.2, 0.2), glowWin, 0, 0.16, D / 2 + 0.003));
+  g.add(m(new THREE.CircleGeometry(0.1, 16, 0, Math.PI), glowWin, 0, 0.26, D / 2 + 0.003));
+  for (let k = -2; k <= 2; k++) g.add(m(new THREE.BoxGeometry(0.008, 0.28, 0.008), gold, k * 0.04, 0.2, D / 2 + 0.008));
+  g.add(m(new THREE.TorusGeometry(0.115, 0.014, 6, 18, Math.PI), gold, 0, 0.26, D / 2 + 0.01));
+  // ธงผ้าแดงขอบทองแขวนหน้ากำแพง
+  for (const sx of [-1, 1]) {
+    g.add(m(new THREE.PlaneGeometry(0.09, 0.2), new THREE.MeshStandardMaterial({ color: 0xa3122c, roughness: 0.7, side: THREE.DoubleSide }), sx * 0.22, 0.38, D / 2 + 0.004));
+    g.add(m(new THREE.BoxGeometry(0.1, 0.012, 0.01), gold, sx * 0.22, 0.48, D / 2 + 0.008));
+    g.add(m(new THREE.SphereGeometry(0.018, 8, 6), gold, sx * 0.22, 0.38, D / 2 + 0.01));
+  }
+  // ไฟประดับโยงระหว่างหอคอยหน้า และรอบหอกลาง
+  const ls = lightString([tops[0], new THREE.Vector3(-0.2, tops[0].y - 0.08, 0.3), new THREE.Vector3(0, tops[0].y - 0.1, 0.3), new THREE.Vector3(0.2, tops[0].y - 0.08, 0.3), tops[1]], [0xffe7a3, 0xffffff, 0xfff0c8]);
+  g.add(ls.group);
+  updates.push(ls.update);
+  // บันไดหิมะหน้าประตู และผลึกน้ำแข็งรอบฐาน
+  g.add(m(new THREE.BoxGeometry(0.3, 0.03, 0.12), snowMat(), 0, 0.075, D / 2 + 0.07));
+  const ice = new THREE.MeshPhysicalMaterial({ color: 0xcfefff, roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.8, emissive: 0x5fb8ff, emissiveIntensity: 0.25 });
+  for (let k = 0; k < 7; k++) {
+    const a = -0.4 + k * 0.45 + Math.PI;
+    const c = m(new THREE.ConeGeometry(0.035, 0.16 + (k % 3) * 0.05, 5), ice, Math.cos(a) * 0.6, 0.1, Math.sin(a) * 0.6 * 0.7);
+    c.rotation.z = (k % 2 ? 1 : -1) * 0.2;
+    g.add(c);
+  }
+  // ประกายดาวลอยวนรอบปราสาท
+  const sparkMat = new THREE.MeshBasicMaterial({ color: 0xfff3c4, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+  const sparks: THREE.Mesh[] = [];
+  for (let k = 0; k < 14; k++) {
+    const sp = new THREE.Mesh(new THREE.OctahedronGeometry(0.014), sparkMat);
+    g.add(sp);
+    sparks.push(sp);
+  }
+  updates.push((t, reduced) => {
+    sparks.forEach((sp, k) => {
+      const a = (reduced ? 0 : t * 0.4) + (k / sparks.length) * Math.PI * 2;
+      sp.position.set(Math.cos(a) * 0.62, 0.35 + Math.sin(a * 2 + k) * 0.25 + (k % 3) * 0.15, Math.sin(a) * 0.45 - 0.05);
+      sp.rotation.y = t * 2 + k;
+      sp.scale.setScalar(0.6 + 0.6 * Math.abs(Math.sin(t * 3 + k)));
+    });
+  });
+  return { group: g, update: (t, r) => updates.forEach((u) => u(t, r)) };
+}
+
 export function buildHouse(style: string | undefined, wall: string | undefined, roof: string | undefined): Built | null {
   const wallHex = col(wall, "cream");
   const roofHex = col(roof, "red");
@@ -380,6 +555,8 @@ export function buildHouse(style: string | undefined, wall: string | undefined, 
   if (style === "cabin") return cabin(wallHex, roofHex);
   if (style === "gingerbread") return gingerbread(wallHex, roofHex);
   if (style === "igloo") return igloo(wallHex);
+  if (style === "chalet") return chalet(col(wall, "wood"), col(roof, "forest"));
+  if (style === "castle") return castle(col(wall, "white"), col(roof, "navy"));
   return null;
 }
 
@@ -457,6 +634,44 @@ export function buildFence(kind: string | undefined): Built | null {
       g.add(cap);
       if (k % 3 === 0) g.add(m(new THREE.SphereGeometry(0.012, 8, 6), new THREE.MeshStandardMaterial({ color: 0xff4d5e, emissive: 0xff4d5e, emissiveIntensity: 0.8 }), p.x, 0.11, p.z + 0.04));
     });
+  } else if (kind === "ice") {
+    // กำแพงก้อนน้ำแข็งใส เสาเรืองแสงฟ้าเป็นระยะ
+    const ice = new THREE.MeshPhysicalMaterial({ color: 0xd6f1ff, roughness: 0.08, clearcoat: 1, transparent: true, opacity: 0.78, emissive: 0x4aa8ff, emissiveIntensity: 0.15 });
+    const glow = new THREE.MeshStandardMaterial({ color: 0xbfe8ff, emissive: 0x7cc8ff, emissiveIntensity: 1.2 });
+    angles.forEach((a, k) => {
+      const p = at(a);
+      const b = m(new THREE.BoxGeometry(0.11, 0.08 + (k % 2) * 0.03, 0.05), ice, p.x, 0.05, p.z);
+      b.rotation.y = -a + Math.PI / 2;
+      g.add(b);
+      if (k % 5 === 0) {
+        g.add(m(new THREE.CylinderGeometry(0.018, 0.022, 0.2, 6), ice, p.x, 0.1, p.z));
+        g.add(m(new THREE.OctahedronGeometry(0.028), glow, p.x, 0.23, p.z));
+      }
+    });
+    const tops = angles.map((a) => at(a).setY(0.1));
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(tops), 80, 0.012, 5), snowMat()));
+  } else if (kind === "royal") {
+    // เสาทองหัวโคมไฟ โยงด้วยมาลัยสนประดับโบว์แดง
+    const gold = std(0xf2c25a, 0.25, 0.9);
+    const leaf = std(0x1b5a35, 0.85);
+    const bow = std(0xc41e3a, 0.5);
+    const lamp = new THREE.MeshStandardMaterial({ color: 0xffe1a0, emissive: 0xffb347, emissiveIntensity: 1.5 });
+    const posts = angles.filter((_, k) => k % 3 === 0);
+    posts.forEach((a) => {
+      const p = at(a);
+      g.add(m(new THREE.CylinderGeometry(0.012, 0.018, 0.24, 8), gold, p.x, 0.12, p.z));
+      g.add(m(new THREE.CylinderGeometry(0.024, 0.024, 0.012, 8), gold, p.x, 0.245, p.z));
+      g.add(m(new THREE.BoxGeometry(0.03, 0.04, 0.03), lamp, p.x, 0.27, p.z));
+      g.add(m(new THREE.ConeGeometry(0.026, 0.03, 4).rotateY(Math.PI / 4), gold, p.x, 0.305, p.z));
+    });
+    for (let k = 0; k < posts.length - 1; k++) {
+      const a0 = posts[k];
+      const a1 = posts[k + 1];
+      const pts = Array.from({ length: 7 }, (_, i) => at(a0 + ((a1 - a0) * i) / 6).setY(0.22 - 0.07 * Math.sin((i / 6) * Math.PI)));
+      g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.016, 6), leaf));
+      const mid = at((a0 + a1) / 2).setY(0.15);
+      g.add(m(new THREE.SphereGeometry(0.02, 8, 6), bow, mid.x, mid.y, mid.z));
+    }
   }
   return { group: g, update: (t, r) => updates.forEach((u) => u(t, r)) };
 }
