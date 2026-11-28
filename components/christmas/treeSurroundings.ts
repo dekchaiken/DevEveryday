@@ -3,6 +3,8 @@
 // ตำแหน่งทั้งหมดสุ่มแบบคงที่ ทุกเครื่องจึงเห็นเหมือนกัน และหลบทางเดินกับโซนคำอวยพร
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { DECOR_SPOTS } from "@/lib/christmas/layout";
+import { glowPoints } from "./glowPoints";
 
 type Opts = {
   glowTex: THREE.Texture;
@@ -78,15 +80,12 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   };
 
   // ---------- เสาไฟโบราณรอบลาน และสายไฟห้อยโค้งระหว่างเสา ----------
-  const LAMP_R = 7.7;
+  // ตำแหน่งทั้งหมดมาจาก DECOR_SPOTS ในผัง (ช่องใต้ของตกแต่งถูกสงวนไว้ ไม่ทับตุ๊กตา)
   const LAMP_H = 2.9;
-  const lampAngles: number[] = [];
-  const N_LAMP = 10; // 10 ต้น: มุมกล้องหน้าต้น (ทิศ +z) อยู่กึ่งกลางระหว่างเสาพอดี ไม่มีเสาบังต้น
-  for (let i = 0; i < N_LAMP; i++) {
-    const a = gateA + ((i + 0.5) / N_LAMP) * Math.PI * 2;
-    lampAngles.push(a);
-  }
-  const lampPts = lampAngles.map((a) => new THREE.Vector2(Math.cos(a) * LAMP_R, Math.sin(a) * LAMP_R));
+  const lampSpots = DECOR_SPOTS.filter((d) => d.kind === "lamp").sort((a, b) => a.a - b.a);
+  const lampAngles = lampSpots.map((d) => d.a);
+  const N_LAMP = lampSpots.length;
+  const lampPts = lampSpots.map((d) => new THREE.Vector2(d.x, d.z));
   const ironParts: THREE.BufferGeometry[] = [];
   const goldParts: THREE.BufferGeometry[] = [];
   const glassPos: THREE.Vector3[] = [];
@@ -121,9 +120,10 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   group.add(glass);
   const glowGeo = G(new THREE.BufferGeometry());
   glowGeo.setAttribute("position", new THREE.Float32BufferAttribute(glassPos.flatMap((p) => [p.x, p.y, p.z]), 3));
-  const lampGlow = new THREE.Points(glowGeo, M(new THREE.PointsMaterial({ color: 0xffc46b, size: 1.6, map: glowTex, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending })));
-  lampGlow.frustumCulled = false;
-  group.add(lampGlow);
+  const warm = new THREE.Color(0xffc46b);
+  const lampGlow = glowPoints({ positions: glassPos.flatMap((p) => [p.x, p.y, p.z]), colors: glassPos.flatMap(() => [warm.r, warm.g, warm.b]), size: 1.6, map: glowTex, opacity: 0.7, twinkle: 0.12 });
+  group.add(lampGlow.points);
+  void glowGeo;
 
   // สายไฟห้อยระหว่างเสา (เว้นช่วงที่ทางเดินไปโซนลอดผ่าน)
   const bulbPos: THREE.Vector3[] = [];
@@ -133,7 +133,7 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   for (let i = 0; i < N_LAMP; i++) {
     const a = lampPts[i];
     const b = lampPts[(i + 1) % N_LAMP];
-    const midA = (lampAngles[i] + lampAngles[(i + 1) % N_LAMP] + (i === N_LAMP - 1 ? Math.PI * 2 : 0)) / 2;
+    const midA = Math.atan2(Math.sin(lampAngles[i]) + Math.sin(lampAngles[(i + 1) % N_LAMP]), Math.cos(lampAngles[i]) + Math.cos(lampAngles[(i + 1) % N_LAMP]));
     // เว้นช่วงทางเดินไปโซน และช่วงหน้ากล้องหลัก (ทิศ +z) ไม่ให้สายไฟพาดบังโคนต้น
     if (angDiff(midA, gateA) < 0.2 || angDiff(midA, Math.PI / 2) < 0.2) continue;
     const pts: THREE.Vector3[] = [];
@@ -160,25 +160,16 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   });
   bulbs.frustumCulled = false;
   group.add(bulbs);
-  const haloPos = new Float32Array(bulbPos.length * 3);
-  bulbPos.forEach((p, i) => haloPos.set([p.x, p.y, p.z], i * 3));
-  const haloGeo = G(new THREE.BufferGeometry());
-  haloGeo.setAttribute("position", new THREE.BufferAttribute(haloPos, 3));
-  haloGeo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(bulbPos.length * 3), 3));
-  const halos = new THREE.Points(haloGeo, M(new THREE.PointsMaterial({ size: 0.5, map: glowTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })));
-  halos.frustumCulled = false;
-  group.add(halos);
-  const haloAttr = haloGeo.getAttribute("color") as THREE.BufferAttribute;
+  const halos = glowPoints({ positions: bulbPos.flatMap((p) => [p.x, p.y, p.z]), colors: bulbCol.flatMap((c) => [c.r, c.g, c.b]), size: 0.5, map: glowTex });
+  group.add(halos.points);
 
   // ---------- ม้านั่งไม้ขาเหล็กหันหาต้น วางระหว่างเสาไฟ ----------
   const benchWood: THREE.BufferGeometry[] = [];
   const benchIron: THREE.BufferGeometry[] = [];
   const benchSnow: THREE.BufferGeometry[] = [];
-  for (let i = 0; i < N_LAMP; i += 3) {
-    const a = gateA + ((i + 1.5) / N_LAMP) * Math.PI * 2 + Math.PI / N_LAMP;
-    if (angDiff(a, gateA) < 0.7 || angDiff(a, Math.PI / 2) < 0.3) continue;
-    const R = LAMP_R + 0.7;
-    const mtx = new THREE.Matrix4().compose(new THREE.Vector3(Math.cos(a) * R, 0, Math.sin(a) * R), q.setFromAxisAngle(up, Math.PI / 2 - a), new THREE.Vector3(1, 1, 1));
+  for (const spot of DECOR_SPOTS.filter((d) => d.kind === "bench")) {
+    const a = spot.a;
+    const mtx = new THREE.Matrix4().compose(new THREE.Vector3(spot.x, 0, spot.z), q.setFromAxisAngle(up, Math.PI / 2 - a), new THREE.Vector3(1, 1, 1));
     for (let s = 0; s < 3; s++) benchWood.push(new THREE.BoxGeometry(1.5, 0.05, 0.12).translate(0, 0.44, -0.14 + s * 0.14).applyMatrix4(mtx).toNonIndexed());
     for (let s = 0; s < 2; s++) benchWood.push(new THREE.BoxGeometry(1.5, 0.11, 0.04).translate(0, 0.62 + s * 0.16, 0.24).applyMatrix4(mtx).toNonIndexed());
     for (const x of [-0.65, 0.65]) {
@@ -206,12 +197,9 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   const ballGeo = G(new THREE.SphereGeometry(1, 32, 22));
   const capGeo = G(new THREE.CylinderGeometry(0.22, 0.28, 0.2, 14));
   const loopGeo = G(new THREE.TorusGeometry(0.14, 0.035, 8, 16));
-  const clusterAngles = [gateA + Math.PI * 0.62, gateA + Math.PI, gateA - Math.PI * 0.6];
-  clusterAngles.forEach((a, ci) => {
-    const R = 11.2;
-    const cx = Math.cos(a) * R;
-    const cz = Math.sin(a) * R;
-    if (blocked(cx, cz, 2)) return;
+  DECOR_SPOTS.filter((d) => d.kind === "baubles").forEach((spot, ci) => {
+    const cx = spot.x;
+    const cz = spot.z;
     [
       [0, 0, 0.62],
       [0.95, 0.35, 0.44],
@@ -243,21 +231,15 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   const pineGeo = G(pineGeometry());
   const pineMat = M(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }));
   const pineMtx: THREE.Matrix4[] = [];
-  const tryPine = (x: number, z: number, s: number) => {
-    if (blocked(x, z, 2.2) || Math.hypot(x, z) < 14) return;
-    pineMtx.push(new THREE.Matrix4().compose(new THREE.Vector3(x, 0, z), q.setFromAxisAngle(up, r() * Math.PI * 2), new THREE.Vector3(s, s * (0.9 + r() * 0.3), s)));
-  };
-  const groves = small ? 6 : 9;
-  for (let g = 0; g < groves; g++) {
-    const a = gateA + 0.55 + (g / groves) * (Math.PI * 2 - 1.1) + (r() - 0.5) * 0.25;
-    const R = 16 + r() * 6;
-    const n = (small ? 4 : 6) + Math.floor(r() * 4);
-    for (let k = 0; k < n; k++) tryPine(Math.cos(a) * R + (r() - 0.5) * 5, Math.sin(a) * R + (r() - 0.5) * 5, 1.1 + r() * 1.3);
-  }
-  for (let k = 0; k < (small ? 30 : 60); k++) {
-    const a = r() * Math.PI * 2;
-    const R = 26 + r() * 22;
-    tryPine(Math.cos(a) * R, Math.sin(a) * R, 1.4 + r() * 1.6);
+  // ป่าสนเป็นกลุ่มตามจุดที่ผังสงวนไว้ที่ขอบลาน
+  for (const g of DECOR_SPOTS.filter((d) => d.kind === "grove")) {
+    const n = small ? 4 : 6;
+    for (let k = 0; k < n; k++) {
+      const a = r() * Math.PI * 2;
+      const d = Math.sqrt(r()) * (g.r - 0.8);
+      const s = 1.2 + r() * 1.4;
+      pineMtx.push(new THREE.Matrix4().compose(new THREE.Vector3(g.x + Math.cos(a) * d, 0, g.z + Math.sin(a) * d), q.setFromAxisAngle(up, r() * Math.PI * 2), new THREE.Vector3(s, s * (0.9 + r() * 0.3), s)));
+    }
   }
   const pines = new THREE.InstancedMesh(pineGeo, pineMat, Math.max(1, pineMtx.length));
   pineMtx.forEach((mm, i) => pines.setMatrixAt(i, mm));
@@ -270,11 +252,11 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   const moundGeo = G(new THREE.SphereGeometry(1, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2));
   const moundMtx: THREE.Matrix4[] = [];
   for (let k = 0; k < (small ? 24 : 40); k++) {
+    const groves = DECOR_SPOTS.filter((d) => d.kind === "grove");
+    const g = groves[k % groves.length];
     const a = r() * Math.PI * 2;
-    const R = 12 + r() * 20;
-    const x = Math.cos(a) * R;
-    const z = Math.sin(a) * R;
-    if (blocked(x, z, 1.5)) continue;
+    const x = g.x + Math.cos(a) * g.r * 0.7;
+    const z = g.z + Math.sin(a) * g.r * 0.7;
     const s = 0.6 + r() * 1.2;
     moundMtx.push(new THREE.Matrix4().compose(new THREE.Vector3(x, -0.05, z), q.setFromAxisAngle(up, r() * 3), new THREE.Vector3(s * (1.2 + r()), s * 0.32, s)));
   }
@@ -284,16 +266,13 @@ export function buildSurroundings(opts: Opts): { group: THREE.Group; update: (t:
   mounds.receiveShadow = true;
   group.add(mounds);
 
-  const phase = bulbPos.map((_, i) => (i * 2.399) % (Math.PI * 2));
   function update(t: number, reduced: boolean) {
-    for (let i = 0; i < bulbCol.length; i++) {
-      const b = reduced ? 0.85 : 0.5 + 0.5 * Math.max(0, Math.sin(t * 2 + phase[i]));
-      haloAttr.setXYZ(i, bulbCol[i].r * b, bulbCol[i].g * b, bulbCol[i].b * b);
-    }
-    haloAttr.needsUpdate = true;
-    (lampGlow.material as THREE.PointsMaterial).opacity = reduced ? 0.7 : 0.62 + 0.08 * Math.sin(t * 4.3) * Math.sin(t * 1.7);
+    halos.setTime(t, reduced);
+    lampGlow.setTime(t, reduced);
   }
   function dispose() {
+    halos.dispose();
+    lampGlow.dispose();
     geos.forEach((g) => g.dispose());
     mats.forEach((m) => m.dispose());
   }

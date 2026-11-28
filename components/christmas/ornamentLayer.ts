@@ -63,7 +63,7 @@ function bellGeometry() {
     new THREE.Vector2(0.08, -0.065),
     new THREE.Vector2(0.0, -0.065),
   ];
-  return new THREE.LatheGeometry(pts, 20);
+  return new THREE.LatheGeometry(pts, 14);
 }
 
 const easeOutBounce = (t: number) => {
@@ -79,10 +79,10 @@ export function createOrnamentLayer(opts: { capacity: number; onLanded?: (pos: T
   const cap = opts.capacity;
   const group = new THREE.Group();
   const geos: THREE.BufferGeometry[] = [
-    new THREE.SphereGeometry(TOP.ball, 22, 16),
+    new THREE.SphereGeometry(TOP.ball, 16, 12), // ลูกบอลเล็กบนจอ ลดจำนวนสามเหลี่ยมได้โดยยังกลมเนียน
     starGeometry(),
     bellGeometry(),
-    new RoundedBoxGeometry(0.13, 0.13, 0.13, 2, 0.016),
+    new RoundedBoxGeometry(0.13, 0.13, 0.13, 1, 0.016),
   ];
   // แก้วเคลือบเงา สะท้อนแสงไฟและท้องฟ้า สีมาจาก instanceColor
   const bodyMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0.45, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05, iridescence: 0.15 });
@@ -97,7 +97,7 @@ export function createOrnamentLayer(opts: { capacity: number; onLanded?: (pos: T
     return m;
   });
   // ฝาโลหะทองพร้อมห่วง ลวดเกี่ยวบาง ๆ และริบบิ้นของกล่องของขวัญ
-  const capGeo = new THREE.CylinderGeometry(0.019, 0.022, 0.028, 12);
+  const capGeo = new THREE.CylinderGeometry(0.019, 0.022, 0.028, 8);
   const capMat = new THREE.MeshStandardMaterial({ color: 0xd8b25a, metalness: 0.95, roughness: 0.25 });
   const caps = new THREE.InstancedMesh(capGeo, capMat, cap);
   const wireGeo = new THREE.CylinderGeometry(0.0035, 0.0035, 1, 5);

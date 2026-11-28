@@ -8,8 +8,8 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { TREE_CAPACITY, type Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 // ตำแหน่งวาดบนฉากใช้ชุด DISPLAY (ช่องที่ถูกปิดหลังผังเปลี่ยนย้ายไปแสดงที่ช่องเปิดใกล้สุด)
-import { distToPath, GIANT_DISPLAY as GIANT_POSITIONS, GIANT_MODEL_SCALE, inZone, nearestSlot, SLOT_DISPLAY_POSITIONS as SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
-import { LAND_R } from "@/lib/christmas/grid";
+import { distToPath, GIANT_DISPLAY as GIANT_POSITIONS, GIANT_MODEL_SCALE, inZone, SLOT_DISPLAY_POSITIONS as SLOT_POSITIONS, SLOT_POSITIONS as SLOT_REAL, slotAtWorld, ZONE, ZONE_CAPACITY, ZONE_GATE, ZONE_GATE_ANGLE, ZONE_STOPS, ZONE_WALKWAYS } from "@/lib/christmas/slots";
+import { CELL, LAND_R } from "@/lib/christmas/grid";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, surfaceNormal, TREE_TOP_Y } from "./geometry";
 import { buildTreeModel, type TreeVariant } from "./treeModel";
@@ -43,7 +43,8 @@ export type TreeSceneHandle = {
   project: (x: number, y: number, z: number) => { x: number; y: number; visible: boolean }; // พิกัดจอของจุดในโลก (ใช้วางคำอธิบายข้างโมเดล)
   zoneSlots: (only?: Set<string>) => { id: string; x: number; y: number; visible: boolean; angle: number }[]; // จุดของการ์ดในโซนบนจอ (ใช้วางป้ายชี้) ระบุชุด id เพื่อคำนวณเฉพาะใบที่ต้องการ
   focusZoneCard: (id: string) => void; // กล้องบินไปหาการ์ดใบนั้น
-  flyToZone: () => void; // ซูมออกเป็นแผนที่ แล้วไปที่โซนคำอวยพร
+  flyToZone: () => void; // เดินผ่านอุโมงค์ไฟเข้าหมู่บ้านคำอวยพร แล้วหยุดหน้ากำแพงแรกที่มีการ์ด
+  zoneStep: (delta: number) => void; // เลื่อนไปกำแพงถัดไป/ก่อนหน้า (เฉพาะกำแพงที่มีการ์ด)
   returnView: () => void; // กลับไปมุมกล้องเดิมก่อนไปดูตุ๊กตาหรือโซน
   zoomBy: (factor: number) => void;
   resetView: () => void;
@@ -63,10 +64,12 @@ type Props = {
   onDecorClick: (d: Decor) => void;
   onGiantClick?: (g: GiantSpec) => void; // แตะบ้านหิมะ Exclusive เพื่อดูป้ายและลิงก์
   markerSlot: number | null; // ช่องที่กำลังเลือกบนพื้น
-  onGroundPick: (slot: number) => void; // แตะพื้นหิมะเพื่อเลือกช่องใกล้ที่สุด
+  onGroundPick: (slot: number | null) => void; // โหมดเลือกบนฉาก: ช่องตรงจุดที่แตะ (null = ตรงนั้นวางไม่ได้)
   zoneCards?: CardRecord[]; // การ์ดที่แขวนบนรั้วโซนคำอวยพร
   onZoneCardClick?: (id: string) => void;
   onAwayChange?: (away: boolean) => void; // บอกพาเรนต์ว่ากล้องอยู่นอกมุมเดิมหรือไม่
+  onZoneStop?: (index: number, total: number) => void; // กำแพงที่กำลังชมในหมู่บ้าน
+  pickMode?: boolean; // โหมดเลือกช่องวางตุ๊กตาบนฉาก (แตะพื้นได้เฉพาะตอนนี้)
   snowing: boolean; // เปิด/ปิดหิมะตก
   crowd: { count: number; seed: string }; // จำนวนคนออนไลน์ในโซนนี้ และรหัสโซนสำหรับจัดตำแหน่ง
 };
@@ -141,7 +144,7 @@ function mergeStaticMeshes(root: THREE.Group, keep: Set<THREE.Object3D>) {
 const TREE_VARIANT: TreeVariant = "classic";
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange, onZoneStop, pickMode = false }: Props) {
   const snowingRef = useRef(snowing);
   snowingRef.current = snowing;
   const mountRef = useRef<HTMLDivElement>(null);
@@ -158,9 +161,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setZoneCards: (list: CardRecord[]) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
+    setPickMode: (on: boolean, taken: number[]) => void;
   } | null>(null);
-  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange });
-  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange };
+  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange, onZoneStop });
+  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange, onZoneStop };
   const readyRef = useRef(onReady);
   readyRef.current = onReady;
 
@@ -187,7 +191,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
-    let lastShadowAt = 0;
+    // เงาวาดใหม่เฉพาะตอนของในฉากเปลี่ยน (เดิมวาดทุก 0.25 วินาที ทำให้ภาพกระตุกเป็นจังหวะ)
+    let shadowFrames = 2;
+    const markShadows = () => {
+      shadowFrames = 2;
+    };
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.touchAction = "none";
 
@@ -275,7 +283,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     // ---------- ต้นคริสต์มาส: พุ่มสนจากกิ่งจริง ไฟ สายลูกปัด ดาว ผ้าคลุมโคน และกล่องของขวัญ (treeModel.ts) ----------
     const glowTex = makeGlowTexture();
-    const tree = buildTreeModel({ variant: TREE_VARIANT, small: isSmall, glowTex });
+    const tree = buildTreeModel({ variant: TREE_VARIANT, small: isSmall, glowTex, starLight: false });
     scene.add(tree.group);
     const hitCone = tree.hitMesh;
     // ลานหินลายทองรอบต้น รั้วไม้เท้าลูกกวาดกับโคมไฟ และอุโมงค์ซุ้มไฟตามทางไปโซนคำอวยพร
@@ -286,7 +294,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const ornLayer = createOrnamentLayer({
       capacity: TREE_CAPACITY,
       // ลูกบอลหล่นลงถึงจุดแขวน: มีประกายสีเดียวกับลูกบอลแตกออกเบา ๆ
-      onLanded: (pos, color) => burst(pos.clone().add(new THREE.Vector3(0, 0.08, 0)), color, isSmall ? 14 : 24, 0.25),
+      onLanded: (pos, color) => (markShadows(), burst(pos.clone().add(new THREE.Vector3(0, 0.08, 0)), color, isSmall ? 14 : 24, 0.25)),
     });
     scene.add(ornLayer.group);
     let loadedOnce = false;
@@ -294,6 +302,21 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ---------- ออร่าความคืบหน้า: ไต่จากโคนถึงยอดตามจำนวนคำอวยพร (treeAura.ts) ----------
     const aura = createTreeAura({ small: isSmall, pixelRatio: renderer.getPixelRatio() });
     scene.add(aura.group);
+
+    // ต้น ลูกบอล และออร่าใช้ instancing ที่เดิมปิดการตัดวัตถุนอกจอ (วาดทุกเฟรมแม้กล้องหันไปทางอื่น)
+    // ให้ทุกชิ้นใช้ทรงกลมครอบต้นเดียวกัน เมื่อกล้องอยู่ในหมู่บ้านหรือหันออกจากต้น การ์ดจอจะข้ามไปเลย
+    const treeSphere = new THREE.Sphere(new THREE.Vector3(0, 3.2, 0), 5);
+    for (const root of [tree.group, ornLayer.group, aura.group]) {
+      root.traverse((o) => {
+        if (o.frustumCulled) return;
+        const inst = o as THREE.InstancedMesh;
+        const geo = (o as THREE.Mesh).geometry as THREE.BufferGeometry | undefined;
+        if (inst.isInstancedMesh) inst.boundingSphere = treeSphere.clone();
+        else if (geo) geo.boundingSphere = treeSphere.clone();
+        else return;
+        o.frustumCulled = true;
+      });
+    }
 
     // ---------- ตัวอย่างลูกบอลก่อนยืนยัน ----------
     const previewMesh = new THREE.Mesh(
@@ -470,19 +493,55 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         new THREE.PointsMaterial({ color: hex, size: 0.3, map: glowTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }),
       );
     }
+    const zoneAwayRef = { v: false };
+    const walkRef = { v: false };
     // ---------- ปรับขนาดและเรนเดอร์ ----------
     function resize() {
       const w = mount!.clientWidth;
       const h = mount!.clientHeight;
       renderer.setSize(w, h, false);
       camera.aspect = w / Math.max(h, 1);
-      // จอแคบให้ถอยกล้องออกเพื่อให้ต้นไม้ไม่ถูกตัด
-      camera.fov = camera.aspect < 0.8 ? 50 : 38;
+      // จอแคบให้ถอยกล้องออกเพื่อให้ต้นไม้ไม่ถูกตัด (ระหว่างเดินหรืออยู่ในหมู่บ้าน มุมกล้องคุมโดยเส้นทาง)
+      if (!zoneAwayRef.v && !walkRef.v) camera.fov = camera.aspect < 0.8 ? 50 : 38;
       camera.updateProjectionMatrix();
     }
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(mount);
+
+    // ความละเอียดปรับเองตามความเร็วเครื่อง: วาดไม่ทัน 60 fps ต่อเนื่อง 1.5 วินาที ลดลงทีละขั้น
+    // และเครื่องเหลือแรงต่อเนื่อง 5 วินาที เพิ่มกลับ (ไม่เกินค่าตั้งต้น)
+    const PR_MAX = renderer.getPixelRatio();
+    const PR_MIN = isSmall ? 0.75 : 0.9;
+    let frameAvg = 16.7;
+    let slowFor = 0;
+    let fastFor = 0;
+    function governPixelRatio(dtMs: number) {
+      if (dtMs > 200) return; // แท็บเพิ่งกลับมาจากเบื้องหลัง ไม่นับ
+      frameAvg += (dtMs - frameAvg) * 0.05;
+      const pr = renderer.getPixelRatio();
+      if (frameAvg > 19) {
+        slowFor += dtMs;
+        fastFor = 0;
+        if (slowFor > 1500 && pr > PR_MIN) {
+          renderer.setPixelRatio(Math.max(PR_MIN, pr - 0.15));
+          resize();
+          slowFor = 0;
+          frameAvg = 16.7;
+        }
+      } else if (frameAvg < 15 && pr < PR_MAX) {
+        fastFor += dtMs;
+        slowFor = 0;
+        if (fastFor > 5000) {
+          renderer.setPixelRatio(Math.min(PR_MAX, pr + 0.1));
+          resize();
+          fastFor = 0;
+        }
+      } else {
+        slowFor = 0;
+        fastFor = 0;
+      }
+    }
 
     // คลิกหรือแตะ: ถ้าโดนลูกบอลให้แสดงคำอวยพร ถ้าโดนผิวต้นให้เลือกตำแหน่งแขวน
     const raycaster = new THREE.Raycaster();
@@ -497,6 +556,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const rect = renderer.domElement.getBoundingClientRect();
       ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
+      // โหมดเลือกช่องบนฉาก: ใช้ช่องที่อยู่ใต้จุดแตะพอดี และไม่เปิดสิ่งอื่น
+      if (pickOn) {
+        const gh = raycaster.intersectObject(ground, false)[0];
+        if (gh) callbacks.current.onGroundPick(slotAtWorld(gh.point.x, gh.point.z));
+        return;
+      }
       const picked = ornLayer.pick(raycaster);
       if (picked) {
         callbacks.current.onOrnamentClick(picked);
@@ -543,9 +608,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         callbacks.current.onPick(pick.height, pick.angle);
         return;
       }
-      // แตะพื้นหิมะ: เลือกช่องวางตุ๊กตาหิมะที่ใกล้ที่สุด
-      const g = raycaster.intersectObject(ground, false)[0];
-      if (g) callbacks.current.onGroundPick(nearestSlot(g.point.x, g.point.z));
+      // แตะพื้นปกติไม่ทำอะไร (เลือกช่องได้เฉพาะในโหมด "บนฉาก" จากหน้าตกแต่งตุ๊กตา)
     };
     // เมื่อเลื่อนเมาส์ไปโดนลูกบอลให้เปลี่ยนเคอร์เซอร์เป็นมือชี้
     const onMove = (e: PointerEvent) => {
@@ -553,18 +616,70 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const rect = renderer.domElement.getBoundingClientRect();
       ndc.set(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
       raycaster.setFromCamera(ndc, camera);
+      if (pickOn) {
+        // กรอบช่องใต้เมาส์: เขียว = ว่าง, แดง = วางไม่ได้
+        const gh = raycaster.intersectObject(ground, false)[0];
+        const slot = gh ? slotAtWorld(gh.point.x, gh.point.z) : null;
+        if (gh) {
+          const cx = Math.floor(gh.point.x / CELL);
+          const cz = Math.floor(gh.point.z / CELL);
+          hoverCell.position.set((cx + 0.5) * CELL, 0.06, (cz + 0.5) * CELL);
+          hoverCell.visible = true;
+          (hoverCell.material as THREE.MeshBasicMaterial).color.setHex(slot !== null && !pickTaken.has(slot) ? 0x4ade80 : 0xef4444);
+        } else hoverCell.visible = false;
+        renderer.domElement.style.cursor = "crosshair";
+        return;
+      }
       renderer.domElement.style.cursor = ornLayer.pick(raycaster) ? "pointer" : "";
     };
     renderer.domElement.addEventListener("pointerdown", onDown);
     renderer.domElement.addEventListener("pointerup", onUp);
     renderer.domElement.addEventListener("pointermove", onMove);
 
+    // ตอนพัฒนา: วัดเวลาวาดจริงด้วยการวาดซ้ำแล้วรอ GPU ทำเสร็จ (ใช้ได้แม้แท็บอยู่เบื้องหลัง)
+    if (process.env.NODE_ENV !== "production") {
+      // รายการสามเหลี่ยมมากสุด 15 อันดับ (นับรวมจำนวน instance)
+      (window as unknown as { __xmasTris?: unknown }).__xmasTris = () => {
+        const rows: { name: string; tris: number; inst: number }[] = [];
+        scene.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (!m.isMesh || !m.visible) return;
+          const g = m.geometry;
+          const per = (g.index ? g.index.count : g.getAttribute("position").count) / 3;
+          const inst = (m as unknown as THREE.InstancedMesh).isInstancedMesh ? (m as unknown as THREE.InstancedMesh).count : 1;
+          let path = "";
+          for (let p: THREE.Object3D | null = o; p && p !== scene; p = p.parent) path = (p.name || p.type) + "/" + path;
+          rows.push({ name: path.slice(-80) + ` [${g.type}]`, tris: Math.round(per * inst), inst });
+        });
+        return rows.sort((a, b) => b.tris - a.tris).slice(0, 15);
+      };
+      (window as unknown as { __xmasBench?: unknown }).__xmasBench = (n = 30, shadows = false) => {
+        const gl = renderer.getContext();
+        renderer.render(scene, camera);
+        gl.finish();
+        const t0 = performance.now();
+        for (let i = 0; i < n; i++) {
+          if (shadows) renderer.shadowMap.needsUpdate = true;
+          renderer.render(scene, camera);
+        }
+        gl.finish();
+        const ms = (performance.now() - t0) / n;
+        void ms;
+        return { msPerFrame: Math.round(ms * 100) / 100, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, px: renderer.getPixelRatio(), size: [renderer.domElement.width, renderer.domElement.height] };
+      };
+    }
     // ---------- วนลูปภาพ ----------
     let reduced = reducedMotion;
     let raf = 0;
     const startedAt = performance.now();
     let lastFrameAt = startedAt;
+    let lastGovAt = startedAt;
     function frame() {
+      // ระหว่างหน้าเปิด (ลูกแก้วหิมะ) ฉากหลักหยุดวาด เครื่องจึงทำงานภาพเดียว
+      if (document.documentElement.dataset.intro === "on") {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       const t = (performance.now() - startedAt) / 1000;
       if (focusDecorGroup) {
         // โยกตัวเบา ๆ และกระโดดนิดหนึ่ง เหมือนกำลังทักทาย
@@ -572,6 +687,8 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         focusDecorGroup.position.y = Math.abs(Math.sin(t * 2.6)) * 0.1;
       }
       const now = performance.now();
+      governPixelRatio(now - lastGovAt);
+      lastGovAt = now;
       if (beacon) {
         const age = (now - beacon.start) / 1000;
         const b = beacon;
@@ -710,9 +827,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       }
 
       // เงาไม่ต้องวาดใหม่ทุกเฟรม (ของส่วนใหญ่อยู่นิ่ง) จึงอัปเดตทุก 0.25 วินาที เงาของชิ้นใหม่จะขึ้นช้าไม่กี่ร้อยมิลลิวินาที
-      if (now - lastShadowAt > 250) {
+      if (shadowFrames > 0) {
         renderer.shadowMap.needsUpdate = true;
-        lastShadowAt = now;
+        shadowFrames--;
       }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(frame);
@@ -772,6 +889,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
     // ตุ๊กตายักษ์ทุกตัวของห้อง: สร้างเฉพาะตัวที่เพิ่งมา และเอาตัวที่หายไปออก
     function api_setGiants(list: GiantSpec[]) {
+      markShadows();
       const keep = new Set<number>();
       for (const g of list) {
         const key = JSON.stringify(g);
@@ -1147,7 +1265,52 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     );
     marker.rotation.x = -Math.PI / 2;
     marker.visible = false;
+    marker.renderOrder = 6; // อยู่เหนือตารางช่องในโหมดเลือกบนฉาก
     scene.add(marker);
+
+    // ---------- โหมดเลือกช่องบนฉาก: ตารางช่องบนพื้น (เขียว = ว่าง, แดง = มีคนวางแล้ว) ----------
+    let pickOn = false;
+    let pickTaken = new Set<number>();
+    const openSlots: number[] = [];
+    SLOT_REAL.forEach((_, i) => {
+      if (slotAtWorld(SLOT_REAL[i].x, SLOT_REAL[i].z) === i) openSlots.push(i);
+    });
+    const tileGeo = new THREE.PlaneGeometry(CELL * 0.84, CELL * 0.84);
+    tileGeo.rotateX(-Math.PI / 2);
+    const pickGrid = new THREE.InstancedMesh(tileGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }), openSlots.length);
+    openSlots.forEach((slot, k) => pickGrid.setMatrixAt(k, new THREE.Matrix4().makeTranslation(SLOT_REAL[slot].x, 0.045, SLOT_REAL[slot].z)));
+    pickGrid.visible = false;
+    pickGrid.renderOrder = 3;
+    scene.add(pickGrid);
+    const hoverCell = new THREE.Mesh(new THREE.RingGeometry(CELL * 0.42, CELL * 0.52, 4, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }));
+    hoverCell.rotation.x = -Math.PI / 2;
+    hoverCell.visible = false;
+    hoverCell.renderOrder = 4;
+    scene.add(hoverCell);
+    const FREE = new THREE.Color(0x4ade80);
+    const TAKEN = new THREE.Color(0xef4444);
+    function setPickMode(on: boolean, taken: number[]) {
+      pickTaken = new Set(taken);
+      openSlots.forEach((slot, k) => pickGrid.setColorAt(k, pickTaken.has(slot) ? TAKEN : FREE));
+      if (pickGrid.instanceColor) pickGrid.instanceColor.needsUpdate = true;
+      if (on === pickOn) return;
+      pickOn = on;
+      pickGrid.visible = on;
+      hoverCell.visible = false;
+      if (on) {
+        // มองจากด้านบนเฉียง เห็นช่องรอบต้นชัดและแตะได้แม่น
+        rememberView();
+        controls.minDistance = 3;
+        animateCam(new THREE.Vector3(0, isSmall ? 24 : 19, isSmall ? 17 : 15), new THREE.Vector3(0, 0, 1.5), 1100);
+      } else {
+        renderer.domElement.style.cursor = "";
+        if (savedView && !zoneAway) {
+          animateCam(savedView.pos, savedView.tgt, 900);
+          controls.minDistance = savedView.min;
+          savedView = null;
+        }
+      }
+    }
 
     // ตุ๊กตาหิมะทุกชิ้นวาดด้วย InstancedMesh เพื่อให้รองรับหลายพันชิ้นได้โดยไม่ทำให้เครื่องหนัก
     // ชิ้นที่ใหม่สุด 40 ชิ้นจะวาดเป็นโมเดลละเอียดแทน
@@ -1162,49 +1325,90 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     type CamAnim = { fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number; dur: number };
     let camAnim: CamAnim | null = null;
     let savedView: { pos: THREE.Vector3; tgt: THREE.Vector3; min: number } | null = null;
-    type WalkAnim = { curve: THREE.CatmullRomCurve3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number; dur: number; fov0: number; endMin: number };
-    let walkAnim: WalkAnim | null = null;
+    // ---------- เดินกล้องตามจุดสำคัญ (ตำแหน่ง + จุดที่มอง) ----------
+    // ทิศที่มองถูกแปลงเป็นมุมส่าย/มุมก้มแล้วต่อกันอย่างต่อเนื่อง กล้องจึงหันอย่างนุ่มนวลไม่สะบัดหรือหันกลับหลังเอง
+    type Key = { p: THREE.Vector3; look: THREE.Vector3; fov?: number; turn?: 1 | -1 }; // turn: บังคับทิศหันเมื่อหันเกือบกลับหลัง
+    type PathAnim = { pc: THREE.CatmullRomCurve3; vc: THREE.CatmullRomCurve3; times: number[]; start: number; dur: number; end: Key; endMin: number; done?: () => void };
+    let walkAnim: PathAnim | null = null;
     function animateCam(toPos: THREE.Vector3, toTgt: THREE.Vector3, dur = 900) {
-      if (walkAnim) {
-        camera.fov = walkAnim.fov0;
-        camera.updateProjectionMatrix();
-        walkAnim = null;
-      }
+      walkAnim = null;
+      walkRef.v = false;
       camAnim = { fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt, start: performance.now(), dur };
     }
-    // เดินกล้องไปตามเส้นโค้ง (ใช้กับทางเดินอุโมงค์ไฟไปโซนคำอวยพร) มองไปข้างหน้าตามทาง แล้วค่อยหันไปหาจุดหมาย
-    function walkCam(points: THREE.Vector3[], toTgt: THREE.Vector3, dur: number, endMin = 0.5) {
+    // มุมกล้องในหมู่บ้าน: จอแนวตั้งกว้างกว่า เห็นกำแพงได้มากขึ้น
+    let ZONE_FOV = 50;
+    const zoneFov = () => (camera.aspect < 1 ? 62 : 50);
+    // มุมกล้องปกติ (จอแคบกว้างกว่า) ใช้ปลายทางของการเดินกลับ
+    const baseFov = () => (camera.aspect < 0.8 ? 50 : 38);
+    function playPath(keys: Key[], opts: { speed?: number; turn?: number; maxDur?: number; endMin?: number; done?: () => void } = {}) {
       camAnim = null;
       controls.minDistance = 0.2;
-      const curve = new THREE.CatmullRomCurve3([camera.position.clone(), ...points], false, "centripetal");
-      walkAnim = { curve, fromTgt: controls.target.clone(), toTgt, start: performance.now(), dur, fov0: walkAnim?.fov0 ?? camera.fov, endMin };
+      const speed = opts.speed ?? 4.2;
+      // มุมส่ายต่อกันแบบไม่กระโดดข้าม ±180°
+      let prevYaw = 0;
+      const views = keys.map((k, i) => {
+        const d = k.look.clone().sub(k.p);
+        let yaw = Math.atan2(d.x, d.z);
+        if (i > 0) {
+          while (yaw - prevYaw > Math.PI) yaw -= Math.PI * 2;
+          while (yaw - prevYaw < -Math.PI) yaw += Math.PI * 2;
+          if (k.turn && Math.sign(yaw - prevYaw) !== k.turn && Math.abs(yaw - prevYaw) > 0.3) yaw += k.turn * Math.PI * 2;
+        }
+        prevYaw = yaw;
+        const pitch = Math.atan2(d.y, Math.hypot(d.x, d.z));
+        return new THREE.Vector3(yaw, pitch, k.fov ?? camera.fov);
+      });
+      const segs: number[] = [];
+      for (let i = 1; i < keys.length; i++) {
+        const move = keys[i].p.distanceTo(keys[i - 1].p) / speed;
+        const turn = Math.abs(views[i].x - views[i - 1].x) / (opts.turn ?? 1.5); // จำกัดความเร็วการหัน ไม่ให้ภาพสะบัด
+        segs.push(Math.max(move, turn, 0.25));
+      }
+      // ทางยาวแค่ไหนก็จบในเวลาที่กำหนด (ความเร็วเพิ่มขึ้นเท่ากันทุกช่วง จึงยังลื่นเหมือนเดิม)
+      const total = Math.min(segs.reduce((a, b) => a + b, 0), opts.maxDur ?? Infinity);
+      const rawTotal = segs.reduce((a, b) => a + b, 0);
+      const times = [0];
+      segs.forEach((sg) => times.push(times[times.length - 1] + sg / rawTotal));
+      walkRef.v = true;
+      walkAnim = {
+        pc: new THREE.CatmullRomCurve3(keys.map((k) => k.p.clone()), false, "centripetal"),
+        vc: new THREE.CatmullRomCurve3(views, false, "catmullrom", 0.5),
+        times,
+        start: performance.now(),
+        dur: total * 1000,
+        end: keys[keys.length - 1],
+        endMin: opts.endMin ?? 0.5,
+        done: opts.done,
+      };
     }
-    const smooth = (a: number, b: number, x: number) => {
-      const k = Math.min(Math.max((x - a) / (b - a), 0), 1);
-      return k * k * (3 - 2 * k);
-    };
+    const tmpDir = new THREE.Vector3();
     function stepWalk(now: number) {
       if (!walkAnim) return;
       const w = walkAnim;
-      const k = Math.min((now - w.start) / w.dur, 1);
-      // เร่งออกตัว เดินคงที่ช่วงกลาง แล้วชะลอตอนถึง
-      const e = k < 0.15 ? (k * k) / 0.3 : k > 0.85 ? 1 - ((1 - k) * (1 - k)) / 0.3 : 0.075 + (k - 0.15) * (0.85 / 0.7);
-      const pos = w.curve.getPointAt(Math.min(Math.max(e, 0), 1));
-      const ahead = w.curve.getPointAt(Math.min(e + 0.06, 1));
-      ahead.y = Math.max(pos.y - 0.25, 0.8);
-      const tgt = new THREE.Vector3().lerpVectors(w.fromTgt, ahead, smooth(0, 0.12, e));
-      tgt.lerp(w.toTgt, smooth(0.78, 1, e));
+      const k = Math.min((now - w.start) / Math.max(w.dur, 1), 1);
+      // ออกตัวและหยุดแบบนุ่ม ช่วงกลางความเร็วคงที่
+      const e = k < 0.12 ? (k * k) / 0.24 : k > 0.88 ? 1 - ((1 - k) * (1 - k)) / 0.24 : 0.06 + (k - 0.12) * (0.88 / 0.76);
+      const n = w.times.length - 1;
+      let j = 0;
+      while (j < n - 1 && e > w.times[j + 1]) j++;
+      const f = Math.min(Math.max((e - w.times[j]) / Math.max(w.times[j + 1] - w.times[j], 1e-6), 0), 1);
+      const u = (j + f) / n;
+      const pos = w.pc.getPoint(u);
+      const v = w.vc.getPoint(u);
       camera.position.copy(pos);
-      controls.target.copy(tgt);
-      // มุมกล้องกว้างขึ้นเล็กน้อยระหว่างเดิน ให้รู้สึกเหมือนวาปผ่านอุโมงค์
-      const warp = Math.sin(Math.min(e, 1) * Math.PI);
-      camera.fov = w.fov0 + warp * 12;
-      camera.updateProjectionMatrix();
-      if (k >= 1) {
-        camera.fov = w.fov0;
+      tmpDir.set(Math.sin(v.x) * Math.cos(v.y), Math.sin(v.y), Math.cos(v.x) * Math.cos(v.y));
+      controls.target.copy(pos).addScaledVector(tmpDir, 3);
+      if (Math.abs(camera.fov - v.z) > 0.01) {
+        camera.fov = v.z;
         camera.updateProjectionMatrix();
+      }
+      if (k >= 1) {
+        camera.position.copy(w.end.p);
+        controls.target.copy(w.end.look);
         controls.minDistance = w.endMin;
         walkAnim = null;
+        walkRef.v = false;
+        w.done?.();
       }
     }
     const HOME_POS = new THREE.Vector3(0, 3.9, 13.6);
@@ -1226,94 +1430,215 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
     // ---------- มุมมองโซนคำอวยพร: ซูมออกเป็นแผนที่ แล้วเลื่อนไปที่โซน และกลับมุมเดิมได้
     const FOG_FAR = 56;
-    let zoneTimers: number[] = [];
     let zoneAway = false;
+      zoneAwayRef.v = false;
     function rememberView() {
       if (!savedView) savedView = { pos: camera.position.clone(), tgt: controls.target.clone(), min: controls.minDistance };
     }
-    function flyToZone() {
-      zoneTimers.forEach((t) => clearTimeout(t));
-      zoneTimers = [];
+    // ---------- เส้นทางในหมู่บ้าน: ทางเดินวงแหวนสองวง ช่องตรงแนวประตูเชื่อมทุกวง ----------
+    const ZC = new THREE.Vector3(ZONE.x, 0, ZONE.z);
+    const GA = ZONE_GATE_ANGLE;
+    const EYE = 1.7;
+    const polar = (a: number, r: number, y = EYE) => new THREE.Vector3(ZONE.x + Math.cos(a) * r, y, ZONE.z + Math.sin(a) * r);
+    const angleOf = (p: THREE.Vector3) => Math.atan2(p.z - ZONE.z, p.x - ZONE.x);
+    const radiusOf = (p: THREE.Vector3) => Math.hypot(p.x - ZONE.x, p.z - ZONE.z);
+    const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+    // จุดชม: จอแคบแบ่งหน้ากำแพงเป็นซ้าย/ขวา ให้ซองใหญ่พออ่านชื่อได้
+    // ระยะยืนที่เห็นหน้ากำแพงเต็มความกว้าง (กว้าง 3.6 หน่วย) ตามสัดส่วนจอ ถ้าไกลเกินทางเดินให้แบ่งชมซ้าย/ขวา
+    const fitDist = (halfW: number) => {
+      const tv = Math.tan(THREE.MathUtils.degToRad(zoneFov()) / 2);
+      return Math.max(halfW / (tv * camera.aspect), 1.45 / tv);
+    };
+    const halves = () => fitDist(1.7) > 3.6;
+    function stopKey(stop: number, part = 0): Key {
+      ZONE_FOV = zoneFov();
+      const st = ZONE_STOPS[stop];
+      const half = halves();
+      const shift = half ? (part === 0 ? -0.9 : 0.9) : 0;
+      const dist = Math.min(Math.max(fitDist(half ? 0.98 : 1.7), 2.6), 3.6);
+      const c = new THREE.Vector3(st.center.x + st.tangent.x * shift, 1.45, st.center.z + st.tangent.z * shift);
+      const p = new THREE.Vector3(c.x + st.normal.x * dist, 1.6, c.z + st.normal.z * dist);
+      return { p, look: c, fov: ZONE_FOV };
+    }
+    // จุดชมที่มีการ์ดอยู่ (เรียงตามลำดับเดิน) แต่ละรายการคือ [จุดชม, ครึ่งซ้าย/ขวา]
+    function browseList(): [number, number][] {
+      const used = new Map<number, Set<number>>();
+      for (const en of village.cardEntries()) {
+        const st = ZONE_STOPS[en.stop];
+        const t = (en.pos.x - st.center.x) * st.tangent.x + (en.pos.z - st.center.z) * st.tangent.z;
+        if (!used.has(en.stop)) used.set(en.stop, new Set());
+        used.get(en.stop)!.add(halves() ? (t < 0 ? 0 : 1) : 0);
+      }
+      const out: [number, number][] = [];
+      ZONE_STOPS.forEach((_, i) => {
+        const parts = used.get(i);
+        if (!parts) return;
+        [...parts].sort().forEach((pt) => out.push([i, pt]));
+      });
+      if (!out.length) out.push([0, 0]);
+      return out;
+    }
+    let browseIdx = 0;
+    function reportStop() {
+      const list = browseList();
+      callbacks.current.onZoneStop?.(Math.min(browseIdx, list.length - 1), list.length);
+    }
+    // จุดเดินตามทางวงแหวน (ไม่ทะลุกำแพง): จาก p ไปยังมุม a1 บนทางเดินรัศมี r
+    function arcKeys(fromA: number, toA: number, r: number, lookAhead = true): Key[] {
+      const d = wrap(toA - fromA);
+      const n = Math.max(1, Math.ceil(Math.abs(d) / 0.45));
+      const out: Key[] = [];
+      for (let i = 1; i <= n; i++) {
+        const a = fromA + (d * i) / n;
+        const p = polar(a, r);
+        // มองไปข้างหน้าตามทางเดิน
+        const look = lookAhead ? polar(a + Math.sign(d || 1) * 0.5, r, EYE - 0.15) : ZC.clone().setY(1.4);
+        out.push({ p, look, fov: ZONE_FOV });
+      }
+      return out;
+    }
+    const walkwayOf = (p: THREE.Vector3) => (radiusOf(p) < 8.5 ? 0 : 1);
+    // เส้นทางจากตำแหน่งปัจจุบันในหมู่บ้านไปยังจุดชม
+    function routeInVillage(from: THREE.Vector3, stop: number, part: number): Key[] {
+      const target = stopKey(stop, part);
+      const wFrom = walkwayOf(from);
+      const wTo = ZONE_STOPS[stop].walkway;
+      const keys: Key[] = [];
+      const aFrom = angleOf(from);
+      const aTo = angleOf(target.p);
+      if (wFrom === wTo) {
+        if (Math.abs(wrap(aTo - aFrom)) > 0.25) keys.push(...arcKeys(aFrom, aTo, ZONE_WALKWAYS[wFrom].r).slice(0, -1));
+      } else {
+        // เดินไปแนวประตู ข้ามช่องของกำแพงวงกลาง แล้วเดินต่อในทางอีกวง
+        keys.push(...arcKeys(aFrom, GA, ZONE_WALKWAYS[wFrom].r));
+        keys.push({ p: polar(GA, ZONE_WALKWAYS[wTo].r), look: polar(GA + (wTo > wFrom ? 0 : Math.PI), 30, EYE), fov: ZONE_FOV });
+        if (Math.abs(wrap(aTo - GA)) > 0.25) keys.push(...arcKeys(GA, aTo, ZONE_WALKWAYS[wTo].r).slice(0, -1));
+      }
+      keys.push(target);
+      return keys;
+    }
+    function goStop(idx: number) {
+      const list = browseList();
+      browseIdx = ((idx % list.length) + list.length) % list.length;
+      const [stop, part] = list[browseIdx];
+      const from = camera.position.clone();
+      const keys = routeInVillage(from, stop, part);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const end = keys[keys.length - 1];
+        camera.position.copy(end.p);
+        controls.target.copy(end.look);
+      } else {
+        playPath([{ p: from, look: controls.target.clone(), fov: camera.fov }, ...keys], { speed: 3.2, endMin: 1.2 });
+      }
+      reportStop();
+    }
+    function flyToZone(stopIdx = 0) {
+      ZONE_FOV = zoneFov();
       clearBeacon();
       rememberView();
       zoneAway = true;
+      zoneAwayRef.v = true;
       callbacks.current.onAwayChange?.(true);
       const fog = scene.fog as THREE.Fog | null;
-      if (fog) fog.far = 120;
-      controls.minDistance = 0.5;
-      const reducedNow = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const { pts, tgt } = tunnelRoute();
-      if (reducedNow) {
-        // ลดการเคลื่อนไหว: วาปไปถึงทันที
-        animateCam(pts[pts.length - 1], tgt, 1);
-        return;
+      if (fog) fog.far = 90;
+      controls.maxDistance = 4.2; // ในหมู่บ้านถอยได้ไม่ไกล กล้องจึงไม่ทะลุกำแพงด้านหลัง
+      const list = browseList();
+      browseIdx = Math.min(stopIdx, list.length - 1);
+      const [stop, part] = list[browseIdx];
+      const keys = tunnelRoute(stop, part);
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const end = keys[keys.length - 1];
+        camera.position.copy(end.p);
+        controls.target.copy(end.look);
+        camera.fov = ZONE_FOV;
+        camera.updateProjectionMatrix();
+        controls.minDistance = 1.2;
+      } else {
+        playPath(keys, { speed: 9, turn: 1.8, maxDur: 6.8, endMin: 1.2 });
       }
-      walkCam(pts, tgt, isSmall ? 6200 : 6800);
+      reportStop();
     }
-    // ทางเดินจากจุดที่กล้องอยู่: อ้อมต้นไปหัวทาง เดินลอดซุ้มไฟ ผ่านประตู แล้วหยุดในลานระหว่างกำแพงการ์ดสองวง
-    function tunnelRoute() {
-      const gate = new THREE.Vector3(ZONE_GATE.x, 0, ZONE_GATE.z);
-      const dir = gate.clone().normalize();
-      const total = gate.length();
-      const EYE = 1.75;
+    // ทางจากกล้องตอนนี้: เดินเข้าหาลานต้นไม้ เดินรอบลาน เลี้ยวเข้าอุโมงค์ไฟ ลอดประตู แล้วไปหยุดหน้ากำแพงแรก
+    function tunnelRoute(stop: number, part: number): Key[] {
+      const gateDir = new THREE.Vector3(ZONE_GATE.x, 0, ZONE_GATE.z).normalize();
+      const gateDist = Math.hypot(ZONE_GATE.x, ZONE_GATE.z);
+      const at = (s: number, y = EYE) => gateDir.clone().multiplyScalar(s).setY(y);
+      const keys: Key[] = [{ p: camera.position.clone(), look: controls.target.clone(), fov: camera.fov }];
       const camA = Math.atan2(camera.position.z, camera.position.x);
-      const gateA = Math.atan2(dir.z, dir.x);
-      let diff = gateA - camA;
-      while (diff > Math.PI) diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-      const pts: THREE.Vector3[] = [];
-      const camR = Math.hypot(camera.position.x, camera.position.z);
-      // อ้อมรอบต้น (ถ้ากล้องอยู่คนละฝั่งกับทาง)
-      if (Math.abs(diff) > 0.5) {
-        const r = Math.min(Math.max(camR, 9.5), 14);
-        for (const f of [0.35, 0.7]) {
-          const a = camA + diff * f;
-          pts.push(new THREE.Vector3(Math.cos(a) * r, 4.4 - f * 1.4, Math.sin(a) * r));
+      const gA = Math.atan2(gateDir.z, gateDir.x);
+      const diff = wrap(gA - camA);
+      // วนรอบต้น (สูงเหนือหลังคาบ้าน Exclusive) กล้องหันมองต้นตลอด
+      const ringR = 7.2; // วงเสาไฟอยู่ที่ 7.7 แต่กล้องลอยสูงกว่าหัวเสา
+      const sgn = Math.sign(diff) || 1;
+      if (Math.abs(diff) > 0.35) {
+        const n = Math.max(2, Math.ceil(Math.abs(diff) / 0.4));
+        for (let i = 0; i <= n; i++) {
+          const a = camA + (diff * i) / n;
+          const k = i / n;
+          keys.push({ p: new THREE.Vector3(Math.cos(a) * ringR, 4.0 + k * 0.9, Math.sin(a) * ringR), look: new THREE.Vector3(0, 3.0 + k * 0.6, 0), fov: baseFov() + 4 });
         }
+      } else {
+        keys.push({ p: at(ringR, 3.8), look: new THREE.Vector3(0, 3.4, 0), fov: baseFov() + 6 });
       }
-      for (const s of [8.2, 12, total * 0.72, total - 1.6]) pts.push(dir.clone().multiplyScalar(s).setY(EYE));
-      pts.push(new THREE.Vector3(ZONE.x, EYE, ZONE.z + ZONE.half - 1.4));
-      // หยุดในทางเดินวงแหวนระหว่างกำแพงสองวง เห็นต้นสนกลางลานทั้งต้นและกำแพงการ์ดฝั่งตรงข้าม
-      const end = new THREE.Vector3(ZONE.x, isSmall ? 2.8 : 2.5, ZONE.z + (isSmall ? 8.7 : 8.35));
-      pts.push(end);
-      return { pts, tgt: new THREE.Vector3(ZONE.x, isSmall ? 2.0 : 2.2, ZONE.z + 1) };
+      // ยกกล้องขึ้นแล้วหันกลับไปทางหมู่บ้าน (เห็นวิวลานและอุโมงค์ไฟจากมุมสูง) จากนั้นร่อนลงหัวอุโมงค์
+      keys.push({ p: at(ringR + 0.6, 6.0), look: at(gateDist + 10, 1.5), fov: baseFov() + 10, turn: -sgn as 1 | -1 }); // มุมส่ายลดลงเมื่อเดินทวนเข็ม จึงหันต่อในทิศเดียวกับที่วนมา
+      keys.push({ p: at(8.6, 2.1), look: at(gateDist + 6, 1.7), fov: baseFov() + 10 });
+      keys.push({ p: at(gateDist * 0.6), look: at(gateDist + 6, 1.8), fov: baseFov() + 10 });
+      keys.push({ p: at(gateDist - 1.2), look: ZC.clone().setY(1.9), fov: (baseFov() + ZONE_FOV) / 2 + 4 });
+      // ลอดประตูเข้าทางเดินวงนอก แล้วผ่านช่องกำแพงวงกลางเข้าทางเดินวงใน (ถ้าจุดชมอยู่วงใน)
+      keys.push({ p: polar(GA, ZONE_WALKWAYS[1].r), look: polar(GA, 4.0, 1.7), fov: ZONE_FOV });
+      const wTo = ZONE_STOPS[stop].walkway;
+      if (wTo === 0) keys.push({ p: polar(GA, ZONE_WALKWAYS[0].r), look: polar(GA, 2.0, 1.6), fov: ZONE_FOV });
+      const target = stopKey(stop, part);
+      const aTo = angleOf(target.p);
+      if (Math.abs(wrap(aTo - GA)) > 0.25) keys.push(...arcKeys(GA, aTo, ZONE_WALKWAYS[wTo].r).slice(0, -1));
+      keys.push(target);
+      return keys;
     }
     function returnView() {
-      zoneTimers.forEach((t) => clearTimeout(t));
-      zoneTimers = [];
       clearBeacon();
+      village.highlight(null);
       const fog = scene.fog as THREE.Fog | null;
       if (fog) fog.far = FOG_FAR;
       zoneAway = false;
+      zoneAwayRef.v = false;
+      controls.maxDistance = 60;
       callbacks.current.onAwayChange?.(false);
       const back = savedView ?? { pos: HOME_POS.clone(), tgt: HOME_TGT.clone(), min: 5.5 };
       savedView = null;
-      controls.minDistance = back.min;
-      // ถ้ากล้องอยู่ในหมู่บ้าน ให้เดินกลับออกทางประตูและอุโมงค์ ไม่ทะลุกำแพง
-      const inVillage = inZone(camera.position.x, camera.position.z, 0.5);
-      if (inVillage && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        const gate = new THREE.Vector3(ZONE_GATE.x, 0, ZONE_GATE.z);
-        const dir = gate.clone().normalize();
-        const total = gate.length();
-        const pts = [
-          new THREE.Vector3(ZONE.x, 1.9, ZONE.z + ZONE.half - 2.2),
-          dir.clone().multiplyScalar(total - 1.2).setY(1.9),
-          dir.clone().multiplyScalar(total * 0.55).setY(2.2),
-          dir.clone().multiplyScalar(9).setY(2.8),
-        ];
-        // อ้อมรอบต้นกลับไปยังมุมเดิม (ไม่ตัดผ่านต้น)
-        const gA = Math.atan2(dir.z, dir.x);
-        const bA = Math.atan2(back.pos.z, back.pos.x);
-        let d = bA - gA;
-        while (d > Math.PI) d -= Math.PI * 2;
-        while (d < -Math.PI) d += Math.PI * 2;
-        const bR = Math.min(Math.max(Math.hypot(back.pos.x, back.pos.z), 9.5), 14);
-        if (Math.abs(d) > 0.5) for (const f of [0.35, 0.7]) pts.push(new THREE.Vector3(Math.cos(gA + d * f) * bR, 3.2 + f * 0.6, Math.sin(gA + d * f) * bR));
-        pts.push(back.pos);
-        walkCam(pts, back.tgt, 4200, back.min);
-      } else {
-        animateCam(back.pos, back.tgt, 1000);
+      const reducedNow = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!inZone(camera.position.x, camera.position.z, 0.5) || reducedNow) {
+        camera.fov = baseFov();
+        camera.updateProjectionMatrix();
+        controls.minDistance = back.min;
+        animateCam(back.pos, back.tgt, reducedNow ? 1 : 1000);
+        return;
       }
+      // เดินกลับตามทางเดิม: ไปแนวประตู ออกประตู ผ่านอุโมงค์ (มองไปทางต้นไม้) อ้อมลานกลับไปยังมุมเดิม
+      const gateDir = new THREE.Vector3(ZONE_GATE.x, 0, ZONE_GATE.z).normalize();
+      const gateDist = Math.hypot(ZONE_GATE.x, ZONE_GATE.z);
+      const at = (s: number, y = EYE) => gateDir.clone().multiplyScalar(s).setY(y);
+      const keys: Key[] = [{ p: camera.position.clone(), look: controls.target.clone(), fov: camera.fov }];
+      const w = walkwayOf(camera.position);
+      keys.push(...arcKeys(angleOf(camera.position), GA, ZONE_WALKWAYS[w].r));
+      if (w === 0) keys.push({ p: polar(GA, ZONE_WALKWAYS[1].r), look: polar(GA, 30), fov: ZONE_FOV });
+      keys.push({ p: at(gateDist + 0.5), look: new THREE.Vector3(0, 2.4, 0), fov: baseFov() + 10 });
+      keys.push({ p: at(gateDist * 0.55, 1.9), look: new THREE.Vector3(0, 2.8, 0), fov: baseFov() + 8 });
+      // ออกจากอุโมงค์แล้ววนรอบต้น (มองต้นตลอด) กลับไปยังมุมเดิม
+      keys.push({ p: at(8.2, 3.4), look: new THREE.Vector3(0, 3.0, 0), fov: baseFov() + 4 });
+      const gA = Math.atan2(gateDir.z, gateDir.x);
+      const bA = Math.atan2(back.pos.z, back.pos.x);
+      const d = wrap(bA - gA);
+      if (Math.abs(d) > 0.35) {
+        const n = Math.max(2, Math.ceil(Math.abs(d) / 0.45));
+        for (let i = 1; i < n; i++) {
+          const a = gA + (d * i) / n;
+          const r = 7.6 + (i / n) * Math.max(0, Math.hypot(back.pos.x, back.pos.z) - 7.6) * 0.5;
+          keys.push({ p: new THREE.Vector3(Math.cos(a) * r, 3.8 + (i / n) * 0.4, Math.sin(a) * r), look: new THREE.Vector3(0, 3.0, 0), fov: baseFov() + 2 });
+        }
+      }
+      keys.push({ p: back.pos.clone(), look: back.tgt.clone(), fov: baseFov() });
+      playPath(keys, { speed: 9, turn: 1.9, maxDur: 5.5, endMin: back.min });
     }
     // ตุ๊กตาหิมะที่คลิก: กล้องเลื่อนไปหา และตุ๊กตาโยกทักทายเบา ๆ ตอนเปิดดู
     let focusDecorGroup: THREE.Group | null = null;
@@ -1477,6 +1802,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     }
 
     function setDecor(list: Decor[]) {
+      markShadows();
       decorById.clear();
       while (decorGroup.children.length) {
         const c = decorGroup.children.pop()!;
@@ -1576,14 +1902,16 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           return;
         }
         const pp = SLOT_POSITIONS[slot];
-        marker.position.set(pp.x, 0.03, pp.z);
+        marker.position.set(pp.x, 0.08, pp.z);
         marker.visible = true;
       },
       setGiants: api_setGiants,
+      setPickMode,
       setZoneCards: api_setZoneCards,
       setOrnaments: (list) => {
         // โหลดครั้งแรกไม่ต้องเล่นแอนิเมชัน ที่เหลือให้ลูกบอลใหม่ค่อย ๆ หล่นลงมาจากกิ่ง
         ornLayer.set(list, loadedOnce);
+        markShadows();
         aura.setProgress(Math.min(list.length, TREE_CAPACITY) / TREE_CAPACITY, !loadedOnce);
         loadedOnce = true;
       },
@@ -1658,25 +1986,45 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       },
       // กล้องบินไปหาการ์ดใบนั้น (ใช้กับป้ายที่อยู่นอกจอ)
       focusZoneCard: (id: string) => {
-        // มองตรงจากด้านหน้าซอง (ตามทิศหน้ากำแพง) จึงไม่ถูกกำแพงอื่นบัง
+        // ไปยังจุดชมของกำแพงที่ซองนั้นแขวนอยู่ แล้วขึ้นกรอบแสงรอบซอง
         const en = village.cardEntries().find((e) => e.id === id);
         if (!en) return;
-        const target = en.pos.clone();
-        const toPos = target.clone().addScaledVector(en.normal, 2.4).setY(Math.max(1.3, target.y + 0.35));
-        controls.minDistance = 0.5;
-        animateCam(toPos, target, reduced ? 1 : 900);
+        const st = ZONE_STOPS[en.stop];
+        const t = (en.pos.x - st.center.x) * st.tangent.x + (en.pos.z - st.center.z) * st.tangent.z;
+        const part = halves() && t >= 0 ? 1 : 0;
+        const idx = browseList().findIndex(([s, pt]) => s === en.stop && pt === part);
+        village.highlight(id);
+        if (!zoneAway || !inZone(camera.position.x, camera.position.z, 0.5)) flyToZone(Math.max(0, idx));
+        else goStop(Math.max(0, idx));
       },
       flyToZone: () => flyToZone(),
+      zoneStep: (delta: number) => {
+        if (!zoneAway) return;
+        goStop(browseIdx + delta);
+      },
       returnView: () => returnView(),
       locate: (target: LocateTarget) => locate(target),
       zoomBy: (factor: number) => zoomBy(factor),
       resetView: () => resetView(),
     });
 
-    // เริ่มวนลูปภาพหลังประกาศทุกตัวแปรครบแล้ว
-    frame();
+    // คอมไพล์ shader ทุกตัวล่วงหน้า แล้ววาดหนึ่งภาพให้ข้อมูลขึ้นการ์ดจอครบ ก่อนเริ่มวนลูป
+    // ภาพแรกที่ผู้ใช้เห็นจึงไม่สะดุด และบอกหน้าเปิดว่าเริ่มลูกแก้วได้แล้ว
+    let disposed = false;
+    const begin = () => {
+      if (disposed) return;
+      renderer.render(scene, camera);
+      document.documentElement.dataset.sceneReady = "1";
+      window.dispatchEvent(new Event("xmas-scene-ready"));
+      frame();
+    };
+    const compiling = (renderer as unknown as { compileAsync?: (s: THREE.Scene, c: THREE.Camera) => Promise<unknown> }).compileAsync?.(scene, camera);
+    if (compiling) compiling.then(begin, begin);
+    else begin();
 
     return () => {
+      disposed = true;
+      delete document.documentElement.dataset.sceneReady;
       cancelAnimationFrame(raf);
       ro.disconnect();
       renderer.domElement.removeEventListener("pointerdown", onDown);
@@ -1726,6 +2074,12 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
   useEffect(() => {
     api.current?.setMarker(markerSlot);
   }, [markerSlot]);
+
+  // โหมดเลือกช่องบนฉาก: เปิด/ปิดตารางช่องและอัปเดตช่องที่มีคนวางแล้ว
+  useEffect(() => {
+    api.current?.setPickMode(pickMode, decor.map((d) => d.slot));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickMode, decorKey]);
 
   // ซิงก์การ์ดที่แขวนบนรั้วโซนคำอวยพร
   const zoneKey = zoneCards.map((c) => c.id).join(",");
@@ -1825,7 +2179,8 @@ function makeSnowTexture() {
 
 // เนินเขาหิมะรอบฉาก: ผิวเป็นลอนแบบธรรมชาติ ยอดมีหิมะ ฐานมืดกลมกลืนกับท้องฟ้าค่ำ
 function buildHills(): THREE.Mesh {
-  const R = 42;
+  // เนินเขาอยู่เลยขอบลาน (LAND_R 56) ทุกจุดที่วางได้จึงอยู่หน้าเนินเขาเสมอ
+  const R = 59;
   const H = 10;
   const geo = new THREE.CylinderGeometry(R, R, H, 200, 1, true);
   geo.translate(0, -4.6, 0);
@@ -1841,14 +2196,15 @@ function buildHills(): THREE.Mesh {
     const z = p.getZ(i);
     const th = Math.atan2(z, x);
     const h =
-      (Math.sin(th * 3 + 0.8) * 0.5 + 0.5) * 3.4 +
-      (Math.sin(th * 7 + 2.1) * 0.5 + 0.5) * 1.5 +
-      (Math.sin(th * 15 + 0.3) * 0.5 + 0.5) * 0.4;
+      ((Math.sin(th * 3 + 0.8) * 0.5 + 0.5) * 3.4 +
+        (Math.sin(th * 7 + 2.1) * 0.5 + 0.5) * 1.5 +
+        (Math.sin(th * 15 + 0.3) * 0.5 + 0.5) * 0.4) *
+      1.4;
     const top = y > 0;
     if (top) p.setY(i, y + h);
     const height = top ? h : 0;
-    c.copy(cBase).lerp(cSlope, top ? Math.min(height / 3.5, 1) : 0);
-    c.lerp(cSnow, top ? Math.min(Math.max((height - 3.6) / 1.2, 0), 1) * 0.9 : 0);
+    c.copy(cBase).lerp(cSlope, top ? Math.min(height / 4.9, 1) : 0);
+    c.lerp(cSnow, top ? Math.min(Math.max((height - 5) / 1.7, 0), 1) * 0.9 : 0);
     colors[i * 3] = c.r;
     colors[i * 3 + 1] = c.g;
     colors[i * 3 + 2] = c.b;
