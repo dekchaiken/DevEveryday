@@ -84,7 +84,8 @@ export async function POST(req: Request) {
   }
   let look: ReturnType<typeof parseGiantLook> = null;
   if (kind === "giant") {
-    look = parseGiantLook(body.look);
+    // ตัดตัวเลือกที่เกินสิทธิ์ของยอดที่จ่ายจริงทิ้ง (กันการส่งบ้านระดับสูงมากับยอดต่ำ)
+    look = parseGiantLook(body.look, amount);
     if (!look) return NextResponse.json({ error: "ตกแต่งตุ๊กตายักษ์ไม่ถูกต้อง" }, { status: 400 });
   }
 

@@ -339,6 +339,132 @@ function benchModel(p: Parts): THREE.Group {
   return g;
 }
 
+// ---------- ของแต่งระดับสูง ----------
+const iceMat = (hex: number) => new THREE.MeshPhysicalMaterial({ color: hex, roughness: 0.06, clearcoat: 1, transparent: true, opacity: 0.8, emissive: hex, emissiveIntensity: 0.12 });
+
+// รูปปั้นน้ำแข็งรูปดาวบนแท่น มีไฟส่องจากฐาน
+function icesculptureModel(p: Parts): THREE.Group {
+  const g = new THREE.Group();
+  const ice = iceMat(colorOf(p.ice, "sky"));
+  g.add(mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.08, 16), std(0xe9eef2, 0.5), 0, 0.04, 0));
+  g.add(mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.012, 16), glowMat(colorOf(p.glow, "sky")), 0, 0.085, 0));
+  const star = new THREE.Shape();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 0.06 : 0.14;
+    const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+    if (i === 0) star.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    else star.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  star.closePath();
+  const geo = new THREE.ExtrudeGeometry(star, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.012, bevelSegments: 2 });
+  geo.translate(0, 0, -0.025);
+  g.add(mesh(geo, ice, 0, 0.26, 0));
+  g.add(mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.1, 8), ice, 0, 0.13, 0));
+  for (let k = 0; k < 5; k++) {
+    const a = (k / 5) * Math.PI * 2;
+    g.add(mesh(new THREE.OctahedronGeometry(0.025), ice, Math.cos(a) * 0.1, 0.11, Math.sin(a) * 0.1));
+  }
+  return g;
+}
+
+// ต้นคริสต์มาสใหญ่ประดับเต็มต้น สายรุ้งทองพันรอบ ดาวยอดเรืองแสง
+function bigtreeModel(p: Parts): THREE.Group {
+  const g = new THREE.Group();
+  const leaf = std(colorOf(p.leaf, "forest"), 0.8);
+  const ballHex = colorOf(p.ball, "red");
+  g.add(mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.1, 10), std(0x6b4423, 0.9), 0, 0.05, 0));
+  g.add(mesh(new THREE.CylinderGeometry(0.09, 0.08, 0.06, 12), std(0xc41e3a, 0.5), 0, 0.03, 0));
+  const tiers = [
+    [0.27, 0.32, 0.22],
+    [0.21, 0.28, 0.4],
+    [0.15, 0.24, 0.56],
+    [0.09, 0.18, 0.7],
+  ];
+  for (const [r, h, y] of tiers) {
+    g.add(mesh(new THREE.ConeGeometry(r, h, 18), leaf, 0, y, 0));
+    g.add(mesh(new THREE.ConeGeometry(r * 0.98, h * 0.25, 18, 1, true), std(0xffffff, 0.6), 0, y - h * 0.32, 0));
+  }
+  const ball = new THREE.MeshStandardMaterial({ color: ballHex, roughness: 0.2, metalness: 0.4 });
+  const bulb = glowMat(0xffd28a);
+  for (let k = 0; k < 26; k++) {
+    const t = k / 26;
+    const y = 0.12 + t * 0.62;
+    const r = 0.27 * (1 - t * 0.85) + 0.005;
+    const a = k * 2.4;
+    g.add(mesh(new THREE.SphereGeometry(k % 3 ? 0.018 : 0.012, 8, 6), k % 3 ? ball : bulb, Math.cos(a) * r, y, Math.sin(a) * r));
+  }
+  const spiral: THREE.Vector3[] = [];
+  for (let i = 0; i <= 40; i++) {
+    const t = i / 40;
+    const r = 0.27 * (1 - t * 0.9) + 0.01;
+    spiral.push(new THREE.Vector3(Math.cos(t * 14) * r, 0.1 + t * 0.66, Math.sin(t * 14) * r));
+  }
+  g.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(spiral), 120, 0.006, 5), std(0xf2c25a, 0.25)));
+  const s = new THREE.Shape();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 0.025 : 0.06;
+    const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+    if (i === 0) s.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    else s.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  const sg = new THREE.ExtrudeGeometry(s, { depth: 0.02, bevelEnabled: false });
+  sg.translate(0, 0, -0.01);
+  g.add(mesh(sg, glowMat(colorOf(p.top, "gold")), 0, 0.83, 0));
+  return g;
+}
+
+// น้ำพุสามชั้นที่น้ำแข็งตัว มีน้ำแข็งย้อยและแสงเรืองจากด้านใน
+function fountainModel(p: Parts): THREE.Group {
+  const g = new THREE.Group();
+  const stone = std(colorOf(p.stone, "white"), 0.5, p.stone === "gold" ? 0.8 : 0);
+  const ice = iceMat(0xcfefff);
+  const glow = glowMat(colorOf(p.glow, "sky"));
+  const basin = (r: number, y: number) => {
+    const prof = [[0.0001, 0], [r, 0], [r * 1.05, 0.05], [r * 0.95, 0.06], [0.0001, 0.04]].map(([x, yy]) => new THREE.Vector2(x, yy));
+    g.add(mesh(new THREE.LatheGeometry(prof, 24), stone, 0, y, 0));
+    g.add(mesh(new THREE.CylinderGeometry(r * 0.92, r * 0.92, 0.01, 24), glow, 0, y + 0.045, 0));
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2;
+      const c = mesh(new THREE.ConeGeometry(0.012, 0.05 + (k % 3) * 0.02, 5), ice, Math.cos(a) * r, y - 0.02, Math.sin(a) * r);
+      c.rotation.x = Math.PI;
+      g.add(c);
+    }
+  };
+  basin(0.26, 0.0);
+  g.add(mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.2, 10), stone, 0, 0.14, 0));
+  basin(0.16, 0.22);
+  g.add(mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.14, 10), stone, 0, 0.32, 0));
+  basin(0.08, 0.38);
+  // น้ำที่แข็งตัวกลางอากาศ
+  g.add(mesh(new THREE.ConeGeometry(0.03, 0.12, 8), ice, 0, 0.48, 0));
+  for (let k = 0; k < 6; k++) {
+    const a = (k / 6) * Math.PI * 2;
+    const arc = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.5, 0), new THREE.Vector3(Math.cos(a) * 0.06, 0.52, Math.sin(a) * 0.06), new THREE.Vector3(Math.cos(a) * 0.1, 0.42, Math.sin(a) * 0.1)]);
+    g.add(mesh(new THREE.TubeGeometry(arc, 10, 0.008, 5), ice));
+  }
+  return g;
+}
+
+// ซุ้มประตูน้ำแข็ง: เสาคู่ โค้งด้านบน ไฟเรียงตามโค้ง หิมะบนสันซุ้ม
+function icearchModel(p: Parts): THREE.Group {
+  const g = new THREE.Group();
+  const ice = iceMat(colorOf(p.ice, "sky"));
+  const bulb = glowMat(colorOf(p.lights, "warm"));
+  for (const s of [-1, 1]) {
+    g.add(mesh(new THREE.BoxGeometry(0.07, 0.36, 0.07), ice, s * 0.22, 0.18, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.1, 0.04, 0.1), ice, s * 0.22, 0.02, 0));
+  }
+  g.add(mesh(new THREE.TorusGeometry(0.22, 0.04, 8, 24, Math.PI), ice, 0, 0.36, 0));
+  g.add(mesh(new THREE.TorusGeometry(0.22, 0.025, 6, 24, Math.PI), std(0xffffff, 0.6), 0, 0.395, 0));
+  for (let k = 0; k <= 10; k++) {
+    const a = (k / 10) * Math.PI;
+    g.add(mesh(new THREE.SphereGeometry(0.014, 8, 6), bulb, Math.cos(a) * 0.22, 0.36 + Math.sin(a) * 0.22, 0.045));
+  }
+  for (const s of [-1, 1]) for (let k = 0; k < 4; k++) g.add(mesh(new THREE.SphereGeometry(0.012, 8, 6), bulb, s * 0.22, 0.06 + k * 0.08, 0.04));
+  g.add(mesh(new THREE.OctahedronGeometry(0.04), bulb, 0, 0.62, 0));
+  return g;
+}
+
 type Parts = Record<string, string | undefined>;
 const MODELS: Record<string, (p: Parts) => THREE.Group> = {
   snowman: snowmanModel,
@@ -356,6 +482,10 @@ const MODELS: Record<string, (p: Parts) => THREE.Group> = {
   nutcracker: nutcrackerModel,
   giftstack: giftstackModel,
   bench: benchModel,
+  icesculpture: icesculptureModel,
+  bigtree: bigtreeModel,
+  fountain: fountainModel,
+  icearch: icearchModel,
 };
 
 // สร้างโมเดลของชิ้นหนึ่งตามชนิดและสีของแต่ละส่วน (ไม่รวมวงแหวนไฮไลต์)
