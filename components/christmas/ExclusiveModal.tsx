@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
-import { DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
+import { DEFAULT_GIANT_LOOK, FENCE_LABEL, FENCES, HOUSE_LABEL, HOUSE_ROOFS, HOUSE_STYLES, HOUSE_WALLS, DIORAMA_BASES, DIORAMA_KINDS, fits, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
 import { CELL, LAND_R, TREE_CORE_R } from "@/lib/christmas/grid";
 import { DECOR_SPOTS, GIANT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
-import type { SnowParts } from "./SnowmanPreview";
-import { SnowmanPreview } from "./SnowmanPreview";
+import type { SnowParts } from "@/lib/christmas/snowman";
+import { SnowmanImage } from "./Snowman3D";
 import { DioramaViewer } from "./DioramaViewer";
 import { rememberPending } from "./pendingOrders";
 import { Icon } from "./Icon";
@@ -110,7 +110,7 @@ function hexOf(key: string): string | null {
   return key in PALETTE ? `#${PALETTE[key as PaletteKey].toString(16).padStart(6, "0")}` : null;
 }
 
-function PickRow({ title, options, value, onChange, swatch = false }: { title: string; options: readonly string[]; value: string; onChange: (v: string) => void; swatch?: boolean }) {
+function PickRow({ title, options, value, onChange, swatch = false, labels }: { title: string; options: readonly string[]; value: string; onChange: (v: string) => void; swatch?: boolean; labels?: Record<string, string> }) {
   return (
     <div className="xmas-pick-row">
       <span className="xmas-pick-title">{title}</span>
@@ -118,7 +118,7 @@ function PickRow({ title, options, value, onChange, swatch = false }: { title: s
         {options.map((o) => (
           <button type="button" key={o} role="radio" aria-checked={value === o} className={value === o ? "is-on" : ""} onClick={() => onChange(o)}>
             {swatch && hexOf(o) && <i className="xmas-chip-dot" style={{ background: hexOf(o) ?? undefined }} aria-hidden />}
-            {LABEL[o] ?? o}
+            {labels?.[o] ?? LABEL[o] ?? o}
           </button>
         ))}
       </div>
@@ -224,14 +224,14 @@ function newItemId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function DioramaStudio({ items, selectedId, onSelect, onChange }: { items: DioramaItem[]; selectedId: string | null; onSelect: (id: string | null) => void; onChange: (items: DioramaItem[]) => void }) {
+function DioramaStudio({ items, selectedId, onSelect, onChange, house }: { items: DioramaItem[]; selectedId: string | null; onSelect: (id: string | null) => void; onChange: (items: DioramaItem[]) => void; house?: string }) {
   const [note, setNote] = useState("");
   const selected = items.find((it) => it.id === selectedId) ?? null;
   const deg = selected ? Math.round((((selected.r % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) * (180 / Math.PI)) % 360 : 0;
 
   function add(kind: string) {
     if (items.length >= MAX_ITEMS) return setNote(`ใส่ได้สูงสุด ${MAX_ITEMS} ชิ้นต่อฐาน`);
-    const spot = freeSpot(items, kind);
+    const spot = freeSpot(items, kind, house);
     if (!spot) return setNote("พื้นที่บนฐานเต็มแล้ว ลองย้ายหรือเอาชิ้นอื่นออกก่อน");
     const item = makeItem(newItemId(), kind, spot.x, spot.z);
     setNote("");
@@ -331,6 +331,9 @@ export default function ExclusiveModal({
   defaultName = "",
   social,
   decor,
+  hidden = false,
+  onPickOnScene,
+  pickedSpot,
 }: {
   roomId: string;
   roomName: string;
@@ -339,6 +342,9 @@ export default function ExclusiveModal({
   defaultName?: string;
   social?: Social;
   decor?: DecorDraft;
+  hidden?: boolean; // ซ่อนชั่วคราวระหว่างเลือกจุดบนฉาก (ยังจำค่าที่กรอกไว้)
+  onPickOnScene?: (taken: number[], held: number[], current: number | null) => void; // เลือกจุดตั้งบ้านบนฉากจริง
+  pickedSpot?: { spot: number; at: number } | null; // จุดที่เลือกจากฉาก
 }) {
   const { cfg, error: cfgError } = useDonateConfig();
   const [view, setView] = useState<View>(decor ? "decor" : "menu");
@@ -351,6 +357,9 @@ export default function ExclusiveModal({
   const [taken, setTaken] = useState<Set<number>>(new Set());
   const [held, setHeld] = useState<Set<number>>(new Set());
   const [spotPopup, setSpotPopup] = useState(false);
+  useEffect(() => {
+    if (pickedSpot) setSpotPick(pickedSpot.spot);
+  }, [pickedSpot]);
   const [amount, setAmount] = useState<number | null>(null);
   const [custom, setCustom] = useState("");
   const [busy, setBusy] = useState(false);
@@ -399,6 +408,20 @@ export default function ExclusiveModal({
 
   function setPart(key: GiantKey, value: string) {
     setLook((l) => ({ ...l, [key]: value }));
+  }
+  // เปลี่ยนแบบบ้าน: ของที่วางทับพื้นที่บ้านจะถูกย้ายไปที่ว่างใกล้ ๆ
+  function setHouse(house: string) {
+    setLook((l) => {
+      const kept: DioramaItem[] = [];
+      for (const it of l.items) {
+        if (fits(kept, it, undefined, house)) kept.push(it);
+        else {
+          const spot = freeSpot(kept, it.kind, house);
+          if (spot) kept.push({ ...it, ...spot });
+        }
+      }
+      return { ...l, house, items: kept };
+    });
   }
   function setItems(items: DioramaItem[]) {
     setLook((l) => ({ ...l, items }));
@@ -477,7 +500,7 @@ export default function ExclusiveModal({
   );
 
   return (
-    <div className="xmas-modal-back" role="presentation" onClick={locked ? undefined : onClose}>
+    <div className="xmas-modal-back" role="presentation" onClick={locked ? undefined : onClose} hidden={hidden}>
       <div className="xmas-modal xmas-exclusive" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         {!locked && (
           <button className="xmas-x" onClick={onClose} aria-label="ปิด">
@@ -583,6 +606,12 @@ export default function ExclusiveModal({
                 </label>
                 <div className="xmas-sup-field">
                   <span>ตำแหน่งบนลาน</span>
+                  {onPickOnScene && (
+                    <button type="button" className="xmas-spot-scene" onClick={() => onPickOnScene([...taken], [...held], spotPick)}>
+                      <b>เลือกบนฉาก</b>
+                      <small>ดูพื้นที่จริงรอบต้นคริสต์มาส แล้วแตะช่องสีเขียวที่อยากตั้งบ้าน</small>
+                    </button>
+                  )}
                   <SpotMap taken={taken} held={held} value={spotPick} onPick={(i) => setSpotPick(i)} />
                   {spotPick !== null && (
                     <button type="button" className="xmas-studio-del" onClick={() => setSpotPick(null)}>
@@ -597,8 +626,16 @@ export default function ExclusiveModal({
                   <span className="xmas-sup-num">2</span>
                   <h3>ตกแต่ง · ฐานและของบนฐาน</h3>
                 </header>
-                <PickRow title="ลายฐาน" options={DIORAMA_BASES} value={look.base} onChange={(v) => setPart("base", v)} />
-                <DioramaStudio items={look.items} selectedId={selId} onSelect={setSelId} onChange={setItems} />
+                <PickRow title="บ้านหิมะ" options={HOUSE_STYLES} value={look.house ?? "none"} onChange={(v) => setHouse(v)} labels={HOUSE_LABEL} />
+                {look.house && look.house !== "none" && (
+                  <>
+                    <PickRow title={look.house === "igloo" ? "สีน้ำแข็ง" : look.house === "gingerbread" ? "สีลูกกวาด" : "สีผนัง"} options={HOUSE_WALLS} value={look.wall ?? "cream"} onChange={(v) => setPart("wall", v)} swatch />
+                    {look.house !== "igloo" && <PickRow title="สีหลังคา" options={HOUSE_ROOFS} value={look.roof ?? "red"} onChange={(v) => setPart("roof", v)} swatch />}
+                  </>
+                )}
+                <PickRow title="รั้วรอบฐาน" options={FENCES} value={look.fence ?? "none"} onChange={(v) => setPart("fence", v)} labels={FENCE_LABEL} />
+                <PickRow title="ลายขอบฐาน" options={DIORAMA_BASES} value={look.base} onChange={(v) => setPart("base", v)} />
+                <DioramaStudio items={look.items} selectedId={selId} onSelect={setSelId} onChange={setItems} house={look.house} />
               </section>
 
               <section className="xmas-sec" data-step="2" data-on={step === 2}>
@@ -714,7 +751,7 @@ export default function ExclusiveModal({
         {!order && cfg && !disabled && view === "decor" && decor && (
           <form className="xmas-decor-pay" onSubmit={submitDecor}>
             <div className="xmas-decor-pay-preview">
-              <SnowmanPreview parts={decor.parts} className="xmas-donate-snow" />
+              <SnowmanImage parts={decor.parts} view="full" size={256} className="xmas-donate-snow" alt="ตุ๊กตาหิมะของคุณ" />
               <span>ช่อง {decor.slot + 1}</span>
             </div>
             <div className="xmas-decor-pay-form">

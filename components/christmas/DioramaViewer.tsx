@@ -170,7 +170,7 @@ export function DioramaViewer({ look, name, message, selectedId, onSelect, onMov
       const nx = hit.x + d.dx;
       const nz = hit.z + d.dz;
       // ไม่ให้ชิ้นออกนอกฐานหรือทับชิ้นอื่น: ถ้าตำแหน่งนี้ใช้ไม่ได้ก็คงตำแหน่งเดิมไว้
-      if (!fits(cur.items, { kind: item.kind, x: nx, z: nz }, d.id)) return;
+      if (!fits(cur.items, { kind: item.kind, x: nx, z: nz }, d.id, cur.house)) return;
       d.x = nx;
       d.z = nz;
       d.moved = true;

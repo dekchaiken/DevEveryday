@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { clientIp } from "@/lib/clientIp";
 import { getRoom } from "@/lib/christmas/rooms";
-import { ACCESSORIES, ARMS, BODY_COLORS, claimDecor, claimFreeDecor, HATS, LEGS, NOSES, releaseFreeDecor, SCARVES, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
+import { claimDecor, claimFreeDecor, releaseFreeDecor, SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
+import { parseSnowParts } from "@/lib/christmas/snowman";
 import { rateOk } from "@/lib/christmas/store";
 import { clean, hasBlocked } from "@/lib/christmas/validate";
 import { isReservedSlot } from "@/lib/christmas/slots";
@@ -36,17 +37,10 @@ export async function POST(req: Request) {
   }
 
   const slot = Number(body.slot);
-  const pick = <T extends string>(v: unknown, list: readonly T[]) => (list as readonly string[]).includes(String(v)) ? String(v) : null;
-  const hat = pick(body.hat, HATS);
-  const scarf = pick(body.scarf, SCARVES);
-  const nose = pick(body.nose, NOSES);
-  const arms = pick(body.arms, ARMS);
-  const bodyColor = pick(body.body, BODY_COLORS);
-  const legs = pick(body.legs, LEGS);
-  const acc = pick(body.acc, ACCESSORIES);
+  const parts = parseSnowParts(body);
   if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) return NextResponse.json({ error: `เลือกช่องระหว่าง 1–${SLOT_COUNT}` }, { status: 400 });
   if (isReservedSlot(slot)) return NextResponse.json({ error: "ช่องนี้อยู่ในเขตโซนคำอวยพรหรือทางเดิน เลือกช่องอื่น" }, { status: 409 });
-  if (!hat || !scarf || !nose || !arms || !bodyColor || !legs || !acc) return NextResponse.json({ error: "ชิ้นส่วนไม่ถูกต้อง" }, { status: 400 });
+  if (!parts) return NextResponse.json({ error: "ชิ้นส่วนไม่ถูกต้อง" }, { status: 400 });
 
   // ตุ๊กตาฟรี: วางได้คนละ 1 ตัวต่อห้อง เพื่อให้คนอื่นมีโอกาสวางด้วย
   const clientId = typeof body.clientId === "string" ? body.clientId.slice(0, 80) : "";
@@ -54,17 +48,11 @@ export async function POST(req: Request) {
 
   const id = crypto.randomUUID();
   const decor: Decor = {
+    ...parts,
     id,
     room: room.id,
     slot,
     name,
-    hat,
-    scarf,
-    nose,
-    arms,
-    body: bodyColor,
-    legs,
-    acc,
     createdAt: Date.now(),
     likes: 0,
     social: sanitizeSocial(body.social, (s) => hasBlocked(s, cfg.blockedWords)),
@@ -77,6 +65,6 @@ export async function POST(req: Request) {
     await releaseFreeDecor(room.id, clientId);
     return NextResponse.json({ error: "ช่องนี้มีคนวางแล้ว เลือกช่องอื่น" }, { status: 409 });
   }
-  await writeLog({ type: "decor", room: room.id, actor: maskIp(ip), text: `${name} วางตุ๊กตาช่อง ${slot + 1} (${hat}/${scarf}/${bodyColor})` });
+  await writeLog({ type: "decor", room: room.id, actor: maskIp(ip), text: `${name} วางตุ๊กตาช่อง ${slot + 1} (${parts.hat}/${parts.scarf}/${parts.body})` });
   return NextResponse.json({ ok: true, decor });
 }
