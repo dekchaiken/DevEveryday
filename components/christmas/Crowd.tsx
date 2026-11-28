@@ -10,7 +10,6 @@ export function Backdrop() {
   return (
     <div className="xmas-atmos" aria-hidden>
       <div className="xmas-aurora" />
-      <div className="xmas-moon" />
       <div className="xmas-fairy">
         <svg className="xmas-fairy-wire" viewBox="0 0 100 40" preserveAspectRatio="none">
           <path d="M0 4 Q50 40 100 4" />

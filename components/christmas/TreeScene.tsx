@@ -22,6 +22,7 @@ import { buildWishVillage } from "./wishVillage";
 import { buildSnowman } from "./snowmanModel";
 import { buildSurroundings } from "./treeSurroundings";
 import { buildBackdrop, HILL_SCALE } from "./roomBackdrop";
+import { buildRailway } from "./plazaRailway";
 import type { Landmark, SceneKind } from "@/lib/christmas/rooms";
 import { buildDiorama } from "./diorama";
 import { buildSleighFlight, flightProgressAt } from "./sleighFlight";
@@ -212,8 +213,10 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
     scene.environmentIntensity = 0.55;
     // หมอกบาง ๆ ทำให้พื้นหิมะไกลค่อย ๆ กลมกลืนกับท้องฟ้าค่ำ
     scene.fog = new THREE.Fog(0x0c251d, 14, 56);
+    // ระยะหมอกพื้นฐาน (โหมดต่าง ๆ ปรับค่านี้) แต่ละเฟรมขยายตามระยะกล้อง: ซูมออกไกลแล้วยังเห็นตุ๊กตาและบ้านหิมะไกล ๆ ชัด
+    let fogBase = 56;
 
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 220);
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 340);
     camera.position.set(0, 3.9, 13.6);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -379,6 +382,11 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
     // ฉากหลังไกลของจังหวัด (ตึก ดอย ทุ่งนา ทะเล เมืองเก่า และแลนด์มาร์ก)
     const backdrop = buildBackdrop(sceneKind, scenery?.landmarks ?? [], isSmall);
     scene.add(backdrop.group);
+    // พระจันทร์อยู่บนท้องฟ้าจริง (ทิศเดิมเสมอ หมุนกล้องแล้วพระจันทร์อยู่ที่เดิม ไม่ตามจอ)
+    scene.add(buildMoon());
+    // ทางรถไฟคริสต์มาสรอบขอบลาน พร้อมเสาไฟทาง
+    const railway = buildRailway({ small: isSmall });
+    scene.add(railway.group);
 
     // ---------- หิมะตก ----------
     const SNOW = isSmall ? 320 : 800;
@@ -688,6 +696,11 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
           return { id: c.userData.decorId, x: Math.round(r.left + ((v.x + 1) / 2) * r.width), y: Math.round(r.top + ((1 - v.y) / 2) * r.height), front: v.z < 1 };
         });
       };
+      (window as unknown as { __xmasCam?: unknown }).__xmasCam = (x: number, y: number, z: number, tx: number, ty: number, tz: number) => {
+        controls.maxDistance = 200;
+        camera.position.set(x, y, z);
+        controls.target.set(tx, ty, tz);
+      };
       (window as unknown as { __xmasBench?: unknown }).__xmasBench = (n = 30, shadows = false) => {
         const gl = renderer.getContext();
         renderer.render(scene, camera);
@@ -755,6 +768,7 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
       village.update(t, reduced, camera.position);
       surroundings.update(t, reduced);
       backdrop.update(t, reduced);
+      railway.update(serverNowMs() / 1000, reduced);
       stepWalk(now);
       if (camAnim) {
         const k = Math.min((now - camAnim.start) / camAnim.dur, 1);
@@ -768,6 +782,14 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
       // กันกล้องและจุดมองไม่ให้ต่ำกว่าพื้นหิมะ (เช่นตอนซูมเข้าใกล้หรือหมุนมุมต่ำ)
       if (camera.position.y < 0.45) camera.position.y = 0.45;
       if (controls.target.y < 0) controls.target.y = 0;
+      {
+        const fg = scene.fog as THREE.Fog | null;
+        if (fg) {
+          const cd = camera.position.distanceTo(controls.target);
+          fg.far = Math.max(fogBase, cd * 1.8 + 34);
+          fg.near = Math.max(14, cd * 0.55);
+        }
+      }
       // ตอนเลื่อนแผนที่เลือกช่อง ไม่ให้เลื่อนออกนอกลาน
       if (pickOn) {
         const tr = Math.hypot(controls.target.x, controls.target.z);
@@ -1116,14 +1138,14 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
         setPickControls(true);
         // มองจากที่สูงต้องไม่ให้หมอกกลบพื้น
         const fog = scene.fog as THREE.Fog | null;
-        if (fog) fog.far = 160;
+        if (fog) fogBase = 160;
         const far = mode === "giant" ? 1.5 : 1;
         animateCam(new THREE.Vector3(0, (isSmall ? 24 : 19) * far, (isSmall ? 17 : 15) * far), new THREE.Vector3(0, 0, 1.5), 1100);
       } else if (!pickOn) {
         setPickControls(false);
         renderer.domElement.style.cursor = "";
         const fog = scene.fog as THREE.Fog | null;
-        if (fog && !zoneAway) fog.far = 56;
+        if (fog && !zoneAway) fogBase = 56;
         if (wasOn && marker.userData.base === 2.2) {
           marker.visible = false;
           marker.userData.base = 1;
@@ -1404,7 +1426,7 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
       zoneAwayRef.v = true;
       callbacks.current.onAwayChange?.(true);
       const fog = scene.fog as THREE.Fog | null;
-      if (fog) fog.far = 90;
+      if (fog) fogBase = 90;
       controls.maxDistance = 4.2; // ในหมู่บ้านถอยได้ไม่ไกล กล้องจึงไม่ทะลุกำแพงด้านหลัง
       const list = browseList();
       browseIdx = Math.min(stopIdx, list.length - 1);
@@ -1463,7 +1485,7 @@ export default function TreeScene({ scenery, ornaments, preview, reducedMotion, 
       clearBeacon();
       village.highlight(null);
       const fog = scene.fog as THREE.Fog | null;
-      if (fog) fog.far = FOG_FAR;
+      if (fog) fogBase = FOG_FAR;
       zoneAway = false;
       zoneAwayRef.v = false;
       controls.maxDistance = 60;
@@ -2206,4 +2228,50 @@ function makeGiftBox(size: number, color: number) {
   bow.position.y = size * 1.02;
   box.add(body, rib1, rib2, bow);
   return box;
+}
+
+// ดวงจันทร์เต็มดวง ผิวมีหลุมจาง ๆ และแสงเรืองรอบดวง (ไกลมาก ไม่โดนหมอก)
+function buildMoon(): THREE.Group {
+  const g = new THREE.Group();
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const x = c.getContext("2d")!;
+  const disc = x.createRadialGradient(108, 100, 10, 128, 128, 110);
+  disc.addColorStop(0, "#fffbea");
+  disc.addColorStop(0.7, "#f6e7bf");
+  disc.addColorStop(1, "#e7d29d");
+  x.fillStyle = disc;
+  x.beginPath();
+  x.arc(128, 128, 110, 0, Math.PI * 2);
+  x.fill();
+  x.globalAlpha = 0.12;
+  x.fillStyle = "#a88f5a";
+  for (const [cx, cy, r] of [[90, 100, 22], [150, 80, 14], [160, 150, 26], [100, 170, 16], [130, 120, 10]]) {
+    x.beginPath();
+    x.arc(cx, cy, r, 0, Math.PI * 2);
+    x.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const halo = document.createElement("canvas");
+  halo.width = halo.height = 128;
+  const h = halo.getContext("2d")!;
+  const hg = h.createRadialGradient(64, 64, 18, 64, 64, 64);
+  hg.addColorStop(0, "rgba(255,240,200,0.55)");
+  hg.addColorStop(1, "rgba(255,240,200,0)");
+  h.fillStyle = hg;
+  h.fillRect(0, 0, 128, 128);
+  const htex = new THREE.CanvasTexture(halo);
+  htex.colorSpace = THREE.SRGBColorSpace;
+  const pos = new THREE.Vector3(34, 40, -180);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: htex, transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  glow.scale.setScalar(70);
+  glow.position.copy(pos);
+  const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));
+  moon.scale.setScalar(17);
+  moon.position.copy(pos);
+  glow.renderOrder = -2;
+  moon.renderOrder = -1;
+  g.add(glow, moon);
+  return g;
 }
