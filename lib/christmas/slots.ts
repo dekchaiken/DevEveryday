@@ -1,11 +1,17 @@
 // ตำแหน่งวางบนลานคริสต์มาส: ตุ๊กตาธรรมดาใช้ช่อง 1×1 ตุ๊กตายักษ์ใช้จุด 2×2 (ผังมาจาก layout.ts)
 // ชื่อเดิมยังคงไว้เพื่อให้โค้ดอื่นทำงานต่อได้ ค่าทั้งหมดมาจากผังเดียวกัน
-import { DOLL_BLOCKED, DOLL_CELLS, DOLL_POSITIONS, GIANT_BLOCKED, ZONE_CARD_SLOTS } from "@/lib/christmas/layout";
-export { GIANT_CAPACITY, GIANT_MODEL_SCALE, GIANT_POSITIONS, GIANT_RING_START, GIANT_STEP, ZONE, ZONE_CARD_SLOTS, ZONE_GATE, ZONE_RAIL_Y, distToPath, inPath, inZone } from "@/lib/christmas/layout";
+import { DOLL_BLOCKED, DOLL_CELLS, DOLL_DISPLAY_POSITIONS, DOLL_POSITIONS, GIANT_BLOCKED, GIANT_DISPLAY_POSITIONS, GIANT_POSITIONS as GP, ZONE_CARD_SLOTS } from "@/lib/christmas/layout";
+export { GIANT_CAPACITY, GIANT_MODEL_SCALE, GIANT_POSITIONS, GIANT_RING_START, GIANT_STEP, ZONE, ZONE_CARD_SLOTS, ZONE_GATE, ZONE_GATE_HALF, ZONE_RAIL_Y, ZONE_RINGS, ZONE_WALLS, PATH_HALF, distToPath, inPath, inZone } from "@/lib/christmas/layout";
 
 // จำนวนช่องตุ๊กตาหิมะธรรมดาทั้งหมด (ลำดับช่องคงที่ตามผัง)
 export const SLOT_COUNT = DOLL_CELLS.length;
 export const SLOT_POSITIONS = DOLL_POSITIONS;
+// ตำแหน่งที่วาดบนฉาก: ตุ๊กตาที่วางไว้ก่อนผังเปลี่ยนและตอนนี้ทับโซน ทางเดิน หรือโคนต้น ย้ายไปแสดงที่ช่องเปิดใกล้สุด
+export const SLOT_DISPLAY_POSITIONS = DOLL_DISPLAY_POSITIONS;
+export const GIANT_DISPLAY = GP.map((g, i) => {
+  const d = GIANT_DISPLAY_POSITIONS[i];
+  return { ...g, x: d.x, z: d.z, angle: Math.atan2(d.z, d.x) };
+});
 
 // จำนวนการ์ดที่แขวนบนรั้วในฉาก (การ์ดที่เหลือดูได้จากรายการในโซน)
 export const ZONE_CAPACITY = ZONE_CARD_SLOTS.length; // จำนวนช่องซองบนรั้ว 4 ชั้น (คำนวณจากผังโซน)

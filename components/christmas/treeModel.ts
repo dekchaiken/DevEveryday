@@ -351,15 +351,15 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
   // ---------- ลำต้นและรากที่โผล่พ้นหิมะ ----------
   const bark = keepT(barkTexture());
   const barkMat = keepM(new THREE.MeshStandardMaterial({ map: bark, roughness: 0.95 }));
-  const trunkH = TREE_BASE_Y + 1.3;
-  const trunk = new THREE.Mesh(keepG(new THREE.CylinderGeometry(0.12, 0.24, trunkH, 14)), barkMat);
+  const trunkH = TREE_BASE_Y + 1.7;
+  const trunk = new THREE.Mesh(keepG(new THREE.CylinderGeometry(0.16, 0.32, trunkH, 14)), barkMat);
   trunk.position.y = trunkH / 2 - 0.02;
   trunk.castShadow = true;
   group.add(trunk);
   for (let i = 0; i < 5; i++) {
     const a = (i / 5) * Math.PI * 2 + 0.4;
-    const root = new THREE.Mesh(keepG(new THREE.ConeGeometry(0.07, 0.42, 8)), barkMat);
-    root.position.set(Math.cos(a) * 0.2, 0.06, Math.sin(a) * 0.2);
+    const root = new THREE.Mesh(keepG(new THREE.ConeGeometry(0.09, 0.56, 8)), barkMat);
+    root.position.set(Math.cos(a) * 0.27, 0.07, Math.sin(a) * 0.27);
     root.rotation.set(0, -a, Math.PI / 2 - 0.35);
     root.rotation.order = "YZX";
     group.add(root);
@@ -380,10 +380,10 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
   const needleMat = keepM(new THREE.MeshStandardMaterial({ map: needleTex, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.86, metalness: 0 }));
   type Branch = { m: THREE.Matrix4; tone: number };
   const branches: Branch[] = [];
-  const tiers = small ? 20 : 28;
+  const tiers = small ? 24 : 34;
   for (let k = 0; k < tiers; k++) {
     const h = 0.015 + (k / (tiers - 1)) * 0.9;
-    const count = Math.max(5, Math.round((small ? 11 : 15) * Math.pow(1 - h, 0.75) + 4));
+    const count = Math.max(5, Math.round((small ? 14 : 19) * Math.pow(1 - h, 0.75) + 4));
     for (let j = 0; j < count; j++) {
       const az = (j / count) * Math.PI * 2 + k * 2.399 + (r() - 0.5) * 0.35;
       const len = radiusAt(h) * (1.0 + (r() - 0.5) * 0.18) + 0.08;
@@ -396,7 +396,7 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
     }
   }
   // กิ่งสั้นสีเข้มชั้นใน เติมความแน่นของพุ่ม
-  const fill = small ? 70 : 140;
+  const fill = small ? 110 : 220;
   for (let i = 0; i < fill; i++) {
     const h = r() * 0.9;
     const az = r() * Math.PI * 2;
@@ -412,8 +412,8 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
     const az = (i / 7) * Math.PI * 2;
     e.set(0, -az, 1.15 + r() * 0.2, "YZX");
     q.setFromEuler(e);
-    v.set(0, TREE_TOP_Y - 0.34, 0);
-    sc.set(0.42, 0.42, 0.42);
+    v.set(0, TREE_TOP_Y - 0.42, 0);
+    sc.set(0.52, 0.52, 0.52);
     branches.push({ m: new THREE.Matrix4().compose(v.clone(), q.clone(), sc.clone()), tone: 1.05 });
   }
   const branchMesh = new THREE.InstancedMesh(branchGeo, needleMat, branches.length);
@@ -442,14 +442,14 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
   }
 
   // ---------- ไฟประดับ: สองเกลียวสลับกัน หลอดเล็กมีแสงฟุ้ง กระพริบเบา ๆ ----------
-  const LIGHTS = small ? 170 : 280;
+  const LIGHTS = small ? 230 : 380;
   const lightPos: THREE.Vector3[] = [];
   const lightBase: THREE.Color[] = [];
   const lightPhase: number[] = [];
   for (let i = 0; i < LIGHTS; i++) {
     const s = (i + 0.5) / LIGHTS;
     const h = 0.03 + s * 0.9;
-    const a = s * Math.PI * 2 * 8.5 + (i % 2) * Math.PI + (r() - 0.5) * 0.25;
+    const a = s * Math.PI * 2 * 10 + (i % 2) * Math.PI + (r() - 0.5) * 0.25;
     lightPos.push(onSurface(h + (r() - 0.5) * 0.012, a, 0.97));
     lightBase.push(new THREE.Color(theme.lights[i % theme.lights.length]));
     lightPhase.push(r() * Math.PI * 2);
@@ -568,7 +568,7 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
     }
     const coneGeo = keepG(new THREE.LatheGeometry(prof, 10));
     const list: THREE.Matrix4[] = [];
-    for (let i = 0; i < (small ? 26 : 44); i++) {
+    for (let i = 0; i < (small ? 36 : 60); i++) {
       const h = 0.08 + r() * 0.8;
       list.push(hangDown(onSurface(h, r() * Math.PI * 2, 1.0), 0.9 + r() * 0.4, r() * 6));
     }
@@ -589,7 +589,7 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
     ]);
     const caneGeo = keepG(new THREE.TubeGeometry(path, 24, 0.012, 8, false));
     const list: THREE.Matrix4[] = [];
-    for (let i = 0; i < (small ? 14 : 24); i++) {
+    for (let i = 0; i < (small ? 20 : 32); i++) {
       const h = 0.1 + r() * 0.75;
       const a = r() * Math.PI * 2;
       list.push(hangDown(onSurface(h, a, 1.0), 1, -a + Math.PI / 2));
@@ -615,24 +615,25 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
     starGeo,
     keepM(new THREE.MeshPhysicalMaterial({ color: theme.star, metalness: 0.9, roughness: 0.16, emissive: theme.starEmissive, emissiveIntensity: 0.5, clearcoat: 1 })),
   );
-  const starPosition = new THREE.Vector3(0, TREE_TOP_Y + 0.26, 0);
+  const starPosition = new THREE.Vector3(0, TREE_TOP_Y + 0.34, 0);
   star.position.copy(starPosition);
+  star.scale.setScalar(1.3);
   star.castShadow = true;
   group.add(star);
   const starGlow = new THREE.Sprite(keepM(new THREE.SpriteMaterial({ map: opts.glowTex, color: theme.starEmissive, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending })));
-  starGlow.scale.set(1.9, 1.9, 1);
+  starGlow.scale.set(2.5, 2.5, 1);
   starGlow.position.copy(starPosition);
   group.add(starGlow);
   const rays = new THREE.Sprite(keepM(new THREE.SpriteMaterial({ map: keepT(raysTexture(theme.star)), transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending })));
-  rays.scale.set(2.6, 2.6, 1);
+  rays.scale.set(3.4, 3.4, 1);
   rays.position.copy(starPosition);
   group.add(rays);
-  const starLight = new THREE.PointLight(theme.starEmissive, 2.2, 7, 2);
+  const starLight = new THREE.PointLight(theme.starEmissive, 2.6, 9, 2);
   starLight.position.copy(starPosition).add(new THREE.Vector3(0, 0.1, 0.35));
   group.add(starLight);
 
   // ---------- ผ้าคลุมโคนต้นขอบหยัก ขลิบขนนุ่ม และกล่องของขวัญ ----------
-  const skirtR = 1.62;
+  const skirtR = 2.2;
   const skirtGeo = keepG(new THREE.CircleGeometry(skirtR, 96));
   const sp = skirtGeo.getAttribute("position") as THREE.BufferAttribute;
   for (let i = 1; i < sp.count; i++) {
@@ -652,19 +653,22 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
     trimPts.push(new THREE.Vector3(Math.cos(a) * skirtR * k, 0.045, -Math.sin(a) * skirtR * k));
   }
   const trim = new THREE.Mesh(
-    keepG(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(trimPts, true), 192, 0.055, 8, true)),
+    keepG(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(trimPts, true), 220, 0.07, 8, true)),
     keepM(new THREE.MeshStandardMaterial({ color: theme.trim, roughness: 1 })),
   );
   trim.receiveShadow = true;
   group.add(trim);
   const giftSpots: [number, number, number][] = [
-    [0.95, 0.4, 0.3],
-    [-0.85, 0.75, 0.26],
-    [0.25, 1.25, 0.22],
-    [-1.15, -0.25, 0.28],
-    [0.55, -1.05, 0.24],
-    [1.25, -0.35, 0.2],
-    [-0.4, -1.2, 0.2],
+    [1.3, 0.55, 0.38],
+    [-1.15, 1.0, 0.33],
+    [0.35, 1.7, 0.28],
+    [-1.55, -0.35, 0.36],
+    [0.75, -1.4, 0.3],
+    [1.7, -0.45, 0.26],
+    [-0.55, -1.62, 0.26],
+    [1.75, 0.2, 0.22],
+    [-1.75, 0.45, 0.24],
+    [-0.35, 1.85, 0.2],
   ];
   giftSpots.forEach(([gx, gz, size], i) => {
     const color = theme.gifts[i % theme.gifts.length];

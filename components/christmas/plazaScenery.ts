@@ -8,7 +8,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 
 export type Plaza = { group: THREE.Group; update: (t: number, reduced: boolean) => void; dispose: () => void };
 
-const PLAZA_R = 5.4;
+const PLAZA_R = 6.8;
 
 // ลายพื้นลาน: หินปูสีอ่อน รอยต่อเป็นวงและเส้นรัศมี วงทอง และเกล็ดหิมะทอง 8 จุด ขอบนอกจางเข้าหิมะ
 function plazaTexture() {
@@ -171,8 +171,10 @@ export function buildPlaza(opts: { gate: { x: number; z: number }; glowTex: THRE
   group.add(plaza);
 
   // ---------- รั้วไม้เท้าลูกกวาดสลับโคมไฟ รอบผ้าคลุมโคน ----------
-  const ringR = 1.76;
-  const N = 12;
+  const ringR = 2.5;
+  const N = 16;
+  const PS = 1.35; // ขนาดรั้วไม้เท้าและโคมไฟ (ขยายตามต้นใหญ่)
+  const one = new THREE.Vector3(PS, PS, PS);
   const canePath = new THREE.CatmullRomCurve3([
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(0, 0.34, 0),
@@ -202,13 +204,13 @@ export function buildPlaza(opts: { gate: { x: number; z: number }; glowTex: THRE
     const x = Math.cos(a) * ringR;
     const z = Math.sin(a) * ringR;
     // ไม้เท้าหันขอเข้าหาต้น
-    canes.setMatrixAt(i, m4.compose(new THREE.Vector3(x, 0, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a + Math.PI, 0)), new THREE.Vector3(1, 1, 1)));
+    canes.setMatrixAt(i, m4.compose(new THREE.Vector3(x, 0, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -a + Math.PI, 0)), one));
     const a2 = a + Math.PI / N;
     const lx = Math.cos(a2) * ringR;
     const lz = Math.sin(a2) * ringR;
-    frames.setMatrixAt(i, m4.makeTranslation(lx, 0, lz));
-    glass.setMatrixAt(i, m4.makeTranslation(lx, 0.12, lz));
-    lanternGlowPos.push(lx, 0.13, lz);
+    frames.setMatrixAt(i, m4.compose(new THREE.Vector3(lx, 0, lz), new THREE.Quaternion(), one));
+    glass.setMatrixAt(i, m4.compose(new THREE.Vector3(lx, 0.12 * PS, lz), new THREE.Quaternion(), one));
+    lanternGlowPos.push(lx, 0.13 * PS, lz);
   }
   for (const m of [canes, frames, glass]) {
     m.castShadow = true;
@@ -219,7 +221,7 @@ export function buildPlaza(opts: { gate: { x: number; z: number }; glowTex: THRE
   lanternGlowGeo.setAttribute("position", new THREE.Float32BufferAttribute(lanternGlowPos, 3));
   const lanternGlow = new THREE.Points(
     lanternGlowGeo,
-    M(new THREE.PointsMaterial({ color: 0xffc46b, size: 0.55, map: opts.glowTex, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })),
+    M(new THREE.PointsMaterial({ color: 0xffc46b, size: 0.7, map: opts.glowTex, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })),
   );
   group.add(lanternGlow);
 
@@ -230,7 +232,7 @@ export function buildPlaza(opts: { gate: { x: number; z: number }; glowTex: THRE
   const side = new THREE.Vector3(-dir.z, 0, dir.x);
   const s0 = PLAZA_R - 0.3;
   const len = total - s0 - 0.4;
-  const pathW = 2.0;
+  const pathW = 2.8;
   const pathGeo = G(new THREE.PlaneGeometry(pathW, len, 1, 1));
   pathGeo.rotateX(-Math.PI / 2);
   const ptex = T(pathTexture());
@@ -242,13 +244,13 @@ export function buildPlaza(opts: { gate: { x: number; z: number }; glowTex: THRE
   path.receiveShadow = true;
   group.add(path);
 
-  const archHalf = 1.15;
-  const archTop = 2.3;
+  const archHalf = 1.5;
+  const archTop = 2.7;
   const parts: THREE.BufferGeometry[] = [];
   const bulbPos: THREE.Vector3[] = [];
   const bulbS: number[] = []; // ระยะตามทางเดิน ใช้ทำไฟวิ่ง
   const yaw = Math.atan2(-side.z, side.x);
-  for (let s = s0 + 1.6; s < total - 1.4; s += 2.8) {
+  for (let s = s0 + 1.6; s < total - 1.4; s += 2.3) {
     const c = dir.clone().multiplyScalar(s);
     const rot = new THREE.Matrix4().makeRotationY(yaw);
     for (const k of [-1, 1]) {

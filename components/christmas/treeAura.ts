@@ -141,7 +141,7 @@ export function createTreeAura(opts: { small: boolean; pixelRatio: number }): Tr
     transparent: true,
     depthWrite: false,
   });
-  const ringGeo = new THREE.PlaneGeometry(5.2, 5.2);
+  const ringGeo = new THREE.PlaneGeometry(7, 7);
   ringGeo.rotateX(-Math.PI / 2);
   const ring = new THREE.Mesh(ringGeo, ringMat);
   ring.position.y = 0.03;
