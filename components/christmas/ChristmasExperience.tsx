@@ -22,7 +22,7 @@ import { markInternalNav } from "./skipIntro";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import { ShareCardModal } from "./ShareCard";
 import { SkyOverlay, type SkyShow } from "./SkyOverlay";
-import type { SkyTheme } from "./skyArt";
+import { parseSkyStyle } from "@/lib/christmas/skyStyle";
 import { ProfileCard, SocialLinks } from "./ProfileCard";
 import { loadProfile, saveProfile, type Profile } from "./profile";
 import type { Decor } from "@/lib/christmas/decor";
@@ -360,6 +360,24 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [guideOn, setGuideOn] = useState(false);
   const [giftDone, setGiftDone] = useState(false);
   const [sceneReady, setSceneReady] = useState(false); // ฉาก 3 มิติพร้อมรับคำสั่ง (เช่น ฉลอง)
+  // ความสูงของแถบเมนูล่างจริง (บนมือถือชื่อปุ่มอาจขึ้นสองบรรทัด) ใช้วางแถบควบคุมอื่นให้อยู่เหนือเมนูพอดีไม่ทับกัน
+  useEffect(() => {
+    const nav = document.querySelector<HTMLElement>(".xmas-actions");
+    if (!nav) return;
+    const apply = () => {
+      const top = nav.getBoundingClientRect().top;
+      const gap = Math.max(60, Math.round(window.innerHeight - top + 10));
+      document.documentElement.style.setProperty("--xmas-dock", `${gap}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(nav);
+    window.addEventListener("resize", apply);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
+    };
+  }, []);
   const [celebrateOpen, setCelebrateOpen] = useState(false); // หน้าต่างฉลองต้นครบ 999 คำอวยพร
   const [celebrateMsg, setCelebrateMsg] = useState("");
   useEffect(() => {
@@ -488,7 +506,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       return;
     }
     // ข้อความขึ้นจอแสดงเพียงที่เดียวเหนือต้นไม้ (ไม่ซ้ำกับแถบข้อความ)
-    setSkyShow({ id: ev.id, text: ev.text, by: ev.by, theme: (ev.theme ?? "fireworks") as SkyTheme, duration: Math.max(ev.duration, 4000) });
+    setSkyShow({ id: ev.id, text: ev.text, by: ev.by, style: parseSkyStyle(ev.style, ev.theme), duration: Math.max(ev.duration, 6000) });
+  }, []);
+
+  // ตอนพัฒนา: สั่งแสดงข้อความขึ้นจอจากคอนโซล เพื่อตรวจทุกธีมโดยไม่ต้องชำระเงิน
+  useEffect(() => {
+    if (process.env.NODE_ENV === "production") return;
+    (window as unknown as { __skyShow?: unknown }).__skyShow = (style: Record<string, string> = {}, text = "ขอให้ทุกคนมีความสุขมาก ๆ ในวันคริสต์มาสปีนี้", by = "ทดสอบ") =>
+      setSkyShow({ id: String(Date.now()), text, by, style: parseSkyStyle(style), duration: 10000 });
   }, []);
 
   // ---------- รวมลูกบอลจากเซิร์ฟเวอร์กับที่เพิ่งแขวนเอง ----------
@@ -872,7 +897,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {skyShow && <SkyOverlay key={skyShow.id} show={skyShow} onDone={() => setSkyShow(null)} />}
 
       {/* ข้อความแจ้งเตือนชั่วคราว */}
-      <PendingOrdersWatch roomId={room.id} notify={notify} />
+      <PendingOrdersWatch roomId={room.id} notify={notify} hideButton={exclusiveOpen || supportOpen || decorOpen || studioOpen || zoneOpen || pickMode || giantPick !== null || feedOpen || rankOpen || inviteOpen || chooseOpen || !!focus} />
       {giantCard && (
         <GiantBanner
           info={giantCard}
@@ -1104,8 +1129,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       {/* แถบเลือกช่องบนฉาก: แตะช่องสีเขียวบนพื้น แล้วกดใช้ช่องนี้ */}
       {giantPick && (
         <div className="xz-pick" role="group" aria-label="เลือกจุดตั้งบ้านหิมะ Exclusive บนฉาก">
-          <span className={`xz-pick-note is-${pickNote?.tone ?? "idle"}`}>{pickNote?.text ?? "แตะกรอบสีเขียวบนพื้นเพื่อเลือกจุดตั้งบ้านหิมะ (ส้ม = มีคนจอง · แดง = ซื้อแล้ว)"}</span>
+          <span className={`xz-pick-note is-${pickNote?.tone ?? "idle"}`}>{pickNote?.text ?? "แตะกรอบสีเขียวเพื่อเลือกจุดตั้งบ้าน · ลากเพื่อเลื่อนดู บีบนิ้วหรือกด +/− เพื่อซูม (ส้ม = มีคนจอง · แดง = ซื้อแล้ว)"}</span>
           <div className="xz-pick-actions">
+            <button type="button" className="xz-hud-btn is-ghost xz-pick-zoom" onClick={() => treeRef.current?.zoomBy(0.75)} aria-label="ซูมเข้า">
+              +
+            </button>
+            <button type="button" className="xz-hud-btn is-ghost xz-pick-zoom" onClick={() => treeRef.current?.zoomBy(1.33)} aria-label="ซูมออก">
+              −
+            </button>
             <button
               type="button"
               className="xz-hud-btn"
@@ -1125,8 +1156,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
       {pickMode && (
         <div className="xz-pick" role="group" aria-label="เลือกช่องวางตุ๊กตาบนฉาก">
-          <span className={`xz-pick-note is-${pickNote?.tone ?? "idle"}`}>{pickNote?.text ?? "แตะช่องสีเขียวบนพื้นเพื่อเลือกที่วางตุ๊กตา"}</span>
+          <span className={`xz-pick-note is-${pickNote?.tone ?? "idle"}`}>{pickNote?.text ?? "แตะช่องสีเขียวเพื่อเลือกที่วางตุ๊กตา · ลากเพื่อเลื่อนดู บีบนิ้วหรือกด +/− เพื่อซูม"}</span>
           <div className="xz-pick-actions">
+            <button type="button" className="xz-hud-btn is-ghost xz-pick-zoom" onClick={() => treeRef.current?.zoomBy(0.75)} aria-label="ซูมเข้า">
+              +
+            </button>
+            <button type="button" className="xz-hud-btn is-ghost xz-pick-zoom" onClick={() => treeRef.current?.zoomBy(1.33)} aria-label="ซูมออก">
+              −
+            </button>
             <button
               type="button"
               className="xz-hud-btn"
@@ -1219,7 +1256,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
 
       {/* ปุ่มซูมบนฉาก: ซูมเข้า ออก และกลับมุมมองเริ่มต้น (มือถือกดหรือบีบนิ้วได้ คอมใช้ลูกล้อเมาส์) */}
-      <div className={`xmas-zoom ${zoneOpen ? "is-zone" : ""}`} role="group" aria-label="ซูมภาพ">
+      <div className={`xmas-zoom ${zoneOpen ? "is-zone" : ""} ${pickMode || giantPick ? "is-pick" : ""}`} role="group" aria-label="ซูมภาพ">
         <button type="button" onClick={() => treeRef.current?.zoomBy(0.8)} aria-label="ซูมเข้า">
           <Icon name="plus" size={18} />
         </button>
@@ -1354,8 +1391,24 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         />
       )}
 
-      {/* โซนคำอวยพรอยู่บนแผนที่: แถบควบคุมด้านล่างเมื่อกล้องไปที่โซน */}
+      {/* โซนคำอวยพรอยู่บนแผนที่: แถบควบคุมรวมเป็นกองเดียวเหนือเมนู จึงไม่ซ้อนกันแม้ปุ่มขึ้นบรรทัดใหม่ */}
       {zoneOpen && !zoneList && (
+        <div className="xz-dock">
+      {/* เลื่อนชมทีละกำแพง: ทุกหน้ากำแพงมีจุดยืนมองตรง ๆ จึงเห็นซองครบทุกใบ ไม่มีใบไหนถูกบัง */}
+      {zoneStop && zoneTotal > 0 && (
+        <div className="xz-nav" role="group" aria-label="เลื่อนชมกำแพงการ์ด">
+          <button type="button" className="xz-nav-btn" aria-label="กำแพงก่อนหน้า" onClick={() => treeRef.current?.zoneStep(-1)}>
+            ‹
+          </button>
+          <span className="xz-nav-label">
+            กำแพง {zoneStop.index + 1}/{zoneStop.total}
+            <small className="xz-nav-count">{zoneTotal} ใบ</small>
+          </span>
+          <button type="button" className="xz-nav-btn" aria-label="กำแพงถัดไป" onClick={() => treeRef.current?.zoneStep(1)}>
+            ›
+          </button>
+        </div>
+      )}
         <div className="xz-hud" role="toolbar" aria-label="โซนคำอวยพร">
           <span className="xz-hud-count">
             โซนคำอวยพร · {zoneTotal} ใบ
@@ -1388,20 +1441,6 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             กลับมุมเดิม
           </button>
         </div>
-      )}
-      {/* เลื่อนชมทีละกำแพง: ทุกหน้ากำแพงมีจุดยืนมองตรง ๆ จึงเห็นซองครบทุกใบ ไม่มีใบไหนถูกบัง */}
-      {zoneOpen && !zoneList && zoneStop && zoneTotal > 0 && (
-        <div className="xz-nav" role="group" aria-label="เลื่อนชมกำแพงการ์ด">
-          <button type="button" className="xz-nav-btn" aria-label="กำแพงก่อนหน้า" onClick={() => treeRef.current?.zoneStep(-1)}>
-            ‹
-          </button>
-          <span className="xz-nav-label">
-            กำแพง {zoneStop.index + 1}/{zoneStop.total}
-            <small className="xz-nav-count">{zoneTotal} ใบ</small>
-          </span>
-          <button type="button" className="xz-nav-btn" aria-label="กำแพงถัดไป" onClick={() => treeRef.current?.zoneStep(1)}>
-            ›
-          </button>
         </div>
       )}
       {zoneOpen && !zoneList && zonePins.length > 0 && (

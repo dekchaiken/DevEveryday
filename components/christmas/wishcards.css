@@ -2140,3 +2140,48 @@
 @media (max-height: 520px) and (orientation: landscape) {
   .xmas-stage.is-zone .xmas-ticker {
     display: none;}}
+
+/* ---------- แถบควบคุมโซนคำอวยพร: กองเดียวเหนือเมนู (ความสูงเมนูวัดจริงเป็น --xmas-dock) ---------- */
+.xz-dock {
+  position: fixed;
+  left: 50%;
+  bottom: var(--xmas-dock, 100px);
+  z-index: 62;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  pointer-events: none;}
+.xz-dock > .xz-nav,
+.xz-dock > .xz-hud {
+  position: static;
+  inset: auto;
+  transform: none;
+  max-width: 100%;
+  pointer-events: auto;}
+@media (max-width: 759px) {
+  .xz-dock > .xz-hud {
+    flex-wrap: wrap;
+    justify-content: center;}}
+@media (max-height: 520px) and (orientation: landscape) {
+  .xz-dock {
+    flex-direction: row;
+    align-items: flex-end;
+    width: calc(100vw - 24px);
+    justify-content: space-between;}}
+/* แถบเลือกช่องบนฉาก และปุ่มกลับมุมเดิม อยู่เหนือเมนูจริงเสมอ */
+.xz-pick,
+.xz-hud {
+  bottom: var(--xmas-dock, 100px);}
+@media (max-width: 759px) {
+  .xz-hud {
+    bottom: var(--xmas-dock, 100px);}
+  .xz-pick {
+    bottom: var(--xmas-dock, 100px);}}
+.xz-pick-zoom {
+  min-width: 40px;
+  padding: 0;
+  font-size: 18px;}

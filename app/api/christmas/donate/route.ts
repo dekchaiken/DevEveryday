@@ -1,3 +1,4 @@
+import { parseSkyStyle } from "@/lib/christmas/skyStyle";
 import { NextResponse } from "next/server";
 import { clientIp } from "@/lib/clientIp";
 import { getConfig } from "@/lib/christmas/config";
@@ -110,6 +111,7 @@ export async function POST(req: Request) {
     social: sanitizeSocial(body.social, (s) => hasBlocked(s, config.blockedWords)),
     spot: Math.max(0, spot),
     theme: MESSAGE_THEMES.includes(body.theme as MessageTheme) ? (body.theme as MessageTheme) : "fireworks",
+    ...(kind === "message" ? { style: parseSkyStyle(body.style, body.theme) } : {}),
     mode: config.payMode,
     status: "awaiting_payment",
     createdAt: Date.now(),

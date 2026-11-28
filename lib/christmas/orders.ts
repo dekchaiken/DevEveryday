@@ -1,6 +1,7 @@
 // คำสั่งสนับสนุน (ตุ๊กตาหิมะยักษ์) เก็บใน Redis หรือหน่วยความจำ (พัฒนาในเครื่อง)
 import { cmd, storeConfigured } from "@/lib/redis";
 import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
+import type { SkyStyle } from "@/lib/christmas/skyStyle";
 import type { Social } from "@/lib/christmas/social";
 import type { DecorPick } from "@/lib/christmas/decor";
 import type { GiantLook } from "@/lib/christmas/giant";
@@ -19,6 +20,7 @@ export type Order = {
   name: string;
   message: string;
   theme: MessageTheme; // ธีมการแสดงบนท้องฟ้า (เฉพาะ giant)
+  style?: SkyStyle; // รูปแบบข้อความขึ้นจอ (ฟอนต์ สี กรอบ การเปิดตัว)
   spot: number; // จุดตั้ง Exclusive (เฉพาะ giant) จองไว้ตอนสร้างออเดอร์ 0–N ส่วนออเดอร์อื่นเป็น 0
   social?: Social; // ลิงก์โซเชียลของผู้สนับสนุน
   decor?: DecorPick; // ชิ้นส่วนตุ๊กตา (เฉพาะ decor)

@@ -1,6 +1,7 @@
 // ซานตาและกวางเรนเดียร์ลากเลื่อนบินข้ามท้องฟ้าเหนือต้นคริสต์มาส ทิ้งหิมะโปรยไว้เป็นทางให้ค่อย ๆ หายไป
 // ทุกชิ้นสร้างด้วยโค้ด ไม่มีไฟล์โมเดลภายนอก การเคลื่อนไหวมีแรงเฉื่อย การโยก และการสปริงตามกัน
 import * as THREE from "three";
+import { buildSleighRig } from "./sleighModel";
 
 export type SleighFlight = {
   group: THREE.Group;
@@ -70,155 +71,6 @@ function flakeTexture(): THREE.Texture {
   flakeCache = new THREE.CanvasTexture(c);
   flakeCache.colorSpace = THREE.SRGBColorSpace;
   return flakeCache;
-}
-
-// ---------- วัสดุและตัวช่วยสร้างรูปทรง ----------
-const std = (color: number, roughness = 0.7, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
-const fur = () => new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.96, sheen: 1, sheenRoughness: 0.5, sheenColor: new THREE.Color(0xdfeeff) });
-
-const add = <T extends THREE.Object3D>(parent: THREE.Object3D, o: T, x = 0, y = 0, z = 0): T => {
-  o.position.set(x, y, z);
-  parent.add(o);
-  return o;
-};
-const ball = (r: number, mat: THREE.Material, sx = 1, sy = 1, sz = 1) => {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), mat);
-  m.scale.set(sx, sy, sz);
-  return m;
-};
-// ท่อนแขนขาที่เชื่อมจุด a ไปจุด b
-function limb(parent: THREE.Object3D, a: THREE.Vector3, b: THREE.Vector3, r: number, mat: THREE.Material): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 0.9, a.distanceTo(b), 12), mat);
-  m.position.copy(a).add(b).multiplyScalar(0.5);
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
-  parent.add(m);
-  return m;
-}
-
-// ---------- ซานตาคลอส: ตัวกลม แก้มชมพู หนวดเคราขาวยาว หมวกโค้งมีพู่ ----------
-function buildSanta() {
-  const g = new THREE.Group();
-  const red = new THREE.MeshPhysicalMaterial({ color: 0xd42a2a, roughness: 0.5, clearcoat: 0.4, clearcoatRoughness: 0.35 });
-  const whiteFur = fur();
-  const skin = std(0xf7d3b8, 0.62);
-  const cheek = new THREE.MeshStandardMaterial({ color: 0xff8f9b, roughness: 0.8, emissive: 0x3a0a10, emissiveIntensity: 0.25 });
-  const black = std(0x151515, 0.35);
-  const gold = std(0xf2c14e, 0.22, 0.85);
-  // ลำตัวกลมอ้วน เข็มขัดดำหัวทอง และขอบขนขาวด้านล่าง
-  add(g, ball(0.27, red, 0.98, 1.08, 0.92), 0, 0.3, 0);
-  const belt = add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.262, 0.262, 0.085, 28, 1, true), black), 0, 0.14, 0);
-  belt.scale.set(1, 1, 0.9);
-  add(g, new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.03), gold), 0, 0.14, 0.245);
-  add(g, new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.02), black), 0, 0.14, 0.26);
-  const hem = add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.06, 28, 1, true), whiteFur), 0, 0.02, 0);
-  hem.scale.set(1, 1, 0.92);
-  // หัวและหน้า: เคราเป็นส่วนล่างของทรงกลม ไม่บังดวงตา
-  const head = new THREE.Group();
-  g.add(head);
-  head.position.set(0, 0.7, 0.02);
-  add(head, ball(0.22, skin, 1, 0.98, 0.95), 0, 0, 0);
-  const beard = new THREE.Mesh(new THREE.SphereGeometry(0.236, 28, 18, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), whiteFur);
-  beard.position.set(0, 0, 0.03);
-  beard.scale.set(1.03, 1.05, 0.9);
-  head.add(beard);
-  add(head, ball(0.1, whiteFur, 1.1, 0.85, 0.85), 0, -0.2, 0.12); // ปลายเคราด้านล่าง
-  for (const s of [-1, 1]) {
-    add(head, ball(0.075, whiteFur, 1.4, 0.55, 0.7), s * 0.07, 0.0, 0.205); // หนวด
-    add(head, ball(0.04, cheek, 1, 0.7, 0.5), s * 0.13, 0.03, 0.15); // แก้มชมพู
-    add(head, ball(0.03, black), s * 0.075, 0.1, 0.2); // ตา
-    add(head, ball(0.009, std(0xffffff)), s * 0.068, 0.11, 0.223); // ประกายในตา
-  }
-  add(head, ball(0.05, red, 1, 0.9, 1), 0, 0.04, 0.23); // จมูกแดง
-  // หมวกโค้งลงด้านหลัง มีขอบขนและพู่ขาว
-  const hatCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.12, 0), new THREE.Vector3(0.02, 0.26, -0.03), new THREE.Vector3(0.12, 0.34, -0.1), new THREE.Vector3(0.22, 0.28, -0.14)]);
-  const hat = new THREE.Group();
-  head.add(hat);
-  hat.position.set(0, 0.16, -0.01);
-  hat.add(new THREE.Mesh(new THREE.TubeGeometry(hatCurve, 24, 0.17, 16, false), red));
-  const brim = add(hat, new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.06, 12, 28), whiteFur), 0, 0.02, 0);
-  brim.rotation.x = Math.PI / 2;
-  brim.scale.set(1, 1, 0.92);
-  add(hat, ball(0.07, whiteFur), 0.22, 0.2, -0.14); // พู่ขาวที่ปลายหมวก
-  // แขนสองข้าง แขนเสื้อแดง ปลอกขาว มือถือบังเหียน
-  const shoulderR = new THREE.Vector3(0.24, 0.42, 0.13);
-  const shoulderL = new THREE.Vector3(0.24, 0.42, -0.13);
-  const armR = new THREE.Group();
-  const armL = new THREE.Group();
-  g.add(armR, armL);
-  armR.position.copy(shoulderR);
-  armL.position.copy(shoulderL);
-  const handR = new THREE.Vector3(0.38, 0.27, 0.03).sub(shoulderR);
-  const handL = new THREE.Vector3(0.38, 0.27, -0.03).sub(shoulderL);
-  limb(armR, new THREE.Vector3(), handR, 0.075, red);
-  limb(armL, new THREE.Vector3(), handL, 0.075, red);
-  add(armR, ball(0.085, red), 0, 0, 0);
-  add(armL, ball(0.085, red), 0, 0, 0);
-  add(armR, ball(0.07, whiteFur), handR.x, handR.y, handR.z);
-  add(armL, ball(0.07, whiteFur), handL.x, handL.y, handL.z);
-  // ขาสั้นอ้วน รองเท้าบู๊ตดำขอบขาว
-  for (const z of [-0.12, 0.12]) {
-    limb(g, new THREE.Vector3(0.05, 0.05, z), new THREE.Vector3(0.24, 0.02, z), 0.085, red);
-    add(g, ball(0.085, black, 1.2, 0.7, 1.35), 0.27, 0.02, z);
-    add(g, new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 8, 16), whiteFur), 0.25, 0.09, z).rotation.y = Math.PI / 2;
-  }
-  return { group: g, hat, head, armR, armL };
-}
-
-// ---------- กวางเรนเดียร์: ตัวอวบ หัวใหญ่ ตาโต จมูกแดงเรืองแสง ขาสั้นอ้วนก้าววิ่งจริง ----------
-function buildReindeer() {
-  const g = new THREE.Group();
-  const coat = new THREE.MeshStandardMaterial({ color: 0xb07043, roughness: 0.9 });
-  const light = new THREE.MeshStandardMaterial({ color: 0xf0d2ac, roughness: 0.9 });
-  const dark = std(0x4a2e1a, 0.8);
-  const hoof = std(0x1d1410, 0.6);
-  const antler = std(0x8a5f36, 0.7);
-  const black = std(0x101010, 0.3);
-  const pink = new THREE.MeshStandardMaterial({ color: 0xff9aa8, roughness: 0.8 });
-  const nose = new THREE.MeshStandardMaterial({ color: 0xff2e4d, emissive: 0xff2e4d, emissiveIntensity: 0.9, roughness: 0.3 });
-  // ลำตัวกลมอวบ ท้องและอกสีอ่อน
-  add(g, ball(0.25, coat, 1.3, 0.9, 0.92), 0, 0.06, 0);
-  add(g, ball(0.2, light, 1.15, 0.5, 0.78), 0, -0.02, 0.02);
-  add(g, ball(0.16, coat, 1, 1, 1), 0.25, 0.1, 0);
-  const tail = add(g, ball(0.075, light), -0.36, 0.12, 0); // หางกลม
-  // คอหนาและหัวใหญ่
-  limb(g, new THREE.Vector3(0.26, 0.12, 0), new THREE.Vector3(0.37, 0.36, 0), 0.105, coat);
-  const head = new THREE.Group();
-  head.position.set(0.42, 0.42, 0);
-  g.add(head);
-  add(head, ball(0.17, coat, 1.2, 1.05, 1.02), 0, 0, 0);
-  add(head, ball(0.1, light, 1.25, 0.85, 1), 0.12, -0.06, 0); // ปาก
-  const noseMesh = add(head, ball(0.05, nose), 0.23, -0.02, 0);
-  for (const s of [-1, 1]) {
-    add(head, ball(0.036, black), 0.11, 0.05, s * 0.085); // ตาดำใหญ่
-    add(head, ball(0.012, std(0xffffff)), 0.12, 0.065, s * 0.1); // ประกายตา
-    add(head, ball(0.035, pink, 1, 0.6, 0.8), 0.1, -0.05, s * 0.13); // แก้มชมพู
-    const ear = add(head, new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.15, 10), coat), -0.03, 0.13, s * 0.15);
-    ear.rotation.set(s * 0.5, 0, s * 1.05);
-    // เขาแตกกิ่งสองง่าม
-    const base = new THREE.Vector3(-0.02, 0.14, s * 0.07);
-    const p1 = new THREE.Vector3(-0.03, 0.28, s * 0.12);
-    const p2 = new THREE.Vector3(-0.08, 0.38, s * 0.16);
-    const tine = new THREE.Vector3(0.03, 0.42, s * 0.22);
-    head.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([base, p1, p2]), 14, 0.021, 8, false), antler));
-    head.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([p1, new THREE.Vector3(0.02, 0.34, s * 0.18)]), 6, 0.017, 8, false), antler));
-    head.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([p2, tine]), 6, 0.017, 8, false), antler));
-  }
-  // ขาสั้นอ้วน มีข้อเข่าและกีบ จุดหมุนอยู่ที่สะโพกและไหล่
-  const legs: THREE.Group[] = [];
-  for (const [x, z] of [
-    [0.19, 0.1],
-    [0.19, -0.1],
-    [-0.18, 0.1],
-    [-0.18, -0.1],
-  ]) {
-    const pivot = add(g, new THREE.Group(), x, -0.08, z);
-    limb(pivot, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -0.2, 0), 0.055, coat);
-    add(pivot, ball(0.05, coat), 0, -0.2, 0);
-    limb(pivot, new THREE.Vector3(0, -0.2, 0), new THREE.Vector3(0, -0.36, 0), 0.042, dark);
-    add(pivot, ball(0.05, hoof, 1.1, 0.7, 1.2), 0, -0.38, 0);
-    legs.push(pivot);
-  }
-  return { group: g, legs, head, nose: noseMesh, tail };
 }
 
 // ---------- ระบบอนุภาคหิมะ: จุดที่มีอายุ ค่อย ๆ จางจนหายไป ----------
@@ -361,60 +213,9 @@ export function buildSleighFlight(): SleighFlight {
   const rig = new THREE.Group();
   rig.scale.setScalar(SCALE);
   group.add(rig);
-
-  // ตัวเลื่อนสีแดงเงาวาว โค้งหน้าขึ้น ขอบทอง
-  const profile = new THREE.Shape();
-  profile.moveTo(-0.62, 0.62);
-  profile.lineTo(0.5, 0.62);
-  profile.quadraticCurveTo(0.76, 0.62, 0.8, 0.94);
-  profile.lineTo(0.68, 0.96);
-  profile.quadraticCurveTo(0.64, 0.8, 0.44, 0.8);
-  profile.lineTo(-0.62, 0.8);
-  profile.closePath();
-  const bodyGeo = new THREE.ExtrudeGeometry(profile, { depth: 0.56, bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.035, bevelSegments: 3, curveSegments: 12 });
-  bodyGeo.translate(0, 0, -0.28);
-  const paint = new THREE.MeshPhysicalMaterial({ color: 0xc41e3a, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.15 });
-  add(rig, new THREE.Mesh(bodyGeo, paint));
-  const gold = std(0xf5c542, 0.25, 0.85);
-  for (const z of [-0.3, 0.3]) add(rig, new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.03), gold), -0.05, 0.8, z);
-  // เบาะนั่งขาวขนนุ่ม
-  add(rig, new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 0.5), fur()), -0.1, 0.84, 0);
-  // คันเลื่อนสองเส้นที่ต่อกับตัวเลื่อนด้วยขาค้ำ
-  for (const z of [-0.2, 0.2]) {
-    const runner = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.9, 0.5, z),
-      new THREE.Vector3(-0.45, 0.44, z),
-      new THREE.Vector3(0.3, 0.44, z),
-      new THREE.Vector3(0.72, 0.56, z),
-      new THREE.Vector3(0.94, 0.8, z),
-    ]);
-    add(rig, new THREE.Mesh(new THREE.TubeGeometry(runner, 40, 0.03, 8, false), gold));
-    for (const x of [-0.55, 0, 0.45]) limb(rig, new THREE.Vector3(x, 0.63, z), new THREE.Vector3(x, 0.46, z), 0.02, gold);
-  }
-  // ถุงของขวัญข้างหลังมีโบว์ทอง
-  const sack = add(rig, ball(0.22, std(0x9a6b3a, 0.95), 1.1, 0.9, 1), -0.62, 0.98, 0);
-  sack.rotation.z = 0.2;
-  add(rig, new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 6, 12), gold), -0.62, 1.16, 0).rotation.x = Math.PI / 2;
-
-  const santa = buildSanta();
-  santa.group.position.set(-0.12, 0.84, 0);
-  rig.add(santa.group);
-
-  // กวางสี่ตัววิ่งนำหน้า ต่อบังเหียนทองมาที่หน้าเลื่อน
-  const deer: { group: THREE.Group; legs: THREE.Group[]; head: THREE.Group; nose: THREE.Mesh; tail: THREE.Mesh; baseX: number; baseZ: number; y: number; vy: number; pitch: number; vp: number; phase: number; k: number }[] = [];
-  const reinGold = std(0xd9b45a, 0.3, 0.7);
-  const reinLines: THREE.Mesh[] = [];
-  for (let i = 0; i < 4; i++) {
-    const d = buildReindeer();
-    const baseX = 1.6 + i * 0.95;
-    const baseZ = (i % 2 === 0 ? 0.13 : -0.13) * (i < 2 ? 1 : 1.15);
-    d.group.position.set(baseX, 1.0, baseZ);
-    rig.add(d.group);
-    deer.push({ ...d, baseX, baseZ, y: 0, vy: 0, pitch: 0, vp: 0, phase: i * 1.37, k: 46 - i * 4 });
-    const line = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1, 6), reinGold);
-    rig.add(line);
-    reinLines.push(line);
-  }
+  // โมเดลเลื่อน ซานตา และกวาง (ดู sleighModel.ts)
+  const model = buildSleighRig();
+  rig.add(model.group);
 
   // ระบบหิมะ 3 ชั้น: เกล็ดใหญ่ เกล็ดกลาง และละอองทองเล็ก ๆ
   const flakes = makeSys(300, 0.34, flakeTexture(), 0xffffff);
@@ -485,48 +286,12 @@ export function buildSleighFlight(): SleighFlight {
         // ขบวนค่อย ๆ โผล่จากระยะไกลและค่อย ๆ จางหายตอนท้ายรอบ (ไม่ป็อปหาย)
         rig.scale.setScalar(SCALE * smooth(progress / 0.04) * smooth((1 - progress) / 0.04));
 
-        // ซานตาเด้งตามเลื่อน พู่หมวกและหนวดพลิ้วตามลม
-        santa.group.position.y = 0.84 + Math.sin(t * 9.2 + 0.6) * 0.012;
-        santa.head.rotation.z = Math.sin(t * 2.6) * 0.04;
-        santa.hat.rotation.z = Math.sin(t * 3.4) * 0.12 - 0.05;
-        santa.hat.rotation.x = Math.sin(t * 2.2 + 1) * 0.08;
-        santa.armR.rotation.x = Math.sin(t * 9.2) * 0.05;
-        santa.armL.rotation.x = Math.sin(t * 9.2 + 0.5) * 0.05;
-
-        // กวางแต่ละตัวมีสปริงตามเลื่อน วิ่งก้าวเป็นจังหวะ หัวและหางขยับตาม
-        for (const d of deer) {
-          const target = Math.sin(t * 9.2 - d.phase * 0.2) * 0.08;
-          d.vy += ((target - d.y) * d.k - d.vy * 4.2) * dt;
-          d.y += d.vy * dt;
-          d.vp += (-d.pitch * 30 - d.vp * 5) * dt;
-          d.pitch += d.vp * dt;
-          d.group.position.set(d.baseX, 1.0 + d.y, d.baseZ);
-          d.group.rotation.z = d.pitch * 0.6 + Math.sin(t * 9.2 + d.phase) * 0.05;
-          d.legs.forEach((leg, li) => {
-            const front = li < 2;
-            const ph = t * 11.5 + d.phase + (front ? 0 : Math.PI * 0.6) + (li % 2) * 0.45;
-            leg.rotation.z = Math.sin(ph) * 0.8;
-            leg.rotation.x = Math.cos(ph) * 0.2;
-          });
-          d.head.rotation.z = Math.sin(t * 11.5 + d.phase + 0.8) * 0.06 - 0.08;
-          d.head.position.y = Math.sin(t * 23 + d.phase) * 0.012;
-          d.tail.position.y = 0.12 + Math.sin(t * 11.5 + d.phase) * 0.02;
-          (d.nose.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.7 + Math.sin(t * 6 + d.phase) * 0.25;
-        }
-        // สายบังเหียนจากอกกวางไปยังหน้าเลื่อน
-        deer.forEach((d, i) => {
-          const a = new THREE.Vector3(d.baseX - 0.28, 1.0 + d.y + 0.02, d.baseZ);
-          const b = new THREE.Vector3(0.82, 0.74, 0);
-          const dir = b.clone().sub(a);
-          const line = reinLines[i];
-          line.scale.set(1, dir.length(), 1);
-          line.position.copy(a).add(b).multiplyScalar(0.5);
-          line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-        });
+        // ซานตา กวาง บังเหียน และโคมไฟขยับตามเวลา
+        model.animate(t, dt);
 
         // ทางหิมะ: ปล่อยเกล็ดจากท้ายเลื่อนทุกเฟรม ลมพัดไปทางหลัง แล้วค่อย ๆ ลอยลงและจางหาย
         rig.updateMatrixWorld(true);
-        tailPos.set(-1.45, 0.8, 0).applyMatrix4(rig.matrixWorld);
+        tailPos.copy(model.tailLocal).applyMatrix4(rig.matrixWorld);
         const wind = routeLen / flightSec;
         const back = tan.clone().multiplyScalar(-1);
         emitSys(flakes, tailPos.x, tailPos.y, tailPos.z, Math.round(4 + dt * 50), 2.8, 4.4, back.x * (0.6 + 0.02 * wind) - 0.2, back.y * 0.2 - 0.05, 0.8);

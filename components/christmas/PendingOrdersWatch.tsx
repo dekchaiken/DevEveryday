@@ -17,7 +17,7 @@ const KIND_TH: Record<string, string> = {
 };
 const HOLD_MS = 60 * 60 * 1000; // ตรงกับเวลาจองตำแหน่งบนเซิร์ฟเวอร์
 
-export function PendingOrdersWatch({ roomId, notify }: { roomId: string; notify: (kind: "ok" | "err", text: string) => void }) {
+export function PendingOrdersWatch({ roomId, notify, hideButton = false }: { roomId: string; notify: (kind: "ok" | "err", text: string) => void; hideButton?: boolean }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [open, setOpen] = useState(false);
   const [paying, setPaying] = useState<OrderPreview | null>(null);
@@ -63,10 +63,13 @@ export function PendingOrdersWatch({ roomId, notify }: { roomId: string; notify:
 
   return (
     <>
-      <button type="button" className="xmas-inbox-btn" onClick={() => setOpen(true)} aria-label="กล่องจดหมายคำสั่งซื้อ">
-        กล่องจดหมาย
-        {needs > 0 && <b>{needs}</b>}
-      </button>
+      {/* ซ่อนปุ่มตอนเปิดหน้าต่างอื่นหรือเลือกช่องบนฉาก ไม่ให้ลอยทับเนื้อหา */}
+      {!hideButton && (
+        <button type="button" className="xmas-inbox-btn" onClick={() => setOpen(true)} aria-label="กล่องจดหมายคำสั่งซื้อ">
+          กล่องจดหมาย
+          {needs > 0 && <b>{needs}</b>}
+        </button>
+      )}
 
       {open && (
         <div className="xmas-inbox-back" role="presentation" onClick={() => setOpen(false)}>

@@ -7,6 +7,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { optionsOf, randomSnow, SNOW_PART_KEYS, type SnowPartKey } from "@/lib/christmas/snowman";
 import { buildSnowman } from "./snowmanModel";
 import { buildDiorama } from "./diorama";
+import { buildSleighRig } from "./sleighModel";
 import { makeItem, type GiantLook } from "@/lib/christmas/giant";
 
 // หน้าตรวจโมเดล: แถวบนเรียงตัวเลือกของชิ้นที่ระบุใน ?part= (ค่าเริ่มต้น hat) แถวล่างเป็นชุดสุ่ม
@@ -33,7 +34,18 @@ export default function SnowmanLab() {
     scene.add(key, new THREE.AmbientLight(0x9fb8d6, 0.4));
     const params = new URLSearchParams(location.search);
     const updates: ((t: number, r: boolean) => void)[] = [];
-    if (params.get("ex")) {
+    let lastT = performance.now() / 1000;
+    if (params.get("sleigh")) {
+      // ขบวนซานตาวางนิ่งกลางฉาก ขยับตามเวลา หมุนกล้องดูได้
+      const rig = buildSleighRig();
+      rig.group.position.set(-1.3, 0, 0);
+      scene.add(rig.group);
+      updates.push((t) => {
+        const dt = Math.min(0.05, t - lastT);
+        lastT = t;
+        rig.animate(t, dt);
+      });
+    } else if (params.get("ex")) {
       // บ้าน Exclusive ทุกแบบ พร้อมรั้วต่างกัน และของตกแต่งใหม่วางหน้าบ้าน
       const styles = ["cottage", "cabin", "gingerbread", "igloo"];
       const fences = ["candy", "picket", "lights", "hedge"];
@@ -73,6 +85,7 @@ export default function SnowmanLab() {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 1, -1);
     controls.update();
+    (window as unknown as { __labScene?: unknown }).__labScene = scene;
     (window as unknown as { __labView?: unknown }).__labView = (x: number, y: number, z: number, tx: number, ty: number, tz: number) => {
       camera.position.set(x, y, z);
       controls.target.set(tx, ty, tz);

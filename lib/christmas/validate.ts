@@ -1,3 +1,4 @@
+import { parseSkyStyle, SKY_SHOW_MS } from "@/lib/christmas/skyStyle";
 import { sanitizeSocial } from "@/lib/christmas/social";
 import { EVENT_KINDS, MESSAGE_THEMES, ORNAMENT_COLORS, ORNAMENT_SHAPES, type EventKind, type MessageTheme, type OrnamentColor, type OrnamentShape } from "@/lib/christmas/types";
 
@@ -56,6 +57,7 @@ export function parseEvent(body: Record<string, unknown>, extra: readonly string
   const theme = pick<MessageTheme>(body.theme, MESSAGE_THEMES, "fireworks");
   if (hasBlocked(text, extra) || hasBlocked(by, extra)) return { error: "ข้อความมีคำที่ไม่เหมาะสม" } as const;
   if (kind === "message" && !text) return { error: "กรุณาใส่ข้อความ" } as const;
-  const duration = kind === "firework" ? 3200 : Math.min(Math.max(Number(body.duration) || 6000, 3000), 12000);
-  return { value: { kind, text, by, color, theme, duration } } as const;
+  const duration = kind === "firework" ? 3200 : Math.min(Math.max(Number(body.duration) || SKY_SHOW_MS, 3000), 15000);
+  const style = parseSkyStyle(body.style, theme);
+  return { value: { kind, text, by, color, theme, duration, ...(kind === "message" ? { style } : {}) } } as const;
 }
