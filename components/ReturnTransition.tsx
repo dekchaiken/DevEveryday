@@ -8,7 +8,11 @@ export function ReturnTransition({ name }: { name: string }) {
 
   useEffect(() => {
     let hiddenAt = 0;
-    const show = () => setKey((k) => k + 1);
+    // หน้าต้นคริสต์มาสมีฉาก 3 มิติของตัวเอง ไม่ต้องมีม่านสีขาวทับตอนสลับแอปกลับมา
+    const show = () => {
+      if (location.pathname.startsWith("/Christmas")) return;
+      setKey((k) => k + 1);
+    };
     const onPageShow = (e: PageTransitionEvent) => {
       if (e.persisted) show();
     };

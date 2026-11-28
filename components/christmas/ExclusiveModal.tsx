@@ -182,7 +182,7 @@ export default function ExclusiveModal({
 
   return (
     <div className="xmas-modal-back" role="presentation" onClick={locked ? undefined : onClose} hidden={hidden}>
-      <div className={`xmas-modal xmas-exclusive ${view === "giant" && !order ? "is-giant" : ""}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div className={`xmas-modal xmas-exclusive ${view === "giant" && !order ? "is-giant" : ""} ${disabled ? "is-empty" : ""}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         {!locked && (
           <button className="xmas-x" onClick={onClose} aria-label="ปิด">
             <Icon name="close" size={18} />

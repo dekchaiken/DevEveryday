@@ -38,6 +38,7 @@ export default function SupportModal({
   const chosen = amount ?? (custom ? Number(custom) : null);
   const locked = order !== null && order.status !== "paid";
   const disabled = cfg !== null && !cfg.enabled;
+  const [nudge, setNudge] = useState(0); // นับครั้งที่กดถัดไปโดยยังไม่เลือก ใช้เล่นแอนิเมชันเตือน
 
   // ปิดด้วย Esc ได้เฉพาะตอนที่ไม่ได้รอชำระ
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function SupportModal({
 
   return (
     <div className="xmas-modal-back" role="presentation" onClick={locked ? undefined : onClose}>
-      <div className="xmas-modal xmas-support" role="dialog" aria-modal="true" aria-label="สนับสนุนทีมงาน" onClick={(e) => e.stopPropagation()}>
+      <div className={`xmas-modal xmas-support ${disabled ? "is-empty" : ""}`} role="dialog" aria-modal="true" aria-label="สนับสนุนทีมงาน" onClick={(e) => e.stopPropagation()}>
         {!locked && (
           <button className="xmas-x" onClick={onClose} aria-label="ปิด">
             <Icon name="close" size={18} />
@@ -98,7 +99,7 @@ export default function SupportModal({
 
         {!order && cfg && !disabled && (
           <form className="xmas-sup-grid" onSubmit={submit}>
-            <section className="xmas-sup-card" data-step="0" data-on={step === 0}>
+            <section key={`n${nudge}`} className={`xmas-sup-card ${nudge ? "is-alert" : ""}`} data-step="0" data-on={step === 0}>
               <h3>
                 <span className="xmas-sup-num">1</span> เลือกจำนวน
               </h3>
@@ -112,6 +113,8 @@ export default function SupportModal({
                     onClick={() => {
                       setAmount(p);
                       setCustom("");
+                      setError("");
+                      setNudge(0);
                     }}
                   >
                     ฿{p}
@@ -166,7 +169,20 @@ export default function SupportModal({
                 </button>
                 <span className="xmas-wiz-count">ขั้นที่ {step + 1} จาก 2</span>
                 {step === 0 ? (
-                  <button type="button" className="xmas-wiz-next" onClick={() => setStep(1)} disabled={!chosen}>
+                  <button
+                    type="button"
+                    className={`xmas-wiz-next ${chosen ? "" : "is-wait"}`}
+                    onClick={() => {
+                      // ยังไม่เลือกจำนวน: บอกให้รู้ว่าต้องทำอะไรก่อน (ไม่ใช่กดแล้วเงียบ)
+                      if (!chosen) {
+                        setError("เลือกจำนวนหรือกรอกยอดก่อน แล้วค่อยกดถัดไป");
+                        setNudge((n) => n + 1);
+                        return;
+                      }
+                      setError("");
+                      setStep(1);
+                    }}
+                  >
                     ถัดไป
                   </button>
                 ) : (

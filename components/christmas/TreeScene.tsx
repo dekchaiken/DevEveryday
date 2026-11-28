@@ -21,6 +21,8 @@ import { DEFAULT_GIANT_LOOK, parseGiantLook, type GiantLook } from "@/lib/christ
 import { buildWishVillage } from "./wishVillage";
 import { buildSnowman } from "./snowmanModel";
 import { buildSurroundings } from "./treeSurroundings";
+import { buildBackdrop, HILL_SCALE } from "./roomBackdrop";
+import type { Landmark, SceneKind } from "@/lib/christmas/rooms";
 import { buildDiorama } from "./diorama";
 import { buildSleighFlight, flightProgressAt } from "./sleighFlight";
 import { serverNowMs, startServerClock } from "./serverClock";
@@ -49,9 +51,11 @@ export type TreeSceneHandle = {
   returnView: () => void; // กลับไปมุมกล้องเดิมก่อนไปดูตุ๊กตาหรือโซน
   zoomBy: (factor: number) => void;
   resetView: () => void;
+  depart: () => void; // ออกจากห้อง: กล้องลอยขึ้นและถอยออกไปเหนือลาน
 };
 
 type Props = {
+  scenery?: { kind: SceneKind; landmarks: Landmark[] }; // ฉากหลังของห้อง (จังหวัด)
   ornaments: Ornament[];
   preview: Preview;
   reducedMotion: boolean;
@@ -147,7 +151,7 @@ function mergeStaticMeshes(root: THREE.Group, keep: Set<THREE.Object3D>) {
 const TREE_VARIANT: TreeVariant = "classic";
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange, onZoneStop, pickMode = false, giantPickState = null, onGiantPick }: Props) {
+export default function TreeScene({ scenery, ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange, onZoneStop, pickMode = false, giantPickState = null, onGiantPick }: Props) {
   const snowingRef = useRef(snowing);
   snowingRef.current = snowing;
   const mountRef = useRef<HTMLDivElement>(null);
@@ -370,7 +374,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setCrowd(crowd.count, crowd.seed);
 
     // ---------- เนินเขาเป็นวงรอบฉากในโลก 3 มิติ จึงหมุนไปพร้อมกับพื้นหิมะและต้นไม้ ----------
-    scene.add(buildHills());
+    const sceneKind = scenery?.kind ?? "hills";
+    scene.add(buildHills(HILL_SCALE[sceneKind]));
+    // ฉากหลังไกลของจังหวัด (ตึก ดอย ทุ่งนา ทะเล เมืองเก่า และแลนด์มาร์ก)
+    const backdrop = buildBackdrop(sceneKind, scenery?.landmarks ?? [], isSmall);
+    scene.add(backdrop.group);
 
     // ---------- หิมะตก ----------
     const SNOW = isSmall ? 320 : 800;
@@ -746,6 +754,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
       village.update(t, reduced, camera.position);
       surroundings.update(t, reduced);
+      backdrop.update(t, reduced);
       stepWalk(now);
       if (camAnim) {
         const k = Math.min((now - camAnim.start) / camAnim.dur, 1);
@@ -1898,6 +1907,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       locate: (target: LocateTarget) => locate(target),
       zoomBy: (factor: number) => zoomBy(factor),
       resetView: () => resetView(),
+      depart: () => {
+        // ลอยขึ้นไปเหนือลานและถอยออก มองลงมาที่ต้นไม้ เหมือนเครื่องบินกำลังขึ้น
+        const dir = camera.position.clone().setY(0);
+        if (dir.lengthSq() < 1) dir.set(0, 0, 1);
+        dir.normalize();
+        controls.enabled = false;
+        animateCam(new THREE.Vector3(dir.x * 34, 30, dir.z * 34), new THREE.Vector3(0, 4, 0), 2300);
+      },
     });
 
     // คอมไพล์ shader ทุกตัวล่วงหน้า แล้ววาดหนึ่งภาพให้ข้อมูลขึ้นการ์ดจอครบ ก่อนเริ่มวนลูป
@@ -2070,7 +2087,7 @@ function makeSnowTexture() {
 }
 
 // เนินเขาหิมะรอบฉาก: ผิวเป็นลอนแบบธรรมชาติ ยอดมีหิมะ ฐานมืดกลมกลืนกับท้องฟ้าค่ำ
-function buildHills(): THREE.Mesh {
+function buildHills(scale = 1): THREE.Mesh {
   // เนินเขาอยู่เลยขอบลาน (LAND_R 56) ทุกจุดที่วางได้จึงอยู่หน้าเนินเขาเสมอ
   const R = 59;
   const H = 10;
@@ -2091,7 +2108,8 @@ function buildHills(): THREE.Mesh {
       ((Math.sin(th * 3 + 0.8) * 0.5 + 0.5) * 3.4 +
         (Math.sin(th * 7 + 2.1) * 0.5 + 0.5) * 1.5 +
         (Math.sin(th * 15 + 0.3) * 0.5 + 0.5) * 0.4) *
-      1.4;
+      1.4 *
+      scale;
     const top = y > 0;
     if (top) p.setY(i, y + h);
     const height = top ? h : 0;

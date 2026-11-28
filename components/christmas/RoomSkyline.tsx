@@ -10,6 +10,7 @@ export function RoomSkyline({ kind }: { kind: RoomTheme["skyline"] }) {
       {kind === "hills" && <Hills />}
       {kind === "rice" && <Rice />}
       {kind === "sea" && <Sea />}
+      {kind === "ancient" && <Ancient />}
     </svg>
   );
 }
@@ -71,4 +72,21 @@ function Sea() {
       <path d="M1032 60 Q1000 40 975 60 M1032 60 Q1060 35 1088 52 M1032 60 Q1010 26 1000 22 M1032 60 Q1055 22 1072 14" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round" />
     </>
   );
+}
+
+// เมืองเก่า: ปรางค์และเจดีย์ทรงระฆังเรียงกัน
+function Ancient() {
+  const parts: ReactElement[] = [];
+  const bases = [80, 230, 380, 520, 700, 860, 1010, 1130];
+  bases.forEach((x, i) => {
+    const h = 70 + ((i * 37) % 70);
+    if (i % 2) {
+      parts.push(<path key={`b${i}`} d={`M${x - 36},200 L${x - 30},${200 - h * 0.35} Q${x},${200 - h * 0.95} ${x + 30},${200 - h * 0.35} L${x + 36},200 Z`} fill="currentColor" />);
+      parts.push(<rect key={`s${i}`} x={x - 3} y={200 - h * 1.25} width={6} height={h * 0.35} fill="currentColor" />);
+    } else {
+      parts.push(<path key={`p${i}`} d={`M${x - 30},200 L${x - 22},${200 - h * 0.6} Q${x},${200 - h * 1.3} ${x + 22},${200 - h * 0.6} L${x + 30},200 Z`} fill="currentColor" />);
+    }
+  });
+  parts.push(<rect key="ground" x={0} y={186} width={1200} height={14} fill="currentColor" />);
+  return <>{parts}</>;
 }
