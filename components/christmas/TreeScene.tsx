@@ -16,7 +16,7 @@ import { buildTreeModel, type TreeVariant } from "./treeModel";
 import { createOrnamentLayer } from "./ornamentLayer";
 import { createTreeAura } from "./treeAura";
 import { buildPlaza } from "./plazaScenery";
-import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
+import { drawGiantBoard, type BoardStyle } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, parseGiantLook, type GiantLook } from "@/lib/christmas/giant";
 import { buildWishVillage } from "./wishVillage";
 import { buildSnowman } from "./snowmanModel";
@@ -735,7 +735,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // ซานตาบินตามนาฬิกาเซิร์ฟเวอร์ ทุกคนในห้องจึงเห็นการบินเดียวกันในเวลาเดียวกัน
       const flightDt = Math.min(0.05, (now - lastFlightFrame) / 1000);
       lastFlightFrame = now;
-      const flightProgress = reduced ? null : flightProgressAt(serverNowMs());
+      // ตอนพัฒนา: window.__xmasFlight = 0..1 บังคับตำแหน่งการบิน (null = ตามนาฬิกา)
+      const forced = process.env.NODE_ENV !== "production" ? (window as unknown as { __xmasFlight?: number | null }).__xmasFlight : undefined;
+      const flightProgress = typeof forced === "number" ? forced : reduced ? null : flightProgressAt(serverNowMs());
       flight.update(flightProgress, serverNowMs() / 1000, flightDt);
       if (!reduced && now - lastZoneBurst > 2600) {
         lastZoneBurst = now;
@@ -757,6 +759,20 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // กันกล้องและจุดมองไม่ให้ต่ำกว่าพื้นหิมะ (เช่นตอนซูมเข้าใกล้หรือหมุนมุมต่ำ)
       if (camera.position.y < 0.45) camera.position.y = 0.45;
       if (controls.target.y < 0) controls.target.y = 0;
+      // ตอนเลื่อนแผนที่เลือกช่อง ไม่ให้เลื่อนออกนอกลาน
+      if (pickOn) {
+        const tr = Math.hypot(controls.target.x, controls.target.z);
+        const lim = LAND_R * 0.95;
+        if (tr > lim) {
+          const k2 = lim / tr;
+          const dx = controls.target.x * (1 - k2);
+          const dz = controls.target.z * (1 - k2);
+          controls.target.x -= dx;
+          controls.target.z -= dz;
+          camera.position.x -= dx;
+          camera.position.z -= dz;
+        }
+      }
 
       const frameDt = Math.min(0.05, (now - lastFrameAt) / 1000);
       lastFrameAt = now;
@@ -1034,7 +1050,30 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       for (const dx of [0, 1]) for (const dz of [0, 1]) giantByCell.set(`${c.x + dx},${c.z + dz}`, spot);
     });
     function giantAtWorld(x: number, z: number): number | null {
-      return giantByCell.get(`${Math.floor(x / CELL)},${Math.floor(z / CELL)}`) ?? null;
+      const hit = giantByCell.get(`${Math.floor(x / CELL)},${Math.floor(z / CELL)}`);
+      if (hit !== undefined) return hit;
+      // แตะพลาดขอบกรอบนิดหน่อย (นิ้วใหญ่หรือมองจากไกล) ให้ใช้จุดที่ใกล้ที่สุดในระยะประมาณหนึ่งช่อง
+      let best: number | null = null;
+      let bestD = CELL * 1.7;
+      for (const i of openGiants) {
+        const g = GIANT_REAL[i];
+        const d = Math.hypot(g.x - x, g.z - z);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      }
+      return best;
+    }
+    // โหมดเลือกช่อง: ลากหนึ่งนิ้ว (หรือคลิกซ้ายค้าง) เพื่อเลื่อนแผนที่ บีบนิ้วหรือลูกล้อเพื่อซูม สองนิ้วหมุน
+    function setPickControls(on: boolean) {
+      controls.enablePan = on;
+      controls.screenSpacePanning = false;
+      controls.panSpeed = on ? 1.4 : 1;
+      controls.touches.ONE = on ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
+      controls.touches.TWO = on ? THREE.TOUCH.DOLLY_ROTATE : THREE.TOUCH.DOLLY_PAN;
+      controls.mouseButtons.LEFT = on ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+      controls.mouseButtons.RIGHT = on ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
     }
     const HELD = new THREE.Color(0xf59e0b);
     const PICKED = new THREE.Color(0xfacc15);
@@ -1065,12 +1104,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         // มองจากด้านบนเฉียง เห็นช่องรอบต้นชัดและแตะได้แม่น (จุดบ้านอยู่ไกลกว่า จึงถอยกล้องมากกว่า)
         rememberView();
         controls.minDistance = 3;
+        setPickControls(true);
         // มองจากที่สูงต้องไม่ให้หมอกกลบพื้น
         const fog = scene.fog as THREE.Fog | null;
         if (fog) fog.far = 160;
         const far = mode === "giant" ? 1.5 : 1;
         animateCam(new THREE.Vector3(0, (isSmall ? 24 : 19) * far, (isSmall ? 17 : 15) * far), new THREE.Vector3(0, 0, 1.5), 1100);
       } else if (!pickOn) {
+        setPickControls(false);
         renderer.domElement.style.cursor = "";
         const fog = scene.fog as THREE.Fog | null;
         if (fog && !zoneAway) fog.far = 56;
@@ -2131,34 +2172,6 @@ function seededRandom(seed: string) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-// แผงข้อความบนท้องฟ้า วาดจากงานศิลป์ร่วม (skyArt) ให้เหมือนตัวอย่างในหน้าแก้ไข
-function makeSkyPanelTexture(text: string, by: string, theme: SkyTheme) {
-  const cv = document.createElement("canvas");
-  cv.width = 1024;
-  cv.height = 256;
-  const g = cv.getContext("2d");
-  const tex = new THREE.CanvasTexture(cv);
-  if (!g) return tex;
-  drawSkyPanel(g, 14, 14, 996, 228, { text, by, theme });
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-// เลื่อนของซานตาที่มีกวางเรนเดียร์นำหน้า
-function makeSleighTexture() {
-  const cv = document.createElement("canvas");
-  cv.width = 512;
-  cv.height = 160;
-  const g = cv.getContext("2d");
-  const tex = new THREE.CanvasTexture(cv);
-  if (!g) return tex;
-  drawSled(g, 512, 160);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
 }
 
 // กล่องของขวัญ มีริบบิ้นไขว้ และโบว์ด้านบน

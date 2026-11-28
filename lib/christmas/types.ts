@@ -1,3 +1,4 @@
+import { SKY_THEMES, type SkyStyle } from "@/lib/christmas/skyStyle";
 // ชนิดข้อมูลของต้นคริสต์มาสร่วมกัน ใช้ร่วมกันทั้งฝั่งเซิร์ฟเวอร์และเบราว์เซอร์
 
 import type { Social } from "@/lib/christmas/social";
@@ -31,7 +32,7 @@ export const EVENT_KINDS = ["firework", "message"] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
 // ธีมการแสดงข้อความขอบคุณบนท้องฟ้า เห็นพร้อมกันทุกจอในห้อง
-export const MESSAGE_THEMES = ["fireworks", "snow", "sparkle", "sleigh"] as const;
+export const MESSAGE_THEMES = SKY_THEMES;
 export type MessageTheme = (typeof MESSAGE_THEMES)[number];
 
 export type ShowEvent = {
@@ -41,6 +42,7 @@ export type ShowEvent = {
   by: string; // ชื่อผู้ส่ง
   color: OrnamentColor;
   theme: MessageTheme; // ธีมการแสดงของข้อความ
+  style?: SkyStyle; // รูปแบบเต็ม (ฟอนต์ สี กรอบ การเปิดตัว) ข้อความเก่าไม่มี
   startAt: number; // เวลาเซิร์ฟเวอร์ (ms) ที่ทุกหน้าจอเริ่มเล่นพร้อมกัน
   duration: number; // ms
 };

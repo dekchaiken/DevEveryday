@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
+import type { OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
 import { DEFAULT_GIANT_LOOK, FENCE_LABEL, FENCES, HOUSE_LABEL, HOUSE_ROOFS, HOUSE_STYLES, HOUSE_WALLS, DIORAMA_BASES, DIORAMA_KINDS, fits, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
 import { CELL, LAND_R, TREE_CORE_R } from "@/lib/christmas/grid";
@@ -12,18 +12,13 @@ import { DioramaViewer } from "./DioramaViewer";
 import { rememberPending } from "./pendingOrders";
 import { Icon } from "./Icon";
 import { PaymentPanel, useDonateConfig } from "./PaymentPanel";
-import { paintSkyScene, type SkyTheme } from "./skyArt";
+import { DEFAULT_SKY_STYLE, type SkyStyle } from "@/lib/christmas/skyStyle";
+import { SkyPreview, SkyStyleEditor } from "./SkyStudio";
 
 // ตุ๊กตาหิมะ Exclusive ที่ผู้ใช้ตกแต่งและเลือกช่องไว้แล้ว รอชำระเงินเพื่อวาง
 export type DecorDraft = { slot: number; parts: SnowParts; name: string; social?: Social };
 
 const TIER_NAMES = ["ดาวดวงเล็ก", "ระฆังเงิน", "ดาวประจำห้อง"];
-const THEMES: { id: MessageTheme; label: string; hint: string; icon: "firework" | "snow" | "sparkle" | "sleigh" }[] = [
-  { id: "fireworks", label: "พลุฉลอง", hint: "พลุทองระเบิดเป็นชุดเหนือต้น", icon: "firework" },
-  { id: "snow", label: "หิมะโปรยปราย", hint: "หิมะหนาแน่นพร้อมแสงน้ำแข็ง", icon: "snow" },
-  { id: "sparkle", label: "ประกายระยิบ", hint: "ประกายทองวิ่งไปตามกรอบ", icon: "sparkle" },
-  { id: "sleigh", label: "เลื่อนกวางเรนเดียร์", hint: "เลื่อนซานตามีกวางนำหน้า", icon: "sleigh" },
-];
 const THANKS_CHIPS = ["ขอบคุณที่ทำให้คริสต์มาสนี้อบอุ่น", "ขอให้ปีใหม่มีแต่รอยยิ้ม", "สุขสันต์วันคริสต์มาสนะ"];
 
 // ชื่อภาษาไทยของชิ้นส่วนแต่ละแบบ
@@ -300,29 +295,6 @@ function DioramaStudio({ items, selectedId, onSelect, onChange, house }: { items
   );
 }
 
-// ท้องฟ้าตัวอย่าง วาดต่อเนื่องด้วยเวลาจริง (ถ้าผู้ใช้ตั้งค่าลดการเคลื่อนไหวจะหยุดนิ่ง)
-function SkyCanvas({ theme, text, by }: { theme: SkyTheme; text: string; by: string }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  const latest = useRef({ theme, text, by });
-  latest.current = { theme, text, by };
-  useEffect(() => {
-    const cv = ref.current;
-    const g = cv?.getContext("2d");
-    if (!cv || !g) return;
-    const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const start = performance.now();
-    let raf = 0;
-    const draw = () => {
-      const t = reduced ? 4 : (performance.now() - start) / 1000;
-      paintSkyScene(g, cv.width, cv.height, t, latest.current);
-      if (!reduced) raf = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => cancelAnimationFrame(raf);
-  }, []);
-  return <canvas ref={ref} width={960} height={540} className="xmas-sky-canvas" aria-label="ตัวอย่างการแสดงบนท้องฟ้า" />;
-}
-
 export default function ExclusiveModal({
   roomId,
   roomName,
@@ -350,7 +322,7 @@ export default function ExclusiveModal({
   const [view, setView] = useState<View>(decor ? "decor" : "menu");
   const [name, setName] = useState(decor?.name ?? defaultName);
   const [message, setMessage] = useState("");
-  const [theme, setTheme] = useState<MessageTheme>("fireworks");
+  const [skyStyle, setSkyStyle] = useState<SkyStyle>(DEFAULT_SKY_STYLE);
   const [look, setLook] = useState<GiantLook>(DEFAULT_GIANT_LOOK);
   const [selId, setSelId] = useState<string | null>(null);
   const [spotPick, setSpotPick] = useState<number | null>(null);
@@ -466,7 +438,7 @@ export default function ExclusiveModal({
     e.preventDefault();
     if (!name.trim()) return setError("กรุณาใส่ชื่อผู้ส่ง");
     if (!message.trim()) return setError("กรุณาใส่ข้อความที่จะขึ้นจอ");
-    create("message", { name: name.trim(), message: message.trim(), theme });
+    create("message", { name: name.trim(), message: message.trim(), theme: skyStyle.theme, style: skyStyle });
   }
 
   function submitDecor(e: FormEvent) {
@@ -483,21 +455,6 @@ export default function ExclusiveModal({
     decor: "วางตุ๊กตาหิมะ Exclusive",
   }[view];
 
-  const themeOptions = (
-    <div className="xmas-theme-list" role="radiogroup" aria-label="ธีมการแสดง">
-      {THEMES.map((t) => (
-        <button type="button" key={t.id} role="radio" aria-checked={theme === t.id} className={`xmas-theme-opt ${theme === t.id ? "is-on" : ""}`} onClick={() => setTheme(t.id)}>
-          <span className="xmas-theme-ico">
-            <Icon name={t.icon} size={22} />
-          </span>
-          <span>
-            <b>{t.label}</b>
-            <small>{t.hint}</small>
-          </span>
-        </button>
-      ))}
-    </div>
-  );
 
   return (
     <div className="xmas-modal-back" role="presentation" onClick={locked ? undefined : onClose} hidden={hidden}>
@@ -704,13 +661,20 @@ export default function ExclusiveModal({
               <section className="xmas-sec" data-step="0" data-on={step === 0}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">1</span>
-                  <h3>ธีมการแสดง</h3>
+                  <h3>ธีมและการเปิดตัว</h3>
                 </header>
-                {themeOptions}
+                <SkyStyleEditor style={skyStyle} onChange={setSkyStyle} part="effect" />
               </section>
               <section className="xmas-sec" data-step="1" data-on={step === 1}>
                 <header className="xmas-sec-head">
                   <span className="xmas-sup-num">2</span>
+                  <h3>ตัวอักษร สี และกรอบ</h3>
+                </header>
+                <SkyStyleEditor style={skyStyle} onChange={setSkyStyle} part="look" />
+              </section>
+              <section className="xmas-sec" data-step="2" data-on={step === 2}>
+                <header className="xmas-sec-head">
+                  <span className="xmas-sup-num">3</span>
                   <h3>ผู้ส่งและข้อความ</h3>
                 </header>
                 <label className="xmas-sup-field">
@@ -734,16 +698,16 @@ export default function ExclusiveModal({
             </div>
 
             <aside className="xmas-ex-col xmas-ex-side">
-              <SkyCanvas theme={theme} text={message.trim() || "ข้อความของคุณจะขึ้นบนท้องฟ้า"} by={name.trim() || "ชื่อผู้ส่ง"} />
-              <p className="xmas-hint">ตัวอย่างนี้คือการแสดงจริงที่ทุกคนในห้องจะเห็นพร้อมกัน</p>
-              <div className="xmas-ex-final" data-step="1" data-on={step === 1}>
+              <SkyPreview style={skyStyle} text={message.trim() || "ข้อความของคุณจะขึ้นจอให้ทุกคนเห็น"} by={name.trim() || "ชื่อผู้ส่ง"} />
+              <p className="xmas-hint">ตัวอย่างนี้คือการแสดงจริงเต็มจอที่ทุกคนในห้องจะเห็นพร้อมกัน นาน 10 วินาที</p>
+              <div className="xmas-ex-final" data-step="2" data-on={step === 2}>
                 {error && <p className="xmas-msg err">{error}</p>}
                 <button className="xmas-submit" disabled={busy}>
                   {busy ? "กำลังสร้างรายการ…" : `ชำระ ฿${cfg.messagePrice}`}
                 </button>
               </div>
             </aside>
-            <WizardNav step={step} last={1} setStep={setStep} />
+            <WizardNav step={step} last={2} setStep={setStep} />
           </form>
         )}
 
