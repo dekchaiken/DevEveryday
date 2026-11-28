@@ -9,7 +9,7 @@ const SHAPES: OrnamentShape[] = ["ball", "star", "bell", "gift"];
 // ระยะจากจุดกึ่งกลางชิ้นงานถึงขอบบน (ตำแหน่งฝา)
 const TOP: Record<OrnamentShape, number> = { ball: 0.085, star: 0.1, bell: 0.075, gift: 0.07 };
 // ย่อทุกชิ้นลงจากขนาดโมเดล ให้สมส่วนกับกิ่งสนจริงและแขวนได้แน่นถึง 999 ลูก
-const SIZE = 0.8;
+const SIZE = 1.0;
 
 type Item = {
   o: Ornament;

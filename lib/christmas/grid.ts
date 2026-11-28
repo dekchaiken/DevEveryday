@@ -3,7 +3,8 @@
 
 export const CELL = 1.2; // ขนาดของช่องกริดในโลก (หน่วย)
 export const LAND_R = 56; // รัศมีของลานที่วางได้ (หมอกในฉากบังขอบลานพอดี จึงดูเป็นขอบฟ้า)
-export const TREE_CORE_R = 1.8; // รัศมีที่ห้ามวาง รอบโคนต้น (กระโปรงใบของต้นกว้าง 1.45 เผื่อไว้อีกนิด)
+export const TREE_CORE_R = 2.6; // รัศมีที่ห้ามวาง รอบโคนต้น (ต้นใหม่ฐานกว้าง 2.0 + ผ้าคลุมโคนและรั้วไม้เท้า)
+export const LEGACY_TREE_CORE_R = 1.8; // รัศมีโคนต้นของผังเดิม ใช้คำนวณลำดับช่องเดิมเท่านั้น
 
 export type Cell = { x: number; z: number };
 export type Footprint = 1 | 2; // 1 = ตุ๊กตาธรรมดา, 2 = Exclusive
@@ -29,7 +30,7 @@ export function footprintCells(c: Cell, size: Footprint): Cell[] {
 }
 
 // ตรวจพื้นที่ของช่องเดียว: ทุกมุมต้องอยู่ในลาน และไม่เข้าไปในโคนต้น
-function landStatus(c: Cell): "ok" | "outside" | "tree" {
+function landStatus(c: Cell, coreR: number): "ok" | "outside" | "tree" {
   let worst: "ok" | "outside" | "tree" = "ok";
   for (const [px, pz] of [
     [0, 0],
@@ -39,7 +40,7 @@ function landStatus(c: Cell): "ok" | "outside" | "tree" {
   ]) {
     const d = Math.hypot((c.x + px) * CELL, (c.z + pz) * CELL);
     if (d > LAND_R) return "outside";
-    if (d < TREE_CORE_R) worst = "tree";
+    if (d < coreR) worst = "tree";
   }
   return worst;
 }
@@ -48,6 +49,7 @@ export type Rules = {
   road: (c: Cell) => boolean; // ถนนและทางเดิน วางทับไม่ได้
   reserved: (c: Cell) => boolean; // พื้นที่ที่สงวนไว้ เช่น โซนอวยพร
   occupied: (c: Cell) => boolean; // มีชิ้นงานอยู่แล้ว
+  coreR?: number; // รัศมีโคนต้นที่ห้ามวาง (ไม่ระบุ = TREE_CORE_R)
 };
 
 export type PlacementResult = { ok: true } | { ok: false; reason: Blocked; cell: Cell };
@@ -55,7 +57,7 @@ export type PlacementResult = { ok: true } | { ok: false; reason: Blocked; cell:
 // ตรวจว่าวางชิ้นงานได้หรือไม่ และถ้าไม่ได้ บอกว่าติดที่ช่องไหนเพราะอะไร (ใช้ทั้งเซิร์ฟเวอร์และพรีวิวสีเขียว/แดง)
 export function checkPlacement(c: Cell, size: Footprint, rules: Rules): PlacementResult {
   for (const cell of footprintCells(c, size)) {
-    const land = landStatus(cell);
+    const land = landStatus(cell, rules.coreR ?? TREE_CORE_R);
     if (land === "outside") return { ok: false, reason: "outside", cell };
     if (land === "tree") return { ok: false, reason: "tree", cell };
     if (rules.road(cell)) return { ok: false, reason: "road", cell };

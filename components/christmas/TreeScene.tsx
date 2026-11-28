@@ -7,7 +7,8 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { TREE_CAPACITY, type Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
-import { distToPath, GIANT_MODEL_SCALE, GIANT_POSITIONS, inZone, nearestSlot, SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_CARD_SLOTS, ZONE_GATE, ZONE_RAIL_Y } from "@/lib/christmas/slots";
+// ตำแหน่งวาดบนฉากใช้ชุด DISPLAY (ช่องที่ถูกปิดหลังผังเปลี่ยนย้ายไปแสดงที่ช่องเปิดใกล้สุด)
+import { distToPath, GIANT_DISPLAY as GIANT_POSITIONS, GIANT_MODEL_SCALE, inZone, nearestSlot, SLOT_DISPLAY_POSITIONS as SLOT_POSITIONS, ZONE, ZONE_CAPACITY, ZONE_GATE } from "@/lib/christmas/slots";
 import { LAND_R } from "@/lib/christmas/grid";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, surfaceNormal, TREE_TOP_Y } from "./geometry";
@@ -17,8 +18,8 @@ import { createTreeAura } from "./treeAura";
 import { buildPlaza } from "./plazaScenery";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, parseGiantLook, type GiantLook } from "@/lib/christmas/giant";
-import { buildYardScenery, candyStripes, giftBox, miniPine, shade, woodMaterial } from "./zoneScenery";
-import { buildZoneSign, ZONE_SIGN_H } from "./giantSign";
+import { buildWishVillage } from "./wishVillage";
+import { buildSurroundings } from "./treeSurroundings";
 import { buildDiorama } from "./diorama";
 import { buildSleighFlight, flightProgressAt } from "./sleighFlight";
 import { serverNowMs, startServerClock } from "./serverClock";
@@ -40,7 +41,7 @@ export type TreeSceneHandle = {
   focusDecor: (d: Decor | null) => void;
   focusGiant: (spot: number | null) => void; // กล้องบินไปหาบ้านหิมะ Exclusive และกลับมุมเดิมเมื่อส่ง null
   project: (x: number, y: number, z: number) => { x: number; y: number; visible: boolean }; // พิกัดจอของจุดในโลก (ใช้วางคำอธิบายข้างโมเดล)
-  zoneSlots: () => { id: string; x: number; y: number; visible: boolean; angle: number }[]; // จุดของการ์ดแต่ละใบในโซนบนจอ (ใช้วางป้ายชี้)
+  zoneSlots: (only?: Set<string>) => { id: string; x: number; y: number; visible: boolean; angle: number }[]; // จุดของการ์ดในโซนบนจอ (ใช้วางป้ายชี้) ระบุชุด id เพื่อคำนวณเฉพาะใบที่ต้องการ
   focusZoneCard: (id: string) => void; // กล้องบินไปหาการ์ดใบนั้น
   flyToZone: () => void; // ซูมออกเป็นแผนที่ แล้วไปที่โซนคำอวยพร
   returnView: () => void; // กลับไปมุมกล้องเดิมก่อนไปดูตุ๊กตาหรือโซน
@@ -198,13 +199,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     scene.fog = new THREE.Fog(0x0c251d, 14, 56);
 
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 220);
-    camera.position.set(0, 3.0, 10.4);
+    camera.position.set(0, 3.9, 13.6);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 2.15, 0);
+    controls.target.set(0, 2.85, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.minDistance = 4.5;
+    controls.minDistance = 5.5;
     // ซูมออกได้ไกลพอให้เห็นทั้งวงตุ๊กตาหิมะและตุ๊กตายักษ์ทั้ง 12 จุด
     controls.maxDistance = 60;
     // ก้มกล้องได้ไม่เกินแนวเกือบขนานพื้น (ไม่ให้มุดลงใต้พื้นแล้วเห็นทะลุ)
@@ -302,121 +303,14 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     previewMesh.visible = false;
     scene.add(previewMesh);
 
-    // ---------- ของประดับรอบลาน: ทางเดินโค้งไม่เป็นวงกลม โคมไฟเรียงตามทาง กลุ่มต้นสน กล่องของขวัญกองกัน และกองหิมะ ----------
-    // ตั้งค่าสุ่มคงที่ เพื่อให้ทุกเครื่องเห็นการจัดวางเดียวกัน
-    const dressRnd = seededRandom("dressing-v2");
-    const dressing = new THREE.Group();
-    scene.add(dressing);
-    // ทางเดินหิมะ: เส้นโค้งปิดที่ไม่สม่ำเสมอ สร้างเป็นริบบิ้นแบนบนพื้น
-    const pathPts: THREE.Vector3[] = [];
-    for (let k = 0; k < 9; k++) {
-      const th = (k / 9) * Math.PI * 2;
-      const rr = 9.1 + 0.8 * Math.sin(3 * th + 0.5) + 0.45 * Math.cos(5 * th) + (dressRnd() - 0.5) * 0.4;
-      pathPts.push(new THREE.Vector3(Math.cos(th) * rr, 0.012, Math.sin(th) * rr));
-    }
-    const pathCurve = new THREE.CatmullRomCurve3(pathPts, true, "catmullrom", 0.5);
-    const PATH_SEG = 260;
-    const ppos: number[] = [];
-    const pidx: number[] = [];
-    for (let i = 0; i <= PATH_SEG; i++) {
-      const u = i / PATH_SEG;
-      const pt = pathCurve.getPointAt(u);
-      const tg = pathCurve.getTangentAt(u);
-      const side = new THREE.Vector3(-tg.z, 0, tg.x).normalize();
-      const w = 0.28 + 0.06 * Math.sin(u * 40);
-      ppos.push(pt.x + side.x * w, 0.012, pt.z + side.z * w, pt.x - side.x * w, 0.012, pt.z - side.z * w);
-      if (i < PATH_SEG) {
-        const v = i * 2;
-        pidx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
-      }
-    }
-    const pathGeo = new THREE.BufferGeometry();
-    pathGeo.setAttribute("position", new THREE.Float32BufferAttribute(ppos, 3));
-    pathGeo.setIndex(pidx);
-    pathGeo.computeVertexNormals();
-    const pathMesh = new THREE.Mesh(pathGeo, new THREE.MeshStandardMaterial({ color: 0xcfdbe7, roughness: 0.95, metalness: 0, side: THREE.DoubleSide }));
-    pathMesh.receiveShadow = true;
-    dressing.add(pathMesh);
-    // กลุ่มต้นสนขนาดต่าง ๆ เป็นป่าเล็ก ๆ ที่ไม่สม่ำเสมอ
-    const pineMat = new THREE.MeshStandardMaterial({ color: 0x0f3d24, roughness: 0.85 });
-    const pineCap = new THREE.MeshStandardMaterial({ color: 0xeef5fb, roughness: 0.7 });
-    const groves = [
-      { a: 0.4, r: 14.5, n: 7 },
-      { a: 1.9, r: 13.2, n: 5 },
-      { a: 3.3, r: 15.5, n: 6 },
-      { a: 4.6, r: 13.8, n: 4 },
-      { a: 5.9, r: 14.8, n: 6 },
-    ];
-    for (const g of groves) {
-      const cx = Math.cos(g.a) * g.r;
-      const cz = Math.sin(g.a) * g.r;
-      for (let k = 0; k < g.n; k++) {
-        const h = 1.3 + dressRnd() * 1.6;
-        const sc = 0.8 + dressRnd() * 0.5;
-        const tree = new THREE.Group();
-        for (let t = 0; t < 3; t++) {
-          const rad = (0.7 - t * 0.18) * sc;
-          const cone = new THREE.Mesh(new THREE.ConeGeometry(rad, h * 0.6, 12), pineMat);
-          cone.position.y = h * 0.3 + t * h * 0.22;
-          cone.castShadow = true;
-          const cap = new THREE.Mesh(new THREE.ConeGeometry(rad * 0.5, h * 0.18, 12), pineCap);
-          cap.position.y = cone.position.y + h * 0.27;
-          tree.add(cone, cap);
-        }
-        tree.position.set(cx + (dressRnd() - 0.5) * 3.2, 0, cz + (dressRnd() - 0.5) * 3.2);
-        tree.rotation.y = dressRnd() * Math.PI;
-        dressing.add(tree);
-      }
-    }
-    // กล่องของขวัญกองกันเป็นกลุ่ม 2–3 กล่อง บางกองมีกล่องซ้อนด้านบน
-    const giftCols = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e, 0xf472b6];
-    for (let c = 0; c < 6; c++) {
-      const a = dressRnd() * Math.PI * 2;
-      const r = 10.6 + dressRnd() * 1.4;
-      const cx = Math.cos(a) * r;
-      const cz = Math.sin(a) * r;
-      const n = 2 + Math.floor(dressRnd() * 2);
-      for (let k = 0; k < n; k++) {
-        const size = 0.2 + dressRnd() * 0.2;
-        const g = makeGiftBox(size, giftCols[Math.floor(dressRnd() * giftCols.length)]);
-        g.position.set(cx + (dressRnd() - 0.5) * 0.7, 0, cz + (dressRnd() - 0.5) * 0.7);
-        g.rotation.y = dressRnd() * Math.PI;
-        g.traverse((o) => {
-          o.castShadow = true;
-          o.receiveShadow = true;
-        });
-        dressing.add(g);
-        if (k === 0 && dressRnd() < 0.6) {
-          const top = makeGiftBox(size * 0.7, giftCols[Math.floor(dressRnd() * giftCols.length)]);
-          top.position.set(g.position.x + 0.02, size, g.position.z - 0.01);
-          top.rotation.y = dressRnd();
-          top.traverse((o) => {
-            o.castShadow = true;
-          });
-          dressing.add(top);
-        }
-      }
-    }
-    // กองหิมะที่ไม่สม่ำเสมอ
-    const moundMat = new THREE.MeshStandardMaterial({ color: 0xf4f8fc, roughness: 0.9 });
-    for (let k = 0; k < 22; k++) {
-      const a = dressRnd() * Math.PI * 2;
-      const r = 9.6 + dressRnd() * 6;
-      const m = new THREE.Mesh(new THREE.SphereGeometry(0.4 + dressRnd() * 0.6, 16, 10), moundMat);
-      m.scale.set(1 + dressRnd() * 0.8, 0.35 + dressRnd() * 0.2, 1 + dressRnd() * 0.6);
-      m.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
-      m.rotation.y = dressRnd() * Math.PI;
-      m.receiveShadow = true;
-      dressing.add(m);
-    }
-    // เอาของประดับที่ตกบนทางเดินไปโซนหรือในเขตโซนคำอวยพรออก (ทางเดินต้องโล่ง)
-    for (const child of [...dressing.children]) {
-      if (child === pathMesh) continue;
-      const cp = child.position;
-      if (distToPath(cp.x, cp.z) < 2.2 || inZone(cp.x, cp.z, 1.5)) dressing.remove(child);
-    }
-    // ของประดับรอบลานทั้งหมดนิ่งอยู่แล้ว จึงรวมเมชเพื่อลดคำสั่งวาด
-    mergeStaticMeshes(dressing, new Set<THREE.Object3D>());
+    // ---------- ฉากรอบลาน: เสาไฟโบราณกับสายไฟห้อย ม้านั่ง ลูกบอลยักษ์ ป่าสนหิมะเกาะ (treeSurroundings.ts) ----------
+    const surroundings = buildSurroundings({
+      glowTex,
+      small: isSmall,
+      gate: ZONE_GATE,
+      blocked: (x, z, pad) => distToPath(x, z) < 1.7 + pad || inZone(x, z, pad),
+    });
+    scene.add(surroundings.group);
 
     // ---------- ฝูงชนเงาในโซนนี้: จำนวนตามคนออนไลน์ ตำแหน่งต่างกันในแต่ละโซน ----------
     const crowdGroup = new THREE.Group();
@@ -637,14 +531,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           return;
         }
       }
-      const zoneHit = raycaster.intersectObjects(zoneCardGroup.children, true)[0];
-      if (zoneHit) {
-        let obj: THREE.Object3D | null = zoneHit.object;
-        while (obj && !obj.userData.cardId) obj = obj.parent;
-        if (obj?.userData.cardId) {
-          callbacks.current.onZoneCardClick?.(obj.userData.cardId as string);
-          return;
-        }
+      const zoneCardId = village.pickCard(raycaster);
+      if (zoneCardId) {
+        callbacks.current.onZoneCardClick?.(zoneCardId);
+        return;
       }
       const hit = raycaster.intersectObject(hitCone, false)[0];
       if (hit) {
@@ -708,14 +598,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         zoneFirework();
       }
 
-      zoneCardGroup.children.forEach((g) => {
-        g.rotation.z = reduced ? 0 : Math.sin(t * 1.5 + (g.userData.phase as number)) * 0.06;
-        const h = g.userData.halo as THREE.Mesh | undefined;
-        if (h) (h.material as THREE.MeshBasicMaterial).opacity = reduced ? 0.4 : 0.3 + 0.2 * Math.sin(t * 2 + (g.userData.phase as number));
-      });
-      zoneLights.forEach((m, i) => {
-        (m.material as THREE.MeshBasicMaterial).opacity = reduced ? 1 : 0.6 + 0.4 * Math.sin(t * 3 + i);
-      });
+      village.update(t, reduced, camera.position);
+      surroundings.update(t, reduced);
+      stepWalk(now);
       if (camAnim) {
         const k = Math.min((now - camAnim.start) / camAnim.dur, 1);
         const e = 1 - Math.pow(1 - k, 3);
@@ -918,324 +803,16 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     const SCARF_HEX: Record<string, number> = { red: 0xdc2643, green: 0x16a34a, gold: 0xf5c542, blue: 0x3b82f6, white: 0xf8fafc, plaid: 0xb91c3c, purple: 0xa855f7 };
     const HAT_HEX = 0x1f2937;
 
-    // ---------- โซนคำอวยพรบนแผนที่: รั้วใหญ่ 2 ชั้นรอบโซน มีประตูและซุ้ม ทางเดินหินจากต้นไม้ และซองอวยพรที่แขวนบนรั้ว ----------
-    const zoneGroup = new THREE.Group();
-    scene.add(zoneGroup);
-    const zoneCardGroup = new THREE.Group();
-    scene.add(zoneCardGroup);
-    const zoneLights: THREE.Mesh[] = [];
-    const zWood = new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 });
-    const zRail = new THREE.MeshStandardMaterial({ color: 0x9a6a3a, roughness: 0.8 });
-    const zStone = new THREE.MeshStandardMaterial({ color: 0xeef6fb, roughness: 0.7 });
+    // ---------- หมู่บ้านคำอวยพร: กำแพงการ์ดสองวงรอบต้นสนกลางลาน บ้านหิมะ เสาไฟ (สร้างใน wishVillage.ts) ----------
+    const village = buildWishVillage({ glowTex, small: isSmall });
+    scene.add(village.group);
+    mergeStaticMeshes(village.staticRoot, new Set<THREE.Object3D>());
     const zx = ZONE.x;
     const zz = ZONE.z;
-    const zh = ZONE.half;
-    const gx = ZONE_GATE.x;
-    const gz = ZONE_GATE.z;
-    const RAIL_Y = ZONE_RAIL_Y; // 4 ชั้น ห่างกัน 0.55 หน่วย (ผังเดียวกับที่ใช้นับความจุการ์ด)
-    const POST_H = 2.45;
-    const zBox = (w: number, h: number, d: number, mat: THREE.Material, x: number, y: number, z: number) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-      m.position.set(x, y, z);
-      zoneGroup.add(m);
-      return m;
-    };
-    // ไม้ของรั้วและเสา: ลายไม้จริง หัวเสาเป็นหลังคาปิรามิดมีหิมะเกาะ
-    const fenceWood = woodMaterial();
-    const zSnowMat = new THREE.MeshStandardMaterial({ color: 0xf8fbff, roughness: 0.6 });
-    const fenceIron = new THREE.MeshStandardMaterial({ color: 0x2b2b2b, roughness: 0.5, metalness: 0.6 });
-    const zPost = (x: number, z: number, h: number) => {
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, h, 12), fenceWood);
-      shaft.position.set(x, h / 2, z);
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.2, 4), fenceWood);
-      roof.rotation.y = Math.PI / 4;
-      roof.position.set(x, h + 0.1, z);
-      const snowCap = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 8), zSnowMat);
-      snowCap.scale.set(1.1, 0.45, 1.1);
-      snowCap.position.set(x, h + 0.22, z);
-      shaft.castShadow = true;
-      roof.castShadow = true;
-      zoneGroup.add(shaft, roof, snowCap);
-    };
-    // ลานหิมะของโซน
-    zBox(zh * 2 + 1.2, 0.05, zh * 2 + 1.2, zStone, zx, 0.03, zz).receiveShadow = true;
-    // รั้ว 4 ชั้น: ด้านหน้าเว้นประตูกว้าง 2.4 หน่วยตรงกลาง
-    // ราวไม้กลมแท่งยาว มีหิมะบาง ๆ เกาะด้านบน
-    const logRail = (x0: number, x1: number, z0: number, z1: number, y: number) => {
-      const horizontal = Math.abs(x1 - x0) > Math.abs(z1 - z0);
-      const len = horizontal ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
-      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, len, 12), fenceWood);
-      log.position.set((x0 + x1) / 2, y, (z0 + z1) / 2);
-      if (horizontal) log.rotation.z = Math.PI / 2;
-      else log.rotation.x = Math.PI / 2;
-      const snow = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? len * 0.98 : 0.11, 0.035, horizontal ? 0.11 : len * 0.98), zSnowMat);
-      snow.position.set(log.position.x, y + 0.075, log.position.z);
-      log.castShadow = true;
-      zoneGroup.add(log, snow);
-      // เหล็กรัดรอยต่อที่หัวราวทั้งสองข้าง ให้ดูเป็นงานไม้จริง
-      for (const sgn of [-1, 1]) {
-        const plate = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? 0.05 : 0.2, 0.2, horizontal ? 0.2 : 0.05), fenceIron);
-        const off = len / 2 - 0.18;
-        plate.position.set(log.position.x + (horizontal ? sgn * off : 0), y, log.position.z + (horizontal ? 0 : sgn * off));
-        zoneGroup.add(plate);
-      }
-    };
-    for (const y of RAIL_Y) {
-      logRail(zx - zh, gx - 1.2, gz, gz, y);
-      logRail(gx + 1.2, zx + zh, gz, gz, y);
-      logRail(zx - zh, zx + zh, zz - zh, zz - zh, y);
-      logRail(zx - zh, zx - zh, zz - zh, zz + zh, y);
-      logRail(zx + zh, zx + zh, zz - zh, zz + zh, y);
-    }
-    // เสาทุก 4 หน่วย ด้านหน้าไม่มีเสาตรงประตู
-    [-zh, -zh / 2, 0, zh / 2, zh].forEach((t) => {
-      if (Math.abs(t) > 0.01) zPost(zx + t, gz, POST_H);
-      zPost(zx + t, zz - zh, POST_H);
-      if (Math.abs(t) > 0.01 && Math.abs(t) !== zh) {
-        zPost(zx - zh, zz + t, POST_H);
-        zPost(zx + zh, zz + t, POST_H);
-      }
-    });
-    zPost(zx - zh, gz, POST_H);
-    zPost(zx + zh, gz, POST_H);
-    zPost(gx - 1.2, gz, POST_H);
-    zPost(gx + 1.2, gz, POST_H);
-    // กองหิมะเล็ก ๆ เกาะตามแนวรั้วด้านนอก ให้ดูเป็นฉากจริง
-    const fenceMoundGeo = new THREE.SphereGeometry(0.42, 14, 10);
-    const fenceMoundMat = new THREE.MeshStandardMaterial({ color: 0xf6fafe, roughness: 0.9 });
-    const fenceEdges: [number, number, number, number][] = [
-      [zx - zh, zz - zh, zx - zh, zz + zh],
-      [zx + zh, zz - zh, zx + zh, zz + zh],
-      [zx - zh, zz - zh, zx + zh, zz - zh],
-      [zx - zh, gz, gx - 1.2, gz],
-      [gx + 1.2, gz, zx + zh, gz],
-    ];
-    for (const [ax, az, bx, bz] of fenceEdges) {
-      const len = Math.hypot(bx - ax, bz - az);
-      for (let d = 0.9; d < len - 0.5; d += 2.1 + ((d * 7) % 0.9)) {
-        const px = ax + ((bx - ax) * d) / len;
-        const pz = az + ((bz - az) * d) / len;
-        const out = Math.abs(bx - ax) > Math.abs(bz - az) ? (az < zz ? -1 : 1) * 0.34 : (ax < zx ? -1 : 1) * 0.34;
-        const m = new THREE.Mesh(fenceMoundGeo, fenceMoundMat);
-        m.position.set(px + (Math.abs(bx - ax) > Math.abs(bz - az) ? 0 : out), 0.06, pz + (Math.abs(bx - ax) > Math.abs(bz - az) ? out : 0));
-        m.scale.set(1.2 + (d % 0.6), 0.3, 0.9);
-        m.receiveShadow = true;
-        zoneGroup.add(m);
-      }
-    }
-    // ซุ้มประตูลายไม้เท้าขนม มีพวงมาลัย ลูกประดับ สายไฟ และโบว์แดง
-    // ป้ายชื่อโซนแขวนด้วยโซ่จากเสาสองข้างประตู
-    const ARCH_R = 1.2;
-    const GARLAND_R = ARCH_R + 0.13;
-    const archPts = (r: number, n: number) =>
-      Array.from({ length: n }, (_, i) => {
-        const th = Math.PI - (i / (n - 1)) * Math.PI;
-        return new THREE.Vector3(gx + Math.cos(th) * r, POST_H + Math.sin(th) * r, gz);
-      });
-    const cane = new THREE.Mesh(
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(archPts(ARCH_R, 48)), 96, 0.085, 14, false),
-      new THREE.MeshStandardMaterial({ map: candyStripes(), roughness: 0.35 }),
-    );
-    zoneGroup.add(cane);
-    const garland = new THREE.Mesh(
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(archPts(GARLAND_R, 48)), 96, 0.055, 10, false),
-      new THREE.MeshStandardMaterial({ color: 0x1f7a3a, roughness: 0.8 }),
-    );
-    zoneGroup.add(garland);
-    const ornMats = [
-      new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.35 }),
-      new THREE.MeshStandardMaterial({ color: 0xf5c542, roughness: 0.25, metalness: 0.7 }),
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }),
-    ];
-    for (let i = 0; i <= 14; i++) {
-      const th = Math.PI - (i / 14) * Math.PI;
-      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), ornMats[i % ornMats.length]);
-      orb.position.set(gx + Math.cos(th) * GARLAND_R, POST_H + Math.sin(th) * GARLAND_R, gz + 0.04);
-      zoneGroup.add(orb);
-    }
-    const gateBulbCols = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
-    for (let i = 0; i < 18; i++) {
-      const th = Math.PI - ((i + 0.5) / 18) * Math.PI;
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), new THREE.MeshBasicMaterial({ color: gateBulbCols[i % gateBulbCols.length], transparent: true, opacity: 1 }));
-      bulb.position.set(gx + Math.cos(th) * (ARCH_R + 0.02), POST_H + Math.sin(th) * (ARCH_R + 0.02), gz + 0.08);
-      zoneGroup.add(bulb);
-      zoneLights.push(bulb);
-    }
-    // โบว์แดงที่ยอดซุ้ม
-    const bowMat = new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.45 });
-    for (const s of [-1, 1]) {
-      const loop = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.04, 8, 18), bowMat);
-      loop.position.set(gx + s * 0.13, POST_H + ARCH_R + 0.12, gz + 0.1);
-      loop.rotation.z = s * 0.5;
-      zoneGroup.add(loop);
-    }
-    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), bowMat);
-    knot.position.set(gx, POST_H + ARCH_R + 0.12, gz + 0.1);
-    zoneGroup.add(knot);
-    // ป้ายชื่อโซนแขวนเหนือซุ้ม และโซ่สองเส้นจากเสาประตู
-    const signY = POST_H + ARCH_R + 0.28 + ZONE_SIGN_H / 2;
-    const zoneSign = buildZoneSign();
-    zoneSign.position.set(gx, signY, gz + 0.04);
-    zoneGroup.add(zoneSign);
-    const chainMat = new THREE.MeshStandardMaterial({ color: 0xd9b45a, roughness: 0.3, metalness: 0.8 });
-    for (const s of [-1, 1]) {
-      const len = signY - ZONE_SIGN_H / 2 - (POST_H + 0.12);
-      const link = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, len, 6), chainMat);
-      link.position.set(gx + s * 1.2, POST_H + 0.12 + len / 2, gz + 0.04);
-      zoneGroup.add(link);
-    }
-    // ไฟประดับตามขอบรั้วด้านบน กระพริบเบา ๆ
-    const bulbColors = [0xffd76a, 0xff6b8a, 0x7dd3fc, 0x86efac];
-    let bulbIdx = 0;
-    for (let t = -zh; t <= zh + 0.01; t += 0.9) {
-      if (Math.abs(zx + t - gx) < 1.6) continue;
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({ color: bulbColors[bulbIdx++ % 4], transparent: true, opacity: 1 }));
-      bulb.position.set(zx + t, 1.6, gz);
-      zoneGroup.add(bulb);
-      zoneLights.push(bulb);
-    }
-    // ทางเดินจากต้นไม้มาถึงประตูโซนอยู่ใน plazaScenery.ts (ทางหินปูพร้อมอุโมงค์ซุ้มไฟ)
-    // ของขวัญและต้นสน 3 มิติรอบโซน (อยู่นอกรั้ว ไม่บังการ์ด)
-    const presentColors = [0xdc2643, 0x3b82f6, 0xf5c542, 0x22c55e, 0xec4899];
-    [
-      [zx - zh - 2, zz + zh + 1.6],
-      [zx + zh + 2, zz + zh + 1.4],
-      [zx + zh + 2.2, zz - zh - 1],
-      [zx - zh - 1.6, zz - zh - 1.6],
-      [zx + 3, zz - zh - 2.4],
-    ].forEach(([px, pz], i) => {
-      const g = giftBox(0.8, presentColors[i], i % 2 ? 0xfff6e6 : 0xf5c542);
-      g.position.set(px, 0, pz);
-      g.rotation.y = i * 0.7;
-      zoneGroup.add(shade(g));
-    });
-    [
-      [zx + zh + 3.2, zz + 1.8, 1.4],
-      [zx - zh - 3.4, zz + 0.5, 1.1],
-      [zx + 3.6, zz - zh - 3.2, 1.4],
-      [zx - 4.6, zz - zh - 3.4, 1],
-    ].forEach(([px, pz, sc]) => {
-      const t = miniPine(3.7 * sc, 2.2 * sc);
-      t.position.set(px, 0, pz);
-      zoneGroup.add(shade(t));
-    });
-
-    // ซองอวยพรบนรั้ว 4 ชั้น ด้านหน้ามองเห็นก่อน รวมไม่เกิน ZONE_CAPACITY
-    const ENV_HEX: Record<string, [string, string, string]> = {
-      red: ["#b91c3c", "#9b1630", "#ffffff"],
-      gold: ["#d9a93a", "#b98a2a", "#ffffff"],
-      green: ["#1f7a4d", "#16603b", "#ffffff"],
-      white: ["#f4efe3", "#e0d6bf", "#3b2a14"],
-      pink: ["#f9a8d4", "#f472b6", "#5b1a3a"],
-      blue: ["#93c5fd", "#60a5fa", "#0f2a4a"],
-    };
-    function envelopeTexture(env: string, name: string) {
-      const cv = document.createElement("canvas");
-      cv.width = 256;
-      cv.height = 164;
-      const g = cv.getContext("2d");
-      const [c1, c2, ink] = ENV_HEX[env] ?? ENV_HEX.red;
-      if (g) {
-        g.fillStyle = c1;
-        g.fillRect(0, 0, 256, 164);
-        g.fillStyle = c2;
-        g.beginPath();
-        g.moveTo(0, 164);
-        g.lineTo(128, 86);
-        g.lineTo(256, 164);
-        g.closePath();
-        g.fill();
-        g.fillStyle = "rgba(255,255,255,0.14)";
-        g.beginPath();
-        g.moveTo(0, 0);
-        g.lineTo(128, 86);
-        g.lineTo(256, 0);
-        g.closePath();
-        g.fill();
-        g.fillStyle = "#ffd76a";
-        g.beginPath();
-        g.arc(128, 92, 13, 0, Math.PI * 2);
-        g.fill();
-        g.fillStyle = ink;
-        g.font = "700 18px 'IBM Plex Sans Thai', sans-serif";
-        g.textAlign = "center";
-        g.textBaseline = "middle";
-        g.fillText("✦ อวยพร ✦", 128, 26);
-        g.font = "600 22px 'IBM Plex Sans Thai', sans-serif";
-        g.fillText(name.slice(0, 14), 128, 140);
-      }
-      const tex = new THREE.CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      return tex;
-    }
-    // แสงฟุ้งสีทองหลังซอง
-    const haloCv = document.createElement("canvas");
-    haloCv.width = 128;
-    haloCv.height = 128;
-    const hg = haloCv.getContext("2d");
-    if (hg) {
-      const grad = hg.createRadialGradient(64, 64, 4, 64, 64, 64);
-      grad.addColorStop(0, "rgba(255,230,140,0.9)");
-      grad.addColorStop(1, "rgba(255,230,140,0)");
-      hg.fillStyle = grad;
-      hg.fillRect(0, 0, 128, 128);
-    }
-    const haloTex = new THREE.CanvasTexture(haloCv);
-    // ตำแหน่งซอง: ด้านหน้าก่อน แล้วด้านข้าง และด้านหลัง (คำนวณใน layout.ts ใช้ร่วมกับการนับความจุ)
-    const ZONE_SLOTS = ZONE_CARD_SLOTS;
-    const zHookGeo = new THREE.TorusGeometry(0.085, 0.01, 6, 18);
-    const zHookMat = new THREE.MeshStandardMaterial({ color: 0xd9b45a, roughness: 0.3, metalness: 0.8 });
-    // โซ่สั้นจากตะขอลงไปยังมุมบนของซอง
-    const chainA = new THREE.Vector3(0, -0.085, 0);
-    const chainB = new THREE.Vector3(0, -0.135, 0.1);
-    const chainGeo = new THREE.CylinderGeometry(0.006, 0.006, chainA.distanceTo(chainB), 6);
-    const chainQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), chainB.clone().sub(chainA).normalize());
-    const chainPos = chainA.clone().add(chainB).multiplyScalar(0.5);
-    const chainMesh = () => {
-      const m = new THREE.Mesh(chainGeo, zHookMat);
-      m.position.copy(chainPos);
-      m.quaternion.copy(chainQuat);
-      return m;
-    };
     function api_setZoneCards(list: CardRecord[]) {
-      while (zoneCardGroup.children.length) {
-        const c = zoneCardGroup.children.pop()!;
-        c.traverse((o) => {
-          const m = o as THREE.Mesh;
-          m.geometry?.dispose?.();
-          const mat = m.material as THREE.MeshStandardMaterial | undefined;
-          mat?.map?.dispose?.();
-          mat?.dispose?.();
-        });
-      }
-      const shown = list.slice(0, Math.min(ZONE_CAPACITY, ZONE_SLOTS.length));
-      shown.forEach((c, i) => {
-        const slot = ZONE_SLOTS[i];
-        const pivot = new THREE.Group();
-        pivot.position.set(slot.x, slot.y, slot.z);
-        pivot.rotation.y = slot.ry;
-        // ตะขอทองคล้องรอบราว โซ่สั้นลงมาถึงซองที่แขวนอยู่หน้ารั้ว
-        const hook = new THREE.Mesh(zHookGeo, zHookMat);
-        hook.rotation.y = Math.PI / 2;
-        const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.52), new THREE.MeshBasicMaterial({ map: haloTex, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
-        halo.position.set(0, -0.27, 0.06);
-        const card = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.27), new THREE.MeshStandardMaterial({ map: envelopeTexture(c.envelope, c.name), roughness: 0.6, side: THREE.DoubleSide }));
-        card.position.set(0, -0.27, 0.1);
-        card.userData.cardId = c.id;
-        pivot.userData.phase = i * 0.7;
-        pivot.userData.cardId = c.id;
-        pivot.userData.halo = halo;
-        pivot.add(hook, chainMesh(), halo, card);
-        zoneCardGroup.add(pivot);
-      });
+      village.setCards(list.slice(0, ZONE_CAPACITY).map((c) => ({ id: c.id, envelope: c.envelope, name: c.name })));
     }
-    // ลานโซน: บ้านหิมะ ต้นสนเรืองแสง และของตกแต่งอยู่ด้านในรั้ว ช่องการ์ดอยู่บนรั้วจึงไม่ถูกบัง
-    const yard = buildYardScenery();
-    yard.group.position.set(zx, 0, zz);
-    zoneGroup.add(yard.group);
-    // รั้วและของประดับโซนที่ไม่ขยับ รวมเป็นชิ้นเดียวต่อวัสดุ (ไฟกะพริบและลานที่มีแอนิเมชันไม่รวม)
-    mergeStaticMeshes(zoneGroup, new Set<THREE.Object3D>(zoneLights));
-    const sceneryUpdaters: ((t: number, reduced: boolean) => void)[] = [yard.update];
+    const sceneryUpdaters: ((t: number, reduced: boolean) => void)[] = [];
     // พลุในโซนเป็นจังหวะเบา ๆ เหนือลาน (ปิดเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว)
     let lastZoneBurst = 0;
     // ซานตากับกวางเรนเดียร์บินข้ามท้องฟ้าเป็นช่วง ๆ (ไม่แสดงเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว)
@@ -1585,11 +1162,53 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     type CamAnim = { fromPos: THREE.Vector3; toPos: THREE.Vector3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number; dur: number };
     let camAnim: CamAnim | null = null;
     let savedView: { pos: THREE.Vector3; tgt: THREE.Vector3; min: number } | null = null;
+    type WalkAnim = { curve: THREE.CatmullRomCurve3; fromTgt: THREE.Vector3; toTgt: THREE.Vector3; start: number; dur: number; fov0: number; endMin: number };
+    let walkAnim: WalkAnim | null = null;
     function animateCam(toPos: THREE.Vector3, toTgt: THREE.Vector3, dur = 900) {
+      if (walkAnim) {
+        camera.fov = walkAnim.fov0;
+        camera.updateProjectionMatrix();
+        walkAnim = null;
+      }
       camAnim = { fromPos: camera.position.clone(), toPos, fromTgt: controls.target.clone(), toTgt, start: performance.now(), dur };
     }
-    const HOME_POS = new THREE.Vector3(0, 3.0, 10.4);
-    const HOME_TGT = new THREE.Vector3(0, 2.15, 0);
+    // เดินกล้องไปตามเส้นโค้ง (ใช้กับทางเดินอุโมงค์ไฟไปโซนคำอวยพร) มองไปข้างหน้าตามทาง แล้วค่อยหันไปหาจุดหมาย
+    function walkCam(points: THREE.Vector3[], toTgt: THREE.Vector3, dur: number, endMin = 0.5) {
+      camAnim = null;
+      controls.minDistance = 0.2;
+      const curve = new THREE.CatmullRomCurve3([camera.position.clone(), ...points], false, "centripetal");
+      walkAnim = { curve, fromTgt: controls.target.clone(), toTgt, start: performance.now(), dur, fov0: walkAnim?.fov0 ?? camera.fov, endMin };
+    }
+    const smooth = (a: number, b: number, x: number) => {
+      const k = Math.min(Math.max((x - a) / (b - a), 0), 1);
+      return k * k * (3 - 2 * k);
+    };
+    function stepWalk(now: number) {
+      if (!walkAnim) return;
+      const w = walkAnim;
+      const k = Math.min((now - w.start) / w.dur, 1);
+      // เร่งออกตัว เดินคงที่ช่วงกลาง แล้วชะลอตอนถึง
+      const e = k < 0.15 ? (k * k) / 0.3 : k > 0.85 ? 1 - ((1 - k) * (1 - k)) / 0.3 : 0.075 + (k - 0.15) * (0.85 / 0.7);
+      const pos = w.curve.getPointAt(Math.min(Math.max(e, 0), 1));
+      const ahead = w.curve.getPointAt(Math.min(e + 0.06, 1));
+      ahead.y = Math.max(pos.y - 0.25, 0.8);
+      const tgt = new THREE.Vector3().lerpVectors(w.fromTgt, ahead, smooth(0, 0.12, e));
+      tgt.lerp(w.toTgt, smooth(0.78, 1, e));
+      camera.position.copy(pos);
+      controls.target.copy(tgt);
+      // มุมกล้องกว้างขึ้นเล็กน้อยระหว่างเดิน ให้รู้สึกเหมือนวาปผ่านอุโมงค์
+      const warp = Math.sin(Math.min(e, 1) * Math.PI);
+      camera.fov = w.fov0 + warp * 12;
+      camera.updateProjectionMatrix();
+      if (k >= 1) {
+        camera.fov = w.fov0;
+        camera.updateProjectionMatrix();
+        controls.minDistance = w.endMin;
+        walkAnim = null;
+      }
+    }
+    const HOME_POS = new THREE.Vector3(0, 3.9, 13.6);
+    const HOME_TGT = new THREE.Vector3(0, 2.85, 0);
     // ซูมเข้า/ออกทีละขั้นแบบนุ่ม (ปุ่มบนจอ) ระยะถูกจำกัดตามค่าที่ตั้งไว้
     function zoomBy(factor: number) {
       const dir = camera.position.clone().sub(controls.target);
@@ -1601,7 +1220,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ดูตัวอย่างป้ายประจำห้องที่ตำแหน่งที่เลือก (แสดงเฉพาะในเครื่องนี้ 9 วินาที ไม่บันทึก)
     function resetView() {
       animateCam(HOME_POS.clone(), HOME_TGT.clone());
-      controls.minDistance = 4.5;
+      controls.minDistance = 5.5;
       savedView = null;
     }
 
@@ -1622,17 +1241,42 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       const fog = scene.fog as THREE.Fog | null;
       if (fog) fog.far = 120;
       controls.minDistance = 0.5;
-      const cx = ZONE.x;
-      const cz = ZONE.z;
-      // จอแคบต้องถอยห่างกว่าเดิม ให้เห็นทั้งรั้วและป้าย
-      const far = isSmall ? 1.8 : 1;
-      // 1) ซูมออกขึ้นไปมองจากด้านบนเหมือนแผนที่
-      animateCam(new THREE.Vector3(cx * 0.4, 50, cz * 0.4 + 8), new THREE.Vector3(cx * 0.5, 0, cz * 0.5), 1100);
-      // 2) เลื่อนไปเหนือโซน
-      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx, 34, cz + 6), new THREE.Vector3(cx, 0, cz), 1000), 1150));
-      // 3) ลงมาดูรั้วและการ์ดระดับสายตา
-      const zk = ZONE.half / 8; // โซนกว้างขึ้น กล้องถอยออกตามสัดส่วน
-      zoneTimers.push(window.setTimeout(() => animateCam(new THREE.Vector3(cx + 3.5 * far * zk, 5.4 * far * zk, cz + 15.5 * far * zk), new THREE.Vector3(cx, 1.4, cz), 1100), 2200));
+      const reducedNow = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const { pts, tgt } = tunnelRoute();
+      if (reducedNow) {
+        // ลดการเคลื่อนไหว: วาปไปถึงทันที
+        animateCam(pts[pts.length - 1], tgt, 1);
+        return;
+      }
+      walkCam(pts, tgt, isSmall ? 6200 : 6800);
+    }
+    // ทางเดินจากจุดที่กล้องอยู่: อ้อมต้นไปหัวทาง เดินลอดซุ้มไฟ ผ่านประตู แล้วหยุดในลานระหว่างกำแพงการ์ดสองวง
+    function tunnelRoute() {
+      const gate = new THREE.Vector3(ZONE_GATE.x, 0, ZONE_GATE.z);
+      const dir = gate.clone().normalize();
+      const total = gate.length();
+      const EYE = 1.75;
+      const camA = Math.atan2(camera.position.z, camera.position.x);
+      const gateA = Math.atan2(dir.z, dir.x);
+      let diff = gateA - camA;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      const pts: THREE.Vector3[] = [];
+      const camR = Math.hypot(camera.position.x, camera.position.z);
+      // อ้อมรอบต้น (ถ้ากล้องอยู่คนละฝั่งกับทาง)
+      if (Math.abs(diff) > 0.5) {
+        const r = Math.min(Math.max(camR, 9.5), 14);
+        for (const f of [0.35, 0.7]) {
+          const a = camA + diff * f;
+          pts.push(new THREE.Vector3(Math.cos(a) * r, 4.4 - f * 1.4, Math.sin(a) * r));
+        }
+      }
+      for (const s of [8.2, 12, total * 0.72, total - 1.6]) pts.push(dir.clone().multiplyScalar(s).setY(EYE));
+      pts.push(new THREE.Vector3(ZONE.x, EYE, ZONE.z + ZONE.half - 1.4));
+      // หยุดในทางเดินวงแหวนระหว่างกำแพงสองวง เห็นต้นสนกลางลานทั้งต้นและกำแพงการ์ดฝั่งตรงข้าม
+      const end = new THREE.Vector3(ZONE.x, isSmall ? 2.8 : 2.5, ZONE.z + (isSmall ? 8.7 : 8.35));
+      pts.push(end);
+      return { pts, tgt: new THREE.Vector3(ZONE.x, isSmall ? 2.0 : 2.2, ZONE.z + 1) };
     }
     function returnView() {
       zoneTimers.forEach((t) => clearTimeout(t));
@@ -1642,13 +1286,33 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       if (fog) fog.far = FOG_FAR;
       zoneAway = false;
       callbacks.current.onAwayChange?.(false);
-      if (savedView) {
-        animateCam(savedView.pos, savedView.tgt, 1000);
-        controls.minDistance = savedView.min;
-        savedView = null;
+      const back = savedView ?? { pos: HOME_POS.clone(), tgt: HOME_TGT.clone(), min: 5.5 };
+      savedView = null;
+      controls.minDistance = back.min;
+      // ถ้ากล้องอยู่ในหมู่บ้าน ให้เดินกลับออกทางประตูและอุโมงค์ ไม่ทะลุกำแพง
+      const inVillage = inZone(camera.position.x, camera.position.z, 0.5);
+      if (inVillage && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const gate = new THREE.Vector3(ZONE_GATE.x, 0, ZONE_GATE.z);
+        const dir = gate.clone().normalize();
+        const total = gate.length();
+        const pts = [
+          new THREE.Vector3(ZONE.x, 1.9, ZONE.z + ZONE.half - 2.2),
+          dir.clone().multiplyScalar(total - 1.2).setY(1.9),
+          dir.clone().multiplyScalar(total * 0.55).setY(2.2),
+          dir.clone().multiplyScalar(9).setY(2.8),
+        ];
+        // อ้อมรอบต้นกลับไปยังมุมเดิม (ไม่ตัดผ่านต้น)
+        const gA = Math.atan2(dir.z, dir.x);
+        const bA = Math.atan2(back.pos.z, back.pos.x);
+        let d = bA - gA;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        const bR = Math.min(Math.max(Math.hypot(back.pos.x, back.pos.z), 9.5), 14);
+        if (Math.abs(d) > 0.5) for (const f of [0.35, 0.7]) pts.push(new THREE.Vector3(Math.cos(gA + d * f) * bR, 3.2 + f * 0.6, Math.sin(gA + d * f) * bR));
+        pts.push(back.pos);
+        walkCam(pts, back.tgt, 4200, back.min);
       } else {
-        animateCam(HOME_POS.clone(), HOME_TGT.clone(), 1000);
-        controls.minDistance = 4.5;
+        animateCam(back.pos, back.tgt, 1000);
       }
     }
     // ตุ๊กตาหิมะที่คลิก: กล้องเลื่อนไปหา และตุ๊กตาโยกทักทายเบา ๆ ตอนเปิดดู
@@ -1954,7 +1618,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         return { x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h, visible: v.z < 1 && Math.abs(v.x) < 1.15 && Math.abs(v.y) < 1.15 };
       },
       // จุดของการ์ดแต่ละใบบนจอ ถ้าอยู่นอกจอจะถูกดันไปที่ขอบจอ พร้อมมุมชี้ไปหาการ์ดนั้น
-      zoneSlots: () => {
+      zoneSlots: (only?: Set<string>) => {
         const w = renderer.domElement.clientWidth;
         const h = renderer.domElement.clientHeight;
         const cx = w / 2;
@@ -1962,16 +1626,18 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         const m = 40;
         const out: { id: string; x: number; y: number; visible: boolean; angle: number }[] = [];
         const p = new THREE.Vector3();
-        for (const pivot of zoneCardGroup.children) {
-          const id = pivot.userData.cardId as string | undefined;
-          if (!id) continue;
-          pivot.getWorldPosition(p);
-          p.y -= 0.3; // ป้ายอยู่เหนือซองเล็กน้อย
+        const toCam = new THREE.Vector3();
+        for (const en of village.cardEntries()) {
+          const id = en.id;
+          if (only && !only.has(id)) continue;
+          p.copy(en.pos);
+          // ซองที่หันหลังให้กล้อง (อยู่อีกด้านของกำแพง) นับเป็นมองไม่เห็น ให้ป้ายชี้ทางที่ขอบจอแทน
+          const facing = toCam.copy(camera.position).sub(en.pos).dot(en.normal) > 0;
           const v = p.clone().project(camera);
           const inFront = v.z < 1;
           let sx = ((v.x + 1) / 2) * w;
           let sy = ((1 - v.y) / 2) * h;
-          const visible = inFront && sx >= m && sx <= w - m && sy >= m && sy <= h - m;
+          const visible = facing && inFront && sx >= m && sx <= w - m && sy >= m && sy <= h - m;
           let angle = 0;
           if (!visible) {
             let dx = sx - cx;
@@ -1992,17 +1658,13 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       },
       // กล้องบินไปหาการ์ดใบนั้น (ใช้กับป้ายที่อยู่นอกจอ)
       focusZoneCard: (id: string) => {
-        for (const pivot of zoneCardGroup.children) {
-          if (pivot.userData.cardId !== id) continue;
-          const target = new THREE.Vector3();
-          pivot.getWorldPosition(target);
-          target.y -= 0.3;
-          const dir = camera.position.clone().sub(target);
-          if (dir.lengthSq() < 1e-4) dir.set(0, 0, 1);
-          dir.normalize().multiplyScalar(3.2);
-          animateCam(target.clone().add(dir), target.clone(), reduced ? 1 : 900);
-          return;
-        }
+        // มองตรงจากด้านหน้าซอง (ตามทิศหน้ากำแพง) จึงไม่ถูกกำแพงอื่นบัง
+        const en = village.cardEntries().find((e) => e.id === id);
+        if (!en) return;
+        const target = en.pos.clone();
+        const toPos = target.clone().addScaledVector(en.normal, 2.4).setY(Math.max(1.3, target.y + 0.35));
+        controls.minDistance = 0.5;
+        animateCam(toPos, target, reduced ? 1 : 900);
       },
       flyToZone: () => flyToZone(),
       returnView: () => returnView(),

@@ -319,7 +319,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     let raf = 0;
     let lastKey = "";
     const tick = () => {
-      const list = treeRef.current?.zoneSlots() ?? [];
+      // การ์ดในหมู่บ้านแตะเปิดได้โดยตรง ป้ายบนจอจึงมีเฉพาะการ์ดของเรา (ชี้ทางเมื่ออยู่นอกจอ)
+      const list = treeRef.current?.zoneSlots(mineIds) ?? [];
       const key = list.map((p) => `${Math.round(p.x)},${Math.round(p.y)},${p.visible ? 1 : 0}`).join("|");
       if (key !== lastKey) {
         lastKey = key;
@@ -329,7 +330,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
     };
     tick();
     return () => cancelAnimationFrame(raf);
-  }, [zoneOpen, cards]);
+  }, [zoneOpen, cards, mineIds]);
   const [exclusiveDraft, setExclusiveDraft] = useState<DecorDraft | null>(null); // ตุ๊กตา Exclusive ที่รอชำระเงิน
   const [shareOf, setShareOf] = useState<Ornament | null>(null); // การ์ดคำอวยพรที่กำลังแชร์
   // คู่มือการใช้งาน: เปิดอัตโนมัติครั้งแรกหลังของขวัญเปิดและตั้งชื่อแล้ว เปิดซ้ำได้จากปุ่ม "?"
@@ -606,10 +607,19 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const refreshCards = useCallback(async () => {
     setCardsLoading(true);
     try {
-      const res = await fetch(`/api/christmas/card?room=${roomId}&size=${ZONE_CAPACITY}`, { cache: "no-store" });
-      const data = (await res.json()) as { cards?: CardRecord[]; total?: number };
-      if (data.cards) setCards(data.cards);
-      if (typeof data.total === "number") setZoneTotal(data.total);
+      // หมู่บ้านแขวนได้มากกว่า 1,000 ใบ แต่ API ส่งได้หน้าละ 300 ใบ จึงโหลดต่อกันจนครบที่แขวนได้
+      const PAGE = 300;
+      const all: CardRecord[] = [];
+      let total = 0;
+      for (let page = 1; page <= Math.ceil(ZONE_CAPACITY / PAGE); page++) {
+        const res = await fetch(`/api/christmas/card?room=${roomId}&size=${PAGE}&page=${page}`, { cache: "no-store" });
+        const data = (await res.json()) as { cards?: CardRecord[]; total?: number };
+        if (typeof data.total === "number") total = data.total;
+        all.push(...(data.cards ?? []));
+        if (!data.cards || data.cards.length < PAGE || all.length >= Math.min(total, ZONE_CAPACITY)) break;
+      }
+      setCards(all.slice(0, ZONE_CAPACITY));
+      setZoneTotal(total);
     } catch {
       /* ลองใหม่รอบถัดไป */
     } finally {
@@ -1245,7 +1255,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <div className="xz-hud" role="toolbar" aria-label="โซนคำอวยพร">
           <span className="xz-hud-count">
             โซนคำอวยพร · {zoneTotal} ใบ
-            <span className="xz-hud-hint-text">{zoneTotal === 0 ? " · ยังไม่มีการ์ดในโซนนี้" : " · แตะป้ายทองบนรั้วเพื่อเปิดการ์ด"}</span>
+            <span className="xz-hud-hint-text">{zoneTotal === 0 ? " · ยังไม่มีการ์ดในโซนนี้" : " · แตะซองบนกำแพงเพื่อเปิดการ์ด"}</span>
           </span>
           <button type="button" className={`xz-hud-btn ${zoneTotal > 0 ? "is-hint" : ""}`} onClick={() => setZoneList(true)} disabled={zoneTotal === 0}>
             ดูรายการ
@@ -1279,6 +1289,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <div className="xz-pins">
           {zonePins.map((p) => {
             const mine = mineIds.has(p.id);
+            if (!mine) return null;
             // การ์ดนอกจอ: แสดงเฉพาะการ์ดของเราเป็นลูกศรที่ขอบจอ แตะแล้วกล้องบินไปหา
             if (!p.visible) {
               if (!mine) return null;
