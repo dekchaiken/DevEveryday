@@ -710,7 +710,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
   return (
     <div
-      className="xmas-stage"
+      className={`xmas-stage ${zoneOpen ? "is-zone" : ""}`}
       style={{ "--sky-top": room.skyTop, "--sky-bottom": room.skyBottom, "--room-accent": room.accent } as CSSProperties}
     >
       {/* พื้นหลังท้องฟ้าค่ำและดาว */}
@@ -1176,7 +1176,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
 
       {/* ปุ่มซูมบนฉาก: ซูมเข้า ออก และกลับมุมมองเริ่มต้น (มือถือกดหรือบีบนิ้วได้ คอมใช้ลูกล้อเมาส์) */}
-      <div className="xmas-zoom" role="group" aria-label="ซูมภาพ">
+      <div className={`xmas-zoom ${zoneOpen ? "is-zone" : ""}`} role="group" aria-label="ซูมภาพ">
         <button type="button" onClick={() => treeRef.current?.zoomBy(0.8)} aria-label="ซูมเข้า">
           <Icon name="plus" size={18} />
         </button>
@@ -1354,6 +1354,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           </button>
           <span className="xz-nav-label">
             กำแพง {zoneStop.index + 1}/{zoneStop.total}
+            <small className="xz-nav-count">{zoneTotal} ใบ</small>
           </span>
           <button type="button" className="xz-nav-btn" aria-label="กำแพงถัดไป" onClick={() => treeRef.current?.zoneStep(1)}>
             ›
