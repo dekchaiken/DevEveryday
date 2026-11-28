@@ -1995,3 +1995,88 @@
     animation: none;
   }
 }
+
+/* ---------- เลื่อนชมทีละกำแพงในหมู่บ้านคำอวยพร ---------- */
+.xz-nav {
+  position: fixed;
+  left: 50%;
+  bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+  z-index: 62;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(14, 34, 27, 0.82);
+  border: 1px solid rgba(232, 209, 154, 0.4);
+  box-shadow: 0 12px 26px -12px rgba(0, 0, 0, 0.7);
+  animation: xz-tip-in 0.45s ease both;}
+.xz-nav-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 0;
+  background: linear-gradient(180deg, #d9a93a, #b98a2a);
+  color: #2a1d10;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;}
+.xz-nav-btn:active {
+  transform: scale(0.94);}
+.xz-nav-label {
+  min-width: 96px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f7f2e6;
+  font-variant-numeric: tabular-nums;}
+@media (max-width: 759px) {
+  .xz-nav {
+    top: auto;
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));}}
+
+/* ---------- แถบเลือกช่องวางตุ๊กตาบนฉาก ---------- */
+.xz-pick {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  z-index: 63;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  padding: 8px 10px 8px 16px;
+  border-radius: 22px;
+  background: rgba(14, 34, 27, 0.92);
+  border: 1px solid rgba(232, 209, 154, 0.45);
+  box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.7);
+  color: #f7f2e6;
+  animation: xz-tip-in 0.35s ease both;}
+.xz-pick-note {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;}
+.xz-pick-note.is-ok {
+  color: #86efac;}
+.xz-pick-note.is-warn {
+  color: #fca5a5;}
+.xz-pick-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;}
+.xz-hud-btn:disabled {
+  opacity: 0.45;
+  cursor: default;}
+@media (max-width: 759px) {
+  .xz-pick {
+    flex-direction: column;
+    align-items: stretch;
+    width: calc(100vw - 24px);
+    padding: 10px 12px;
+    text-align: center;}
+  .xz-pick-actions {
+    justify-content: center;}}

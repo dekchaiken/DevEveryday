@@ -6,26 +6,40 @@
 // และพื้นที่ที่ว่างขึ้นจากโซนเก่าจะต่อท้ายรายการเป็นช่องใหม่
 import { CELL, LAND_R, LEGACY_TREE_CORE_R, TREE_CORE_R, checkPlacement, cellKey, footprintCells, footprintCenter, type Cell, type Rules } from "@/lib/christmas/grid";
 
-export type Zone = { x: number; z: number; half: number };
+// โซนแบบสี่เหลี่ยม (half = ครึ่งความกว้าง) หรือวงกลม (round: half = รัศมีที่สงวนไว้)
+// gate = จุดที่ทางเดินจากต้นไม้มาถึงโซน (ไม่ระบุ = กลางขอบด้านที่หันเข้าหาต้น แบบผังเดิม)
+export type Zone = { x: number; z: number; half: number; round?: boolean; gate?: { x: number; z: number } };
 
-// ผังรุ่นแรก (ก่อนย้ายโซน) และรุ่นที่สอง (โซน 20×20) ใช้คำนวณลำดับช่องเดิมเท่านั้น
+// ผังรุ่นแรก (ก่อนย้ายโซน) รุ่นที่สอง (โซน 20×20) และรุ่นที่สาม (หมู่บ้าน 26×26) ใช้คำนวณลำดับช่องเดิมเท่านั้น
 export const LEGACY_ZONE: Zone = { x: -5, z: -19, half: 8 };
 export const ZONE_V2: Zone = { x: -12, z: -26, half: 10 };
-// โซนคำอวยพรปัจจุบัน: หมู่บ้านคำอวยพร 26×26 หน่วย มีกำแพงการ์ดสองวงล้อมต้นสนกลางลาน
-export const ZONE: Zone = { x: -14, z: -32, half: 13 };
-// ประตูโซนหันเข้าหาต้นไม้ และทางเดินจากประตูไปยังต้นไม้
-export const ZONE_GATE = { x: ZONE.x, z: ZONE.z + ZONE.half };
+export const ZONE_V3: Zone = { x: -14, z: -32, half: 13 };
+
+// ---------- โซนคำอวยพรปัจจุบัน: หมู่บ้านวงกลม ห่างต้น 30 หน่วย อยู่ในเขตลานทั้งหมด ----------
+// กำแพงการ์ดสามวง (รัศมี 4.5 / 8.5 / 12.5) มีทางเดินวงแหวนสองวงคั่น ทุกหน้าการ์ดหันเข้าหาทางเดิน
+export const ZONE_WALL_R = 12.5; // รัศมีกำแพงวงนอกสุด (ขอบหมู่บ้าน)
+const ZONE_CENTER = { x: -15, z: -26 };
+const ZONE_DIST = Math.hypot(ZONE_CENTER.x, ZONE_CENTER.z);
+export const ZONE_GATE = {
+  x: ZONE_CENTER.x * (1 - ZONE_WALL_R / ZONE_DIST),
+  z: ZONE_CENTER.z * (1 - ZONE_WALL_R / ZONE_DIST),
+};
+// สงวนวงกว้างกว่ากำแพงเล็กน้อย เผื่อบ้านหิมะสองหลังข้างประตูและต้นสนรอบนอก
+export const ZONE: Zone = { x: ZONE_CENTER.x, z: ZONE_CENTER.z, half: 15.3, round: true, gate: ZONE_GATE };
+// มุมของประตูเมื่อมองจากจุดกลางโซน (ชี้กลับมาหาต้นไม้)
+export const ZONE_GATE_ANGLE = Math.atan2(ZONE_GATE.z - ZONE.z, ZONE_GATE.x - ZONE.x);
 // ครึ่งความกว้างของทางเดิน (ทางเดินปัจจุบันกว้างขึ้นเพื่อให้มีอุโมงค์ซุ้มไฟ)
 const PATH_HALF_OLD = 1.3;
 export const PATH_HALF = 1.7;
 
 function inZoneOf(zone: Zone, x: number, z: number, pad = 0.6) {
+  if (zone.round) return Math.hypot(x - zone.x, z - zone.z) <= zone.half + pad;
   return Math.abs(x - zone.x) <= zone.half + pad && Math.abs(z - zone.z) <= zone.half + pad;
 }
 // ระยะจากจุดถึงทางเดินเส้นตรงจากต้นไม้ไปประตูโซน
 function distToPathOf(zone: Zone, x: number, z: number): number {
-  const vx = zone.x;
-  const vz = zone.z + zone.half;
+  const vx = zone.gate ? zone.gate.x : zone.x;
+  const vz = zone.gate ? zone.gate.z : zone.z + zone.half;
   const t = Math.max(0, Math.min(1, (x * vx + z * vz) / (vx * vx + vz * vz)));
   return Math.hypot(x - vx * t, z - vz * t);
 }
@@ -60,11 +74,43 @@ function cornersOf(c: Cell): [number, number][] {
   ];
 }
 
-type Gen = { zone: Zone; pathHalf: number; coreR: number };
+// ---------- ของตกแต่งรอบลาน: ตำแหน่งคงที่และสงวนช่องไว้ ไม่ทับตุ๊กตาหรือบ้าน Exclusive ----------
+export type DecorSpot = { kind: "lamp" | "bench" | "baubles" | "grove"; x: number; z: number; r: number; a: number };
+const deg = (d: number) => (d * Math.PI) / 180;
+function buildDecorSpots(): DecorSpot[] {
+  const out: DecorSpot[] = [];
+  const at = (kind: DecorSpot["kind"], a: number, rad: number, r: number) => out.push({ kind, x: Math.cos(a) * rad, z: Math.sin(a) * rad, r, a });
+  // เสาไฟ 12 ต้นรอบลาน: มุมกล้องหน้าต้น (90°) และทางเดินไปโซนอยู่กึ่งกลางระหว่างเสาพอดี
+  for (let k = 0; k < 12; k++) at("lamp", deg(75 + k * 30), 7.7, 0.45);
+  for (const a of [0, 150, 300]) at("bench", deg(a), 8.6, 0.95);
+  for (const a of [20, 125, 195]) at("baubles", deg(a), 11.2, 1.4);
+  // ป่าสนเป็นกลุ่มที่ขอบลาน (ไกลจากต้น ไม่กินพื้นที่ที่คนนิยมวาง) เว้นแนวทางไปโซน
+  const gateA = Math.atan2(ZONE_GATE.z, ZONE_GATE.x);
+  for (let k = 0; k < 16; k++) {
+    const a = deg(k * 22.5 + 8);
+    const d = Math.abs(Math.atan2(Math.sin(a - gateA), Math.cos(a - gateA)));
+    if (d < deg(16)) continue;
+    const x = Math.cos(a) * 48.5;
+    const z = Math.sin(a) * 48.5;
+    if (inZoneOf(ZONE, x, z, 4)) continue;
+    at("grove", a, 48.5, 3.6);
+  }
+  return out;
+}
+export const DECOR_SPOTS = buildDecorSpots();
+function inDecor(x: number, z: number, pad = 0) {
+  return DECOR_SPOTS.some((d) => Math.hypot(x - d.x, z - d.z) < d.r + pad);
+}
+
+type Gen = { zone: Zone; pathHalf: number; coreR: number; decor?: boolean };
 function rulesFor(gen: Gen, extraReserved?: (c: Cell) => boolean): Rules {
   return {
     road: (c) => cornersOf(c).some(([x, z]) => inPathOf(gen.zone, x, z, gen.pathHalf)), // ทางเดินไปโซนอวยพรวางทับไม่ได้
-    reserved: (c) => cornersOf(c).some(([x, z]) => inZoneOf(gen.zone, x, z)) || (extraReserved ? extraReserved(c) : false), // โซนคำอวยพรสงวนไว้
+    // โซนคำอวยพรและของตกแต่งรอบลานสงวนไว้ (ใช้จุดกลางช่องตรวจของตกแต่งด้วย เพราะเสาไฟเล็กกว่าช่อง)
+    reserved: (c) =>
+      cornersOf(c).some(([x, z]) => inZoneOf(gen.zone, x, z)) ||
+      (gen.decor ? cornersOf(c).some(([x, z]) => inDecor(x, z)) || inDecor((c.x + 0.5) * CELL, (c.z + 0.5) * CELL) : false) ||
+      (extraReserved ? extraReserved(c) : false),
     occupied: () => false,
     coreR: gen.coreR,
   };
@@ -115,10 +161,12 @@ const footprintKeys = (cells: Cell[], size: 1 | 2) => {
 
 // ---------- ลำดับช่อง: ทุกรุ่นของผังต่อท้ายกัน (ห้ามแก้รุ่นที่ผ่านมา เพิ่มรุ่นใหม่ต่อท้ายเท่านั้น) ----------
 // รุ่นที่ 1: โซนเดิม  รุ่นที่ 2: โซน 20×20  รุ่นที่ 3: หมู่บ้านคำอวยพรและต้นใหญ่ (โคนต้นกว้างขึ้น ทางเดินกว้างขึ้น)
+// รุ่นที่ 4: หมู่บ้านวงกลมใกล้ต้นขึ้น และสงวนช่องใต้ของตกแต่งรอบลาน
 const GENS: Gen[] = [
   { zone: LEGACY_ZONE, pathHalf: PATH_HALF_OLD, coreR: LEGACY_TREE_CORE_R },
   { zone: ZONE_V2, pathHalf: PATH_HALF_OLD, coreR: LEGACY_TREE_CORE_R },
-  { zone: ZONE, pathHalf: PATH_HALF, coreR: TREE_CORE_R },
+  { zone: ZONE_V3, pathHalf: PATH_HALF, coreR: TREE_CORE_R },
+  { zone: ZONE, pathHalf: PATH_HALF, coreR: TREE_CORE_R, decor: true },
 ];
 const GIANT_CELLS_LIST: Cell[] = [];
 const DOLL_LIST: Cell[] = [];
@@ -189,76 +237,77 @@ export const DOLL_DISPLAY_POSITIONS = relocate(DOLL_POSITIONS, DOLL_BLOCKED);
 export const GIANT_DISPLAY_POSITIONS = relocate(GIANT_POSITIONS, GIANT_BLOCKED);
 
 // ---------- ช่องแขวนซองการ์ดในหมู่บ้านคำอวยพร ----------
-// ราว 4 ชั้น ห่างกัน 0.55 หน่วย ให้ซองแขวนใต้ราวได้โดยไม่ทับราวชั้นล่าง
-export const ZONE_RAIL_Y = [2.25, 1.7, 1.15, 0.6];
-export type ZoneCardSlot = { x: number; z: number; ry: number; y: number };
-// กำแพงการ์ดสองหน้า วางเป็นสองวงรอบต้นสนกลางลาน (ช่องว่างตรงแนวประตูเป็นทางเดินเข้า)
-// x, z คือจุดกลางกำแพงในโลก ry คือมุมหมุนของหน้ากำแพงที่หันออกจากศูนย์กลาง
-export type ZoneWall = { x: number; z: number; ry: number; len: number; ring: 0 | 1 };
-export const ZONE_RINGS = [
-  { r: 6.5, count: 8, len: 3.2, offset: Math.PI / 8 },
-  { r: 10.2, count: 12, len: 3.6, offset: Math.PI / 12 },
+// ราว 5 ชั้น ห่างกัน 0.55 หน่วย ซองแขวนใต้ราว
+export const ZONE_RAIL_Y = [2.8, 2.25, 1.7, 1.15, 0.6];
+export const ZONE_WALL_TOP = 3.05;
+export type ZoneCardSlot = { x: number; z: number; ry: number; y: number; stop: number };
+// กำแพงหนึ่งแผง: x, z คือจุดกลาง ry คือมุมหมุนที่หน้า +z ของแผงชี้ออกจากจุดกลางโซน
+export type ZoneWall = { x: number; z: number; ry: number; len: number; ring: number; angle: number };
+// faces: +1 = หน้าการ์ดหันออก, -1 = หันเข้า
+export const ZONE_RINGS: { r: number; count: number; len: number; faces: (1 | -1)[] }[] = [
+  { r: 4.5, count: 6, len: 3.6, faces: [1] },
+  { r: 8.5, count: 12, len: 3.6, faces: [1, -1] },
+  { r: ZONE_WALL_R, count: 18, len: 3.6, faces: [-1] },
 ];
-export const ZONE_GATE_HALF = 2.2; // ครึ่งความกว้างช่องประตูบนรั้วด้านหน้า
-export const ZONE_WALLS: ZoneWall[] = ZONE_RINGS.flatMap((ring, ri) =>
-  Array.from({ length: ring.count }, (_, k) => {
-    const phi = ring.offset + (k / ring.count) * Math.PI * 2;
-    const nx = Math.cos(phi);
-    const nz = Math.sin(phi);
-    return { x: ZONE.x + nx * ring.r, z: ZONE.z + nz * ring.r, ry: Math.atan2(nx, nz), len: ring.len, ring: ri as 0 | 1 };
-  }),
-);
-const SLOT_STEP = 0.8;
-// ระยะของซองตามแนวกำแพงยาว len (จัดกึ่งกลาง)
-function slotTs(len: number): number[] {
-  const n = Math.max(1, Math.floor((len - 0.4) / SLOT_STEP + 1e-6) + 1);
-  const n2 = Math.min(n, Math.floor(len / SLOT_STEP));
-  return Array.from({ length: n2 }, (_, i) => Math.round((i - (n2 - 1) / 2) * SLOT_STEP * 100) / 100);
-}
-// ลำดับ: ระดับสายตาก่อน ด้านในวงในรอบต้นสน → ด้านนอกวงใน → ด้านในวงนอก → ด้านนอกวงนอก → รั้วรอบโซน
-const ROW_ORDER = [1, 2, 0, 3].map((i) => ZONE_RAIL_Y[i]);
-function buildZoneCardSlots(): ZoneCardSlot[] {
-  const out: ZoneCardSlot[] = [];
-  const gateAngle = Math.PI / 2;
-  const angDist = (w: ZoneWall) => {
-    const a = Math.atan2(w.z - ZONE.z, w.x - ZONE.x);
-    const d = Math.abs(a - gateAngle) % (Math.PI * 2);
-    return Math.min(d, Math.PI * 2 - d);
-  };
-  const face = (w: ZoneWall, side: 1 | -1) => {
-    // หน้า +1 หันออกจากศูนย์กลาง, -1 หันเข้าหาต้นสน
-    const nx = Math.sin(w.ry) * side;
-    const nz = Math.cos(w.ry) * side;
-    const tx = Math.cos(w.ry);
-    const tz = -Math.sin(w.ry);
-    const ry = Math.atan2(nx, nz);
-    const ts = slotTs(w.len);
-    return ROW_ORDER.map((y) => ts.map((t) => ({ x: w.x + tx * t + nx * 0.08, z: w.z + tz * t + nz * 0.08, ry, y })));
-  };
-  // หน้าที่หันเข้าศูนย์กลาง: กำแพงฝั่งตรงข้ามประตูมองเห็นก่อน (กล้องยืนหน้าประตูมองเข้าลาน)
-  // หน้าที่หันออก: กำแพงใกล้ประตูมองเห็นก่อน
-  for (const [ring, side] of [
-    [0, -1],
-    [0, 1],
-    [1, -1],
-    [1, 1],
-  ] as const) {
-    const walls = ZONE_WALLS.filter((w) => w.ring === ring).sort((a, b) => (side < 0 ? angDist(b) - angDist(a) : angDist(a) - angDist(b)));
-    const faces = walls.map((w) => face(w, side));
-    ROW_ORDER.forEach((_, ri) => faces.forEach((f) => out.push(...f[ri])));
-  }
-  // รั้วรอบโซน: แขวนด้านใน (หันเข้าลาน) ด้านหน้าเว้นช่องประตู
-  const { x: zx, z: zz, half: zh } = ZONE;
-  const ts: number[] = [];
-  for (let t = -zh + 0.8; t <= zh - 0.8 + 0.001; t += SLOT_STEP) ts.push(Math.round(t * 100) / 100);
-  for (const y of ROW_ORDER) {
-    ts.forEach((t) => {
-      if (Math.abs(t) > ZONE_GATE_HALF + 0.4) out.push({ x: zx + t, z: zz + zh - 0.1, ry: Math.PI, y });
-    });
-    ts.forEach((t) => out.push({ x: zx - zh + 0.1, z: zz + t, ry: Math.PI / 2, y }));
-    ts.forEach((t) => out.push({ x: zx + zh - 0.1, z: zz + t, ry: -Math.PI / 2, y }));
-    ts.forEach((t) => out.push({ x: zx + t, z: zz - zh + 0.1, ry: 0, y }));
+// ทางเดินวงแหวน: วงในระหว่างกำแพงวง 0 กับ 1 และวงนอกระหว่างวง 1 กับ 2
+export const ZONE_WALKWAYS = [
+  { r: 6.5, inner: 4.5, outer: 8.5 },
+  { r: 10.5, inner: 8.5, outer: ZONE_WALL_R },
+];
+// แผงที่ตรงกับแนวประตูถูกเว้นไว้ทุกวง เป็นทางเดินตรงจากประตูถึงต้นสนกลางลาน
+export const ZONE_WALLS: ZoneWall[] = ZONE_RINGS.flatMap((ring, ri) => {
+  const out: ZoneWall[] = [];
+  for (let k = 1; k < ring.count; k++) {
+    const angle = ZONE_GATE_ANGLE + (k / ring.count) * Math.PI * 2;
+    const nx = Math.cos(angle);
+    const nz = Math.sin(angle);
+    out.push({ x: ZONE.x + nx * ring.r, z: ZONE.z + nz * ring.r, ry: Math.atan2(nx, nz), len: ring.len, ring: ri, angle });
   }
   return out;
+});
+// จุดชมการ์ด: หนึ่งจุดต่อหนึ่งหน้ากำแพง เรียงตามทางเดิน (วงในก่อน) และตามมุมจากประตูทวนเข็ม
+export type ZoneStop = { wall: number; side: 1 | -1; walkway: number; center: { x: number; y: number; z: number }; normal: { x: number; z: number }; tangent: { x: number; z: number }; first: number; count: number };
+const SLOT_STEP = 0.7;
+const SLOT_TS = [-1.4, -0.7, 0, 0.7, 1.4];
+function buildStops(): { stops: ZoneStop[]; slots: ZoneCardSlot[] } {
+  const faces: { wall: number; side: 1 | -1; walkway: number; rel: number; ring: number }[] = [];
+  ZONE_WALLS.forEach((w, wi) => {
+    for (const side of ZONE_RINGS[w.ring].faces) {
+      const walkway = side > 0 ? w.ring : w.ring - 1;
+      const rel = (((w.angle - ZONE_GATE_ANGLE) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      faces.push({ wall: wi, side, walkway, rel, ring: w.ring });
+    }
+  });
+  faces.sort((a, b) => a.walkway - b.walkway || a.rel - b.rel || a.ring - b.ring);
+  const stops: ZoneStop[] = [];
+  const slots: ZoneCardSlot[] = [];
+  faces.forEach((f) => {
+    const w = ZONE_WALLS[f.wall];
+    const nx = Math.sin(w.ry) * f.side;
+    const nz = Math.cos(w.ry) * f.side;
+    // ทิศซ้ายไปขวาเมื่อยืนมองหน้ากำแพง
+    const rx = nz;
+    const rz = -nx;
+    const first = slots.length;
+    for (const y of ZONE_RAIL_Y) {
+      for (const t of SLOT_TS) {
+        slots.push({ x: w.x + rx * t + nx * 0.08, z: w.z + rz * t + nz * 0.08, ry: Math.atan2(nx, nz), y, stop: stops.length });
+      }
+    }
+    stops.push({
+      wall: f.wall,
+      side: f.side,
+      walkway: f.walkway,
+      center: { x: w.x + nx * 0.1, y: 1.55, z: w.z + nz * 0.1 },
+      normal: { x: nx, z: nz },
+      tangent: { x: rx, z: rz },
+      first,
+      count: slots.length - first,
+    });
+  });
+  void SLOT_STEP;
+  return { stops, slots };
 }
-export const ZONE_CARD_SLOTS = buildZoneCardSlots();
+const BUILT = buildStops();
+export const ZONE_STOPS = BUILT.stops;
+export const ZONE_CARD_SLOTS = BUILT.slots;

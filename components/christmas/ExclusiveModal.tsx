@@ -5,7 +5,7 @@ import type { MessageTheme, OrderPreview } from "@/lib/christmas/types";
 import type { Social } from "@/lib/christmas/social";
 import { DEFAULT_GIANT_LOOK, DIORAMA_BASES, DIORAMA_KINDS, freeSpot, makeItem, MAX_ITEMS, PALETTE, partsFor, SIGN_BOARDS, specFor, type DioramaItem, type GiantLook, type PaletteKey } from "@/lib/christmas/giant";
 import { CELL, LAND_R, TREE_CORE_R } from "@/lib/christmas/grid";
-import { GIANT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
+import { DECOR_SPOTS, GIANT_POSITIONS, ZONE, ZONE_GATE } from "@/lib/christmas/slots";
 import type { SnowParts } from "./SnowmanPreview";
 import { SnowmanPreview } from "./SnowmanPreview";
 import { DioramaViewer } from "./DioramaViewer";
@@ -154,9 +154,22 @@ function SpotMap({ taken, held, value, onPick }: { taken: Set<number>; held: Set
     g.strokeStyle = "rgba(120,110,100,0.6)";
     g.lineWidth = 4;
     g.stroke();
-    const [zx, zz] = toPx(ZONE.x - ZONE.half, ZONE.z - ZONE.half);
     g.fillStyle = "rgba(20,90,60,0.18)";
-    g.fillRect(zx, zz, ZONE.half * 2 * scale, ZONE.half * 2 * scale);
+    if (ZONE.round) {
+      g.beginPath();
+      g.arc(...toPx(ZONE.x, ZONE.z), ZONE.half * scale, 0, Math.PI * 2);
+      g.fill();
+    } else {
+      const [zx, zz] = toPx(ZONE.x - ZONE.half, ZONE.z - ZONE.half);
+      g.fillRect(zx, zz, ZONE.half * 2 * scale, ZONE.half * 2 * scale);
+    }
+    // ของตกแต่งรอบลานที่สงวนพื้นที่ไว้ (ป่าสน เสาไฟ ม้านั่ง ลูกบอลยักษ์)
+    for (const d of DECOR_SPOTS) {
+      g.beginPath();
+      g.arc(...toPx(d.x, d.z), Math.max(d.r * scale, 1.5), 0, Math.PI * 2);
+      g.fillStyle = d.kind === "grove" ? "rgba(21,83,45,0.35)" : "rgba(180,140,60,0.55)";
+      g.fill();
+    }
     g.fillStyle = "rgba(20,70,50,0.7)";
     g.font = "600 11px sans-serif";
     g.textAlign = "center";

@@ -1,7 +1,8 @@
 // ตำแหน่งวางบนลานคริสต์มาส: ตุ๊กตาธรรมดาใช้ช่อง 1×1 ตุ๊กตายักษ์ใช้จุด 2×2 (ผังมาจาก layout.ts)
 // ชื่อเดิมยังคงไว้เพื่อให้โค้ดอื่นทำงานต่อได้ ค่าทั้งหมดมาจากผังเดียวกัน
+import { cellKey, worldToCell } from "@/lib/christmas/grid";
 import { DOLL_BLOCKED, DOLL_CELLS, DOLL_DISPLAY_POSITIONS, DOLL_POSITIONS, GIANT_BLOCKED, GIANT_DISPLAY_POSITIONS, GIANT_POSITIONS as GP, ZONE_CARD_SLOTS } from "@/lib/christmas/layout";
-export { GIANT_CAPACITY, GIANT_MODEL_SCALE, GIANT_POSITIONS, GIANT_RING_START, GIANT_STEP, ZONE, ZONE_CARD_SLOTS, ZONE_GATE, ZONE_GATE_HALF, ZONE_RAIL_Y, ZONE_RINGS, ZONE_WALLS, PATH_HALF, distToPath, inPath, inZone } from "@/lib/christmas/layout";
+export { GIANT_CAPACITY, GIANT_MODEL_SCALE, GIANT_POSITIONS, GIANT_RING_START, GIANT_STEP, ZONE, ZONE_CARD_SLOTS, ZONE_GATE, ZONE_GATE_ANGLE, ZONE_RAIL_Y, ZONE_RINGS, ZONE_WALLS, ZONE_STOPS, ZONE_WALKWAYS, ZONE_WALL_TOP, ZONE_WALL_R, DECOR_SPOTS, PATH_HALF, distToPath, inPath, inZone } from "@/lib/christmas/layout";
 
 // จำนวนช่องตุ๊กตาหิมะธรรมดาทั้งหมด (ลำดับช่องคงที่ตามผัง)
 export const SLOT_COUNT = DOLL_CELLS.length;
@@ -40,4 +41,11 @@ export function isReservedSlot(slot: number) {
 // จุดบ้าน Exclusive ที่วางใหม่ไม่ได้ (ทับโซนหรือทางเดินใหม่)
 export function isBlockedGiantSpot(spot: number) {
   return GIANT_BLOCKED.has(spot);
+}
+
+// ช่องที่อยู่ตรงจุดในโลกพอดี (ใช้ตอนแตะเลือกบนฉาก ได้ช่องตรงกับที่แตะเสมอ) ไม่ใช่ช่องที่วางได้ = null
+const SLOT_BY_CELL = new Map(DOLL_CELLS.map((c, i) => [cellKey(c), i]));
+export function slotAtWorld(x: number, z: number): number | null {
+  const i = SLOT_BY_CELL.get(cellKey(worldToCell(x, z)));
+  return i === undefined || DOLL_BLOCKED.has(i) ? null : i;
 }

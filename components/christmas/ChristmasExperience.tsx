@@ -149,6 +149,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [zoneTotal, setZoneTotal] = useState(0);
   const [doorGo, setDoorGo] = useState(false); // กำลังเล่นประตูเปลี่ยนห้อง
   const [mineIds, setMineIds] = useState<Set<string>>(() => new Set()); // การ์ดที่เครื่องนี้ส่ง
+  const [zoneStop, setZoneStop] = useState<{ index: number; total: number } | null>(null); // กำแพงที่กำลังชมในหมู่บ้าน
   const [zonePins, setZonePins] = useState<{ id: string; x: number; y: number; visible: boolean; angle: number }[]>([]);
   useEffect(() => {
     setMineIds(myCardIds());
@@ -306,10 +307,28 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   }, [state]);
   const [decorSlot, setDecorSlot] = useState<number | null>(null);
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
+  // โหมดเลือกช่องวางตุ๊กตาบนฉาก (เปิดจากปุ่ม "บนฉาก" ในหน้าตกแต่ง) และข้อความสถานะของช่องที่แตะ
+  const [pickMode, setPickMode] = useState(false);
+  const [pickNote, setPickNote] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
   // แผงแขวนลูกบอลเปิดได้เฉพาะตอนเลือกแขวน ปิดเองเมื่อเข้าโซนหรือโต๊ะการ์ด
   useEffect(() => {
     if (zoneOpen || studioOpen) setSheetOpen(false);
   }, [zoneOpen, studioOpen]);
+  // ลูกศรซ้าย/ขวาบนคีย์บอร์ดเลื่อนชมกำแพงในหมู่บ้าน
+  useEffect(() => {
+    if (!zoneOpen) {
+      setZoneStop(null);
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      if (e.key === "ArrowRight") treeRef.current?.zoneStep(1);
+      if (e.key === "ArrowLeft") treeRef.current?.zoneStep(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoneOpen]);
   // ป้ายชี้การ์ดในโซนตามตำแหน่งบนจอ อัปเดตระหว่างกล้องบินไปที่โซน
   useEffect(() => {
     if (!zoneOpen) {
@@ -735,10 +754,21 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             if (c) setZoneReveal(c);
           }}
           onAwayChange={setAway}
+          onZoneStop={(index, total) => setZoneStop({ index, total })}
+          pickMode={pickMode}
           onGroundPick={(slot) => {
+            if (slot === null) {
+              setPickNote({ tone: "warn", text: "ตรงนี้วางไม่ได้ (ทางเดิน โซน หรือของตกแต่ง) ลองแตะช่องสีเขียว" });
+              return;
+            }
+            const owner = decor.find((d) => d.slot === slot);
+            if (owner) {
+              setPickNote({ tone: "warn", text: `ช่อง ${slot + 1} มี ${owner.name} วางแล้ว เลือกช่องสีเขียว` });
+              return;
+            }
             setMarkerSlot(slot);
             setDecorSlot(slot);
-            setDecorOpen(true);
+            setPickNote({ tone: "ok", text: `ช่อง ${slot + 1} ว่าง` });
           }}
           onDecorClick={(d) => {
             const pos = SLOT_POSITIONS[d.slot] ?? SLOT_POSITIONS[0];
@@ -1049,6 +1079,36 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         />
       )}
 
+      {/* แถบเลือกช่องบนฉาก: แตะช่องสีเขียวบนพื้น แล้วกดใช้ช่องนี้ */}
+      {pickMode && (
+        <div className="xz-pick" role="group" aria-label="เลือกช่องวางตุ๊กตาบนฉาก">
+          <span className={`xz-pick-note is-${pickNote?.tone ?? "idle"}`}>{pickNote?.text ?? "แตะช่องสีเขียวบนพื้นเพื่อเลือกที่วางตุ๊กตา"}</span>
+          <div className="xz-pick-actions">
+            <button
+              type="button"
+              className="xz-hud-btn"
+              disabled={pickNote?.tone !== "ok"}
+              onClick={() => {
+                setPickMode(false);
+                setDecorOpen(true);
+              }}
+            >
+              ใช้ช่องนี้
+            </button>
+            <button
+              type="button"
+              className="xz-hud-btn is-ghost"
+              onClick={() => {
+                setPickMode(false);
+                setDecorOpen(true);
+              }}
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      )}
+
       {decorOpen && (
         <DecorModal
           roomId={room.id}
@@ -1064,7 +1124,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           }}
           onPickOnMap={() => {
             setDecorOpen(false);
-            notify("ok", "แตะพื้นหิมะบนฉากเพื่อเลือกช่อง");
+            setPickNote(null);
+            setPickMode(true);
           }}
           onClose={() => {
             setDecorOpen(false);
@@ -1282,6 +1343,20 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             }}
           >
             กลับมุมเดิม
+          </button>
+        </div>
+      )}
+      {/* เลื่อนชมทีละกำแพง: ทุกหน้ากำแพงมีจุดยืนมองตรง ๆ จึงเห็นซองครบทุกใบ ไม่มีใบไหนถูกบัง */}
+      {zoneOpen && !zoneList && zoneStop && zoneTotal > 0 && (
+        <div className="xz-nav" role="group" aria-label="เลื่อนชมกำแพงการ์ด">
+          <button type="button" className="xz-nav-btn" aria-label="กำแพงก่อนหน้า" onClick={() => treeRef.current?.zoneStep(-1)}>
+            ‹
+          </button>
+          <span className="xz-nav-label">
+            กำแพง {zoneStop.index + 1}/{zoneStop.total}
+          </span>
+          <button type="button" className="xz-nav-btn" aria-label="กำแพงถัดไป" onClick={() => treeRef.current?.zoneStep(1)}>
+            ›
           </button>
         </div>
       )}

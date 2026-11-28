@@ -330,7 +330,8 @@ function onSurface(h: number, a: number, rk = 1) {
   return new THREE.Vector3(Math.cos(a) * r, TREE_BASE_Y + h * TREE_H, Math.sin(a) * r);
 }
 
-export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glowTex: THREE.Texture }): TreeModel {
+// starLight: ไฟจุดสีทองจากดาว (ฉากใหญ่ปิดไว้ เพราะไฟจุดหนึ่งดวงทำให้ทุกวัสดุในฉากคำนวณแสงเพิ่ม)
+export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glowTex: THREE.Texture; starLight?: boolean }): TreeModel {
   const theme = THEMES[opts.variant];
   const small = opts.small;
   const group = new THREE.Group();
@@ -454,7 +455,7 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
     lightBase.push(new THREE.Color(theme.lights[i % theme.lights.length]));
     lightPhase.push(r() * Math.PI * 2);
   }
-  const bulbMesh = new THREE.InstancedMesh(keepG(new THREE.SphereGeometry(theme.bulb, 8, 6)), keepM(new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false })), LIGHTS);
+  const bulbMesh = new THREE.InstancedMesh(keepG(new THREE.SphereGeometry(theme.bulb, 6, 4)), keepM(new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false })), LIGHTS);
   lightPos.forEach((p, i) => {
     bulbMesh.setMatrixAt(i, m4.makeTranslation(p.x, p.y, p.z));
     bulbMesh.setColorAt(i, lightBase[i]);
@@ -495,7 +496,7 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
       }
     });
     const beadMesh = new THREE.InstancedMesh(
-      keepG(new THREE.SphereGeometry(0.022, 10, 8)),
+      keepG(new THREE.SphereGeometry(0.022, 6, 4)), // ลูกปัดเล็กมากบนจอ ใช้รูปทรงหยาบได้
       keepM(new THREE.MeshStandardMaterial({ color: theme.garlandColor, metalness: 0.85, roughness: 0.22 })),
       beads.length,
     );
@@ -552,7 +553,7 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
       for (let k = 0; k < 3; k++) list.push(hangDown(base.clone().add(new THREE.Vector3((r() - 0.5) * 0.06, (r() - 0.5) * 0.05, (r() - 0.5) * 0.06)), 1, 0));
     }
     const berryMesh = new THREE.InstancedMesh(
-      keepG(new THREE.SphereGeometry(0.026, 10, 8)),
+      keepG(new THREE.SphereGeometry(0.026, 7, 5)),
       keepM(new THREE.MeshPhysicalMaterial({ color: 0xc8102e, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08 })),
       list.length,
     );
@@ -630,7 +631,7 @@ export function buildTreeModel(opts: { variant: TreeVariant; small: boolean; glo
   group.add(rays);
   const starLight = new THREE.PointLight(theme.starEmissive, 2.6, 9, 2);
   starLight.position.copy(starPosition).add(new THREE.Vector3(0, 0.1, 0.35));
-  group.add(starLight);
+  if (opts.starLight !== false) group.add(starLight);
 
   // ---------- ผ้าคลุมโคนต้นขอบหยัก ขลิบขนนุ่ม และกล่องของขวัญ ----------
   const skirtR = 2.2;
