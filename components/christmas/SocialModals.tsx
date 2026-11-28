@@ -2,53 +2,17 @@
 
 import { useEffect, useState } from "react";
 import type { Decor } from "@/lib/christmas/decor";
-import { ACCESSORIES, HATS, SCARVES, NOSES, ARMS, BODY_COLORS, LEGS, SLOT_COUNT } from "@/lib/christmas/decor";
+import { SLOT_COUNT } from "@/lib/christmas/decor";
 import { isReservedSlot, SLOT_POSITIONS } from "@/lib/christmas/slots";
-import { SnowmanPreview } from "./SnowmanPreview";
+import { DEFAULT_SNOW, labelOf, optionsOf, randomSnow, SNOW_GROUPS, SNOW_PARTS, withDefaults, type SnowPartKey, type SnowParts } from "@/lib/christmas/snowman";
+import { Snowman3D, SnowmanImage } from "./Snowman3D";
+import type { SnowView } from "./snowmanRender";
 import type { DecorDraft } from "./ExclusiveModal";
 import { getClientId } from "./clientId";
 import type { Social } from "@/lib/christmas/social";
 import { SocialLinks } from "./ProfileCard";
 import { Icon } from "./Icon";
 import "./christmas.css";
-
-const LABEL: Record<string, string> = {
-  top: "หมวกทรงสูง",
-  beanie: "หมวกไหมพรม",
-  santa: "หมวกซานตา",
-  crown: "มงกุฎ",
-  red: "แดง",
-  green: "เขียว",
-  gold: "ทอง",
-  blue: "ฟ้า",
-  carrot: "แครอท",
-  button: "กระดุม",
-  star: "ดาว",
-  sticks: "แขนไม้",
-  wings: "ปีก",
-  none: "ไม่มี",
-  white: "ขาว",
-  mint: "มินต์",
-  sky: "ฟ้าอ่อน",
-  blush: "ชมพู",
-  snow: "ฐานหิมะ",
-  boots: "รองเท้าบูท",
-  gift: "ของขวัญ",
-  pom: "หมวกปอมปอม",
-  holly: "พวงฮอลลี",
-  plaid: "ลายตาราง",
-  bell: "กระดิ่ง",
-  glasses: "แว่นตา",
-  bow: "โบว์",
-  beret: "เบเร่ต์",
-  earmuff: "ที่ปิดหู",
-  purple: "ม่วง",
-  heart: "หัวใจ",
-  snowflake: "เกล็ดหิมะ",
-};
-
-const BODY_HEX: Record<string, string> = { white: "#ffffff", mint: "#d1fae5", sky: "#dbeafe", blush: "#fce7f3" };
-const SCARF_HEX: Record<string, string> = { red: "#dc2643", green: "#16a34a", gold: "#f5c542", blue: "#3b82f6" };
 
 // ----- ชวนเพื่อน: ลิงก์ห้อง คัดลอกหรือแชร์ -----
 export function InviteModal({ roomId, roomName, online, capacity, onClose }: { roomId: string; roomName: string; online: number; capacity: number; onClose: () => void }) {
@@ -104,35 +68,46 @@ export function InviteModal({ roomId, roomName, online, capacity, onClose }: { r
 }
 
 // ----- ตกแต่งตุ๊กตาหิมะ: เลือกชิ้นส่วน เลือกช่อง แล้ววาง -----
-type PartKey = "hat" | "scarf" | "nose" | "arms" | "body" | "legs" | "acc";
-// หมวดการตกแต่ง 3 หมวด แต่ละหมวดมีกลุ่มย่อยที่ต้องพอดีบนหน้าจอโดยไม่ต้องเลื่อน
-const SECTIONS: { title: string; short: string; groups: { key: PartKey; label: string; list: readonly string[] }[] }[] = [
-  {
-    title: "หัวและใบหน้า",
-    short: "หัว/หน้า",
-    groups: [
-      { key: "hat", label: "หมวก", list: HATS },
-      { key: "nose", label: "จมูก", list: NOSES },
-    ],
-  },
-  {
-    title: "ผ้าพันคอและตัว",
-    short: "ผ้าพัน/ตัว",
-    groups: [
-      { key: "scarf", label: "ผ้าพันคอ", list: SCARVES },
-      { key: "body", label: "สีตัว", list: BODY_COLORS },
-    ],
-  },
-  {
-    title: "แขน ฐาน และประดับ",
-    short: "แขน/ฐาน/ประดับ",
-    groups: [
-      { key: "arms", label: "แขน", list: ARMS },
-      { key: "legs", label: "ฐาน", list: LEGS },
-      { key: "acc", label: "เครื่องประดับ", list: ACCESSORIES },
-    ],
-  },
-];
+// หมวดการตกแต่ง 3 หมวด: ชิ้นส่วนแต่ละชิ้นอยู่หมวดตาม SNOW_PARTS[*].group
+// มุมกล้องของรูปตัวอย่างบนปุ่ม และจุดที่ตัวอย่าง 3 มิติซูมไปตอนแต่งหมวดนั้น
+const PART_VIEW: Partial<Record<SnowPartKey, SnowView>> = {
+  hat: "head",
+  eyes: "face",
+  mouth: "face",
+  nose: "face",
+  scarfStyle: "body",
+  buttons: "body",
+  acc: "body",
+  shape: "full",
+  arms: "full",
+  hold: "full",
+  legs: "feet",
+};
+const GROUP_FOCUS = ["head", "body", "full"] as const;
+const GROUP_ICON = ["🎩", "🧣", "🎁"];
+// สีบนปุ่มตัวเลือกแบบสี (ลายผ้าใช้สีหลักของลาย)
+const SWATCH: Record<string, string> = {
+  auto: "conic-gradient(#c81e3a 0 25%, #24242c 0 50%, #1f7a4d 0 75%, #e0b44c 0)",
+  red: "#c81e3a",
+  green: "#1f7a4d",
+  navy: "#1e3a6e",
+  gold: "#e0b44c",
+  white: "#f6f3ee",
+  pink: "#f178a8",
+  purple: "#7c4ddb",
+  black: "#24242c",
+  blue: "#2f6fd6",
+  plaid: "repeating-linear-gradient(0deg, #b3172f 0 6px, #234a36 6px 10px), #b3172f",
+  candy: "repeating-linear-gradient(45deg, #fff 0 5px, #d21f3c 5px 10px)",
+  fairisle: "radial-gradient(circle, #f6f1e7 2px, transparent 2.5px) 0 0/8px 8px, #b3172f",
+  pearl: "#fff6e6",
+  ice: "#e2f6ff",
+  mint: "#dcf7ea",
+  sky: "#dcecff",
+  blush: "#ffe6f0",
+  peach: "#ffa079",
+  none: "repeating-linear-gradient(45deg, #fff 0 4px, #e5e7eb 4px 8px)",
+};
 
 // ตัวสร้างตุ๊กตาหิมะ: ตัวอย่างอยู่ด้านบนแบบเรียลไทม์ ส่วนด้านล่างเลือกทีละหมวด
 // จำไว้ในเบราว์เซอร์ว่าวางตุ๊กตาฟรีของห้องนี้แล้ว (เซิร์ฟเวอร์เป็นตัวตัดสินจริง)
@@ -199,7 +174,7 @@ export function DecorModal({
         /* ไม่แสดงปุ่ม Exclusive ถ้าโหลดค่าไม่ได้ */
       });
   }, [hasExclusive]);
-  const [parts, setParts] = useState({ hat: "top", scarf: "red", nose: "carrot", arms: "sticks", body: "white", legs: "snow", acc: "none" });
+  const [parts, setParts] = useState<SnowParts>(DEFAULT_SNOW);
   const [section, setSection] = useState(0);
   // บนมือถือแสดงทีละขั้น: 0 ช่องวางและชื่อ · 1 ตกแต่งและยืนยัน (บนคอมแสดงทุกขั้นพร้อมกัน)
   const [step, setStep] = useState(0);
@@ -284,9 +259,11 @@ export function DecorModal({
 
   const slotLine = slot === null ? "ยังไม่ได้เลือกช่อง" : slotReserved ? `ช่อง ${slot + 1} · สงวนไว้` : slotTaken ? `ช่อง ${slot + 1} · มี ${taken.get(slot)?.name} วางแล้ว` : `ช่อง ${slot + 1} · ว่าง`;
   const statusTone = slot === null ? "idle" : slotBlocked ? "warn" : "ok";
+  const setPart = (k: SnowPartKey, v: string) => setParts((p) => ({ ...p, [k]: v }));
+  const groupKeys = (g: number) => (Object.keys(SNOW_PARTS) as SnowPartKey[]).filter((k) => SNOW_PARTS[k].group === g);
   return (
     <div className="xmas-modal-back" role="presentation" onClick={onClose}>
-      <div className="xmas-modal xmas-mk" role="dialog" aria-modal="true" aria-label="ตกแต่งตุ๊กตาหิมะ" onClick={(e) => e.stopPropagation()}>
+      <div className="xmas-modal xmas-mk xmas-mk2" role="dialog" aria-modal="true" aria-label="ตกแต่งตุ๊กตาหิมะ" onClick={(e) => e.stopPropagation()}>
         <header className="xmas-mk-head">
           <div>
             <p className="xmas-kicker">ตกแต่งตุ๊กตาหิมะ · {roomName}</p>
@@ -299,9 +276,19 @@ export function DecorModal({
 
         <div className="xmas-mk-body">
           <aside className="xmas-mk-side">
-            <div className="xmas-mk-stage">
-              <SnowmanPreview parts={parts} className="xmas-mk-snow" />
+            {/* ตัวอย่าง 3 มิติ: ลากหมุนได้ ซูมไปส่วนที่กำลังแต่ง */}
+            <div className="xmas-mk2-stage">
+              <Snowman3D parts={parts} focus={step === 1 ? GROUP_FOCUS[section] : "full"} className="xmas-mk2-canvas" />
               <span className="xmas-mk-name">{name.trim() || "ตุ๊กตาของคุณ"}</span>
+              <div className="xmas-mk2-stage-tools">
+                <button type="button" onClick={() => setParts(randomSnow())} title="สุ่มชุดแต่งใหม่">
+                  🎲 สุ่มชุดแต่ง
+                </button>
+                <button type="button" onClick={() => setParts(DEFAULT_SNOW)} title="กลับเป็นแบบเริ่มต้น">
+                  ↺ เริ่มใหม่
+                </button>
+              </div>
+              <span className="xmas-mk2-hint">ลากเพื่อหมุนดู</span>
             </div>
 
             <div className="xmas-mk-card" data-step="0" data-on={step === 0}>
@@ -349,36 +336,49 @@ export function DecorModal({
 
           <section className="xmas-mk-main" data-step="1" data-on={step === 1}>
             <nav className="xmas-mk-tabs" role="tablist" aria-label="หมวดการตกแต่ง">
-              {SECTIONS.map((s, i) => (
-                <button key={s.title} type="button" role="tab" aria-selected={section === i} className={section === i ? "is-on" : ""} onClick={() => setSection(i)}>
-                  <span className="xmas-mk-tab-num">{i + 1}</span>
-                  <span className="xmas-mk-tab-long">{s.title}</span>
-                  <span className="xmas-mk-tab-short">{s.short}</span>
+              {SNOW_GROUPS.map((title, i) => (
+                <button key={title} type="button" role="tab" aria-selected={section === i} className={section === i ? "is-on" : ""} onClick={() => setSection(i)}>
+                  <span className="xmas-mk-tab-num" aria-hidden>
+                    {GROUP_ICON[i]}
+                  </span>
+                  <span className="xmas-mk-tab-long">{title}</span>
+                  <span className="xmas-mk-tab-short">{title.split(" ")[0]}</span>
                 </button>
               ))}
             </nav>
             <div className="xmas-mk-options" role="tabpanel">
-              {SECTIONS[section].groups.map((g) => (
-                <div className="xmas-mk-group" key={g.key}>
-                  <h3>
-                    {g.label}
-                    <small>{LABEL[parts[g.key]] ?? parts[g.key]}</small>
-                  </h3>
-                  <div className="xmas-mk-grid">
-                    {g.list.map((v) => (
-                      <button
-                        type="button"
-                        key={v}
-                        className={parts[g.key] === v ? "is-on" : ""}
-                        aria-pressed={parts[g.key] === v}
-                        onClick={() => setParts({ ...parts, [g.key]: v })}
-                      >
-                        {LABEL[v] ?? v}
-                      </button>
-                    ))}
+              {groupKeys(section).map((k) => {
+                const def = SNOW_PARTS[k];
+                const view = PART_VIEW[k];
+                const swatch = "swatch" in def && def.swatch;
+                return (
+                  <div className="xmas-mk2-group" key={k}>
+                    <h3>
+                      {def.label}
+                      <small>{labelOf(k, parts[k])}</small>
+                    </h3>
+                    {swatch ? (
+                      <div className="xmas-mk2-swatches" role="radiogroup" aria-label={def.label}>
+                        {optionsOf(k).map(([v, label]) => (
+                          <button key={v} type="button" role="radio" aria-checked={parts[k] === v} aria-label={label} title={label} className={parts[k] === v ? "is-on" : ""} onClick={() => setPart(k, v)}>
+                            <i style={{ background: SWATCH[v] ?? "#ccc" }} />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="xmas-mk2-tiles" role="radiogroup" aria-label={def.label}>
+                        {optionsOf(k).map(([v, label]) => (
+                          <button key={v} type="button" role="radio" aria-checked={parts[k] === v} className={parts[k] === v ? "is-on" : ""} onClick={() => setPart(k, v)}>
+                            {/* รูปตัวอย่างใช้ตุ๊กตาแบบเริ่มต้นที่เปลี่ยนแค่ชิ้นนี้ จึงวาดครั้งเดียวแล้วจำไว้ */}
+                            <SnowmanImage parts={{ ...DEFAULT_SNOW, ...(view === "face" ? { hat: "none" } : {}), [k]: v }} view={view ?? "full"} size={160} className="xmas-mk2-thumb" alt="" />
+                            <span>{label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         </div>
@@ -447,16 +447,16 @@ export function DecorInfoCard({ d, onClose, onLiked }: { d: Decor; onClose: () =
       </button>
       <div className="xmas-decor-card-art">
         <span className="xmas-decor-card-glow" aria-hidden />
-        <SnowmanPreview parts={d} className="xmas-decor-card-snow" />
+        <SnowmanImage parts={withDefaults(d)} view="full" size={320} className="xmas-decor-card-snow" alt={`ตุ๊กตาหิมะของ ${d.name}`} />
       </div>
       <span className="xmas-decor-card-tag">ช่อง {d.slot + 1} · วางเมื่อ {when}</span>
       <b className="xmas-decor-card-name">{d.name}</b>
       <SocialLinks social={d.social} />
       <div className="xmas-decor-card-parts">
-        <span>{LABEL[d.hat]}</span>
-        <span>{LABEL[d.scarf]}</span>
-        <span>{LABEL[d.body]}</span>
-        <span>{LABEL[d.acc]}</span>
+        {(() => {
+          const p = withDefaults(d);
+          return (["hat", "scarfStyle", "hold", "legs"] as SnowPartKey[]).filter((k) => p[k] !== "none").map((k) => <span key={k}>{labelOf(k, p[k])}</span>);
+        })()}
       </div>
       <button className={`xmas-decor-card-like ${liked ? "is-liked" : ""}`} onClick={like} disabled={busy || liked}>
         <Icon name="heart" size={18} />

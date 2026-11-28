@@ -8,7 +8,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { TREE_CAPACITY, type Ornament } from "@/lib/christmas/types";
 import { SLOT_COUNT, type Decor } from "@/lib/christmas/decor";
 // ตำแหน่งวาดบนฉากใช้ชุด DISPLAY (ช่องที่ถูกปิดหลังผังเปลี่ยนย้ายไปแสดงที่ช่องเปิดใกล้สุด)
-import { distToPath, GIANT_DISPLAY as GIANT_POSITIONS, GIANT_MODEL_SCALE, inZone, SLOT_DISPLAY_POSITIONS as SLOT_POSITIONS, SLOT_POSITIONS as SLOT_REAL, slotAtWorld, ZONE, ZONE_CAPACITY, ZONE_GATE, ZONE_GATE_ANGLE, ZONE_STOPS, ZONE_WALKWAYS } from "@/lib/christmas/slots";
+import { distToPath, GIANT_DISPLAY as GIANT_POSITIONS, GIANT_MODEL_SCALE, inZone, SLOT_DISPLAY_POSITIONS as SLOT_POSITIONS, SLOT_POSITIONS as SLOT_REAL, GIANT_POSITIONS as GIANT_REAL, slotAtWorld, ZONE, ZONE_CAPACITY, ZONE_GATE, ZONE_GATE_ANGLE, ZONE_STOPS, ZONE_WALKWAYS } from "@/lib/christmas/slots";
 import { CELL, LAND_R } from "@/lib/christmas/grid";
 import type { CardRecord } from "@/lib/christmas/cardSpec";
 import { ORNAMENT_HEX, ornamentPosition, pointToHeightAngle, surfaceNormal, TREE_TOP_Y } from "./geometry";
@@ -19,6 +19,7 @@ import { buildPlaza } from "./plazaScenery";
 import { drawGiantBoard, drawSkyPanel, drawSled, type BoardStyle, type SkyTheme } from "./skyArt";
 import { DEFAULT_GIANT_LOOK, parseGiantLook, type GiantLook } from "@/lib/christmas/giant";
 import { buildWishVillage } from "./wishVillage";
+import { buildSnowman } from "./snowmanModel";
 import { buildSurroundings } from "./treeSurroundings";
 import { buildDiorama } from "./diorama";
 import { buildSleighFlight, flightProgressAt } from "./sleighFlight";
@@ -69,7 +70,9 @@ type Props = {
   onZoneCardClick?: (id: string) => void;
   onAwayChange?: (away: boolean) => void; // บอกพาเรนต์ว่ากล้องอยู่นอกมุมเดิมหรือไม่
   onZoneStop?: (index: number, total: number) => void; // กำแพงที่กำลังชมในหมู่บ้าน
-  pickMode?: boolean; // โหมดเลือกช่องวางตุ๊กตาบนฉาก (แตะพื้นได้เฉพาะตอนนี้)
+  pickMode?: false | "doll" | "giant"; // โหมดเลือกช่องบนฉาก: ตุ๊กตา (1×1) หรือบ้าน Exclusive (2×2) แตะพื้นได้เฉพาะตอนนี้
+  giantPickState?: { taken: number[]; held: number[]; spot: number | null } | null; // จุดบ้านที่ซื้อ/จองแล้ว และจุดที่เลือก
+  onGiantPick?: (spot: number | null) => void;
   snowing: boolean; // เปิด/ปิดหิมะตก
   crowd: { count: number; seed: string }; // จำนวนคนออนไลน์ในโซนนี้ และรหัสโซนสำหรับจัดตำแหน่ง
 };
@@ -144,7 +147,7 @@ function mergeStaticMeshes(root: THREE.Group, keep: Set<THREE.Object3D>) {
 const TREE_VARIANT: TreeVariant = "classic";
 
 // ฉากต้นคริสต์มาสด้วย Three.js: ใบไม้แบบจุดระยิบ ไฟประดับ ลูกบอลโลหะ หิมะ และพลุ
-export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange, onZoneStop, pickMode = false }: Props) {
+export default function TreeScene({ ornaments, preview, reducedMotion, onPick, onOrnamentClick, onError, onReady, ground: groundColor, giants, decor, onDecorClick, onGiantClick, markerSlot, onGroundPick, snowing, crowd, zoneCards = [], onZoneCardClick, onAwayChange, onZoneStop, pickMode = false, giantPickState = null, onGiantPick }: Props) {
   const snowingRef = useRef(snowing);
   snowingRef.current = snowing;
   const mountRef = useRef<HTMLDivElement>(null);
@@ -161,10 +164,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     setZoneCards: (list: CardRecord[]) => void;
     setDecor: (list: Decor[]) => void;
     setMarker: (slot: number | null) => void;
-    setPickMode: (on: boolean, taken: number[]) => void;
+    setPickMode: (mode: false | "doll" | "giant", taken: number[], giant?: { taken: number[]; held: number[]; spot: number | null } | null) => void;
   } | null>(null);
-  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange, onZoneStop });
-  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange, onZoneStop };
+  const callbacks = useRef({ onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange, onZoneStop, onGiantPick });
+  callbacks.current = { onPick, onOrnamentClick, onDecorClick, onGiantClick, onGroundPick, onZoneCardClick, onAwayChange, onZoneStop, onGiantPick };
   const readyRef = useRef(onReady);
   readyRef.current = onReady;
 
@@ -559,7 +562,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       // โหมดเลือกช่องบนฉาก: ใช้ช่องที่อยู่ใต้จุดแตะพอดี และไม่เปิดสิ่งอื่น
       if (pickOn) {
         const gh = raycaster.intersectObject(ground, false)[0];
-        if (gh) callbacks.current.onGroundPick(slotAtWorld(gh.point.x, gh.point.z));
+        if (gh) {
+          if (pickKind === "giant") callbacks.current.onGiantPick?.(giantAtWorld(gh.point.x, gh.point.z));
+          else callbacks.current.onGroundPick(slotAtWorld(gh.point.x, gh.point.z));
+        }
         return;
       }
       const picked = ornLayer.pick(raycaster);
@@ -619,11 +625,21 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       if (pickOn) {
         // กรอบช่องใต้เมาส์: เขียว = ว่าง, แดง = วางไม่ได้
         const gh = raycaster.intersectObject(ground, false)[0];
-        const slot = gh ? slotAtWorld(gh.point.x, gh.point.z) : null;
-        if (gh) {
+        if (gh && pickKind === "giant") {
+          const spot = giantAtWorld(gh.point.x, gh.point.z);
+          if (spot !== null) {
+            const gp = GIANT_REAL[spot];
+            hoverCell.position.set(gp.x, 0.06, gp.z);
+            hoverCell.scale.setScalar(2);
+            hoverCell.visible = true;
+            (hoverCell.material as THREE.MeshBasicMaterial).color.setHex(giantBusy.has(spot) ? 0xef4444 : 0x4ade80);
+          } else hoverCell.visible = false;
+        } else if (gh) {
+          const slot = slotAtWorld(gh.point.x, gh.point.z);
           const cx = Math.floor(gh.point.x / CELL);
           const cz = Math.floor(gh.point.z / CELL);
           hoverCell.position.set((cx + 0.5) * CELL, 0.06, (cz + 0.5) * CELL);
+          hoverCell.scale.setScalar(1);
           hoverCell.visible = true;
           (hoverCell.material as THREE.MeshBasicMaterial).color.setHex(slot !== null && !pickTaken.has(slot) ? 0x4ade80 : 0xef4444);
         } else hoverCell.visible = false;
@@ -652,6 +668,17 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           rows.push({ name: path.slice(-80) + ` [${g.type}]`, tris: Math.round(per * inst), inst });
         });
         return rows.sort((a, b) => b.tris - a.tris).slice(0, 15);
+      };
+      // ตำแหน่งบนจอของตุ๊กตาหิมะแต่ละตัว (ไว้ทดสอบการกดและป้ายชื่อ)
+      (window as unknown as { __xmasDecorScreen?: unknown }).__xmasDecorScreen = () => {
+        const r = renderer.domElement.getBoundingClientRect();
+        return decorGroup.children.map((c) => {
+          const v = new THREE.Vector3();
+          c.getWorldPosition(v);
+          v.y += 0.4;
+          v.project(camera);
+          return { id: c.userData.decorId, x: Math.round(r.left + ((v.x + 1) / 2) * r.width), y: Math.round(r.top + ((1 - v.y) / 2) * r.height), front: v.z < 1 };
+        });
       };
       (window as unknown as { __xmasBench?: unknown }).__xmasBench = (n = 30, shadows = false) => {
         const gl = renderer.getContext();
@@ -739,7 +766,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       aura.update(frameDt, t, reduced);
 
       if (marker.visible) {
-        const k = 1 + 0.12 * Math.sin(t * 4);
+        const k = (1 + 0.12 * Math.sin(t * 4)) * ((marker.userData.base as number | undefined) ?? 1);
         marker.scale.set(k, k, 1);
       }
 
@@ -947,312 +974,10 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     // ตั้งตุ๊กตายักษ์หลังค่าสีทั้งหมดพร้อมแล้ว (กันการเข้าถึงก่อนประกาศ)
     api_setGiants(giants);
 
+    // ตุ๊กตาหิมะแบบละเอียด: โมเดลชุดเดียวกับหน้าตกแต่ง (snowmanModel.ts)
     function buildDecorSnowman(d: Decor) {
-      const grp = new THREE.Group();
-      // ผิวหิมะ: มีเงาแวววาวเบา ๆ จากชั้นขนนุ่ม (sheen) และคลิ้วเคลือบใส
-      const bodyMat = new THREE.MeshPhysicalMaterial({ color: BODY_HEX[d.body] ?? 0xffffff, roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.25, sheen: 0.7, sheenRoughness: 0.35, sheenColor: new THREE.Color(0xdfeeff) });
-      const add = (...ms: THREE.Object3D[]) => grp.add(...ms);
-      const ball = (r: number, y: number, mat: THREE.Material) => {
-        const m = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 22), mat);
-        m.position.y = y;
-        add(m);
-        return m;
-      };
-      // ขา/ฐาน
-      if (d.legs === "snow") {
-        const base = new THREE.Mesh(new THREE.SphereGeometry(0.42, 28, 16), bodyMat);
-        base.scale.set(1, 0.28, 1);
-        base.position.y = 0.04;
-        add(base);
-      } else if (d.legs === "gift") {
-        const gift = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.3, 0.62), new THREE.MeshPhysicalMaterial({ color: 0xdc2643, roughness: 0.4, clearcoat: 0.5 }));
-        gift.position.y = 0.15;
-        const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.32, 0.64), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.5, roughness: 0.3 }));
-        ribbon.position.y = 0.15;
-        add(gift, ribbon);
-      } else if (d.legs === "boots") {
-        const bootMat = new THREE.MeshStandardMaterial({ color: 0x3f2a1a, roughness: 0.6 });
-        [-0.13, 0.13].forEach((x) => {
-          const b = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.16, 16), bootMat);
-          b.position.set(x, 0.08, 0.04);
-          add(b);
-        });
-      }
-      // ตัว
-      ball(0.36, 0.52, bodyMat);
-      ball(0.27, 1.05, bodyMat);
-      // หัว
-      ball(0.2, 1.42, bodyMat);
-      // กระดุมสามเม็ดบนลำตัว
-      const btnMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3, metalness: 0.2 });
-      [0.62, 0.52, 0.42].forEach((y) => {
-        const b = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 10), btnMat);
-        b.position.set(0, y, 0.33);
-        add(b);
-      });
-      // เงาสัมผัสพื้นให้ตุ๊กตาดูนั่งอยู่บนหิมะจริง
-      const contact = new THREE.Mesh(new THREE.CircleGeometry(0.5, 32), new THREE.MeshBasicMaterial({ color: 0x0b2a1f, transparent: true, opacity: 0.2, depthWrite: false }));
-      contact.rotation.x = -Math.PI / 2;
-      contact.position.y = 0.006;
-      add(contact);
-      const eye = new THREE.MeshStandardMaterial({ color: 0x111111 });
-      [-0.07, 0.07].forEach((x) => {
-        const e = new THREE.Mesh(new THREE.SphereGeometry(0.02, 10, 10), eye);
-        e.position.set(x, 1.46, 0.18);
-        add(e);
-        // แสงในดวงตา ทำให้ดูมีชีวิต
-        const hl = new THREE.Mesh(new THREE.SphereGeometry(0.007, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-        hl.position.set(x + 0.006, 1.468, 0.196);
-        add(hl);
-      });
-      // จมูก
-      const noseMat = d.nose === "bell" ? new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.7, roughness: 0.25 }) : d.nose === "star" ? new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.6, roughness: 0.3 }) : d.nose === "button" ? new THREE.MeshStandardMaterial({ color: 0xdc2643 }) : new THREE.MeshStandardMaterial({ color: 0xff8a1f });
-      const nose = new THREE.Mesh(d.nose === "button" || d.nose === "bell" ? new THREE.SphereGeometry(0.04, 12, 12) : new THREE.ConeGeometry(0.035, 0.2, 12), noseMat);
-      if (d.nose === "carrot") nose.rotation.x = Math.PI / 2;
-      nose.position.set(0, 1.4, 0.22);
-      if (d.nose === "heart") {
-        // จมูกรูปหัวใจ: รูปร่างแบนที่ฉายออกมาเล็กน้อย
-        const hs = new THREE.Shape();
-        hs.moveTo(0, -0.035);
-        hs.bezierCurveTo(-0.01, -0.012, -0.035, 0.0, -0.035, 0.02);
-        hs.bezierCurveTo(-0.035, 0.045, -0.012, 0.05, 0, 0.03);
-        hs.bezierCurveTo(0.012, 0.05, 0.035, 0.045, 0.035, 0.02);
-        hs.bezierCurveTo(0.035, 0.0, 0.01, -0.012, 0, -0.035);
-        const heart = new THREE.Mesh(new THREE.ExtrudeGeometry(hs, { depth: 0.014, bevelEnabled: false, curveSegments: 16 }), new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.4 }));
-        heart.position.set(0, 1.4, 0.2);
-        add(heart);
-      } else if (d.nose === "star") {
-        const starShape = new THREE.Shape();
-        for (let i = 0; i < 10; i++) {
-          const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
-          const rad = i % 2 === 0 ? 0.05 : 0.022;
-          if (i === 0) starShape.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
-          else starShape.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-        }
-        starShape.closePath();
-        const star = new THREE.Mesh(new THREE.ExtrudeGeometry(starShape, { depth: 0.02, bevelEnabled: false }), new THREE.MeshStandardMaterial({ color: 0xffd76a, metalness: 0.6, roughness: 0.3 }));
-        star.position.set(0, 1.4, 0.2);
-        add(star);
-      } else {
-        add(nose);
-      }
-      // ผ้าพันคอ
-      // ผ้าพันคอ: เส้นโค้งรอบคอพร้อมชายผ้าที่ห้อยลงด้านหน้า
-      const scarfMat = new THREE.MeshPhysicalMaterial({ color: SCARF_HEX[d.scarf] ?? 0xdc2643, roughness: 0.55, sheen: 0.4, sheenColor: new THREE.Color(0xffffff) });
-      const scarfCurve = new THREE.CatmullRomCurve3(
-        [
-          new THREE.Vector3(-0.22, 1.2, 0.02),
-          new THREE.Vector3(0, 1.17, 0.23),
-          new THREE.Vector3(0.22, 1.2, 0.02),
-          new THREE.Vector3(0.2, 1.23, -0.11),
-          new THREE.Vector3(0, 1.25, -0.21),
-          new THREE.Vector3(-0.2, 1.23, -0.11),
-        ],
-        true,
-      );
-      add(new THREE.Mesh(new THREE.TubeGeometry(scarfCurve, 64, 0.04, 14, true), scarfMat));
-      const tail = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.24, 0.03), scarfMat);
-      tail.position.set(0.11, 1.0, 0.24);
-      tail.rotation.z = -0.1;
-      add(tail);
-      // หมวก
-      const hatMat = new THREE.MeshStandardMaterial({ color: d.hat === "santa" ? 0xdc2643 : d.hat === "crown" ? 0xf5c542 : HAT_HEX, roughness: 0.45 });
-      if (d.hat === "top" || d.hat === "santa") {
-        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.3, 24), hatMat);
-        crown.position.y = 1.68;
-        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.04, 28), hatMat);
-        brim.position.y = 1.52;
-        // แถบสีรอบหมวกทรงสูง
-        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.165, 0.165, 0.06, 24), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.5 }));
-        band.position.y = 1.6;
-        add(crown, brim, band);
-      } else if (d.hat === "beanie") {
-        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: SCARF_HEX[d.scarf] ?? 0x3b82f6 }));
-        cap.position.y = 1.5;
-        add(cap);
-      } else if (d.hat === "crown") {
-        const crownShape = new THREE.Shape();
-        crownShape.moveTo(-0.2, 0);
-        crownShape.lineTo(-0.2, 0.2);
-        crownShape.lineTo(-0.1, 0.07);
-        crownShape.lineTo(0, 0.24);
-        crownShape.lineTo(0.1, 0.07);
-        crownShape.lineTo(0.2, 0.2);
-        crownShape.lineTo(0.2, 0);
-        crownShape.closePath();
-        const crownGeo = new THREE.ExtrudeGeometry(crownShape, { depth: 0.34, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.015, bevelSegments: 2, curveSegments: 1 });
-        crownGeo.translate(0, 0, -0.17);
-        const crown = new THREE.Mesh(crownGeo, new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.7, roughness: 0.25 }));
-        crown.position.y = 1.5;
-        add(crown);
-        // อัญมณีสามเม็ดบนมงกุฎ
-        [
-          [0, 1.56, 0.2, 0xdc2643],
-          [-0.12, 1.53, 0.19, 0x22a95a],
-          [0.12, 1.53, 0.19, 0x3b82f6],
-        ].forEach(([x, y, z, c]) => {
-          const gem = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), new THREE.MeshStandardMaterial({ color: c as number, metalness: 0.2, roughness: 0.15 }));
-          gem.position.set(x as number, y as number, z as number);
-          add(gem);
-        });
-      }
-      // หมวกเบเร่ต์และที่ปิดหู (หมวกฟรี)
-      if (d.hat === "beret") {
-        const beret = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 14), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.7 }));
-        beret.scale.set(1, 0.32, 1);
-        beret.position.set(0.02, 1.58, 0);
-        beret.rotation.z = 0.12;
-        const stem = new THREE.Mesh(new THREE.SphereGeometry(0.028, 10, 10), new THREE.MeshStandardMaterial({ color: 0x7f1d1d }));
-        stem.position.set(0.06, 1.66, 0);
-        add(beret, stem);
-      } else if (d.hat === "earmuff") {
-        const band = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.02, 8, 24, Math.PI), new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.4 }));
-        band.position.set(0, 1.42, 0);
-        const cupMat = new THREE.MeshStandardMaterial({ color: 0xfb7185, roughness: 0.5 });
-        [-1, 1].forEach((side) => {
-          const cup = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 12), cupMat);
-          cup.position.set(side * 0.21, 1.42, 0);
-          add(cup);
-        });
-        add(band);
-      }
-      // เครื่องประดับ
-      if (d.acc === "snowflake") {
-        // เข็มกลัดเกล็ดหิมะที่หน้าอก
-        const ice = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, roughness: 0.2, metalness: 0.1, emissive: 0x0c4a6e, emissiveIntensity: 0.25 });
-        [0, Math.PI / 3, -Math.PI / 3].forEach((a) => {
-          const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.016, 0.016), ice);
-          bar.position.set(0, 1.02, 0.28);
-          bar.rotation.z = a;
-          add(bar);
-        });
-      }
-      if (d.acc === "glasses") {
-        const gm = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3, metalness: 0.4 });
-        [-0.07, 0.07].forEach((x) => {
-          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.008, 8, 20), gm);
-          ring.position.set(x, 1.46, 0.19);
-          add(ring);
-        });
-      } else if (d.acc === "bow") {
-        const bm = new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.5 });
-        const l = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.1, 12), bm);
-        l.rotation.z = Math.PI / 2;
-        l.position.set(-0.05, 1.2, 0.2);
-        const r = l.clone();
-        r.position.x = 0.05;
-        r.rotation.z = -Math.PI / 2;
-        add(l, r);
-      } else if (d.acc === "bell") {
-        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.7, roughness: 0.25 }));
-        bell.position.set(0.14, 1.12, 0.2);
-        add(bell);
-      }
-      // ของตกแต่งหัวเพิ่มเติม
-      if (d.hat === "pom") {
-        const pom = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }));
-        pom.position.y = 1.72;
-        add(pom);
-      } else if (d.hat === "holly") {
-        const wreath = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.04, 10, 28), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.6 }));
-        wreath.rotation.x = Math.PI / 2;
-        wreath.position.y = 1.5;
-        add(wreath);
-      }
-      // หมวกพิเศษของตุ๊กตายักษ์: ทิอารา เขากวาง หมวกเอลฟ์
-      if (d.hat === "tiara") {
-        const gold = new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.8, roughness: 0.2 });
-        const band = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.025, 10, 40), gold);
-        band.rotation.x = Math.PI / 2;
-        band.position.y = 1.52;
-        add(band);
-        [-0.1, 0, 0.1].forEach((x, i) => {
-          const gem = new THREE.Mesh(new THREE.OctahedronGeometry(i === 1 ? 0.045 : 0.03, 0), new THREE.MeshStandardMaterial({ color: i === 1 ? 0xdc2643 : 0x7dd3fc, metalness: 0.2, roughness: 0.1 }));
-          gem.position.set(x, 1.58 + (i === 1 ? 0.03 : 0), 0.18);
-          add(gem);
-        });
-      } else if (d.hat === "antlers") {
-        const antler = new THREE.MeshStandardMaterial({ color: 0x7a4a24, roughness: 0.85 });
-        [-1, 1].forEach((side) => {
-          const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.028, 0.34, 8), antler);
-          stem.position.set(side * 0.12, 1.66, 0);
-          stem.rotation.z = side * -0.5;
-          add(stem);
-          const fork = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.018, 0.22, 6), antler);
-          fork.position.set(side * 0.22, 1.86, 0);
-          fork.rotation.z = side * -1.0;
-          add(fork);
-          const tine = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.014, 0.14, 6), antler);
-          tine.position.set(side * 0.25, 1.98, 0.02);
-          tine.rotation.z = side * -0.3;
-          add(tine);
-        });
-      } else if (d.hat === "elf") {
-        const green = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.5 });
-        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.6, 24), green);
-        cone.position.set(0.04, 1.8, 0);
-        cone.rotation.z = -0.25;
-        const trim = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 10, 32), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 }));
-        trim.rotation.x = Math.PI / 2;
-        trim.position.y = 1.5;
-        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 12), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.8, roughness: 0.2 }));
-        bell.position.set(0.22, 2.05, 0.02);
-        add(cone, trim, bell);
-      }
-      // พวงมาลัยรอบคอ
-      if (d.acc === "wreath") {
-        const wreath = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.05, 12, 40), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.7 }));
-        wreath.rotation.x = Math.PI / 2;
-        wreath.position.y = 1.16;
-        add(wreath);
-        [0, 1.2, 2.4, 3.6, 4.8].forEach((a) => {
-          const berry = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), new THREE.MeshStandardMaterial({ color: 0xdc2643, roughness: 0.4 }));
-          berry.position.set(Math.cos(a) * 0.26, 1.16, Math.sin(a) * 0.26);
-          add(berry);
-        });
-      }
-      // แขน
-      // แขนกิ่งไม้: ติดที่ข้างตัว ยกขึ้นเล็กน้อย มีกิ่งแยกที่ปลาย
-      const stickMat = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.8 });
-      const ARM_ANGLE = 0.75;
-      const armTip = (side: number) => new THREE.Vector3(side * (0.42 + 0.21 * Math.sin(ARM_ANGLE)), 1.12 + 0.21 * Math.cos(ARM_ANGLE), 0);
-      if (d.arms === "sticks") {
-        [-1, 1].forEach((side) => {
-          const st = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.42, 8), stickMat);
-          st.rotation.z = side * -ARM_ANGLE;
-          st.position.set(side * 0.42, 1.12, 0);
-          add(st);
-          const tip = armTip(side);
-          [-0.5, 0, 0.5].forEach((tilt) => {
-            const twig = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.012, 0.1, 6), stickMat);
-            twig.position.set(tip.x + side * 0.02, tip.y + 0.05, 0);
-            twig.rotation.z = side * (-0.5 + tilt * 0.5);
-            add(twig);
-          });
-        });
-      } else if (d.arms === "gift") {
-        const armSide = (side: number) => {
-          const st = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.4, 8), stickMat);
-          st.rotation.z = side * -ARM_ANGLE;
-          st.position.set(side * 0.42, 1.12, 0);
-          add(st);
-        };
-        armSide(1);
-        const box = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 0.2), new THREE.MeshPhysicalMaterial({ color: 0xdc2643, roughness: 0.4 }));
-        box.position.copy(armTip(1)).add(new THREE.Vector3(0.08, 0.06, 0.06));
-        const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.2, 0.22), new THREE.MeshStandardMaterial({ color: 0xf5c542, metalness: 0.5, roughness: 0.3 }));
-        ribbon.position.copy(box.position);
-        add(box, ribbon);
-      }
-      if (d.arms === "wings") {
-        [-1, 1].forEach((side) => {
-          const wing = new THREE.Mesh(new THREE.SphereGeometry(0.12, 20, 14), bodyMat);
-          wing.scale.set(1.5, 0.45, 0.5);
-          wing.position.set(side * 0.44, 0.98, 0);
-          wing.rotation.z = side * -0.35;
-          add(wing);
-        });
-      }
+      const grp = buildSnowman(d);
+      // ติดรหัสตุ๊กตาไว้ทุกชิ้น เพื่อให้กดโดนส่วนไหนก็เปิดการ์ดของตัวนี้ได้
       grp.userData.decorId = d.id;
       grp.traverse((o) => (o.userData.decorId = d.id));
       return grp;
@@ -1289,21 +1014,70 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
     scene.add(hoverCell);
     const FREE = new THREE.Color(0x4ade80);
     const TAKEN = new THREE.Color(0xef4444);
-    function setPickMode(on: boolean, taken: number[]) {
+    // จุดบ้าน Exclusive (2×2) ที่เปิดอยู่: กรอบใหญ่บนพื้น เขียว = ว่าง, ส้ม = มีคนจอง, แดง = ซื้อแล้ว, ทอง = ที่เลือก
+    let pickKind: false | "doll" | "giant" = false;
+    let giantBusy = new Set<number>();
+    const openGiants: number[] = [];
+    GIANT_REAL.forEach((g, i) => {
+      if (!g.blocked) openGiants.push(i);
+    });
+    const giantTileGeo = new THREE.PlaneGeometry(CELL * 1.84, CELL * 1.84);
+    giantTileGeo.rotateX(-Math.PI / 2);
+    const giantGrid = new THREE.InstancedMesh(giantTileGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false }), openGiants.length);
+    openGiants.forEach((spot, k) => giantGrid.setMatrixAt(k, new THREE.Matrix4().makeTranslation(GIANT_REAL[spot].x, 0.05, GIANT_REAL[spot].z)));
+    giantGrid.visible = false;
+    giantGrid.renderOrder = 3;
+    scene.add(giantGrid);
+    const giantByCell = new Map<string, number>();
+    openGiants.forEach((spot) => {
+      const c = GIANT_REAL[spot].cell;
+      for (const dx of [0, 1]) for (const dz of [0, 1]) giantByCell.set(`${c.x + dx},${c.z + dz}`, spot);
+    });
+    function giantAtWorld(x: number, z: number): number | null {
+      return giantByCell.get(`${Math.floor(x / CELL)},${Math.floor(z / CELL)}`) ?? null;
+    }
+    const HELD = new THREE.Color(0xf59e0b);
+    const PICKED = new THREE.Color(0xfacc15);
+    function setPickMode(mode: false | "doll" | "giant", taken: number[], giant?: { taken: number[]; held: number[]; spot: number | null } | null) {
       pickTaken = new Set(taken);
       openSlots.forEach((slot, k) => pickGrid.setColorAt(k, pickTaken.has(slot) ? TAKEN : FREE));
       if (pickGrid.instanceColor) pickGrid.instanceColor.needsUpdate = true;
-      if (on === pickOn) return;
-      pickOn = on;
-      pickGrid.visible = on;
+      if (giant) {
+        const taken2 = new Set(giant.taken);
+        const held2 = new Set(giant.held);
+        giantBusy = new Set([...giant.taken, ...giant.held]);
+        openGiants.forEach((spot, k) => giantGrid.setColorAt(k, spot === giant.spot ? PICKED : taken2.has(spot) ? TAKEN : held2.has(spot) ? HELD : FREE));
+        if (giantGrid.instanceColor) giantGrid.instanceColor.needsUpdate = true;
+        if (giant.spot !== null) {
+          marker.position.set(GIANT_REAL[giant.spot].x, 0.08, GIANT_REAL[giant.spot].z);
+          marker.userData.base = 2.2;
+          marker.visible = true;
+        }
+      }
+      if (mode === pickKind) return;
+      const wasOn = pickOn;
+      pickKind = mode;
+      pickOn = mode !== false;
+      pickGrid.visible = mode === "doll";
+      giantGrid.visible = mode === "giant";
       hoverCell.visible = false;
-      if (on) {
-        // มองจากด้านบนเฉียง เห็นช่องรอบต้นชัดและแตะได้แม่น
+      if (pickOn && !wasOn) {
+        // มองจากด้านบนเฉียง เห็นช่องรอบต้นชัดและแตะได้แม่น (จุดบ้านอยู่ไกลกว่า จึงถอยกล้องมากกว่า)
         rememberView();
         controls.minDistance = 3;
-        animateCam(new THREE.Vector3(0, isSmall ? 24 : 19, isSmall ? 17 : 15), new THREE.Vector3(0, 0, 1.5), 1100);
-      } else {
+        // มองจากที่สูงต้องไม่ให้หมอกกลบพื้น
+        const fog = scene.fog as THREE.Fog | null;
+        if (fog) fog.far = 160;
+        const far = mode === "giant" ? 1.5 : 1;
+        animateCam(new THREE.Vector3(0, (isSmall ? 24 : 19) * far, (isSmall ? 17 : 15) * far), new THREE.Vector3(0, 0, 1.5), 1100);
+      } else if (!pickOn) {
         renderer.domElement.style.cursor = "";
+        const fog = scene.fog as THREE.Fog | null;
+        if (fog && !zoneAway) fog.far = 56;
+        if (wasOn && marker.userData.base === 2.2) {
+          marker.visible = false;
+          marker.userData.base = 1;
+        }
         if (savedView && !zoneAway) {
           animateCam(savedView.pos, savedView.tgt, 900);
           controls.minDistance = savedView.min;
@@ -1710,6 +1484,42 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
         });
       }
     }
+    // หาตำแหน่งกล้องรอบจุด (x, z) ที่ไม่มีอะไรบังระหว่างกล้องกับตัวตุ๊กตา
+    // เริ่มจากมุมด้านนอกลาน แล้วลองเอียงซ้ายขวาทีละนิด ถ้าบังทุกมุมใช้มุมด้านนอกตามเดิม
+    const viewRay = new THREE.Raycaster();
+    function clearViewPos(x: number, z: number, dist: number, h: number, self: THREE.Object3D) {
+      const base = Math.atan2(z, x);
+      viewRay.camera = camera; // ป้ายภาพ (sprite) ในฉากต้องมีกล้องจึงตรวจการชนได้
+      const skip = new Set<THREE.Object3D>([ground, decorGroup, self, ...instMeshes]);
+      const blockers: THREE.Object3D[] = [];
+      scene.children.forEach((c) => {
+        if (!skip.has(c) && c.visible) blockers.push(c);
+      });
+      const from = new THREE.Vector3();
+      const dir = new THREE.Vector3();
+      const blocked = (pos: THREE.Vector3) => {
+        // ตรวจ 3 จุดบนตัว (ฐาน กลางตัว หัว) ให้เห็นทั้งตัว
+        for (const y of [0.25, 0.6, 0.95]) {
+          from.set(x, y, z);
+          dir.subVectors(pos, from);
+          const len = dir.length();
+          viewRay.set(from, dir.normalize());
+          viewRay.far = len;
+          const hit = viewRay.intersectObjects(blockers, true).find((i) => {
+            const m = i.object as THREE.Mesh;
+            return m.isMesh && m.visible && !(m.material as THREE.Material).transparent;
+          });
+          if (hit) return true;
+        }
+        return false;
+      };
+      const at = (off: number) => new THREE.Vector3(x + Math.cos(base + off) * dist, h, z + Math.sin(base + off) * dist);
+      for (const off of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05, 1.4, -1.4]) {
+        const p = at(off);
+        if (!blocked(p)) return p;
+      }
+      return at(0);
+    }
     function focusDecor(d: Decor | null) {
       restoreHidden();
       if (focusDecorGroup) {
@@ -1740,11 +1550,11 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
       scene.add(grp);
       focusDecorGroup = grp;
       if (!savedView) savedView = { pos: camera.position.clone(), tgt: controls.target.clone(), min: controls.minDistance };
-      const out = new THREE.Vector3(pp.x, 0, pp.z).normalize();
       // มองจากด้านนอกและสูงขึ้นเล็กน้อย ให้พุ่มต้นไม้ไม่บังตุ๊กตา
+      // ถ้าเสาไฟ ม้านั่ง หรือของอื่นบังอยู่ ให้หมุนไปมุมข้าง ๆ ที่มองเห็นตัวชัด
       // บนมือถือให้ตุ๊กตาอยู่ช่วงบนของจอ เพื่อให้การ์ดด้านล่างไม่บังตัว
       const toTgt = new THREE.Vector3(pp.x, isSmall ? 0.15 : 0.9, pp.z);
-      const toPos = new THREE.Vector3(pp.x + out.x * 3.2, 2.9, pp.z + out.z * 3.2);
+      const toPos = clearViewPos(pp.x, pp.z, 3.2, 2.9, grp);
       controls.minDistance = 0.5;
       animateCam(toPos, toTgt);
       burst(new THREE.Vector3(pp.x, 1.1, pp.z), 0xffe7a3, isSmall ? 26 : 40, 0.3);
@@ -1942,6 +1752,7 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
           return;
         }
         const pp = SLOT_POSITIONS[slot];
+        marker.userData.base = 1;
         marker.position.set(pp.x, 0.08, pp.z);
         marker.visible = true;
       },
@@ -2117,9 +1928,9 @@ export default function TreeScene({ ornaments, preview, reducedMotion, onPick, o
 
   // โหมดเลือกช่องบนฉาก: เปิด/ปิดตารางช่องและอัปเดตช่องที่มีคนวางแล้ว
   useEffect(() => {
-    api.current?.setPickMode(pickMode, decor.map((d) => d.slot));
+    api.current?.setPickMode(pickMode, decor.map((d) => d.slot), giantPickState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pickMode, decorKey]);
+  }, [pickMode, decorKey, giantPickState]);
 
   // ซิงก์การ์ดที่แขวนบนรั้วโซนคำอวยพร
   const zoneKey = zoneCards.map((c) => c.id).join(",");

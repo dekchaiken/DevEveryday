@@ -33,7 +33,8 @@ import { GuideSpotlight } from "./GuideSpotlight";
 import { myCardIds, rememberMyCard } from "./myCards";
 import { OrnamentPreview } from "./OrnamentPreview";
 import { CARDS_PER_PERSON } from "@/lib/christmas/cardSpec";
-import { GIANT_POSITIONS, SLOT_POSITIONS, ZONE_CAPACITY } from "@/lib/christmas/slots";
+// ตำแหน่งบนฉาก (ตุ๊กตาในช่องที่ถูกปิดหลังเปลี่ยนผังจะแสดงที่ช่องใกล้สุด) ใช้วางป้ายคำอธิบายให้ตรงตัว
+import { GIANT_DISPLAY as GIANT_POSITIONS, SLOT_DISPLAY_POSITIONS as SLOT_POSITIONS, ZONE_CAPACITY } from "@/lib/christmas/slots";
 import "./wishcards.css";
 import "./christmas.css";
 import { PendingOrdersWatch } from "./PendingOrdersWatch";
@@ -309,6 +310,9 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [markerSlot, setMarkerSlot] = useState<number | null>(null);
   // โหมดเลือกช่องวางตุ๊กตาบนฉาก (เปิดจากปุ่ม "บนฉาก" ในหน้าตกแต่ง) และข้อความสถานะของช่องที่แตะ
   const [pickMode, setPickMode] = useState(false);
+  // เลือกจุดตั้งบ้าน Exclusive บนฉาก: ช่องที่ถูกซื้อ/จองไว้ ช่องที่แตะ และช่องที่ยืนยันแล้ว (ส่งกลับให้หน้าต่าง Exclusive)
+  const [giantPick, setGiantPick] = useState<{ taken: number[]; held: number[]; spot: number | null } | null>(null);
+  const [giantPicked, setGiantPicked] = useState<{ spot: number; at: number } | null>(null);
   const [pickNote, setPickNote] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
   // แผงแขวนลูกบอลเปิดได้เฉพาะตอนเลือกแขวน ปิดเองเมื่อเข้าโซนหรือโต๊ะการ์ด
   useEffect(() => {
@@ -755,7 +759,19 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           }}
           onAwayChange={setAway}
           onZoneStop={(index, total) => setZoneStop({ index, total })}
-          pickMode={pickMode}
+          pickMode={pickMode ? "doll" : giantPick ? "giant" : false}
+          giantPickState={giantPick}
+          onGiantPick={(spot) => {
+            if (!giantPick) return;
+            if (spot === null) {
+              setPickNote({ tone: "warn", text: "ตรงนี้ตั้งบ้านไม่ได้ (ใกล้ต้น ทางเดิน โซน หรือของตกแต่ง) แตะกรอบสีเขียว" });
+              return;
+            }
+            if (giantPick.taken.includes(spot)) return setPickNote({ tone: "warn", text: `จุด ${spot + 1} มีคนซื้อไปแล้ว เลือกกรอบสีเขียว` });
+            if (giantPick.held.includes(spot)) return setPickNote({ tone: "warn", text: `จุด ${spot + 1} มีคนกำลังจองอยู่ เลือกกรอบสีเขียว` });
+            setGiantPick({ ...giantPick, spot });
+            setPickNote({ tone: "ok", text: `จุด ${spot + 1} ว่าง ตั้งบ้านได้` });
+          }}
           onGroundPick={(slot) => {
             if (slot === null) {
               setPickNote({ tone: "warn", text: "ตรงนี้วางไม่ได้ (ทางเดิน โซน หรือของตกแต่ง) ลองแตะช่องสีเขียว" });
@@ -779,7 +795,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
               title: d.name,
               cta: "ดูรายละเอียด",
               x: pos.x,
-              y: 1.0,
+              y: 1.35, // เหนือหมวก ป้ายจึงไม่บังหน้าและหมวกของตุ๊กตา
               z: pos.z,
               open: () => {
                 setDecorFocus(d);
@@ -832,6 +848,12 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         <ExclusiveModal
           roomId={room.id}
           roomName={room.name}
+          hidden={giantPick !== null}
+          pickedSpot={giantPicked}
+          onPickOnScene={(taken, held, current) => {
+            setPickNote(null);
+            setGiantPick({ taken, held, spot: current });
+          }}
           onClose={() => setExclusiveOpen(false)}
           defaultName={profile?.name ?? ""}
           social={profile?.social}
@@ -1080,6 +1102,27 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       )}
 
       {/* แถบเลือกช่องบนฉาก: แตะช่องสีเขียวบนพื้น แล้วกดใช้ช่องนี้ */}
+      {giantPick && (
+        <div className="xz-pick" role="group" aria-label="เลือกจุดตั้งบ้านหิมะ Exclusive บนฉาก">
+          <span className={`xz-pick-note is-${pickNote?.tone ?? "idle"}`}>{pickNote?.text ?? "แตะกรอบสีเขียวบนพื้นเพื่อเลือกจุดตั้งบ้านหิมะ (ส้ม = มีคนจอง · แดง = ซื้อแล้ว)"}</span>
+          <div className="xz-pick-actions">
+            <button
+              type="button"
+              className="xz-hud-btn"
+              disabled={pickNote?.tone !== "ok" || giantPick.spot === null}
+              onClick={() => {
+                if (giantPick.spot !== null) setGiantPicked({ spot: giantPick.spot, at: Date.now() });
+                setGiantPick(null);
+              }}
+            >
+              ใช้จุดนี้
+            </button>
+            <button type="button" className="xz-hud-btn is-ghost" onClick={() => setGiantPick(null)}>
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      )}
       {pickMode && (
         <div className="xz-pick" role="group" aria-label="เลือกช่องวางตุ๊กตาบนฉาก">
           <span className={`xz-pick-note is-${pickNote?.tone ?? "idle"}`}>{pickNote?.text ?? "แตะช่องสีเขียวบนพื้นเพื่อเลือกที่วางตุ๊กตา"}</span>

@@ -2,35 +2,24 @@
 import { cmd, storeConfigured } from "@/lib/redis";
 import { isReservedSlot, SLOT_COUNT } from "@/lib/christmas/slots";
 import type { Social } from "@/lib/christmas/social";
+import { parseSnowParts, type SnowParts } from "@/lib/christmas/snowman";
 
 export { SLOT_COUNT };
-export const HATS = ["top", "beanie", "santa", "crown", "pom", "holly", "beret", "earmuff"] as const;
-export const SCARVES = ["red", "green", "gold", "blue", "white", "plaid", "purple"] as const;
-export const NOSES = ["carrot", "button", "star", "bell", "heart"] as const;
-export const ARMS = ["sticks", "wings", "gift", "none"] as const;
-export const BODY_COLORS = ["white", "mint", "sky", "blush"] as const;
-export const LEGS = ["snow", "boots", "gift", "none"] as const; // ฐาน/ขา
-export const ACCESSORIES = ["none", "glasses", "bow", "bell", "snowflake"] as const;
+// ชิ้นส่วนทั้งหมดกำหนดไว้ที่ snowman.ts (ใช้ร่วมกับหน้าตกแต่งและโมเดล 3 มิติ)
+// ชิ้นส่วนที่ผู้ซื้อ Exclusive เลือก (ใช้ตอนสร้างคำสั่งซื้อ)
+export type DecorPick = { slot: number } & SnowParts;
 
-// ชิ้นส่วนตุ๊กตาที่ผู้ซื้อ Exclusive เลือก (ใช้ตอนสร้างคำสั่งซื้อ)
-export type DecorPick = { slot: number; hat: string; scarf: string; nose: string; arms: string; body: string; legs: string; acc: string };
-
+// ชิ้นส่วนรุ่นแรกต้องมีเสมอ ชิ้นที่เพิ่มทีหลังไม่บังคับ (ข้อมูลเก่าไม่มี จะใช้ค่าเริ่มต้นตอนแสดงผล)
 export type Decor = {
   id: string;
   room: string;
   slot: number; // 0..SLOT_COUNT-1
   name: string;
-  hat: string;
-  scarf: string;
-  nose: string;
-  arms: string;
-  body: string;
-  legs: string;
-  acc: string;
   createdAt: number;
   likes: number;
   social?: Social; // ลิงก์โซเชียลของผู้วาง (ไม่บังคับ)
-};
+} & Pick<SnowParts, "hat" | "scarf" | "nose" | "arms" | "body" | "legs" | "acc"> &
+  Partial<SnowParts>;
 
 const K = {
   hash: (r: string) => `xmas:${r}:deco2`, // HASH: ช่อง -> JSON ของตุ๊กตา
@@ -76,37 +65,24 @@ export async function listDecor(room: string): Promise<Decor[]> {
 // ตรวจชิ้นส่วนที่ส่งมาจากหน้าเว็บ คืน null ถ้าไม่ถูกต้อง
 export function parseDecorPick(v: unknown): DecorPick | null {
   if (!v || typeof v !== "object") return null;
-  const o = v as Record<string, unknown>;
-  const pick = <T extends string>(x: unknown, list: readonly T[]) => ((list as readonly string[]).includes(String(x)) ? String(x) : null);
-  const slot = Number(o.slot);
-  const hat = pick(o.hat, HATS);
-  const scarf = pick(o.scarf, SCARVES);
-  const nose = pick(o.nose, NOSES);
-  const arms = pick(o.arms, ARMS);
-  const body = pick(o.body, BODY_COLORS);
-  const legs = pick(o.legs, LEGS);
-  const acc = pick(o.acc, ACCESSORIES);
+  const slot = Number((v as Record<string, unknown>).slot);
   if (!Number.isInteger(slot) || slot < 0 || slot >= SLOT_COUNT) return null;
-  if (!hat || !scarf || !nose || !arms || !body || !legs || !acc) return null;
-  return { slot, hat, scarf, nose, arms, body, legs, acc };
+  const parts = parseSnowParts(v);
+  return parts ? { slot, ...parts } : null;
 }
 
 // วางตุ๊กตา Exclusive หลังชำระเงินแล้ว: ใช้ช่องที่เลือกได้ (รวมช่องสงวน) ถ้าช่องถูกแย่งไปแล้วจะสุ่มช่องว่างแทน
 // id ใช้เลขคำสั่งซื้อ เพื่อให้เรียกซ้ำไม่วางซ้ำ
 export async function placePaidDecor(room: string, id: string, name: string, social: Social, pick: DecorPick): Promise<{ decor: Decor; moved: boolean } | null> {
   const taken = new Set((await listDecor(room)).map((d) => d.slot));
+  const { slot: _wanted, ...parts } = pick;
+  void _wanted;
   const build = (slot: number): Decor => ({
+    ...parts,
     id,
     room,
     slot,
     name,
-    hat: pick.hat,
-    scarf: pick.scarf,
-    nose: pick.nose,
-    arms: pick.arms,
-    body: pick.body,
-    legs: pick.legs,
-    acc: pick.acc,
     createdAt: Date.now(),
     likes: 0,
     social,

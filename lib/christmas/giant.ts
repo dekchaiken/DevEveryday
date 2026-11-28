@@ -6,6 +6,15 @@ export const BASE_R = 1.35; // รัศมีฐาน (หน่วยโล�
 export const MAX_ITEMS = 24;
 export const DIORAMA_BASES = ["pink", "mint", "red", "blue"] as const; // ลายแถบของฐาน
 export const SIGN_BOARDS = ["spruce", "ivory", "berry", "gold"] as const; // สีป้ายชื่อเล็ก
+// บ้านหิมะกลางฐาน (จุดเด่นของ Exclusive) สีผนัง สีหลังคา และรั้วรอบฐาน
+export const HOUSE_STYLES = ["cottage", "cabin", "gingerbread", "igloo", "none"] as const;
+export const HOUSE_WALLS = ["cream", "red", "mint", "sky", "pink", "wood", "white"] as const;
+export const HOUSE_ROOFS = ["red", "forest", "navy", "berry", "black", "gold"] as const;
+export const FENCES = ["candy", "picket", "lights", "hedge", "none"] as const;
+export const HOUSE_LABEL: Record<string, string> = { cottage: "บ้านไม้หิมะ", cabin: "กระท่อมซุง", gingerbread: "บ้านขนมปังขิง", igloo: "อิกลูน้ำแข็ง", none: "ไม่มีบ้าน" };
+export const FENCE_LABEL: Record<string, string> = { candy: "รั้วไม้เท้าขนม", picket: "รั้วไม้ขาว", lights: "เสาไฟประดับ", hedge: "พุ่มสนเตี้ย", none: "ไม่มีรั้ว" };
+// บ้านตั้งค่อนไปด้านหลังฐาน (ด้านหน้าว่างให้วางของ) ของชิ้นอื่นห้ามทับพื้นที่นี้
+export const HOUSE_SPOT = { x: 0, z: -0.42, r: 0.66 };
 
 // สีกลางที่ทุกชิ้นใช้ร่วมกัน (ตัวเลขคือสีจริงบนฉาก)
 export const PALETTE = {
@@ -113,6 +122,56 @@ export const ITEM_SPECS = {
       { key: "bow", label: "โบว์", options: ["red", "gold", "blue", "pink", "white"] },
     ],
   },
+  reindeer: {
+    label: "กวางเรนเดียร์",
+    r: 0.22,
+    parts: [
+      { key: "body", label: "ตัว", options: ["wood", "cream", "white", "gold"] },
+      { key: "nose", label: "จมูก", options: ["red", "gold", "black", "pink"] },
+      { key: "scarf", label: "ผ้าพันคอ", options: ["red", "green", "blue", "gold", "pink"] },
+    ],
+  },
+  sled: {
+    label: "เลื่อนหิมะ",
+    r: 0.24,
+    parts: [
+      { key: "body", label: "ตัวเลื่อน", options: ["red", "forest", "navy", "wood", "gold"] },
+      { key: "gift", label: "ของบนเลื่อน", options: ["gold", "red", "green", "blue", "pink", "white"] },
+    ],
+  },
+  lamppost: {
+    label: "เสาไฟถนน",
+    r: 0.12,
+    parts: [
+      { key: "frame", label: "เสา", options: ["black", "gold", "forest", "red"] },
+      { key: "glow", label: "แสง", options: ["warm", "white", "pink", "sky"] },
+    ],
+  },
+  nutcracker: {
+    label: "ทหารนัทแครกเกอร์",
+    r: 0.14,
+    parts: [
+      { key: "coat", label: "เสื้อ", options: ["red", "navy", "forest", "purple", "gold"] },
+      { key: "hat", label: "หมวก", options: ["black", "red", "navy", "gold"] },
+    ],
+  },
+  giftstack: {
+    label: "กองของขวัญ",
+    r: 0.22,
+    parts: [
+      { key: "box", label: "กล่องใหญ่", options: ["red", "green", "blue", "gold", "pink", "purple", "navy"] },
+      { key: "box2", label: "กล่องเล็ก", options: ["gold", "white", "red", "green", "blue", "pink"] },
+      { key: "ribbon", label: "ริบบิ้น", options: ["gold", "white", "red", "silver"] },
+    ],
+  },
+  bench: {
+    label: "ม้านั่งไม้",
+    r: 0.22,
+    parts: [
+      { key: "wood", label: "ไม้", options: ["wood", "red", "forest", "white"] },
+      { key: "pillow", label: "หมอนอิง", options: ["red", "gold", "green", "blue", "pink"] },
+    ],
+  },
 } as const;
 
 export type DioramaKind = keyof typeof ITEM_SPECS;
@@ -123,9 +182,13 @@ export type GiantLook = {
   base: string;
   items: DioramaItem[];
   board: string; // สีป้ายชื่อเล็ก
+  house?: string; // แบบบ้าน (ข้อมูลเก่าไม่มี = ไม่มีบ้าน ของที่วางไว้แล้วจึงไม่ถูกบ้านทับ)
+  wall?: string;
+  roof?: string;
+  fence?: string;
 };
 
-export const DEFAULT_GIANT_LOOK: GiantLook = { base: "pink", items: [], board: "spruce" };
+export const DEFAULT_GIANT_LOOK: GiantLook = { base: "red", items: [], board: "spruce", house: "cottage", wall: "cream", roof: "red", fence: "candy" };
 
 function pick(v: unknown, list: readonly string[], fallback: string): string {
   return typeof v === "string" && list.includes(v) ? v : fallback;
@@ -158,10 +221,11 @@ export function makeItem(id: string, kind: string, x: number, z: number): Dioram
   return { id, kind, parts: defaultParts(kind), x, z, r: 0 };
 }
 
-// ชิ้นนี้วางได้ไหม: อยู่ในฐานทั้งชิ้น และไม่ชนกับชิ้นอื่น (ยกเว้นชิ้นที่กำลังย้ายเอง)
-export function fits(items: DioramaItem[], cand: { kind: string; x: number; z: number }, ignoreId?: string): boolean {
+// ชิ้นนี้วางได้ไหม: อยู่ในฐานทั้งชิ้น ไม่ทับตัวบ้าน และไม่ชนกับชิ้นอื่น (ยกเว้นชิ้นที่กำลังย้ายเอง)
+export function fits(items: DioramaItem[], cand: { kind: string; x: number; z: number }, ignoreId?: string, house?: string): boolean {
   const r = radiusOf(cand.kind);
   if (Math.hypot(cand.x, cand.z) + r > BASE_R - 0.02) return false;
+  if (house && house !== "none" && Math.hypot(cand.x - HOUSE_SPOT.x, cand.z - HOUSE_SPOT.z) < HOUSE_SPOT.r + r) return false;
   for (const o of items) {
     if (o.id === ignoreId) continue;
     const ro = radiusOf(o.kind);
@@ -171,14 +235,16 @@ export function fits(items: DioramaItem[], cand: { kind: string; x: number; z: n
 }
 
 // หาตำแหน่งว่างใกล้กลางฐานสำหรับชิ้นใหม่ (ค้นเป็นวงรอบ ๆ กลาง)
-export function freeSpot(items: DioramaItem[], kind: string): { x: number; z: number } | null {
-  for (let rad = 0; rad <= BASE_R; rad += 0.08) {
+export function freeSpot(items: DioramaItem[], kind: string, house?: string): { x: number; z: number } | null {
+  // เริ่มหาจากลานหน้าบ้าน (ด้านหน้าฐาน) ก่อน
+  const cz = house && house !== "none" ? 0.55 : 0;
+  for (let rad = 0; rad <= BASE_R * 1.6; rad += 0.08) {
     const steps = rad === 0 ? 1 : Math.max(6, Math.round((2 * Math.PI * rad) / 0.12));
     for (let k = 0; k < steps; k++) {
       const a = (k / steps) * Math.PI * 2 + rad;
       const x = Math.cos(a) * rad;
-      const z = Math.sin(a) * rad;
-      if (fits(items, { kind, x, z })) return { x: round(x), z: round(z) };
+      const z = cz + Math.sin(a) * rad;
+      if (fits(items, { kind, x, z }, undefined, house)) return { x: round(x), z: round(z) };
     }
   }
   return null;
@@ -189,7 +255,7 @@ function round(n: number) {
 }
 
 // ตรวจของตกแต่งทั้งหมดที่ส่งมาจากหน้าเว็บ: ชนิดหรือสีที่ไม่รู้จักใช้ค่าเริ่มต้น ชิ้นนอกฐานและชิ้นที่ชนกันจะถูกตัดทิ้ง
-export function parseItems(v: unknown): DioramaItem[] {
+export function parseItems(v: unknown, house?: string): DioramaItem[] {
   if (!Array.isArray(v)) return [];
   const out: DioramaItem[] = [];
   const ids = new Set<string>();
@@ -203,7 +269,7 @@ export function parseItems(v: unknown): DioramaItem[] {
     const z = Number(o.z);
     const r = Number(o.r);
     if (!Number.isFinite(x) || !Number.isFinite(z)) continue;
-    if (!fits(out, { kind, x, z })) continue;
+    if (!fits(out, { kind, x, z }, undefined, house)) continue;
     const given = o.parts && typeof o.parts === "object" ? (o.parts as Record<string, unknown>) : {};
     const parts: Record<string, string> = {};
     for (const p of partsFor(kind)) parts[p.key] = pick(given[p.key], p.options, p.options[0]);
@@ -219,9 +285,14 @@ export function parseItems(v: unknown): DioramaItem[] {
 export function parseGiantLook(v: unknown): GiantLook | null {
   if (!v || typeof v !== "object") return null;
   const o = v as Record<string, unknown>;
+  const house = pick(o.house, HOUSE_STYLES, "none");
   return {
     base: pick(o.base, DIORAMA_BASES, DEFAULT_GIANT_LOOK.base),
-    items: parseItems(o.items),
+    items: parseItems(o.items, house),
     board: pick(o.board, SIGN_BOARDS, DEFAULT_GIANT_LOOK.board),
+    house,
+    wall: pick(o.wall, HOUSE_WALLS, "cream"),
+    roof: pick(o.roof, HOUSE_ROOFS, "red"),
+    fence: pick(o.fence, FENCES, "none"),
   };
 }
