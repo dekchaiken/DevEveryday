@@ -205,7 +205,7 @@ export const SNOW_PARTS = {
 export type SnowPartKey = keyof typeof SNOW_PARTS;
 export type SnowParts = Record<SnowPartKey, string>;
 export const SNOW_PART_KEYS = Object.keys(SNOW_PARTS) as SnowPartKey[];
-export const SNOW_GROUPS = ["หัวและใบหน้า", "ผ้าพันคอและตัว", "แขน ฐาน และประดับ"] as const;
+export const SNOW_GROUPS = ["หัวและหน้า", "ผ้าพันคอ·ตัว", "แขน·ฐาน·ประดับ"] as const;
 
 // ค่าเริ่มต้น = หน้าตาของตุ๊กตารุ่นเดิม (ข้อมูลเก่าที่ไม่มีชิ้นใหม่จะดูเหมือนเดิม)
 export const DEFAULT_SNOW: SnowParts = {

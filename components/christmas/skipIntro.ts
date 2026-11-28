@@ -20,3 +20,23 @@ export function consumeSkipIntro(): boolean {
     return false;
   }
 }
+
+// ป้ายของการเดินทาง: หน้าถัดไปเล่นเมฆแหวกออกพร้อมชื่อจุดหมาย
+const JOURNEY = "xmas-journey";
+export type Journey = { from?: string; to?: string };
+export function markJourney(j: Journey) {
+  try {
+    sessionStorage.setItem(JOURNEY, JSON.stringify(j));
+  } catch {
+    /* ไม่เป็นไร */
+  }
+}
+export function consumeJourney(): Journey | null {
+  try {
+    const v = sessionStorage.getItem(JOURNEY);
+    sessionStorage.removeItem(JOURNEY);
+    return v ? (JSON.parse(v) as Journey) : null;
+  } catch {
+    return null;
+  }
+}

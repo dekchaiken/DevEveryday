@@ -44,3 +44,19 @@ export async function txn(commands: (string | number)[][]): Promise<void> {
   const failed = items.find((r) => r && r.error);
   if (failed?.error) throw new Error(failed.error);
 }
+
+// หลายคำสั่งในการเรียกครั้งเดียว (ไม่ใช่ธุรกรรม) ใช้อ่านค่าจำนวนมากพร้อมกัน เช่นจำนวนคนออนไลน์ของทุกห้อง
+export async function pipeline<T = unknown>(commands: (string | number)[][]): Promise<T[]> {
+  const { url, token } = redisEnv();
+  if (!url || !token) throw new Error("ยังไม่ได้ตั้งค่าฐานข้อมูล");
+  if (commands.length === 0) return [];
+  const res = await fetch(`${url}/pipeline`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(commands),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`ฐานข้อมูลตอบกลับผิดพลาด (${res.status})`);
+  const json = (await res.json()) as { result?: T; error?: string }[];
+  return json.map((r) => r.result as T);
+}

@@ -1,6 +1,6 @@
 // เก็บสถานะต้นคริสต์มาสแยกตามห้อง ใช้ Upstash Redis ถ้าตั้งค่าไว้
 // ถ้ายังไม่ได้ตั้งค่า จะใช้หน่วยความจำของเซิร์ฟเวอร์ (ใช้ได้เฉพาะตอนพัฒนาในเครื่อง)
-import { cmd, storeConfigured } from "@/lib/redis";
+import { cmd, pipeline, storeConfigured } from "@/lib/redis";
 import { TREE_CAPACITY, type ChristmasState, type Ornament, type ShowEvent } from "@/lib/christmas/types";
 import { ROOM_CAPACITY, ROOMS } from "@/lib/christmas/rooms";
 import { listGiants, listHeldSpots } from "@/lib/christmas/orders";
@@ -146,16 +146,22 @@ export async function heartbeat(room: string, clientId: string, now: number): Pr
 // จำนวนคนออนไลน์ของทุกห้อง (ใช้แสดงบนหน้าเลือกห้อง)
 export async function roomCounts(now: number): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
-  for (const r of ROOMS) {
-    if (!persistent()) {
+  if (!persistent()) {
+    for (const r of ROOMS) {
       const m = memRoom(r.id);
       for (const [id, t] of m.online) if (now - t > ONLINE_MS) m.online.delete(id);
       out[r.id] = m.online.size;
-    } else {
-      await cmd("ZREMRANGEBYSCORE", K.onl(r.id), "-inf", now - ONLINE_MS);
-      out[r.id] = (await cmd<number>("ZCARD", K.onl(r.id))) ?? 0;
     }
+    return out;
   }
+  // ทุกห้องในการเรียกฐานข้อมูลครั้งเดียว (77 จังหวัด ถ้าเรียกทีละห้องจะช้ามาก)
+  const cmds: (string | number)[][] = [];
+  for (const r of ROOMS) {
+    cmds.push(["ZREMRANGEBYSCORE", K.onl(r.id), "-inf", now - ONLINE_MS]);
+    cmds.push(["ZCARD", K.onl(r.id)]);
+  }
+  const res = await pipeline<number>(cmds);
+  ROOMS.forEach((r, i) => (out[r.id] = Number(res[i * 2 + 1]) || 0));
   return out;
 }
 

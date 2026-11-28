@@ -18,7 +18,8 @@ import { RankPanel } from "./RankPanel";
 import { Icon } from "./Icon";
 import { isMusicPlaying, startMusic, stopMusic } from "./music";
 import { useDecor } from "./useDecor";
-import { markInternalNav } from "./skipIntro";
+import { consumeJourney, markInternalNav, markJourney } from "./skipIntro";
+import { JourneyVeil } from "./JourneyVeil";
 import { FeedPanel, Ticker, useFeed } from "./FeedPanel";
 import { ShareCardModal } from "./ShareCard";
 import { SkyOverlay, type SkyShow } from "./SkyOverlay";
@@ -50,7 +51,7 @@ const TreeScene = dynamic(() => import("./TreeScene").then((m) => m.default), {
 });
 
 // ประตูเปลี่ยนห้อง: โหลดเฉพาะตอนกด ไม่กระทบเวลาเปิดหน้า
-const DoorTransition = dynamic(() => import("./DoorTransition").then((m) => m.default), { ssr: false });
+
 
 const POLL_MS = 3000;
 const COLOR_LABEL: Record<OrnamentColor, string> = { gold: "ทอง", red: "แดง", blue: "น้ำเงิน", pink: "ชมพู", white: "ขาว", green: "เขียว" };
@@ -148,7 +149,14 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   const [zoneAll, setZoneAll] = useState<CardRecord[]>([]);
   const [zonePage, setZonePage] = useState(0);
   const [zoneTotal, setZoneTotal] = useState(0);
-  const [doorGo, setDoorGo] = useState(false); // กำลังเล่นประตูเปลี่ยนห้อง
+  const [doorGo, setDoorGo] = useState(false); // กำลังออกเดินทางไปเลือกห้องใหม่
+  const [missionOpen, setMissionOpen] = useState(false); // ป๊อปอัปภารกิจแขวนให้ครบ 999
+  const [arrive, setArrive] = useState<string | null>(null); // เพิ่งเดินทางมาถึงห้องนี้: เมฆแหวกออก
+  useEffect(() => {
+    if (consumeJourney()) setArrive(room.name);
+    // อ่านครั้งเดียวตอนเข้าห้อง
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [mineIds, setMineIds] = useState<Set<string>>(() => new Set()); // การ์ดที่เครื่องนี้ส่ง
   const [zoneStop, setZoneStop] = useState<{ index: number; total: number } | null>(null); // กำแพงที่กำลังชมในหมู่บ้าน
   const [zonePins, setZonePins] = useState<{ id: string; x: number; y: number; visible: boolean; angle: number }[]>([]);
@@ -516,6 +524,35 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
       setSkyShow({ id: String(Date.now()), text, by, style: parseSkyStyle(style), duration: 10000 });
   }, []);
 
+  // ภารกิจ 999: เด้งบอกเองครั้งเดียวต่อการเข้าห้อง (หลังเข้ามาสักพัก ไม่มีหน้าต่างอื่นเปิด และไม่อยู่ระหว่างแนะนำการใช้งาน)
+  const missionBusy = useRef(true);
+  useEffect(() => {
+    if (!sceneReady) return;
+    let key = "";
+    try {
+      key = `xmas-mission-${room.id}`;
+      if (sessionStorage.getItem(key)) return;
+    } catch {
+      /* ไม่มี sessionStorage ก็แสดงตามปกติ */
+    }
+    let closeT = 0;
+    const openT = window.setTimeout(() => {
+      if (missionBusy.current) return;
+      try {
+        sessionStorage.setItem(key, "1");
+      } catch {
+        /* ไม่เป็นไร */
+      }
+      setMissionOpen(true);
+      closeT = window.setTimeout(() => setMissionOpen(false), 10000);
+    }, 15000);
+    return () => {
+      window.clearTimeout(openT);
+      window.clearTimeout(closeT);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneReady]);
+
   // ---------- รวมลูกบอลจากเซิร์ฟเวอร์กับที่เพิ่งแขวนเอง ----------
   const ornaments = useMemo(() => {
     const map = new Map<string, Ornament>();
@@ -527,6 +564,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
   // ---------- จำนวนคำอวยพรบนต้น (0–999) ออร่าบนต้นไต่ขึ้นตามเปอร์เซ็นต์นี้ ----------
   const hung = Math.min(ornaments.length, TREE_CAPACITY);
   const hungPct = Math.floor((hung / TREE_CAPACITY) * 100);
+  missionBusy.current = guideOn || !giftDone || !profile || studioOpen || chooseOpen || sheetOpen || zoneOpen || inviteOpen || decorOpen || exclusiveOpen || supportOpen || profileEdit || feedOpen || rankOpen || !!focus || !!shareOf || !!sharedCard || pickMode || giantPick !== null || doorGo || celebrateOpen;
   // ต้นครบ 999 คำอวยพร: ฉลองทั้งห้อง (แต่ละเครื่องเห็นครั้งเดียว) พร้อมข้อความจากแอดมิน
   useEffect(() => {
     if (hung < TREE_CAPACITY || !giftDone || !sceneReady) return;
@@ -749,6 +787,7 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
 
       {webglOk ? (
         <TreeScene
+          scenery={{ kind: room.skyline, landmarks: room.landmarks }}
           onReady={(h) => {
             treeRef.current = h;
             setSceneReady(true);
@@ -952,14 +991,17 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
             <Icon name="star" size={20} />
           </span>
           <div>
-            <b>ต้นคริสต์มาส{room.name}</b>
+            <b>
+              <span className="xmas-brand-pre">ต้นคริสต์มาส</span>
+              {room.name}
+            </b>
             <small>
               <span className="xmas-region">{room.region}</span>
               {xmasDays !== null && (
                 <span className="xmas-countdown">{xmasDays > 0 ? ` · อีก ${xmasDays} วันถึงคริสต์มาส` : xmasDays === 0 ? " · สุขสันต์วันคริสต์มาส" : ""}</span>
               )}{" "}
               ·{" "}
-              <a href="/Christmas?pick=1" className="xmas-switch-link" onClick={(e) => { e.preventDefault(); markInternalNav(); setDoorGo(true); }}>
+              <a href="/Christmas?pick=1" className="xmas-switch-link" onClick={(e) => { e.preventDefault(); if (doorGo) return; markInternalNav(); markJourney({ from: room.name }); treeRef.current?.depart(); setDoorGo(true); }}>
                 เปลี่ยนห้อง
               </a>
             </small>
@@ -1062,16 +1104,71 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         </button>
       </nav>
 
-      {/* ตัวนับคำอวยพรบนต้น 0/999 และแถบความคืบหน้า */}
-      {!zoneOpen && (
-        <div className={`xmas-tree-count ${hung >= TREE_CAPACITY ? "is-full" : ""}`} role="status" aria-live="polite" title="จำนวนคำอวยพรที่แขวนบนต้นนี้">
-          <span className="xmas-tree-count-label">{hung >= TREE_CAPACITY ? "ต้นเต็มแล้ว" : "แขวนแล้ว"}</span>
-          <b>{hung.toLocaleString("th-TH")}</b>
-          <span className="xmas-tree-count-max">/ {TREE_CAPACITY}</span>
-          <span className="xmas-tree-count-bar" aria-hidden>
-            <i style={{ width: `${Math.max(hungPct, hung > 0 ? 1 : 0)}%` }} />
-          </span>
-          <span className="xmas-tree-count-pct">{hung > 0 && hungPct === 0 ? "<1%" : `${hungPct}%`}</span>
+      {/* ตัวนับคำอวยพรบนต้น 0/999 และภารกิจช่วยกันแขวนให้ครบ (แตะเพื่อดูภารกิจและชวนเพื่อน) */}
+      {!zoneOpen && !feedOpen && !rankOpen && !focus && !pickMode && giantPick === null && (
+        <div className="xmas-mission">
+          <button
+            type="button"
+            className={`xmas-tree-count ${hung >= TREE_CAPACITY ? "is-full" : ""} ${missionOpen ? "is-open" : ""}`}
+            aria-expanded={missionOpen}
+            aria-label={`ภารกิจ แขวนแล้ว ${hung} จาก ${TREE_CAPACITY} ลูก แตะเพื่อดูรายละเอียด`}
+            onClick={() => setMissionOpen((v) => !v)}
+          >
+            <span className="xmas-tree-count-label">{hung >= TREE_CAPACITY ? "ต้นเต็มแล้ว" : "แขวนแล้ว"}</span>
+            <b>{hung.toLocaleString("th-TH")}</b>
+            <span className="xmas-tree-count-max">/ {TREE_CAPACITY}</span>
+            <span className="xmas-tree-count-bar" aria-hidden>
+              <i style={{ width: `${Math.max(hungPct, hung > 0 ? 1 : 0)}%` }} />
+            </span>
+            <span className="xmas-tree-count-pct">{hung > 0 && hungPct === 0 ? "<1%" : `${hungPct}%`}</span>
+            <span className="xmas-mission-tag" aria-hidden>ภารกิจ</span>
+          </button>
+          {missionOpen && (
+            <div className="xmas-mission-pop" role="dialog" aria-label="ภารกิจช่วยกันแขวนให้ครบ">
+              <button type="button" className="xmas-mission-x" aria-label="ปิด" onClick={() => setMissionOpen(false)}>
+                ×
+              </button>
+              <span className="xmas-mission-kicker">ภารกิจของทั้งห้อง</span>
+              <b className="xmas-mission-title">{hung >= TREE_CAPACITY ? `ต้น${room.name}เต็มแล้ว 🎉` : `ช่วยกันแขวนให้ครบ ${TREE_CAPACITY} ลูก`}</b>
+              <p>
+                {hung >= TREE_CAPACITY
+                  ? "ขอบคุณทุกคน ต้นนี้ส่องแสงออร่าทองแล้ว ชวนเพื่อนมาชมพลุฉลองได้เลย"
+                  : `อีก ${(TREE_CAPACITY - hung).toLocaleString("th-TH")} ลูก ต้นจะเต็มและทั้งห้องได้ชมพลุฉลองกับออร่าทองพร้อมกัน ยิ่งชวนเพื่อนมาช่วยยิ่งเต็มไว`}
+              </p>
+              <div className="xmas-mission-steps">
+                {[100, 333, 666, TREE_CAPACITY].map((m) => (
+                  <span key={m} className={hung >= m ? "is-done" : ""}>
+                    {hung >= m ? "★" : "☆"} {m}
+                  </span>
+                ))}
+              </div>
+              <div className="xmas-mission-actions">
+                <button
+                  type="button"
+                  className="xmas-mission-btn is-gold"
+                  onClick={() => {
+                    setMissionOpen(false);
+                    setInviteOpen(true);
+                  }}
+                >
+                  ชวนเพื่อนมาช่วย
+                </button>
+                {hung < TREE_CAPACITY && (
+                  <button
+                    type="button"
+                    className="xmas-mission-btn"
+                    onClick={() => {
+                      setMissionOpen(false);
+                      setFeedOpen(false);
+                      setChooseOpen(true);
+                    }}
+                  >
+                    แขวนคำอวยพร
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1109,7 +1206,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
         ]}
       />
 
-      {doorGo && <DoorTransition onDone={() => window.location.assign("/Christmas?pick=1")} />}
+      {doorGo && <JourneyVeil mode="leave" from={room.name} to="เลือกห้องใหม่" onDone={() => window.location.assign("/Christmas?pick=1")} />}
+      {arrive && !doorGo && <JourneyVeil mode="arrive" to={arrive} hold={!sceneReady && webglOk} onDone={() => setArrive(null)} />}
 
       <GuideSpotlight
         active={guideOn && giftDone && !!profile && !studioOpen && !chooseOpen && !sheetOpen && !zoneOpen && !inviteOpen && !decorOpen && !exclusiveOpen && !supportOpen && !profileEdit && !feedOpen && !rankOpen && !focus && !shareOf && !sharedCard && !exclusiveDraft}
@@ -1122,6 +1220,8 @@ export default function ChristmasExperience({ roomId }: { roomId: string }) {
           roomName={room.name}
           online={online?.count ?? 0}
           capacity={online?.capacity ?? 150}
+          hung={hung}
+          goal={TREE_CAPACITY}
           onClose={() => setInviteOpen(false)}
         />
       )}

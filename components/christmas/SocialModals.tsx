@@ -15,7 +15,7 @@ import { Icon } from "./Icon";
 import "./christmas.css";
 
 // ----- ชวนเพื่อน: ลิงก์ห้อง คัดลอกหรือแชร์ -----
-export function InviteModal({ roomId, roomName, online, capacity, onClose }: { roomId: string; roomName: string; online: number; capacity: number; onClose: () => void }) {
+export function InviteModal({ roomId, roomName, online, capacity, onClose, hung, goal }: { roomId: string; roomName: string; online: number; capacity: number; onClose: () => void; hung?: number; goal?: number }) {
   const [copied, setCopied] = useState(false);
   const url = typeof window !== "undefined" ? `${window.location.origin}/Christmas?room=${roomId}` : `/Christmas?room=${roomId}`;
 
@@ -53,6 +53,17 @@ export function InviteModal({ roomId, roomName, online, capacity, onClose }: { r
         <p className="xmas-live-count">
           ตอนนี้มี <b>{online}</b> / {capacity} คนในห้อง
         </p>
+        {hung !== undefined && goal !== undefined && (
+          <div className="xmas-invite-goal">
+            <span>
+              ภารกิจห้อง: แขวนแล้ว <b>{hung.toLocaleString("th-TH")}</b> / {goal}
+              {hung < goal ? ` · ขาดอีก ${(goal - hung).toLocaleString("th-TH")} ลูก` : " · ครบแล้ว!"}
+            </span>
+            <i aria-hidden>
+              <em style={{ width: `${Math.min(100, (hung / goal) * 100)}%` }} />
+            </i>
+          </div>
+        )}
         <div className="xmas-copy-row">
           <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label="ลิงก์ชวนเพื่อน" />
           <button className="xmas-chip-btn" onClick={copy}>

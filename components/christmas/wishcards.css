@@ -2185,3 +2185,125 @@
   min-width: 40px;
   padding: 0;
   font-size: 18px;}
+
+/* ---------- ภารกิจช่วยกันแขวนให้ครบ 999 ---------- */
+.xmas-mission {
+  position: absolute;
+  top: 144px;
+  left: 24px;
+  z-index: 6;
+  display: grid;
+  gap: 8px;
+  justify-items: start;}
+.xmas-mission > .xmas-tree-count {
+  position: static;
+  pointer-events: auto;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  transition: border-color 0.2s ease, transform 0.15s ease;}
+.xmas-mission > .xmas-tree-count:hover,
+.xmas-mission > .xmas-tree-count.is-open {
+  border-color: rgba(242, 217, 140, 0.9);}
+.xmas-mission > .xmas-tree-count:active {
+  transform: scale(0.98);}
+.xmas-mission-tag {
+  margin-left: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2a1d10;
+  background: linear-gradient(180deg, #f9dc8a, #d9a93a);
+  animation: xmas-mission-tag 2.4s ease-in-out infinite;}
+@keyframes xmas-mission-tag {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 220, 138, 0.6);}
+  50% { box-shadow: 0 0 0 5px rgba(249, 220, 138, 0);}}
+.xmas-mission-pop {
+  position: relative;
+  width: min(330px, calc(100vw - 24px));
+  display: grid;
+  gap: 8px;
+  padding: 16px 16px 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fffaf0, #f6ebd2);
+  color: #1d2b22;
+  border: 1px solid rgba(184, 144, 74, 0.45);
+  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.7);
+  animation: xz-tip-in 0.35s ease both;}
+.xmas-mission-pop::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 28px;
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  background: #fffaf0;
+  border-left: 1px solid rgba(184, 144, 74, 0.45);
+  border-top: 1px solid rgba(184, 144, 74, 0.45);}
+.xmas-mission-x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(29, 43, 34, 0.07);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;}
+.xmas-mission-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #b8904a;}
+.xmas-mission-title {
+  font-family: var(--serif);
+  font-size: 19px;
+  line-height: 1.3;
+  padding-right: 28px;}
+.xmas-mission-pop p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #44524a;}
+.xmas-mission-steps {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;}
+.xmas-mission-steps span {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(29, 43, 34, 0.06);
+  color: #6b766f;}
+.xmas-mission-steps span.is-done {
+  background: #1d4a33;
+  color: #f9dc8a;}
+.xmas-mission-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;}
+.xmas-mission-btn {
+  flex: 1 1 120px;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(29, 74, 51, 0.3);
+  background: #fff;
+  color: #1d4a33;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;}
+.xmas-mission-btn.is-gold {
+  border-color: transparent;
+  background: linear-gradient(180deg, #d9a93a, #b98a2a);
+  color: #2a1d10;}
+@media (max-width: 759px) {
+  .xmas-mission {
+    top: 120px;
+    left: 12px;}
+  .xmas-mission > .xmas-tree-count {
+    font-size: 12px;}}
